@@ -1,4 +1,8 @@
 import { ContentItem } from "@/types/content";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 
 export const formatBytes = (bytes: number, decimals = 2) => {
     if (!bytes || bytes === 0) return "0 Bytes";
@@ -16,7 +20,7 @@ export const formatDuration = (seconds: number) => {
     return `${m}:${s.toString().padStart(2, "0")}`;
 };
 
-const getUrl = (url: string | null) => {
+export const getUrl = (url: string | null) => {
     if (!url) return undefined;
     let cleanUrl = url.trim();
 
@@ -29,23 +33,11 @@ const getUrl = (url: string | null) => {
 
     if (cleanUrl.startsWith("http")) return cleanUrl;
 
-    // Handle relative paths
-    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "").replace(/\/$/, "");
+    // Consistency with ScreenCard.tsx: strip /api/v1 from baseUrl if it exists
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "").replace(/\/api\/v1\/?$/, "");
 
-    // If it's an upload path (starts with /uploads or uploads/), use the origin, not the full API base
-    // The API base might include /api/v1, but uploads are usually at the root
-    if (cleanUrl.startsWith("/") || cleanUrl.startsWith("uploads/")) {
-        const urlObj = new URL(baseUrl);
-        const origin = urlObj.origin;
-        const path = cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`;
-        // If the path already includes /api/v1 (unlikely for raw uploads but possible), handle it?
-        // Actually, based on User's request, the uploads are at root /uploads/...
-        // So we combine origin + path
-        return `${origin}${path}`;
-    }
-
-    const path = cleanUrl.startsWith("/") ? cleanUrl : `/${cleanUrl}`;
-    return `${baseUrl}${path}`;
+    const path = cleanUrl.startsWith("/") ? cleanUrl.slice(1) : cleanUrl;
+    return `${baseUrl}/${path}`;
 };
 
 export const transformFile = (file: any, isMounted: boolean): ContentItem => ({
@@ -54,11 +46,11 @@ export const transformFile = (file: any, isMounted: boolean): ContentItem => ({
     type: file.type === "IMAGE" ? "image" : file.type === "VIDEO" ? "video" : file.type === "AUDIO" ? "audio" : "playlist",
     size: formatBytes(file.size),
     duration: formatDuration(file.duration),
-    thumbnail: (file.type === "IMAGE") ? getUrl(file.url) : undefined,
+    thumbnail: file.type === "IMAGE" ? getUrl(file.url) : undefined,
     video: file.type === "VIDEO" ? getUrl(file.url) : undefined,
     audio: file.type === "AUDIO" ? getUrl(file.url) : undefined,
-    uploadedDate: isMounted ? new Date(file.createdAt).toLocaleDateString() : "",
-    updatedAt: isMounted ? new Date(file.updatedAt).toLocaleDateString() : "",
+    uploadedDate: isMounted ? dayjs(file.createdAt).fromNow() : "",
+    updatedAt: isMounted ? dayjs(file.updatedAt).fromNow() : "",
     fileExtension: file.fileType?.split("/")[1]?.toUpperCase(),
     assignedTo: [],
 });
@@ -69,8 +61,8 @@ export const transformFolder = (folder: any, isMounted: boolean): ContentItem =>
     type: "folder",
     size: formatBytes(folder.files?.reduce((acc: number, f: any) => acc + (f.size || 0), 0) || 0),
     fileCount: folder.files?.length || 0,
-    uploadedDate: isMounted ? new Date(folder.createdAt).toLocaleDateString() : "",
-    updatedAt: isMounted ? new Date(folder.updatedAt).toLocaleDateString() : "",
+    uploadedDate: isMounted ? dayjs(folder.createdAt).fromNow() : "",
+    updatedAt: isMounted ? dayjs(folder.updatedAt).fromNow() : "",
     children: folder.files?.map((f: any) => transformFile(f, isMounted)) || [],
     assignedTo: [],
 });

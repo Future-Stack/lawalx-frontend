@@ -22,7 +22,7 @@ const SchedulesHeader: React.FC<SchedulesHeaderProps> = ({ title, subtitle }) =>
                 </div>
                 <button
                     onClick={() => setDialogOpen(true)}
-                    className="bg-bgBlue hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold shadow-customShadow transition pointer flex items-center gap-2 pointer"
+                    className="bg-bgBlue hover:bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold shadow-customShadow transition flex items-center gap-2 cursor-pointer"
                 >
                     <Plus className="w-5 h-5" />
                     Schedule

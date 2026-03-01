@@ -117,3 +117,6 @@ export interface Schedule {
 
 /** Final response type */
 export type GetSchedulesResponse = ApiResponse<Schedule[]>;
+
+/** Single schedule response type */
+export type GetSingleScheduleResponse = ApiResponse<Schedule>;

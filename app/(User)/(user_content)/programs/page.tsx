@@ -133,7 +133,7 @@ const MyScreensPage: React.FC = () => {
   );
 };
 
-export default MyScreensPage; 
+export default MyScreensPage;
 
 
 

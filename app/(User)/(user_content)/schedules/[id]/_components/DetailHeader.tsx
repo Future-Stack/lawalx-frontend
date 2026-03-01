@@ -1,5 +1,5 @@
 import React from "react";
-import { ChevronLeft, Pause } from "lucide-react";
+import { ArrowLeft, Pause } from "lucide-react";
 import Link from "next/link";
 
 interface DetailHeaderProps {
@@ -12,11 +12,11 @@ const DetailHeader: React.FC<DetailHeaderProps> = ({ isNew, name, onSave }) => {
     return (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-6">
             <div className="flex items-center gap-4">
-                <Link href="/schedules" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition">
-                    <ChevronLeft className="w-6 h-6 text-muted" />
+                <Link href="/schedules" className="p-2 border border-border hover:border-bgBlue rounded-lg shadow-customShadow transition-colors cursor-pointer">
+                    <ArrowLeft className="w-6 h-6 text-muted" />
                 </Link>
                 <div>
-                    <h1 className="text-xl font-bold text-headings dark:text-white">
+                    <h1 className="text-xl md:text-2xl font-bold text-headings leading-tight">
                         {isNew ? "Create Schedule" : name || "Morning Content"}
                     </h1>
                     <p className="text-sm text-muted">

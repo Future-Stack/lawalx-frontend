@@ -226,7 +226,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({ timeline, onSelect, s
           )}
         </div>
         {/* Content List */}
-        <div className="divide-y divide-border max-h-[400px] overflow-y-auto">
+        <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto p-1">
           {items.map((item, index) => (
             <div
               key={item.id}

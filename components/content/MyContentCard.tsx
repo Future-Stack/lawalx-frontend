@@ -89,7 +89,16 @@ const MyContentCard = ({
           }}
           role={item.type === "image" ? "button" : undefined}
         >
-          <Image src={item.thumbnail} alt={item.title} fill className="object-cover" />
+          <Image
+            src={item.thumbnail}
+            alt={item.title}
+            fill
+            className="object-cover"
+            onError={(e: any) => {
+              e.currentTarget.style.display = 'none';
+              e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-xs text-gray-400">Broken</div>';
+            }}
+          />
           {item.type === "video" && (
             <button onClick={(e) => { e.stopPropagation(); setOpen(true); }} className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors">
               <Play className="w-5 h-5 text-white fill-white" />
@@ -130,6 +139,10 @@ const MyContentCard = ({
               src={item.video}
               className="w-full h-full object-cover"
               muted
+              onError={(e: any) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-xs text-gray-400">No Preview</div>';
+              }}
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/10">
               <Play className="w-5 h-5 text-white fill-white" />
@@ -364,7 +377,16 @@ const MyContentCard = ({
 
             {item.thumbnail ? (
               <div className="relative w-full h-full cursor-pointer" onClick={() => item.type === "image" && setOpenImage(true)}>
-                <Image src={item.thumbnail} alt={item.title} fill className="object-cover" />
+                <Image
+                  src={item.thumbnail}
+                  alt={item.title}
+                  fill
+                  className="object-cover"
+                  onError={(e: any) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-sm text-gray-400">Broken Link</div>';
+                  }}
+                />
               </div>
             ) : item.type === "video" ? (
               <div
@@ -379,6 +401,10 @@ const MyContentCard = ({
                   playsInline
                   onMouseEnter={(e) => e.currentTarget.play()}
                   onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                  onError={(e: any) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-sm text-gray-400">Preview Unavailable</div>';
+                  }}
                 />
               </div>
             ) : item.type === "folder" ? (
@@ -428,6 +454,15 @@ const MyContentCard = ({
               <div className="pt-3">
                 <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">Assigned To</p>
                 <p className="text-sm text-textGray dark:text-gray-400">{item.assignedTo?.join(", ")}</p>
+              </div>
+            )}
+
+            {item.uploadedDate && (
+              <div className="mt-4 pt-3 border-t border-border/50">
+                <div className="flex items-center gap-1.5 text-xs text-textGray dark:text-gray-400">
+                  <CalendarClock className="w-3.5 h-3.5" />
+                  <span>{item.type === "folder" ? "Created" : "Uploaded"} {item.uploadedDate}</span>
+                </div>
               </div>
             )}
           </div>

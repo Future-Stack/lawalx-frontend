@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Video, Clock } from "lucide-react";
-import { ContentItem } from "../../_data";
+import { ContentItem } from "@/types/content";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 
 interface ContentPreviewProps {
@@ -48,7 +48,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
           <div className="flex items-center gap-3 text-muted">
             <Video className="w-5 h-5" />
             <span className="text-sm font-medium">
-              Video: {content?.name || "None"}
+              Video: {content?.title || "None"}
             </span>
           </div>
 

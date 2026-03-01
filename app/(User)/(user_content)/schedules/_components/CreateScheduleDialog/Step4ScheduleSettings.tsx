@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
+import React, { useRef } from "react";
 import BaseSelect from "@/common/BaseSelect";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Calendar as CalendarIcon, Clock } from "lucide-react";
 
 interface Step4Props {
     data: {
@@ -19,6 +20,16 @@ interface Step4Props {
 }
 
 const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
+    const startTimeRef = useRef<HTMLInputElement>(null);
+    const endTimeRef = useRef<HTMLInputElement>(null);
+    const startDateRef = useRef<HTMLInputElement>(null);
+    const endDateRef = useRef<HTMLInputElement>(null);
+
+    const handleIconClick = (ref: React.RefObject<HTMLInputElement | null>) => {
+        if (ref.current && 'showPicker' in ref.current) {
+            (ref.current as any).showPicker();
+        }
+    };
     const repeatOptions = [
         { label: "Run Once", value: "run-once" },
         { label: "Daily", value: "daily" },
@@ -116,24 +127,32 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
                     <Label className="text-sm font-medium text-headings">
                         Start Time <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                        type="time"
-                        value={data.playTime}
-                        onChange={(e) => onChange({ ...data, playTime: e.target.value })}
-                        className="bg-input border-borderGray text-headings"
-                    />
+                    <div className="relative cursor-pointer" onClick={() => handleIconClick(startTimeRef)}>
+                        <Input
+                            ref={startTimeRef}
+                            type="time"
+                            value={data.playTime}
+                            onChange={(e) => onChange({ ...data, playTime: e.target.value })}
+                            className="bg-input border-borderGray text-headings cursor-pointer pr-10"
+                        />
+                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                    </div>
                 </div>
 
                 <div className="space-y-2">
                     <Label className="text-sm font-medium text-headings">
                         End Time <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                        type="time"
-                        value={(data as any).endTime}
-                        onChange={(e) => onChange({ ...data, endTime: e.target.value })}
-                        className="bg-input border-borderGray text-headings"
-                    />
+                    <div className="relative cursor-pointer" onClick={() => handleIconClick(endTimeRef)}>
+                        <Input
+                            ref={endTimeRef}
+                            type="time"
+                            value={(data as any).endTime}
+                            onChange={(e) => onChange({ ...data, endTime: e.target.value })}
+                            className="bg-input border-borderGray text-headings cursor-pointer pr-10"
+                        />
+                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                    </div>
                 </div>
             </div>
 
@@ -143,12 +162,16 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
                     <Label className="text-sm font-medium text-headings">
                         {data.repeat === "run-once" ? "Select Date" : "Start Date"} <span className="text-red-500">*</span>
                     </Label>
-                    <Input
-                        type="date"
-                        value={data.startDate}
-                        onChange={(e) => onChange({ ...data, startDate: e.target.value })}
-                        className="bg-input border-borderGray text-headings"
-                    />
+                    <div className="relative cursor-pointer" onClick={() => handleIconClick(startDateRef)}>
+                        <Input
+                            ref={startDateRef}
+                            type="date"
+                            value={data.startDate}
+                            onChange={(e) => onChange({ ...data, startDate: e.target.value })}
+                            className="bg-input border-borderGray text-headings cursor-pointer pr-10"
+                        />
+                        <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                    </div>
                 </div>
 
                 {data.repeat !== "run-once" && (
@@ -156,12 +179,16 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
                         <Label className="text-sm font-medium text-headings">
                             End Date <span className="text-red-500">*</span>
                         </Label>
-                        <Input
-                            type="date"
-                            value={data.endDate || ""}
-                            onChange={(e) => onChange({ ...data, endDate: e.target.value })}
-                            className="bg-input border-borderGray text-headings"
-                        />
+                        <div className="relative cursor-pointer" onClick={() => handleIconClick(endDateRef)}>
+                            <Input
+                                ref={endDateRef}
+                                type="date"
+                                value={data.endDate || ""}
+                                onChange={(e) => onChange({ ...data, endDate: e.target.value })}
+                                className="bg-input border-borderGray text-headings cursor-pointer pr-10"
+                            />
+                            <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                        </div>
                     </div>
                 )}
             </div>

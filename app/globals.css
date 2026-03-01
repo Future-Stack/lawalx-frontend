@@ -746,3 +746,12 @@ body {
   /* Gradient background */
   background: linear-gradient(180deg, #0FA6FF -7.42%, #002940 65.92%);
 }
+
+/* Hide native date/time picker icons to use custom icons instead */
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-inner-spin-button,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+  -webkit-appearance: none !important;
+}

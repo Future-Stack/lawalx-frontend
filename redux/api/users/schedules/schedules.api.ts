@@ -1,6 +1,6 @@
 import { baseApi } from "../../baseApi";
 import { SuccessResponse } from "../content/content.type";
-import { GetSchedulesResponse } from "./schedules.type";
+import { GetSchedulesResponse, GetSingleScheduleResponse } from "./schedules.type";
 
 const schedulesAPI = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -13,13 +13,21 @@ const schedulesAPI = baseApi.injectEndpoints({
       invalidatesTags: ["Schedules"],
     }),
     getAllSchedulesData: build.query<GetSchedulesResponse, void>({
-          query: () => ({
-            url: "/schedule",
-            method: "GET",
-          }),
-          providesTags: ["Schedules"],
-        }),
+      query: () => ({
+        url: "/schedule",
+        method: "GET",
+      }),
+      providesTags: ["Schedules"],
+    }),
+    getSingleScheduleData: build.query<GetSingleScheduleResponse, { id: string }>({
+      query: ({ id }) => ({
+        url: `/schedule/${id}`,
+        method: "GET",
+      }),
+      providesTags: ["Schedules"],
+    }),
+
   }),
 });
 
-export const { useCreateScheduleMutation, useGetAllSchedulesDataQuery } = schedulesAPI;
+export const { useCreateScheduleMutation, useGetAllSchedulesDataQuery, useGetSingleScheduleDataQuery } = schedulesAPI;
