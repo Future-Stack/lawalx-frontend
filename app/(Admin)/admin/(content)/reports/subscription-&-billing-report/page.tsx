@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { Download, Filter, Moon, Sun, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircle, Clock, RefreshCw, DollarSign, ChevronDown, Home, ChevronRight } from 'lucide-react';
+import { Download, Filter, Moon, Sun, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircle, Clock, RefreshCw, DollarSign, ChevronDown, Home, ChevronRight, FileSpreadsheet } from 'lucide-react';
 import Dropdown from '@/components/shared/Dropdown';
 
 import { useTheme } from 'next-themes';
@@ -23,6 +23,7 @@ import {
 } from '@/redux/api/admin/Billing & Payment Report/billingPaymentApi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
 const generateBillingData = (range: number) => {
@@ -155,6 +156,7 @@ const BillingDashboard = () => {
   const [activeTab, setActiveTab] = useState('transactions');
   const { theme: currentTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   React.useEffect(() => {
     setMounted(true);
@@ -348,6 +350,96 @@ const BillingDashboard = () => {
       toast.success("Billing report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
+      toast.error("Failed to export report");
+    } finally {
+      setShowExportMenu(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const result = await triggerExport({ timeRange: timeRangeValue });
+      if (result.error || !result.data || !result.data.success) {
+        const errorMsg = (result.error as any)?.data?.message || result.data?.message || "Failed to fetch export data";
+        toast.error(errorMsg);
+        return;
+      }
+
+      const rawData = result.data.data;
+      if (!rawData) {
+        toast.error("Export data is empty");
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+
+      // Overview sheet
+      const overview = rawData.overview || {};
+      const overviewRows = [
+        ['Metric', 'Value', 'Growth'],
+        ['Success Rate', `${overview.successRate?.value || 0}%`, overview.successRate?.trend || ''],
+        ['Failed Payments Count', overview.failedPayments?.count || 0, ''],
+        ['Failed Payments Amount', `$${overview.failedPayments?.amount || 0}`, ''],
+        ['Overdue Invoices Count', overview.overdueInvoices?.count || 0, ''],
+        ['Overdue Invoices Amount', `$${overview.overdueInvoices?.amount || 0}`, ''],
+        ['Recovery Rate', `${overview.recoveryRate?.value || 0}%`, ''],
+        ['Avg DSO', `${overview.avgDSO?.value || 0} days`, overview.avgDSO?.status || ''],
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(overviewRows), 'Overview');
+
+      // Transactions sheet
+      const transactions = rawData.recentTransactions || rawData.transactions || [];
+      const transactionsRows = [
+        ['ID', 'Date', 'Customer', 'Amount', 'Status', 'Method', 'Invoice'],
+        ...transactions.map((tx: any) => [
+          tx.id || tx.transactionId || '-',
+          tx.date || '-',
+          tx.customer || '-',
+          `$${tx.amount || 0}`,
+          tx.status || '-',
+          tx.method || '-',
+          tx.invoice || '-'
+        ])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(transactionsRows), 'Transactions');
+
+      // Delinquent Accounts sheet
+      const delinquent = rawData.delinquencyReport?.details || [];
+      const delinquentRows = [
+        ['Customer', 'Balance', 'Days Overdue', 'Status'],
+        ...delinquent.map((item: any) => [
+          item.customer,
+          `$${item.balance}`,
+          `${item.daysOverdue} days`,
+          item.status
+        ])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(delinquentRows), 'Delinquent Accounts');
+
+      // Refund & Tax summary
+      const refundTaxRows = [
+        ['Label', 'Value', 'Label', 'Value'],
+        ['Total Refunds', rawData.refundReport?.summary?.totalRefunds || 0, 'Tax Collected', `$${(rawData.taxReport?.summary?.taxCollected || 0).toLocaleString()}`],
+        ['Refund Amount', `$${(rawData.refundReport?.summary?.refundAmount || 0).toLocaleString()}`, 'Taxable Revenue', `$${(rawData.taxReport?.summary?.taxableRevenue || 0).toLocaleString()}`],
+        ['Chargebacks', rawData.refundReport?.summary?.chargebacks || 0, 'Avg Tax Rate', rawData.taxReport?.summary?.avgTaxRate || '0%'],
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(refundTaxRows), 'Refund & Tax');
+
+      // DSO Metrics sheet
+      const dso = rawData.dsoAnalysis?.metrics || {};
+      const dsoRows = [
+        ['Metric', 'Value'],
+        ['Current DSO', `${dso.currentDso || 0} days`],
+        ['Best Possible DSO', `${dso.bestPossibleDso || 0} days`],
+        ['Collection Efficiency', dso.collectionEfficiency || '0%'],
+        ['DSO Status', dso.dsoStatus || '-'],
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dsoRows), 'DSO Metrics');
+
+      XLSX.writeFile(wb, `billing-report-${timeRangeValue}-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success("Billing report exported successfully");
+    } catch (error) {
+      console.error("Excel export error:", error);
       toast.error("Failed to export report");
     }
   };
@@ -1299,13 +1391,21 @@ const BillingDashboard = () => {
                 options={timeRanges.map(t => t.label)}
                 onChange={(label) => setTimeRange(timeRanges.find(t => t.label === label)?.value || 30)}
               />
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-1.5 border border-bgBlue text-bgBlue rounded-lg transition-colors shadow-customShadow cursor-pointer"
-              >
-                <Download size={18} />
-                <span>Export Report</span>
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowExportMenu(prev => !prev)}
+                  className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer"
+                >
+                  <Download size={18} />
+                  Export Report
+                </button>
+                {showExportMenu && (
+                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
+                    <button onClick={handleExport} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
+                    <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Monitor, Wifi, WifiOff, TrendingUp, ChevronDown, Download, Home, ChevronRight } from 'lucide-react';
+import { Monitor, Wifi, WifiOff, TrendingUp, ChevronDown, Download, FileSpreadsheet, Home, ChevronRight } from 'lucide-react';
 import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
 
@@ -11,10 +11,12 @@ import {
 } from '@/redux/api/admin/devicereportApi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
 const DeviceReportDashboard = () => {
   const [timeRange, setTimeRange] = useState(30);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [triggerExport] = useLazyGetDeviceExportQuery();
 
   const handleExportPDF = async () => {
@@ -67,6 +69,37 @@ const DeviceReportDashboard = () => {
       toast.success("Device report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
+      toast.error("An error occurred while exporting the report");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const { data: exportData, isError } = await triggerExport({});
+      if (isError || !exportData?.success) {
+        toast.error("Failed to fetch export data");
+        return;
+      }
+
+      const devices = exportData.data?.devices || [];
+      const wb = XLSX.utils.book_new();
+      const wsData: any[] = [
+        ["Index", "Device ID", "Name", "Status", "Region", "Username"],
+        ...devices.map((device: any, index: number) => [
+          index + 1,
+          device.id || 'N/A',
+          device.name || 'N/A',
+          device.status || 'N/A',
+          device.region || 'N/A',
+          device.user?.username || 'N/A'
+        ])
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Devices');
+      XLSX.writeFile(wb, `device-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success("Device report exported successfully");
+    } catch (error) {
+      console.error("Excel export error:", error);
       toast.error("An error occurred while exporting the report");
     }
   };
@@ -152,13 +185,22 @@ const DeviceReportDashboard = () => {
               onChange={(label) => setTimeRange(timeRanges.find(t => t.label === label)?.value || 30)}
             />
 
-            <button
-              onClick={handleExportPDF}
-              className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg flex items-center gap-2 hover:scale-105 transition-all text-sm bg-navbarBg cursor-pointer dark:shadow-customShadow"
-            >
-              <Download className="w-4 h-4" />
-              <span className='hidden md:block'>Export Device Report</span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(prev => !prev)}
+                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer bg-navbarBg"
+              >
+                <Download className="w-4 h-4" />
+                Export Report
+              </button>
+
+              {showExportMenu && (
+                <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
+                  <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
+                  <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

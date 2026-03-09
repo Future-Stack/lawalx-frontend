@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, ReferenceLine } from 'recharts';
 import { useTheme } from 'next-themes';
-import { Users, DollarSign, Percent, TrendingUp, TrendingDown, UserPlus, ChevronDown, Download, Target, Zap, Home, TargetIcon, ChevronRight, HomeIcon } from 'lucide-react';
+import { Users, DollarSign, Percent, TrendingUp, TrendingDown, UserPlus, ChevronDown, Download, Target, Zap, Home, TargetIcon, ChevronRight, HomeIcon, FileSpreadsheet } from 'lucide-react';
 import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
 import {
@@ -20,6 +20,7 @@ import {
 } from "@/redux/api/admin/financialreportApi";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
 
@@ -35,6 +36,7 @@ const FinancialReport = () => {
   const isDark = mounted && (resolvedTheme === 'dark' || theme === 'dark');
 
   const [timeRange, setTimeRange] = useState(30);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   const timeRangeString = useMemo(() => {
     if (timeRange === 1) return "1d";
@@ -190,6 +192,53 @@ const FinancialReport = () => {
     } catch (error) {
       console.error("Detailed Export error:", error);
       toast.error("An error occurred during export. Check console for details.");
+    } finally {
+      setShowExportMenu(false);
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const result = await triggerExport({ timeRange: timeRangeString });
+      if (result.error || !result.data || !result.data.success) {
+        console.error("Export error:", result.error);
+        toast.error("Failed to fetch export data. Please try again.");
+        return;
+      }
+
+      const rawData = result.data.data;
+      const wb = XLSX.utils.book_new();
+
+      // Overview sheet
+      const overview = rawData?.overview || {};
+      const overviewRows = [
+        ['Metric', 'Value', 'Growth'],
+        ['MRR', `$${(overview.mrr?.value || 0).toLocaleString()}`, `${overview.mrr?.growth || 0}%`],
+        ['ARR', `$${(overview.arr?.value || 0).toLocaleString()}`, `${overview.arr?.growth || 0}%`],
+        ['Churn Rate', `${overview.churnRate?.value || 0}%`, `${overview.churnRate?.growth || 0}%`],
+        ['ARPU', `$${(overview.arpu?.value || 0).toLocaleString()}`, `${overview.arpu?.growth || 0}%`],
+        ['New Subscriptions', overview.newSubscriptions?.value || 0, `${overview.newSubscriptions?.growth || 0}%`]
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(overviewRows), 'Overview');
+
+      // Trial conversion sheet
+      const trialConversion = rawData?.trialConversion || {};
+      const trialRows = [
+        ['Metric', 'Value'],
+        ['Overall Conversion', `${trialConversion.overallConversion?.value || 0}%`],
+        ['Trials Started', trialConversion.trialsStarted?.value || 0],
+        ['Converted to Paid', trialConversion.convertedToPaid?.value || 0],
+        ['Avg Trial Duration', `${trialConversion.averageTrialDuration?.value || 0} days`]
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(trialRows), 'Trial Conversion');
+
+      XLSX.writeFile(wb, `financial-report-${timeRangeString}-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success("Financial report exported successfully");
+    } catch (error) {
+      console.error("Excel export error:", error);
+      toast.error("An error occurred during export. Check console for details.");
+    } finally {
+      setShowExportMenu(false);
     }
   };
 
@@ -365,13 +414,21 @@ const FinancialReport = () => {
               onChange={(label) => setTimeRange(timeRanges.find(t => t.label === label)?.value || 30)}
             />
 
-            <button
-              onClick={handleExport}
-              className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg flex items-center gap-2 hover:scale-105 transition-all text-sm bg-navbarBg cursor-pointer dark:shadow-customShadow"
-            >
-              <Download className="w-4 h-4" />
-              <span className='hidden md:block'>Export Financial Report</span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(prev => !prev)}
+                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                Export Report
+              </button>
+              {showExportMenu && (
+                <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
+                  <button onClick={handleExport} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
+                  <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
