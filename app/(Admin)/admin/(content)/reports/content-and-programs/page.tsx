@@ -13,7 +13,8 @@ import {
   Music,
   Type,
   Home,
-  ChevronRight
+  ChevronRight,
+  FileSpreadsheet
 } from "lucide-react";
 import {
   PieChart,
@@ -31,6 +32,7 @@ import {
 } from "@/redux/api/admin/contentreportApi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
 // Define the time range options
@@ -46,6 +48,7 @@ const ContentAndProgramsReport = () => {
   // State for time range filter
   const [selectedRange, setSelectedRange] = useState(TIME_RANGES[2]); // Default to 1 month
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const [triggerExport] = useLazyGetContentExportQuery();
 
   const handleExportPDF = async () => {
@@ -99,6 +102,37 @@ const ContentAndProgramsReport = () => {
       toast.success("Content report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
+      toast.error("An error occurred while exporting the report");
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const { data: exportData, isError } = await triggerExport({});
+      if (isError || !exportData?.success) {
+        toast.error("Failed to fetch export data");
+        return;
+      }
+
+      const files = exportData.data?.files || [];
+      const wb = XLSX.utils.book_new();
+      const wsData: any[] = [
+        ["Index", "Name", "Type", "Size", "User", "Created At"],
+        ...files.map((file: any, index: number) => [
+          index + 1,
+          file.originalName || 'N/A',
+          file.type || 'N/A',
+          file.size ? `${(file.size / 1024).toFixed(2)} KB` : 'N/A',
+          file.user?.username || 'N/A',
+          file.createdAt ? new Date(file.createdAt).toLocaleDateString() : 'N/A'
+        ])
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Content Files');
+      XLSX.writeFile(wb, `content-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success("Content report exported successfully");
+    } catch (error) {
+      console.error("Excel export error:", error);
       toast.error("An error occurred while exporting the report");
     }
   };
@@ -212,13 +246,22 @@ const ContentAndProgramsReport = () => {
           </div>
 
           {/* Export Button */}
-          <button
-            onClick={handleExportPDF}
-            className="px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Export Content Report
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(prev => !prev)}
+              className="px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              Export Report
+            </button>
+
+            {showExportMenu && (
+              <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
+                <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
+                <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

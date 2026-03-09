@@ -664,10 +664,10 @@ const UserActivityReports = () => {
                   <h2 className="text-lg font-semibold">User Inventory & Permissions Report</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">All user accounts and assigned roles</p>
                 </div>
-                <button className="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg flex items-center gap-2 text-sm hover:bg-gray-800 dark:hover:bg-gray-600 cursor-pointer">
+                {/* <button className="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg flex items-center gap-2 text-sm hover:bg-gray-800 dark:hover:bg-gray-600 cursor-pointer">
                   <Download className="w-4 h-4" />
                   Export
-                </button>
+                </button> */}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -712,10 +712,10 @@ const UserActivityReports = () => {
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">User Directory</h3>
-                  <button className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center gap-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
+                  {/* <button className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center gap-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
                     <Filter className="w-4 h-4" />
                     Filter
-                  </button>
+                  </button> */}
                 </div>
                 <div className="overflow-x-auto scrollbar-hide">
                   <table className="w-full">

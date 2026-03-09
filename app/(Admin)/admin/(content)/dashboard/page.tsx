@@ -16,6 +16,7 @@ import {
 } from '@/redux/api/admin/dashbaordApi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
 type DateRange = '1d' | '7d' | '1m' | '1y';
@@ -83,26 +84,38 @@ const MetricCard: React.FC<MetricCardProps> = ({ icon, title, value, change, isP
   </div>
 );
 
-const DashboardHeader: React.FC<{ onExport: () => void; onAddClientClick: () => void }> = ({
+const DashboardHeader: React.FC<{ onExport: () => void; onExportExcel: () => void; onAddClientClick: () => void }> = ({
   onExport,
+  onExportExcel,
   onAddClientClick
-}) => (
-  <div className="border-b border-border pb-6">
+}) => {
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  return (
+    <div className="border-b border-border pb-6">
     <div className="flex items-center justify-between">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Monitor system performance and manage client operations</p>
       </div>
       <div className="flex items-center gap-2">
-        <button
-          onClick={onExport}
-          className="text-nowrap px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1.5 transition-colors"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <span className='hidden lg:block'>Export Overview Report</span>
-        </button>
+        <div className="relative">
+          <button
+            onClick={() => setShowExportMenu(prev => !prev)}
+            className="text-nowrap px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1.5 transition-colors"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span className='hidden lg:block'>Export Overview Report</span>
+          </button>
+          {showExportMenu && (
+            <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[160px]">
+              <button onClick={() => { onExport(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
+              <button onClick={() => { onExportExcel(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+            </div>
+          )}
+        </div>
         <button className="text-nowrap px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 bg-navbarBg border border-red-200 dark:border-red-900/50 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1.5 transition-colors">
           <AlertCircle className="w-3.5 h-3.5" />
           <span className='hidden lg:block'>View Critical Alerts</span>
@@ -117,7 +130,8 @@ const DashboardHeader: React.FC<{ onExport: () => void; onAddClientClick: () => 
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const DateSelector: React.FC<{ dateRange: DateRange; onDateRangeChange: (range: DateRange) => void }> = ({ dateRange, onDateRangeChange }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -661,6 +675,57 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const handleExportExcel = async () => {
+    try {
+      const { data: exportData, isError } = await triggerExport(dateRange);
+      if (isError || !exportData) {
+        toast.error("Failed to fetch export data");
+        return;
+      }
+
+      const rawData = exportData.dashboard;
+      const wb = XLSX.utils.book_new();
+
+      // Overview sheet
+      const overview = rawData?.overview || {};
+      const overviewRows = [
+        ['Metric', 'Value', 'Growth'],
+        ['Total Users', overview.totalUsers || 0, `${overview.usersGrowth || 0}%`],
+        ['Active Users', overview.activeUsers || 0, `${overview.activeUsersGrowth || 0}%`],
+        ['Active Subscriptions', overview.activeSubscriptions || 0, `${overview.subscriptionGrowth || 0}%`],
+        ['Total Revenue', `$${overview.totalRevenue || 0}`, `${overview.revenueGrowth || 0}%`],
+        ['Active Devices', overview.activeDevices || 0, `${overview.deviceGrowth || 0}%`],
+        ['Total Content Items', overview.totalContentItems || 0, `${overview.contentGrowth || 0}%`],
+        ['Open Support Tickets', overview.openSupportTickets || 0, `${overview.ticketGrowth || 0}%`],
+        ['System Uptime', `${overview.systemUptime || 0}%`, `${overview.uptimeGrowth || 0}%`],
+        ['Avg API Response Time', `${overview.avgApiResponseTime || 0}ms`, `${overview.apiResponseGrowth || 0}%`],
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(overviewRows), 'Overview');
+
+      // Subscription Plan sheet
+      const plans = rawData?.subscriptionPlans?.plans || [];
+      const planRows = [
+        ['Plan Name', 'Count', 'Percentage'],
+        ...plans.map((p: any) => [p.planName || '', p.count || 0, `${p.percentage || 0}%`])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(planRows), 'Subscription Plans');
+
+      // Content summary sheet
+      const contentByType = rawData?.content?.byType || [];
+      const contentRows = [
+        ['Content Type', 'Uploaded', 'Growth'],
+        ...contentByType.map((c: any) => [c.type || '', c.uploaded || 0, `${c.growth || 0}%`])
+      ];
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(contentRows), 'Content Summary');
+
+      XLSX.writeFile(wb, `dashboard-report-${dateRange}-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success("Dashboard report exported successfully");
+    } catch (error) {
+      console.error("Excel export error:", error);
+      toast.error("An error occurred while exporting the report");
+    }
+  };
+
   const handleAddClient = (data: any) => {
     console.log("New client added:", data);
     alert(`New client ${data.fullName} (${data.email}) added successfully!`);
@@ -671,6 +736,7 @@ const Dashboard: React.FC = () => {
     <div className="min-h-screen">
       <DashboardHeader
         onExport={handleExport}
+        onExportExcel={handleExportExcel}
         onAddClientClick={() => setIsAddClientModalOpen(true)}
       />
 
