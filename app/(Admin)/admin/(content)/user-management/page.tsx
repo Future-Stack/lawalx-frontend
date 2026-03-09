@@ -36,6 +36,7 @@ import {
   ChevronRight,
   UserRoundPlus,
   CloudDownload,
+  FileSpreadsheet,
 } from "lucide-react";
 import Dropdown from "@/components/shared/Dropdown";
 import Link from "next/link";
@@ -51,6 +52,7 @@ import {
 } from "@/redux/api/admin/usermanagementApi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 
 type Plan = "Starter" | "Professional" | "Business" | "Trial" | "Enterprise";
 type Status = "Active" | "Suspended" | "DELETED";
@@ -114,6 +116,7 @@ export default function UserManagementPage() {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openActionMenu, setOpenActionMenu] = useState<string | null>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
@@ -192,7 +195,47 @@ export default function UserManagementPage() {
     } catch (error) {
       console.error("Export error:", error);
       toast.error("An error occurred while exporting the report");
+    } finally {
+      setShowExportMenu(false);
     }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const { data: exportData, isError } = await triggerExport({
+        search: searchTerm,
+        status: statusFilter,
+        plan: planFilter,
+        storageUsage: storageFilter,
+      });
+
+      if (isError || !exportData?.success) {
+        toast.error("Failed to fetch export data");
+        return;
+      }
+
+      const users = exportData.data?.users?.users || [];
+      const wb = XLSX.utils.book_new();
+      const wsData: any[] = [
+        ["Index", "User ID", "Name", "Email", "Plan", "Role", "Status"],
+        ...users.map((user: any, index: number) => [
+          index + 1,
+          user.id || 'N/A',
+          user.full_name || user.username || 'N/A',
+          user.account?.email || 'N/A',
+          (user.payments?.[0]?.plan?.name || "Free Trial").replace("_", " "),
+          user.role || 'N/A',
+          user.status || 'N/A'
+        ])
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Users');
+      XLSX.writeFile(wb, `user-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+      toast.success("User report exported successfully");
+    } catch (error) {
+      console.error("Excel export error:", error);
+      toast.error("An error occurred while exporting the report");    } finally {
+      setShowExportMenu(false);    }
   };
 
   const toggleSelectUser = (id: string) => {
@@ -265,13 +308,21 @@ export default function UserManagementPage() {
             </p>
           </div>
           <div className="flex gap-3">
-            <button
-              onClick={handleExportPDF}
-              className="px-4 py-2 shadow-customShadow cursor-pointer bg-white dark:bg-gray-800 text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-            >
-              <CloudDownload className="w-4 h-4" />
-              <span className="hidden lg:block"> Export User Report</span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(prev => !prev)}
+                className="px-4 py-2 shadow-customShadow cursor-pointer bg-white dark:bg-gray-800 text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+              >
+                <CloudDownload className="w-4 h-4" />
+                <span className="hidden lg:block">Export Report</span>
+              </button>
+              {showExportMenu && (
+                <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
+                  <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
+                  <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+                </div>
+              )}
+            </div>
             <button
               onClick={() => setIsModalOpen(true)}
               className="px-4 py-2 shadow-customShadow cursor-pointer bg-blue-500 hover:bg-blue-600 text-nowrap text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
