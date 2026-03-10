@@ -57,6 +57,9 @@ const MyContentCard = ({
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openImage, setOpenImage] = useState(false);
 
+  console.log("this is all content item", item);
+
+
   const getTypeLabel = () => {
     switch (item.type) {
       case "folder": return "Folder";
@@ -93,6 +96,7 @@ const MyContentCard = ({
             src={item.thumbnail}
             alt={item.title}
             fill
+            unoptimized
             className="object-cover"
             onError={(e: any) => {
               e.currentTarget.style.display = 'none';
@@ -381,6 +385,7 @@ const MyContentCard = ({
                   src={item.thumbnail}
                   alt={item.title}
                   fill
+                  unoptimized
                   className="object-cover"
                   onError={(e: any) => {
                     e.currentTarget.style.display = 'none';

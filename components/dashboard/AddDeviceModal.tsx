@@ -1,9 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { X, QrCode } from "lucide-react";
-import Dropdown from "@/components/shared/Dropdown";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAddDeviceMutation } from "@/redux/api/users/devices/devices.api";
+import { useGetAllProgramsDataQuery } from "@/redux/api/users/programs/programs.api";
 import { toast } from "sonner";
 
 interface AddDeviceModalProps {
@@ -13,8 +20,14 @@ interface AddDeviceModalProps {
 
 function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
   const [addDevice] = useAddDeviceMutation();
+  const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
   const [pin, setPin] = useState("");
-  const [selectedScreen, setSelectedScreen] = useState("Main Lobby Display");
+  const [selectedScreen, setSelectedScreen] = useState("All Content");
+
+  const programOptions = useMemo(() => {
+    const fetched = programsData?.data?.map(p => p.name) || [];
+    return ["All Content", ...fetched];
+  }, [programsData]);
 
   if (!isOpen) return null;
 
@@ -41,7 +54,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
       }}
     >
       <div
-        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] border border-gray-200 dark:border-gray-700 z-[101] flex flex-col overflow-hidden cursor-default"
+        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] border border-gray-200 dark:border-gray-700 z-[101] flex flex-col overflow-hidden cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border shrink-0">
@@ -154,20 +167,24 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
           {/* Select Screen Dropdown */}
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
-              Select a Screen
+              Select a Program
             </label>
-            <Dropdown
+            <Select
               value={selectedScreen}
-              options={[
-                "Main Lobby Display",
-                "Conference Room Screen",
-                "Reception Area",
-                "Store A - NYC",
-                "Store B - LA"
-              ]}
-              onChange={setSelectedScreen}
-              className="w-full"
-            />
+              onValueChange={setSelectedScreen}
+              disabled={isLoadingPrograms}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={isLoadingPrograms ? "Loading programs..." : "Select a Program"} />
+              </SelectTrigger>
+              <SelectContent>
+                {programOptions.map((option: string) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

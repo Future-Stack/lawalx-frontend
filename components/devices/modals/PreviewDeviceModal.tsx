@@ -6,7 +6,7 @@ import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.a
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  device: any | null; // Accepting any to stay compatible with different device views
+  device: any | null;
 }
 
 export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
@@ -14,6 +14,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     { id: device?.id },
     { skip: !isOpen || !device?.id }
   );
+  console.log("detailData", detailData);
 
   const deviceDetail = useMemo(() => {
     return detailData?.data && detailData.data.length > 0 ? detailData.data[0] : null;
@@ -212,7 +213,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
               </div>
             </div>
           )}
-          <div className="flex flex-col lg:flex-row min-h-0">
+          <div className="flex flex-col lg:flex-row">
             <div className="flex-1 p-4 sm:p-5">
               <div className="relative bg-black rounded-lg overflow-hidden shadow-md aspect-video">
                 <video
