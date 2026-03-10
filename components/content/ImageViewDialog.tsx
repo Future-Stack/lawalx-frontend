@@ -54,7 +54,7 @@ const ImageViewDialog = ({ item, open, setOpen }: ImageViewDialogProps) => {
                         <div className="p-4 sm:p-6 bg-white flex items-center justify-center">
                             {item.thumbnail ? (
                                 <div className="relative w-full h-[60vh] sm:h-[70vh]">
-                                    <Image src={item.thumbnail} alt={item.title} fill className="object-contain" />
+                                    <Image src={item.thumbnail} alt={item.title} fill unoptimized className="object-contain" />
                                 </div>
                             ) : (
                                 <div className="p-12 text-center text-gray-500">No preview available</div>

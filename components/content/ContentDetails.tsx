@@ -442,6 +442,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
                     alt={content.title}
                     width={600}
                     height={400}
+                    unoptimized
                     className="rounded-lg object-contain w-full h-full max-h-[500px]"
                   />
                 </div>

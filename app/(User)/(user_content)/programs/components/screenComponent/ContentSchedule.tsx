@@ -10,8 +10,6 @@ interface ContentScheduleProps {
   schedules: Schedule[];
 }
 
-
-
 const ContentSchedule: React.FC<ContentScheduleProps> = ({ schedules }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [scheduleList, setScheduleList] = useState<Schedule[]>([]);

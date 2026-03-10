@@ -146,7 +146,7 @@ const TemplateCard = ({ item }: TemplateCardProps) => {
                     onClick={() => item.type === "video" && setOpenVideo(true)}
                 >
                     {item.type === "image" && item.thumbnail ? (
-                        <Image src={item.thumbnail} alt={item.title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                        <Image src={item.thumbnail} alt={item.title} fill unoptimized className="object-cover transition-transform duration-300 group-hover:scale-105" />
                     ) : item.type === "video" && item.video ? (
                         <>
                             <video
