@@ -132,10 +132,6 @@ export default EmptyState;
 
 
 
-
-
-
-
 // import React from "react";
 // import { Folder, ListMusic, FileVideo, CloudUpload } from "lucide-react";
 // import ContentButton from "@/common/ContentButton";
