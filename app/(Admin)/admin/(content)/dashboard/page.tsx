@@ -111,8 +111,8 @@ const DashboardHeader: React.FC<{ onExport: () => void; onExportExcel: () => voi
           </button>
           {showExportMenu && (
             <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[160px]">
-              <button onClick={() => { onExport(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-              <button onClick={() => { onExportExcel(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+              <button onClick={() => { onExport(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
+              <button onClick={() => { onExportExcel(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
             </div>
           )}
         </div>
