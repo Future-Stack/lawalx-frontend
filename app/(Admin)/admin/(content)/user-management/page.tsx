@@ -1,14 +1,3 @@
-// function UserManagement() {
-//     return (
-//         <div className="p-6">
-//             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
-//             <p className="mt-2 text-gray-600 dark:text-gray-400">Manage platform users, roles, and permissions</p>
-//         </div>
-//      );
-// }
-
-// export default UserManagement;
-
 "use client";
 
 import { useState, useMemo } from "react";
@@ -54,8 +43,40 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
-type Plan = "Starter" | "Professional" | "Business" | "Trial" | "Enterprise";
-type Status = "Active" | "Suspended" | "DELETED";
+interface UserPayment {
+  id: string;
+  amount: number;
+  transactionId: string;
+  cardNumber: string | null;
+  durationDays: number | null;
+  email: string;
+  subscription: boolean;
+  userId: string;
+  planName: string;
+  billingCycle: string;
+  deviceLimit: number;
+  storageGB: number;
+  uploadFileLimit: number | null;
+  createdAt: string;
+  updatedAt: string;
+  imageLimit: number;
+  imageMaxSizeMb: number;
+  imageAllowedFormats: string[];
+  videoLimit: number;
+  videoMaxSizeMb: number;
+  videoAllowedFormats: string[];
+  audioLimit: number;
+  audioMaxSizeMb: number;
+  audioAllowedFormats: string[];
+  enableCustomBranding: boolean;
+  status: string;
+}
+
+interface UserAccount {
+  email: string;
+  is_verified: boolean;
+  created_at: string;
+}
 
 interface User {
   id: string;
@@ -67,19 +88,20 @@ interface User {
   status: string;
   created_at: string;
   updated_at: string;
-  account: {
-    email: string;
-    is_verified: boolean;
-    created_at: string;
-  };
-  payments: any[];
+  designation: string | null;
+  location: string | null;
+  phoneCountry: string | null;
+  phoneNumber: string | null;
+  officialName: string | null;
+  industryType: string | null;
+  totalEmployees: string | null;
+  website: string | null;
+  cityCountry: string | null;
+  companyLogoUrl: string | null;
+  advanceCustomizationEnabled: boolean;
+  account: UserAccount;
+  payments: UserPayment[];
   issues: string[];
-  // Frontend virtual fields to match styling
-  plan?: Plan;
-  device?: string;
-  deviceUsage?: number;
-  storage?: string;
-  storageUsage?: number;
 }
 
 export default function UserManagementPage() {
@@ -95,12 +117,20 @@ export default function UserManagementPage() {
   const limit = 10;
 
   // API Queries
+  const planQuery = planFilter === "All Plans"
+    ? undefined
+    : planFilter === "Free Trial"
+      ? "FREE_TRIAL"
+      : planFilter === "Trial"
+        ? "TRIAL"
+        : planFilter;
+
   const { data: usersData, isLoading: isUsersLoading } = useGetUsersQuery({
     page,
     limit,
     search: searchTerm,
     status: statusFilter,
-    plan: planFilter,
+    plan: planQuery,
     storageUsage: storageFilter,
   });
 
@@ -456,19 +486,19 @@ export default function UserManagementPage() {
             </div>
             <Dropdown
               value={planFilter}
-              options={["All Plans", "Starter", "Professional", "Business", "Trial"]}
+              options={["All Plans", "Premium", "Free Trial"]}
               onChange={setPlanFilter}
             />
             <Dropdown
               value={statusFilter}
-              options={["All Status", "Active", "Suspended", "Disabled"]}
+              options={["All Status", "Active", "Suspended"]}
               onChange={setStatusFilter}
             />
-            <Dropdown
+            {/* <Dropdown
               value={storageFilter}
               options={[">80% Storage", "50% Storage", "90% Storage"]}
               onChange={setStorageFilter}
-            />
+            /> */}
           </div>
         </div>
 
@@ -525,10 +555,19 @@ export default function UserManagementPage() {
                 const isFirstRows = index < 2;
                 const isLastRows = index >= users.length - 2;
 
-                // Fallback for styling fields not directly in meta
-                const deviceUsage = user.deviceUsage || 0;
-                const storageUsage = user.storageUsage || 0;
-                const plan = (user.payments?.[0]?.plan?.name || "Free Trial").replace("_", " ");
+                // Derive fields from API response
+                const payment = user.payments?.[0];
+                const plan = (payment?.planName || "Free Trial").replace("_", " ");
+                const deviceLimit = payment?.deviceLimit || 0;
+                const storageGB = payment?.storageGB || 0;
+
+                const deviceUsedRaw = user.device ?? user.deviceUsage ?? 0;
+                const deviceUsed = Number(String(deviceUsedRaw).replace(/[^0-9.]/g, '')) || 0;
+                const storageUsedRaw = user.storage ?? user.storageUsage ?? 0;
+                const storageUsed = Number(String(storageUsedRaw).replace(/[^0-9.]/g, '')) || 0;
+
+                const deviceUsage = deviceLimit > 0 ? Math.min(100, Math.round((deviceUsed / deviceLimit) * 100)) : 0;
+                const storageUsage = storageGB > 0 ? Math.min(100, Math.round((storageUsed / storageGB) * 100)) : 0;
                 const statusStr = user.status.charAt(0) + user.status.slice(1).toLowerCase();
 
                 return (
@@ -561,7 +600,7 @@ export default function UserManagementPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-sm text-gray-900 dark:text-white mb-1">
-                        {user.device || "0/0"}
+                        {`${deviceUsed}/${deviceLimit || 0}`}
                       </div>
                       <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
@@ -577,7 +616,7 @@ export default function UserManagementPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-sm text-gray-900 dark:text-white mb-1">
-                        {user.storage || "0"}
+                        {`${storageUsed}GB/${storageGB || 0}GB`}
                       </div>
                       <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
@@ -664,7 +703,7 @@ export default function UserManagementPage() {
                                     )}&email=${encodeURIComponent(
                                       user.account?.email || ""
                                     )}&plan=${plan}&status=${user.status
-                                    }&device=${user.device || "0/0"}&storage=${user.storage || "0"
+                                    }&device=${deviceLimit || 0}&storage=${storageGB || 0}
                                     }&deviceUsage=${deviceUsage
                                     }&storageUsage=${storageUsage}`
                                   );
