@@ -184,9 +184,9 @@ const ScreenCardDetails = () => {
           })}
         </div>
         {/* Main layout */}
-        <div className="flex flex-col md:flex-row gap-6 md:gap-10">
-          {/* Left side */}
-          <div className="flex-1 w-full">
+        <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
+          {/* Left side - Sticky */}
+          <div className="flex-1 w-full md:sticky md:top-6 md:max-h-[calc(100vh-48px)] md:overflow-y-auto no-scrollbar">
             {activeTab === "timeline" && (
               <ContentTimeline
                 timeline={localTimeline}

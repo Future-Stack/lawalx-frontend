@@ -1,10 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../../baseApi";
-import { SuccessResponse } from "../content/content.type";
+import { CreateFolderPayload, SuccessResponse } from "../content/content.type";
 import { AddDevicePin, DeviceListResponse } from "./devices.type";
 
 const devicesAPI = baseApi.injectEndpoints({
   endpoints: (build) => ({
+    // createDevicePin: build.mutation<SuccessResponse, CreateDevicePin>({
+    //       query: (data) => ({
+    //         url: "/device/pin",
+    //         method: "POST",
+    //         body: data,
+    //       }),
+    //       invalidatesTags: ["Devices"],
+    //     }),
     addDevice: build.mutation<SuccessResponse, AddDevicePin>({
       query: (data) => ({
         url: "/device/pair-check",

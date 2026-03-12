@@ -2,6 +2,11 @@
 
 import { useState, useMemo } from "react";
 import { X, QrCode } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const QrScanner = dynamic(() => import("@/components/common/QrScanner"), {
+  ssr: false,
+});
 import {
   Select,
   SelectContent,
@@ -23,6 +28,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
   const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
   const [pin, setPin] = useState("");
   const [selectedScreen, setSelectedScreen] = useState("All Content");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const programOptions = useMemo(() => {
     const fetched = programsData?.data?.map(p => p.name) || [];
@@ -151,6 +157,8 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
                 className="flex-1 px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
               <button
+                type="button"
+                onClick={() => setIsScannerOpen(true)}
                 className="p-3 border border-borderGray dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0 shadow-customShadow cursor-pointer"
               >
                 <QrCode className="w-6 h-6 text-gray-600 dark:text-gray-400" />
@@ -158,7 +166,10 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
             </div>
 
             <div className="w-full sm:w-auto flex justify-end">
-              <button className="px-6 py-3 bg-gray-900 dark:bg-gray-800 text-white hover:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium shadow-customShadow cursor-pointer">
+              <button
+                onClick={() => handleAddDevice({ pin, name: selectedScreen })}
+                className="px-6 py-3 bg-gray-900 dark:bg-gray-800 text-white hover:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium shadow-customShadow cursor-pointer"
+              >
                 Add
               </button>
             </div>
@@ -204,6 +215,56 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
           </button>
         </div>
       </div>
+
+      {/* QR Scanner Modal */}
+      <QrScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanSuccess={(decodedText) => {
+          setIsScannerOpen(false);
+          let finalPin = decodedText;
+
+          // 1. Try to parse as JSON if it looks like one
+          if (decodedText.startsWith("{") && decodedText.endsWith("}")) {
+            try {
+              const parsed = JSON.parse(decodedText);
+              if (parsed?.data?.pin) {
+                finalPin = parsed.data.pin;
+                console.log("Extracted PIN from JSON:", finalPin);
+              }
+            } catch (e) {
+              console.error("Failed to parse QR JSON", e);
+            }
+          }
+          // 2. Try to parse as URL if it contains a pin parameter
+          else if (decodedText.includes("pin=")) {
+            try {
+              // Handle both absolute URLs and partial strings with query params
+              const queryString = decodedText.includes("?")
+                ? decodedText.split("?")[1]
+                : decodedText.includes("&") ? decodedText : "";
+
+              if (queryString) {
+                const params = new URLSearchParams(queryString);
+                const pinParam = params.get("pin");
+                if (pinParam) {
+                  finalPin = pinParam;
+                  console.log("Extracted PIN from URL:", finalPin);
+                }
+              } else {
+                // Last ditch effort: regex for pin=XXXX
+                const match = decodedText.match(/pin=([^&/]+)/);
+                if (match) finalPin = match[1];
+              }
+            } catch (e) {
+              console.error("Failed to parse QR URL", e);
+            }
+          }
+
+          setPin(finalPin);
+          toast.success("QR Code scanned successfully");
+        }}
+      />
     </div>
   );
 }

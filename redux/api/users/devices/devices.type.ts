@@ -39,3 +39,8 @@ export type DeviceListResponse = {
   message: string;
   data: Device[];
 };
+
+// device pin create type 
+// export interface CreateDevicePin {
+//   deviceSerial: string;
+// }
