@@ -22,30 +22,28 @@ import {
 import ActionCardButton from "@/common/ActionCardButton";
 import CreateScreenModal from "@/components/dashboard/CreateScreenModal";
 import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
-import Image from "next/image";
 import Link from "next/link";
 import ScheduleModal from "@/components/schedules/CreateScheduleModal";
+import DashboardBannerSystem from "@/components/dashboard/DashboardBannerSystem";
 import { formatDistanceToNow } from "date-fns";
-import { useGetAllActivitiesQuery } from "@/redux/api/users/dashboard/activityApi";
+import { useGetAllActivitiesQuery, useGetAllStatsQuery, useGetAllDevicesQuery } from "@/redux/api/users/dashboard/activityApi";
 
 export default function Dashboard() {
+  const { data: statsData } = useGetAllStatsQuery(undefined);
+  const { data: devicesData } = useGetAllDevicesQuery();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-
-  const devices = [
-    { name: "Lobby Screen", online: true, location: "Head Office", screen: "Screen 1" },
-    { name: "Conference Room", online: false, location: "Floor 2", screen: "Screen 2" },
-    { name: "Reception Display", online: true, location: "USA Branch", screen: "Screen 5" },
-    { name: "Meeting Room", online: false, location: "California Branch", screen: "Screen 1" },
-  ];
+  console.log("statsData", statsData);
 
   const { data: activityData } = useGetAllActivitiesQuery();
   const activities = activityData?.data?.slice(0, 4) || [];
 
-  const totalDevices = devices.length;
-  const onlineDevices = devices.filter((d) => d.online).length;
-  const offlineDevices = devices.filter((d) => !d.online).length;
+  const devices = devicesData?.data || [];
+
+  const totalDevices = statsData?.data?.totalDevices || 0;
+  const onlineDevices = statsData?.data?.onlineDevices || 0;
+  const offlineDevices = statsData?.data?.offlineDevices || 0;
 
   function handleSaveSchedule(data: unknown): void {
     console.log("Saved schedule:", data);
@@ -54,89 +52,79 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen">
-      {/* Header Section - Keeps your gradient & images */}
-      <div className="flex items-center justify-center md:justify-between mb-6 dashboard-header-bg p-6 rounded-xl">
-        <div className="ml-0 space-y-1.5 md:ml-0 lg:ml-10">
-          <h1 className="text-2xl font-bold text-white">
-            Go Live on Any Screen Instantly
-          </h1>
-          <p className="text-sm text-gray-200">
-            Create your first screen and start displaying your content in minutes.
-          </p>
-          <button className="bg-bgBlue shadow-customShadow px-4 py-2 rounded-lg text-white mt-4 hover:bg-gray-400 transition-colors text-sm font-medium cursor-pointer flex items-center gap-2">
-            Upload Content
-          </button>
-        </div>
-        <div className="md:mr-2 lg:mr-4 xl:mr-10 md:block hidden">
-          <Image
-            src="/userDashboard/img3.webp"
-            alt="Dashboard Header"
-            height={165}
-            width={165}
-            style={{ transform: "scale(1.25)" }}
-          />
-        </div>
-      </div>
+      {/* Header Section - Banner System */}
+      <DashboardBannerSystem />
 
-      {/* Stats Cards - Same colors in light, dark-adapted */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-info-bg border border-border rounded-xl shadow-sm p-4 flex flex-col gap-6 justify-between">
-          <div className="flex items-center mb-2">
-            <span className="mt-0.5 p-2.5 border rounded-full border-bgBlue mr-2 bg-white dark:bg-gray-800">
-              <Monitor className="w-7 h-7 text-bgBlue" />
+      {/* Stats Cards - Redesigned to match image */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {/* Total Devices */}
+        <div className="bg-[#F0F7FF] border border-[#E0F2FE] rounded-xl p-5 flex flex-col justify-between min-h-[140px]">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center justify-center w-10 h-10 rounded-full border border-[#3BA5FF] bg-white">
+              <Monitor className="w-5 h-5 text-[#3BA5FF]" />
             </span>
-            <span className="text-sm text-gray-600 dark:text-gray-300">Total Devices</span>
+            <span className="text-[15px] font-medium text-gray-600" style={{ fontFamily: "Inter, sans-serif" }}>Total Devices</span>
           </div>
-          <div className="flex items-center justify-between text-gray-900 dark:text-white mb-2">
-            <span className="text-2xl font-semibold">{totalDevices}</span>
-            <div className="text-sm text-green-500 dark:text-green-400 flex items-center gap-1 mb-2">
+          <div className="flex items-end justify-between">
+            <span className="text-[32px] font-bold text-[#111827]" style={{ fontFamily: "Inter, sans-serif" }}>{totalDevices}</span>
+            <div className="flex items-center gap-1.5 text-gray-500 text-sm font-medium mb-1.5" style={{ fontFamily: "Inter, sans-serif" }}>
               <TrendingUp className="w-4 h-4" />
-              {totalDevices > 0 ? `${totalDevices} New This Week` : "0 New This Week"}
+              <span>{statsData?.data?.newDevicesThisWeek ?? 0} This Week</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-success-bg rounded-xl shadow-sm border border-border p-4 flex flex-col gap-6 justify-between">
-          <div className="flex items-center mb-2">
-            <span className="mt-0.5 p-2.5 border rounded-full border-bgGreen mr-2 bg-white dark:bg-gray-800">
-              <Wifi className="w-7 h-7 text-bgGreen" />
+        {/* Online Status */}
+        <div className="bg-[#F0FDF4] border border-[#DCFCE7] rounded-xl p-5 flex flex-col justify-between min-h-[140px]">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center justify-center w-10 h-10 rounded-full border border-[#22C55E] bg-white">
+              <Wifi className="w-5 h-5 text-[#22C55E]" />
             </span>
-            <span className="text-sm text-gray-600 dark:text-gray-300">Online Status</span>
+            <span className="text-[15px] font-medium text-gray-600" style={{ fontFamily: "Inter, sans-serif" }}>Online Status</span>
           </div>
-          <div className="flex items-center justify-between text-gray-900 dark:text-white mb-1">
-            <span className="text-2xl font-semibold">{onlineDevices}</span>
-            <div className="text-sm text-red-500 dark:text-red-400 flex items-center gap-1">
-              {offlineDevices} Offline <TriangleAlertIcon className="w-4 h-4" />
+          <div className="flex items-end justify-between">
+            <span className="text-[32px] font-bold text-[#111827]" style={{ fontFamily: "Inter, sans-serif" }}>{onlineDevices}</span>
+            <div className="flex items-center gap-1.5 text-gray-500 text-sm font-medium mb-1.5" style={{ fontFamily: "Inter, sans-serif" }}>
+              <TrendingUp className="w-4 h-4" />
+              <span>0 This Week</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-destructive-bg shadow-sm border border-border rounded-xl p-4 flex flex-col gap-6 justify-between">
-          <div className="flex items-center mb-2">
-            <span className="mt-0.5 p-2.5 border rounded-full border-bgRed mr-2 bg-white dark:bg-gray-800">
-              <WifiOff className="w-7 h-7 text-bgRed" />
+        {/* Offline Status */}
+        <div className="bg-[#FEF2F2] border border-[#FEE2E2] rounded-xl p-5 flex flex-col justify-between min-h-[140px]">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center justify-center w-10 h-10 rounded-full border border-[#EF4444] bg-white">
+              <WifiOff className="w-5 h-5 text-[#EF4444]" />
             </span>
-            <span className="text-sm text-gray-600 dark:text-gray-300">Offline Status</span>
+            <span className="text-[15px] font-medium text-gray-600" style={{ fontFamily: "Inter, sans-serif" }}>Offline Status</span>
           </div>
-          <div className="flex items-center justify-between text-gray-900 dark:text-white mb-1">
-            <span className="text-2xl font-semibold">{onlineDevices}</span>
-            <div className="text-sm text-red-500 dark:text-red-400 flex items-center gap-1">
-              {offlineDevices} Offline <TriangleAlertIcon className="w-4 h-4" />
+          <div className="flex items-end justify-between">
+            <span className="text-[32px] font-bold text-[#111827]" style={{ fontFamily: "Inter, sans-serif" }}>{offlineDevices}</span>
+            <div className="flex items-center gap-1.5 text-gray-500 text-sm font-medium mb-1.5" style={{ fontFamily: "Inter, sans-serif" }}>
+              <TrendingUp className="w-4 h-4" />
+              <span>0 This Week</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-card-bg shadow-sm border border-border dark:border-gray-700 rounded-xl p-4 flex flex-col gap-6 justify-between">
-          <div className="flex items-center mb-2">
-            <span className="mt-0.5 p-2.5 border rounded-full border-gray-600 dark:border-gray-500 mr-2 bg-white dark:bg-gray-800">
-              <HardDrive className="w-7 h-7 text-gray-600 dark:text-gray-400" />
+        {/* Storage */}
+        <div className="bg-[#F9FAFB] border border-[#F3F4F6] rounded-xl p-5 flex flex-col justify-between min-h-[140px]">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center justify-center w-10 h-10 rounded-full border border-[#6B7280] bg-white">
+              <HardDrive className="w-5 h-5 text-[#374151]" />
             </span>
-            <span className="text-sm text-gray-600 dark:text-gray-300">Storage</span>
+            <span className="text-[15px] font-medium text-gray-600" style={{ fontFamily: "Inter, sans-serif" }}>Storage</span>
           </div>
-          <div className="flex items-center justify-between text-gray-900 dark:text-white mb-1">
-            <span className="text-xl font-semibold">5.0/10 GB</span>
-            <Link href="/choose-plan" className="text-sm text-bgBlue hover:text-blue-400">
-              Upgrade <ArrowUpRight className="w-4 h-4 inline-block" />
+          <div className="flex items-end justify-between">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[32px] font-bold text-[#111827]" style={{ fontFamily: "Inter, sans-serif" }}>
+                {statsData?.data?.usedStorageGb ?? 0}/{statsData?.data?.totalStorageGb ?? 0}
+              </span>
+              <span className="text-sm font-semibold text-gray-900 mb-1" style={{ fontFamily: "Inter, sans-serif" }}>GB</span>
+            </div>
+            <Link href="/choose-plan" className="text-[14px] font-medium text-[#0FA6FF] hover:text-[#0d8ad4] flex items-center gap-1 mb-2 transition-colors" style={{ fontFamily: "Inter, sans-serif" }}>
+              Upgrade <ArrowUpRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -191,49 +179,55 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               Recent Devices
             </h2>
-            <button className="text-sm text-bgBlue hover:text-blue-400 cursor-pointer">
+            <Link href="/devices" className="text-sm text-bgBlue hover:text-blue-400 cursor-pointer">
               View All
-            </button>
+            </Link>
           </div>
 
           <div className="space-y-3 p-6">
-            {devices.map((device, index) => (
-              <div
-                key={index}
-                className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-navbarBg"
-              >
-                <span className="mt-0.5 p-2.5 border rounded-sm border-gray-200 dark:border-gray-600">
-                  <Monitor className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                </span>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {device.name}
-                    </span>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-md border flex items-center gap-1 ${device.online
-                        ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
-                        : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
-                        }`}
-                    >
-                      {device.online ? (
-                        <>
-                          <Wifi className="w-3 h-3" />
-                          Online
-                        </>
-                      ) : (
-                        <>
-                          <WifiOff className="w-3 h-3" />
-                          Offline
-                        </>
-                      )}
-                    </span>
+            {devices.length === 0 ? (
+              <div className="text-center text-gray-500 py-4 dark:text-gray-400">No recent devices</div>
+            ) : (
+              devices.map((device, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-navbarBg"
+                >
+                  <span className="mt-0.5 p-2.5 border rounded-sm border-gray-200 dark:border-gray-600">
+                    <Monitor className="w-4 h-4 text-gray-400 dark:text-gray-500" />
+                  </span>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {device.name}
+                      </span>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-md border flex items-center gap-1 ${device.status === "ONLINE"
+                          ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                          : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
+                          }`}
+                      >
+                        {device.status === "ONLINE" ? (
+                          <>
+                            <Wifi className="w-3 h-3" />
+                            Online
+                          </>
+                        ) : (
+                          <>
+                            <WifiOff className="w-3 h-3" />
+                            Offline
+                          </>
+                        )}
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{device.location || "No location"}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-500">
+                      {device.updatedAt ? formatDistanceToNow(new Date(device.updatedAt), { addSuffix: true }) : ""}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{device.location}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-500">{device.screen}</div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
