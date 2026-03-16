@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // components/CreateScreenModal.tsx
 "use client";
 
@@ -11,14 +12,12 @@ import {
   Wifi,
   WifiOff,
   Search,
-  QrCode,
   ChevronLeft,
   ChevronRight,
   Loader2,
 } from "lucide-react";
 import Dropdown from "@/common/Dropdown";
 import Image from "next/image";
-import QRCodeDialog from "./QRCodeDialog";
 import { useGetAllFilesQuery } from "@/redux/api/users/content/content.api";
 import { useMemo, useEffect } from "react";
 import { transformFile } from "@/lib/content-utils";
@@ -41,7 +40,6 @@ export default function CreateScreenModal({
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedType, setSelectedType] = useState("video");
-  const [showQr, setShowQr] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMounted, setIsMounted] = useState(false);
 
@@ -418,33 +416,14 @@ export default function CreateScreenModal({
                   )}
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                  Add New Device
-                </label>
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="flex flex-1 min-w-[200px] gap-2">
-                    <input
-                      type="text"
-                      placeholder="Enter the PIN or scan the QR code"
-                      className="flex-1 px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                    />
-                    <button
-                      onClick={() => setShowQr(true)}
-                      className="p-3 border border-borderGray dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0 shadow-customShadow cursor-pointer"
-                    >
-                      <QrCode className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-                    </button>
-                  </div>
-
-                  <div className="w-full sm:w-auto flex justify-end">
-                    <button className="px-6 py-3 bg-gray-900 dark:bg-gray-800 text-white hover:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium shadow-customShadow cursor-pointer">
-                      Add
-                    </button>
-                  </div>
-                </div>
-              </div>
+              {/* PIN Input */}
+              {/* <AddDevicePinInput
+                pin={pin}
+                setPin={setPin}
+                onOpenScanner={() => setIsScannerOpen(true)}
+                handleAddDevice={handleAddDevice}
+                selectedScreen={selectedScreen}
+              /> */}
             </div>
           )}
         </div>
@@ -485,7 +464,6 @@ export default function CreateScreenModal({
           )}
         </div>
       </div>
-      <QRCodeDialog open={showQr} setOpen={setShowQr} />
     </div>
   );
 }
