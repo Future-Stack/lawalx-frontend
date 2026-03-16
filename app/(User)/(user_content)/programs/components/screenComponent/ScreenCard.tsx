@@ -14,8 +14,10 @@ import { useRouter } from "next/navigation";
 import { Program } from "@/redux/api/users/programs/programs.type";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-
 dayjs.extend(relativeTime);
+
+import ScreenSettings from "./ScreenSettings";
+import TurnOffProgramDialog from "./TurnOffProgramDialog";
 
 interface ScreenCardProps {
   program: Program;
@@ -23,13 +25,14 @@ interface ScreenCardProps {
 
 const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   const [loading, setLoading] = useState(false);
+  const [isTurnOffDialogOpen, setIsTurnOffDialogOpen] = useState(false);
   const navigate = useRouter();
 
-  const handleOnClick = () => {
-    setLoading(true);
-    navigate.push(`/programs/${program.id}`);
-  };
+  // More robust status check
+  const status = program.status?.toLowerCase() || "";
+  const isActive = status === "publish" || status === "published" || status === "active";
 
+  const lastUpdated = dayjs(program.updated_at).fromNow();
   const videos = program.timeline?.filter((t) => t.file?.type === "VIDEO")?.length || 0;
   const images = program.timeline?.filter((t) => t.file?.type === "IMAGE" || t.file?.type === "CONTENT")?.length || 0;
 
@@ -41,8 +44,31 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   };
 
   const previewVideo = getFileUrl(program.timeline?.[0]?.file?.url || "");
-  const lastUpdated = dayjs(program.updated_at).fromNow();
-  const isActive = program.status.toLowerCase() === "publish";
+
+  const handleOnClick = () => {
+    setLoading(true);
+    navigate.push(`/programs/${program.id}`);
+  };
+
+  const handlePowerClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Power button clicked. Program status:", program.status, "Evaluated isActive:", isActive);
+
+    if (isActive) {
+      console.log("Opening Turn Off Dialog...");
+      setIsTurnOffDialogOpen(true);
+    } else {
+      console.log("Program is already off or has inactive status. Skipping dialog.");
+      // Logic for Turn On can be added here
+    }
+  };
+
+  const handleConfirmTurnOff = () => {
+    console.log("Turn off confirmed for program:", program.id);
+    // API call would go here
+    setIsTurnOffDialogOpen(false);
+  };
 
   return (
     <div className="group bg-navbarBg border border-border rounded-xl overflow-hidden hover:shadow-md dark:hover:shadow-xl transition-all h-full flex flex-col">
@@ -98,6 +124,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
         <div className="flex items-center gap-3 sm:gap-6">
           {/* Manage Button */}
           <button
+            type="button"
             onClick={handleOnClick}
             disabled={loading}
             className="w-full shadow-customShadow bg-bgBlue hover:bg-blue-500 text-white font-medium py-2.5 sm:py-3 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
@@ -117,6 +144,9 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
 
           {/* Power Button */}
           <button
+            type="button"
+            onClick={handlePowerClick}
+            aria-label={isActive ? "Turn Off Program" : "Turn On Program"}
             className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
               py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
               ${isActive
@@ -133,6 +163,13 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
           </button>
         </div>
       </div>
+
+      <TurnOffProgramDialog
+        open={isTurnOffDialogOpen}
+        onOpenChange={setIsTurnOffDialogOpen}
+        onConfirm={handleConfirmTurnOff}
+        deviceCount={program.devices?.length || 0}
+      />
     </div>
   );
 };

@@ -261,7 +261,7 @@ const MyContentCard = ({
       {viewMode === "list" ? (
         <>
           <div className="bg-navbarBg w-full border-b last:border-b-0 border-border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-            <div className="flex flex-col md:flex-row justify-between w-full gap-6 md:gap-12 p-4 items-center">
+            <div className="flex flex-col md:flex-row justify-between w-full p-4 items-center gap-4 md:gap-0">
               <div className="flex items-center gap-4 w-full md:w-[30%]">
                 <div className="flex items-center gap-2 shrink-0">
                   <Checkbox
@@ -303,53 +303,61 @@ const MyContentCard = ({
                 </span>
               </div>
 
-              <div className="flex justify-start w-full md:w-[25%]">
-                <p className="text-sm text-textGray dark:text-gray-400 font-medium truncate">
-                  {isAssigned ? item.assignedTo?.join(", ") : "—"}
-                </p>
+              {/* Mobile and Desktop columns with labels for mobile */}
+              <div className="flex flex-col md:flex-row md:items-center w-full md:w-[45%] gap-2 md:gap-0">
+                <div className="flex justify-between items-center md:justify-start md:w-[55%]">
+                  <span className="text-xs font-bold text-textGray uppercase md:hidden">Assigned To:</span>
+                  <p className="text-sm text-textGray dark:text-gray-400 font-medium truncate">
+                    {isAssigned ? item.assignedTo?.join(", ") : "—"}
+                  </p>
+                </div>
+
+                <div className="flex justify-between items-center md:justify-start md:w-[45%]">
+                  <span className="text-xs font-bold text-textGray uppercase md:hidden">Uploaded:</span>
+                  <p className="text-sm text-textGray dark:text-gray-400 font-medium whitespace-nowrap">
+                    {item.uploadedDate || "—"}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex justify-start w-full md:w-[20%]">
-                <p className="text-sm text-textGray dark:text-gray-400 font-medium">
-                  {item.uploadedDate || "—"}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-4 w-full md:w-[10%] justify-end">
-                {/* File-type specific action buttons */}
-                {item.type === "video" && (
-                  <button
-                    onClick={() => setOpen(true)}
-                    className="px-6 py-2 bg-bgBlue hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-customShadow transition-all cursor-pointer"
-                  >
-                    <Play className="w-4 h-4" /> Play
-                  </button>
-                )}
-                {item.type === "playlist" && (
-                  <button
-                    onClick={() => setOpenAudio(true)}
-                    className="px-6 py-2 bg-bgBlue hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-customShadow transition-all cursor-pointer"
-                  >
-                    <Play className="w-4 h-4" /> Play
-                  </button>
-                )}
-                {item.type === "folder" && (
-                  <button
-                    onClick={() => router.push(`/content/${item.id}`)}
-                    className="px-6 py-2 bg-bgBlue hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-customShadow transition-all cursor-pointer"
-                  >
-                    <FolderOpen className="w-4 h-4" /> Open
-                  </button>
-                )}
-                {item.type === "image" && (
-                  <button
-                    onClick={() => setOpenImage(true)}
-                    className="px-6 py-2 bg-bgBlue hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-customShadow transition-all cursor-pointer"
-                  >
-                    <Eye className="w-4 h-4" /> View
-                  </button>
-                )}
-                <MenuDropdown triggerIcon={<MoreVertical className="w-5 h-5 text-gray-500 dark:text-gray-400 cursor-pointer" />} options={dropdownOptions} />
+              <div className="flex items-center gap-4 w-full md:w-[10%] justify-between md:justify-end border-t md:border-t-0 pt-4 md:pt-0">
+                <span className="text-xs font-bold text-textGray uppercase md:hidden">Actions:</span>
+                <div className="flex items-center gap-3">
+                  {/* File-type specific action buttons */}
+                  {item.type === "video" && (
+                    <button
+                      onClick={() => setOpen(true)}
+                      className="px-6 py-2 bg-bgBlue hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-customShadow transition-all cursor-pointer"
+                    >
+                      <Play className="w-4 h-4" /> Play
+                    </button>
+                  )}
+                  {item.type === "playlist" && (
+                    <button
+                      onClick={() => setOpenAudio(true)}
+                      className="px-6 py-2 bg-bgBlue hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-customShadow transition-all cursor-pointer"
+                    >
+                      <Play className="w-4 h-4" /> Play
+                    </button>
+                  )}
+                  {item.type === "folder" && (
+                    <button
+                      onClick={() => router.push(`/content/${item.id}`)}
+                      className="px-6 py-2 bg-bgBlue hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-customShadow transition-all cursor-pointer"
+                    >
+                      <FolderOpen className="w-4 h-4" /> Open
+                    </button>
+                  )}
+                  {item.type === "image" && (
+                    <button
+                      onClick={() => setOpenImage(true)}
+                      className="px-6 py-2 bg-bgBlue hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-customShadow transition-all cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4" /> View
+                    </button>
+                  )}
+                  <MenuDropdown triggerIcon={<MoreVertical className="w-5 h-5 text-gray-500 dark:text-gray-400 cursor-pointer" />} options={dropdownOptions} />
+                </div>
               </div>
             </div>
           </div>

@@ -17,6 +17,9 @@ import {
   Plus,
   CloudUpload,
   Activity,
+  MoreVertical,
+  TvMinimal,
+  UserRoundCog,
 } from "lucide-react";
 
 import ActionCardButton from "@/common/ActionCardButton";
@@ -174,55 +177,54 @@ export default function Dashboard() {
       {/* Recent Devices & Activities */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent Devices */}
-        <div className="bg-navbarBg rounded-xl shadow-sm border border-border">
-          <div className="flex items-center justify-between p-6 border-b border-borderGray dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="bg-white rounded-[20px] shadow-sm border border-borderGray overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 bg-[#FAFAFA] border-b border-borderGray">
+            <h2 className="text-[20px] font-semibold text-[#171717]" style={{ fontFamily: "Inter, sans-serif" }}>
               Recent Devices
             </h2>
-            <Link href="/devices" className="text-sm text-bgBlue hover:text-blue-400 cursor-pointer">
+            <Link
+              href="/devices"
+              className="text-sm font-medium text-[#171717] border border-[#D4D4D4] px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
               View All
             </Link>
           </div>
 
-          <div className="space-y-3 p-6">
+          <div className="p-6 space-y-4">
             {devices.length === 0 ? (
-              <div className="text-center text-gray-500 py-4 dark:text-gray-400">No recent devices</div>
+              <div className="text-center text-gray-500 py-4">No recent devices</div>
             ) : (
-              devices.map((device, index) => (
+              devices.slice(0, 3).map((device, index) => (
                 <div
                   key={index}
-                  className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-navbarBg"
+                  className="flex items-center gap-4 p-5 border border-[#D4D4D4] rounded-[20px] bg-white"
                 >
-                  <span className="mt-0.5 p-2.5 border rounded-sm border-gray-200 dark:border-gray-600">
-                    <Monitor className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                  </span>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-gray-900 dark:text-white">
-                        {device.name}
-                      </span>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-md border flex items-center gap-1 ${device.status === "ONLINE"
-                          ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
-                          : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
-                          }`}
-                      >
-                        {device.status === "ONLINE" ? (
-                          <>
-                            <Wifi className="w-3 h-3" />
-                            Online
-                          </>
-                        ) : (
-                          <>
-                            <WifiOff className="w-3 h-3" />
-                            Offline
-                          </>
-                        )}
-                      </span>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[16px] font-semibold text-[#171717]" style={{ fontFamily: "Inter, sans-serif" }}>
+                          {device.name}
+                        </span>
+                        <div
+                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[12px] font-medium ${device.status === "ONLINE"
+                            ? "bg-[#F0FDF4] text-[#22C55E] border-[#DCFCE7]"
+                            : "bg-[#FEF2F2] text-[#EF4444] border-[#FEE2E2]"
+                            }`}
+                        >
+                          <div className={`w-2 h-2 rounded-full ${device.status === "ONLINE" ? "bg-[#22C55E]" : "bg-[#EF4444]"}`}></div>
+                          {device.status === "ONLINE" ? "Online" : "Offline"}
+                        </div>
+                      </div>
+                      <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                        <MoreVertical className="w-5 h-5" />
+                      </button>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{device.location || "No location"}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-500">
-                      {device.updatedAt ? formatDistanceToNow(new Date(device.updatedAt), { addSuffix: true }) : ""}
+                    <div className="text-[14px] text-gray-500 mb-1" style={{ fontFamily: "Inter, sans-serif" }}>
+                      3840 × 2160
+                    </div>
+                    <div className="text-[14px] text-gray-400 font-medium uppercase" style={{ fontFamily: "Inter, sans-serif" }}>
+                      {device.location || "LA, USA"}
                     </div>
                   </div>
                 </div>
@@ -232,38 +234,50 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Activities */}
-        <div className="bg-navbarBg rounded-xl shadow-sm border border-border">
-          <div className="flex items-center justify-between border-b p-6 border-borderGray dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <div className="bg-white rounded-[20px] shadow-sm border border-borderGray overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 bg-[#FAFAFA] border-b border-borderGray">
+            <h2 className="text-[20px] font-semibold text-[#171717]" style={{ fontFamily: "Inter, sans-serif" }}>
               Recent Activities
             </h2>
-            <Link href="/activity" className="text-sm text-bgBlue hover:text-blue-400 cursor-pointer">
+            <Link
+              href="/activity"
+              className="text-sm font-medium text-[#171717] border border-[#D4D4D4] px-4 py-2 rounded-lg hover:bg-gray-100 hover:text-bgBlue transition-colors shadow-customShadow cursor-pointer"
+              style={{ fontFamily: "Inter, sans-serif" }}
+            >
               View All
             </Link>
           </div>
 
-          <div className="space-y-3 p-6">
+          <div className="px-6 py-2">
             {activities.length === 0 ? (
-              <div className="text-center text-gray-500 py-4 dark:text-gray-400">No recent activities</div>
+              <div className="text-center text-gray-500 py-8">No recent activities</div>
             ) : (
               activities.map((activity: any, index: number) => (
                 <div
                   key={`${activity.id}-${index}`}
-                  className="flex items-start gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-navbarBg"
+                  className="flex items-start gap-4 py-5"
                 >
-                  <span className="mt-0.5 p-2.5 border rounded-full border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800">
-                    <Activity className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-                  </span>
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {activity.actionType}
+                  <div className="w-10 h-10 rounded-full bg-[rgba(21,93,252,0.08)] p-2.5 flex items-center justify-center shrink-0">
+                    {activity.actionType.toLowerCase().includes("device") ? (
+                      <TvMinimal className="w-5 h-5 text-[#3BA5FF]" />
+                    ) : activity.actionType.toLowerCase().includes("account") ? (
+                      <UserRoundCog className="w-5 h-5 text-[#3BA5FF]" />
+                    ) : (
+                      <Activity className="w-5 h-5 text-[#3BA5FF]" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <h4 className="text-[15px] font-semibold text-[#171717] truncate" style={{ fontFamily: "Inter, sans-serif" }}>
+                        {activity.actionType}
+                      </h4>
+                      <span className="text-[13px] text-gray-400 shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>
+                        {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
+                      </span>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                    <p className="text-[14px] text-gray-500 mt-1 line-clamp-1" style={{ fontFamily: "Inter, sans-serif" }}>
                       {activity.description}
-                    </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
-                    </div>
+                    </p>
                   </div>
                 </div>
               ))

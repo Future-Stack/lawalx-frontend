@@ -3,38 +3,14 @@ import Image from "next/image";
 const DownloadAppBanner = () => {
     return (
         <div
-            className="relative mb-6 flex flex-col md:flex-row items-center justify-between overflow-hidden"
-            style={{
-                padding: '8px',
-                borderRadius: '20px',
-                border: '1px solid var(--Border, #D4D4D4)',
-                background: 'linear-gradient(180deg, rgba(15, 166, 255, 0.10) -7.42%, rgba(236, 151, 207, 0.10) 100%), var(--Section-Background, #FFF)',
-            }}
+            className="relative mb-6 flex flex-col md:flex-row items-center justify-between overflow-hidden p-2 rounded-[20px] border border-borderGray bg-[linear-gradient(180deg,rgba(15,166,255,0.10)-7.42%,rgba(236,151,207,0.10)100%)] bg-white"
         >
             {/* Left Content */}
             <div className="flex-1 p-6 md:p-10">
-                <h2
-                    className="mb-2"
-                    style={{
-                        color: 'var(--Headings, #171717)',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '24px',
-                        fontWeight: 600,
-                        lineHeight: 'normal',
-                    }}
-                >
+                <h2 className="mb-2 text-Heading font-inter text-2xl font-semibold leading-normal">
                     Download Our Mobile App
                 </h2>
-                <p
-                    className="mb-8 max-w-[500px]"
-                    style={{
-                        color: 'var(--Body-Texts, #404040)',
-                        fontFamily: 'Inter, sans-serif',
-                        fontSize: '14px',
-                        fontWeight: 400,
-                        lineHeight: '20px',
-                    }}
-                >
+                <p className="mb-8 max-w-[500px] text-navGray font-inter text-sm font-normal leading-5">
                     This blog post has been published. Team members will be able to edit and publish the changes.
                 </p>
 
@@ -45,8 +21,7 @@ const DownloadAppBanner = () => {
                             alt="Download on the App Store"
                             width={120}
                             height={40}
-                            style={{ width: '119.664px', height: '40px' }}
-                            className="h-[40px] w-auto"
+                            className="h-10 w-[119.664px]"
                         />
                     </a>
                     <a href="#" className="hover:opacity-80 transition-opacity">
@@ -55,8 +30,7 @@ const DownloadAppBanner = () => {
                             alt="Get it on Google Play"
                             width={120}
                             height={40}
-                            style={{ width: '119.664px', height: '40px' }}
-                            className="h-[40px] w-auto"
+                            className="h-10 w-[119.664px]"
                         />
                     </a>
                 </div>
@@ -68,9 +42,9 @@ const DownloadAppBanner = () => {
                     <Image
                         src="/addLogo/add-right.png"
                         alt="Mobile App Mockup"
-                        width={400}
+                        width={300}
                         height={200}
-                        className="object-cover w-full md:w-[400px] h-auto rounded-xl"
+                        className="object-cover rounded-xl w-[300px] h-[250px]"
                     />
                 </div>
             </div>

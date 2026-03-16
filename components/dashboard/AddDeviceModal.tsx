@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { X, QrCode } from "lucide-react";
+import { X } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const QrScanner = dynamic(() => import("@/components/common/QrScanner"), {
   ssr: false,
 });
+import AddDevicePinInput from "./AddDevicePinInput";
 import {
   Select,
   SelectContent,
@@ -147,33 +148,13 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
           </div>
 
           {/* PIN Input */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex flex-1 min-w-[200px] gap-2">
-              <input
-                type="text"
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                placeholder="Enter the PIN or scan the QR code"
-                className="flex-1 px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-              />
-              <button
-                type="button"
-                onClick={() => setIsScannerOpen(true)}
-                className="p-3 border border-borderGray dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0 shadow-customShadow cursor-pointer"
-              >
-                <QrCode className="w-6 h-6 text-gray-600 dark:text-gray-400" />
-              </button>
-            </div>
-
-            <div className="w-full sm:w-auto flex justify-end">
-              <button
-                onClick={() => handleAddDevice({ pin, name: selectedScreen })}
-                className="px-6 py-3 bg-gray-900 dark:bg-gray-800 text-white hover:bg-gray-800 dark:hover:bg-gray-700 rounded-lg transition-colors font-medium shadow-customShadow cursor-pointer"
-              >
-                Add
-              </button>
-            </div>
-          </div>
+          <AddDevicePinInput
+            pin={pin}
+            setPin={setPin}
+            onOpenScanner={() => setIsScannerOpen(true)}
+            handleAddDevice={handleAddDevice}
+            selectedScreen={selectedScreen}
+          />
 
           {/* Select Screen Dropdown */}
           <div>
@@ -203,13 +184,13 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
         <div className="flex items-center justify-between gap-3 mx-5 py-4 sm:py-5 border-t border-gray-200 dark:border-gray-700 shrink-0">
           <button
             onClick={onClose}
-            className="px-5 sm:px-6 py-2 sm:py-2.5 border border-bgRed dark:border-bgRed rounded-lg font-medium text-sm sm:text-base text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors cursor-pointer"
+            className="px-5 sm:px-6 py-2 sm:py-2.5 border border-border hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg font-medium text-sm sm:text-base text-gray-700 dark:text-gray-300 transition-colors cursor-pointer shadow-customShadow"
           >
             Cancel
           </button>
           <button
             onClick={() => handleAddDevice({ pin, name: selectedScreen })}
-            className="px-5 cursor-pointer sm:px-6 py-2 sm:py-2.5 bg-bgBlue text-white rounded-lg font-medium text-sm sm:text-base hover:bg-blue-600 transition-colors"
+            className="px-5 cursor-pointer sm:px-6 py-2 sm:py-2.5 bg-bgBlue text-white rounded-lg font-medium text-sm sm:text-base hover:bg-blue-600 transition-colors shadow-customShadow"
           >
             Add Device
           </button>

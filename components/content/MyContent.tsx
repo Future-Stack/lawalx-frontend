@@ -53,6 +53,7 @@ const MyContent = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [open, setOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+
   console.log("all content data", allContentData);
 
   useEffect(() => {
@@ -275,23 +276,29 @@ const MyContent = () => {
       ) : filteredContent.length === 0 ? (
         <EmptyState contentFilter={contentFilter} searchQuery={searchQuery} />
       ) : (
-        <div className={viewMode === "list" ? "bg-navbarBg rounded-xl border border-border overflow-hidden" : ""}>
-          {viewMode === "list" && (
-            <div className="hidden md:flex items-center justify-between px-4 py-4 border-b border-border bg-[#F9FAFB] dark:bg-gray-800/50 md:gap-12">
-              <div className="w-[30%] text-xs font-bold text-textGray uppercase tracking-widest">File Name</div>
-              <div className="w-[15%] text-xs font-bold text-textGray uppercase tracking-widest">File Type</div>
-              <div className="w-[25%] text-xs font-bold text-textGray uppercase tracking-widest">Assigned To</div>
-              <div className="w-[20%] text-xs font-bold text-textGray uppercase tracking-widest">Uploaded</div>
-              <div className="w-[10%] text-xs font-bold text-textGray uppercase tracking-widest text-right">Actions</div>
+        <div className={`flex flex-col ${viewMode === "list" ? "bg-navbarBg rounded-xl border border-border overflow-hidden" : ""} min-h-[600px] md:min-h-[750px]`}>
+          <div className="flex-1 overflow-x-auto">
+            <div className="min-w-full lg:min-w-0">
+              {viewMode === "list" && (
+                <div className="hidden md:flex items-center justify-between px-4 py-4 border-b border-border bg-[#F9FAFB] dark:bg-gray-800/50">
+                  <div className="w-[30%] text-xs font-bold text-textGray uppercase tracking-widest">File Name</div>
+                  <div className="w-[15%] text-xs font-bold text-textGray uppercase tracking-widest">File Type</div>
+                  <div className="flex items-center w-[45%]">
+                    <div className="w-[55%] text-xs font-bold text-textGray uppercase tracking-widest">Assigned To</div>
+                    <div className="w-[45%] text-xs font-bold text-textGray uppercase tracking-widest">Uploaded</div>
+                  </div>
+                  <div className="w-[10%] text-xs font-bold text-textGray uppercase tracking-widest text-right">Actions</div>
+                </div>
+              )}
+              <ContentGrid
+                items={filteredContent}
+                viewMode={viewMode}
+                onItemSelect={handleItemSelect}
+                onItemMenuClick={handleItemMenuClick}
+                onAssignClick={handleAssignClick}
+              />
             </div>
-          )}
-          <ContentGrid
-            items={filteredContent}
-            viewMode={viewMode}
-            onItemSelect={handleItemSelect}
-            onItemMenuClick={handleItemMenuClick}
-            onAssignClick={handleAssignClick}
-          />
+          </div>
         </div>
       )}
 
@@ -299,14 +306,12 @@ const MyContent = () => {
 
       {/* Move to Folder dialog - reuse FolderOpenDialog component */}
       {selectedItem && (
-        <>
-          <FolderOpenDialog
-            item={selectedItem as any}
-            openFolder={openMoveFolder}
-            setOpenFolder={setOpenMoveFolder}
-            folders={contentItems.filter(i => i.type === "folder").map(f => ({ id: f.id, name: f.title }))}
-          />
-        </>
+        <FolderOpenDialog
+          item={selectedItem as any}
+          openFolder={openMoveFolder}
+          setOpenFolder={setOpenMoveFolder}
+          folders={contentItems.filter(i => i.type === "folder").map(f => ({ id: f.id, name: f.title }))}
+        />
       )}
     </div>
   );
