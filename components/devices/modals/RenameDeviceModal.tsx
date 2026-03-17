@@ -115,14 +115,14 @@ export default function RenameDeviceModal({ isOpen, onClose, deviceId, initialNa
           <button
             onClick={onClose}
             disabled={isRenaming}
-            className="px-6 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors font-medium disabled:opacity-50 cursor-pointer"
+            className="px-6 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors font-medium disabled:opacity-50 cursor-pointer shadow-customShadow"
           >
             Cancel
           </button>
           <button
             onClick={handleRename}
             disabled={isRenaming || (isFetching && !name)}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors disabled:opacity-70 min-w-[100px] flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-500/20"
+            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-colors disabled:opacity-70 min-w-[100px] flex items-center justify-center gap-2 cursor-pointer shadow-customShadow"
           >
             {isRenaming ? (
               <>

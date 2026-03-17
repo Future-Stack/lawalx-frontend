@@ -406,10 +406,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                     <span className="text-xs font-medium text-[#737373] dark:text-gray-500">
                       {total > 0 ? (100 - storagePercent).toFixed(0) : 0}% Free
                     </span>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-[#171717] dark:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer w-full justify-center mt-1">
-                      <Trash2 className="w-4 h-4" />
-                      Clear Space
-                    </button>
                   </div>
                 </div>
 

@@ -32,8 +32,8 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const programOptions = useMemo(() => {
-    const fetched = programsData?.data?.map(p => p.name) || [];
-    return ["All Content", ...fetched];
+    const fetched = programsData?.data?.map(p => ({ id: p.id, name: p.name })) || [];
+    return [{ id: "all-content", name: "All Content" }, ...fetched];
   }, [programsData]);
 
   if (!isOpen) return null;
@@ -170,9 +170,9 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
                 <SelectValue placeholder={isLoadingPrograms ? "Loading programs..." : "Select a Program"} />
               </SelectTrigger>
               <SelectContent>
-                {programOptions.map((option: string) => (
-                  <SelectItem key={option} value={option}>
-                    {option}
+                {programOptions.map((option) => (
+                  <SelectItem key={option.id} value={option.name}>
+                    {option.name}
                   </SelectItem>
                 ))}
               </SelectContent>

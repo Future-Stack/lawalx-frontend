@@ -30,7 +30,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
   const [searchQuery, setSearchQuery] = useState("");
   const [isMounted, setIsMounted] = useState(false);
 
-  const [formData, setFormData] = useState<{
+  const [programData, setProgramData] = useState<{
     name: string;
     description: string;
     serene_size: string;
@@ -74,7 +74,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
     setCurrentStep(1);
     setSearchQuery("");
     setSelectedType("video");
-    setFormData({
+    setProgramData({
       name: "",
       description: "",
       serene_size: "1920x1080",
@@ -88,13 +88,13 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
   const handleNext = () => {
     // Validate before moving forward
     if (currentStep === 1) {
-      if (!formData.name.trim()) {
+      if (!programData.name.trim()) {
         toast.error("Please enter a program name");
         return;
       }
     }
     if (currentStep === 2) {
-      if (formData.content_ids.length === 0) {
+      if (programData.content_ids.length === 0) {
         toast.error("Please select at least one content");
         return;
       }
@@ -108,7 +108,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
 
   // ─── Toggle content selection (step 2) ───────────────────────────────────────
   const toggleVideoSelection = (contentId: string) => {
-    setFormData((prev) => ({
+    setProgramData((prev) => ({
       ...prev,
       content_ids: prev.content_ids.includes(contentId)
         ? prev.content_ids.filter((id) => id !== contentId)
@@ -118,7 +118,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
 
   // ─── Toggle device selection (step 3) ────────────────────────────────────────
   const toggleDeviceSelection = (deviceId: string) => {
-    setFormData((prev) => ({
+    setProgramData((prev) => ({
       ...prev,
       device_ids: prev.device_ids.includes(deviceId)
         ? prev.device_ids.filter((id) => id !== deviceId)
@@ -128,20 +128,20 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
 
   // ─── Final submit ─────────────────────────────────────────────────────────────
   const handleCreate = async () => {
-    if (!formData.name.trim()) {
+    if (!programData.name.trim()) {
       toast.error("Please enter a program name");
       setCurrentStep(1);
       return;
     }
-    if (formData.content_ids.length === 0) {
+    if (programData.content_ids.length === 0) {
       toast.error("Please select at least one content");
       setCurrentStep(2);
       return;
     }
 
     try {
-      console.log("Program Payload:", formData);
-      const response = await createProgram(formData).unwrap();
+      console.log("Program Payload:", programData);
+      const response = await createProgram(programData).unwrap();
       console.log("api response data", response);
 
       if (response.success) {
@@ -234,8 +234,8 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Name</label>
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={programData.name}
+                  onChange={(e) => setProgramData({ ...programData, name: e.target.value })}
                   placeholder="Store A - NYC"
                   className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
@@ -243,8 +243,8 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Description</label>
                 <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  value={programData.description}
+                  onChange={(e) => setProgramData({ ...programData, description: e.target.value })}
                   placeholder="Enter program description"
                   rows={6}
                   className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
@@ -259,8 +259,8 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                     { value: "3840x2160", label: "4K (3840x2160)" },
                     { value: "1080x1920", label: "Portrait (1080x1920)" },
                   ]}
-                  value={formData.serene_size}
-                  onChange={(value) => setFormData({ ...formData, serene_size: String(value) })}
+                  value={programData.serene_size}
+                  onChange={(value) => setProgramData({ ...programData, serene_size: String(value) })}
                   className="w-full cursor-pointer"
                 />
               </div>
@@ -271,10 +271,10 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
           {currentStep === 2 && (
             <div className="space-y-4">
               {/* Selected count badge */}
-              {formData.content_ids.length > 0 && (
+              {programData.content_ids.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
                   <CircleCheckBigIcon className="w-4 h-4" />
-                  {formData.content_ids.length} content{formData.content_ids.length > 1 ? "s" : ""} selected
+                  {programData.content_ids.length} content{programData.content_ids.length > 1 ? "s" : ""} selected
                 </div>
               )}
 
@@ -317,7 +317,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                   filteredFiles.map((file) => (
                     <div
                       key={file.id}
-                      className={`flex items-center gap-4 p-4 border-b last:border-b-0 cursor-pointer transition-colors ${formData.content_ids.includes(file.id)
+                      className={`flex items-center gap-4 p-4 border-b last:border-b-0 cursor-pointer transition-colors ${programData.content_ids.includes(file.id)
                         ? "bg-blue-50 dark:bg-blue-900/20"
                         : "hover:bg-gray-50 dark:hover:bg-gray-800"
                         }`}
@@ -325,7 +325,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                     >
                       <input
                         type="checkbox"
-                        checked={formData.content_ids.includes(file.id)}
+                        checked={programData.content_ids.includes(file.id)}
                         onChange={() => toggleVideoSelection(file.id)}
                         onClick={(e) => e.stopPropagation()}
                         className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500 cursor-pointer"
@@ -354,10 +354,10 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
           {currentStep === 3 && (
             <div className="space-y-5">
               {/* Selected count badge */}
-              {formData.device_ids.length > 0 && (
+              {programData.device_ids.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
                   <CircleCheckBigIcon className="w-4 h-4" />
-                  {formData.device_ids.length} device{formData.device_ids.length > 1 ? "s" : ""} selected
+                  {programData.device_ids.length} device{programData.device_ids.length > 1 ? "s" : ""} selected
                 </div>
               )}
 
@@ -379,7 +379,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                     devices.map((device: any) => (
                       <div
                         key={device.id}
-                        className={`flex items-center gap-4 p-4 cursor-pointer transition-colors ${formData.device_ids.includes(device.id)
+                        className={`flex items-center gap-4 p-4 cursor-pointer transition-colors ${programData.device_ids.includes(device.id)
                           ? "bg-blue-50 dark:bg-blue-900/20"
                           : "hover:bg-gray-50 dark:hover:bg-gray-800"
                           }`}
@@ -387,7 +387,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                       >
                         <input
                           type="checkbox"
-                          checked={formData.device_ids.includes(device.id)}
+                          checked={programData.device_ids.includes(device.id)}
                           onChange={() => toggleDeviceSelection(device.id)}
                           onClick={(e) => e.stopPropagation()}
                           className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500 cursor-pointer"
