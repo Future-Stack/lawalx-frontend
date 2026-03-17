@@ -134,13 +134,13 @@ const AddDeviceDialog = ({ open, setOpen }: AddDeviceDialogProps) => {
                   <QrCode className="w-6 h-6 text-muted" />
                 </button>
 
-                <button
+                {/* <button
                   onClick={handleAddDevice}
                   disabled={!newDevicePin.trim()}
                   className="px-6 py-3 bg-cardBackground text-headings rounded-lg font-medium shadow-customShadow cursor-pointer"
                 >
                   Add
-                </button>
+                </button> */}
               </div>
             </div>
           </div>
