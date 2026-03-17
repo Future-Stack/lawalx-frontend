@@ -140,13 +140,13 @@ export default function Dashboard() {
           <ActionCardButton
             onClick={() => setIsModalOpen(true)}
             icon={<ScreenShare className="text-white w-4 h-4" />}
-            title="Create Screen"
+            title="Create Program"
             // subtitle="Create a new screen to play on your devices"
             active
           />
           <button
             onClick={() => setIsAddDeviceModalOpen(true)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-3 rounded-xl bg-navbarBg cursor-pointer transition-colors hover:shadow-md"
+            className="flex items-center gap-2 px-3 sm:px-4 py-3 rounded-xl bg-navbarBg cursor-pointer transition-colors hover:shadow-sm"
           >
             <Tv className="w-8 h-8 text-[#155DFC] p-2 bg-blue-50 dark:bg-blue-900/50 rounded-md" />
             <div className="text-left">
@@ -154,7 +154,7 @@ export default function Dashboard() {
             </div>
             <span className="ml-auto bg-gray-50 dark:bg-gray-800 p-2 rounded-full"><Plus className="w-4 h-4 text-bgBlue" /></span>
           </button>
-          <button className="flex items-center gap-2 px-3 sm:px-4 py-3 rounded-xl bg-navbarBg cursor-pointer transition-colors hover:shadow-md">
+          <button className="flex items-center gap-2 px-3 sm:px-4 py-3 rounded-xl bg-navbarBg cursor-pointer transition-colors hover:shadow-sm">
             <Video className="w-8 h-8 text-[#155DFC] p-2 bg-blue-50 dark:bg-blue-900/50 rounded-md" />
             <div className="text-left">
               <div className="font-medium text-gray-900 dark:text-white">Upload Content</div>
@@ -163,7 +163,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={() => setIsScheduleModalOpen(true)}
-            className="flex items-center gap-2 px-3 sm:px-4 py-3 rounded-xl bg-navbarBg cursor-pointer transition-colors hover:shadow-md"
+            className="flex items-center gap-2 px-3 sm:px-4 py-3 rounded-xl bg-navbarBg cursor-pointer transition-colors hover:shadow-sm"
           >
             <Calendar className="w-8 h-8 text-[#155DFC] p-2 bg-blue-50 dark:bg-blue-900/50 rounded-md" />
             <div className="text-left">

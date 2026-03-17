@@ -42,6 +42,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onNext }) => {
             }
         } catch (error: any) {
             toast.error(error?.data?.message || "Something went wrong. Please try again.");
+            console.log(error);
         }
     };
 

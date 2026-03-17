@@ -145,7 +145,7 @@ const MyContent = () => {
 
     try {
       const res = await uploadFile(formData).unwrap();
-      // console.log(res);
+      console.log(res);
 
       toast.success(res?.message || "File(s) uploaded successfully");
       // reset file input so same file can be re-selected later

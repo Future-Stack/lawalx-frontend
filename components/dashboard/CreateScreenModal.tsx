@@ -1,28 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// components/CreateScreenModal.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
-  X,
-  FileText,
-  Video,
-  Monitor,
-  CircleCheckBigIcon,
-  Wifi,
-  WifiOff,
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
+  X, FileText, Video, Monitor, CircleCheckBigIcon,
+  Wifi, WifiOff, Search, ChevronLeft, ChevronRight, Loader2,
 } from "lucide-react";
 import Dropdown from "@/common/Dropdown";
 import Image from "next/image";
 import { useGetAllFilesQuery } from "@/redux/api/users/content/content.api";
-import { useMemo, useEffect } from "react";
 import { transformFile } from "@/lib/content-utils";
 import { useCreateProgramMutation } from "@/redux/api/users/programs/programs.api";
 import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { WorkoutStatus } from "@/redux/api/users/programs/programs.type";
 import { toast } from "sonner";
 
 interface CreateScreenModalProps {
@@ -30,10 +20,7 @@ interface CreateScreenModalProps {
   onClose: () => void;
 }
 
-export default function CreateScreenModal({
-  isOpen,
-  onClose,
-}: CreateScreenModalProps) {
+export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModalProps) {
   const { data: allFiles, isLoading: isFilesLoading } = useGetAllFilesQuery(undefined);
   const { data: devicesData, isLoading: isDevicesLoading } = useGetMyDevicesDataQuery(undefined);
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
@@ -46,18 +33,20 @@ export default function CreateScreenModal({
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
-    selectedVideos: string[];
-    selectedDevices: string[];
+    serene_size: string;
+    status: WorkoutStatus;
+    content_ids: string[];
+    device_ids: string[];
   }>({
     name: "",
     description: "",
-    selectedVideos: [],
-    selectedDevices: [],
+    serene_size: "1920x1080",
+    status: WorkoutStatus.DRAFT,
+    content_ids: [],
+    device_ids: [],
   });
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  useEffect(() => { setIsMounted(true); }, []);
 
   const transformedFiles = useMemo(() => {
     if (!allFiles?.data) return [];
@@ -71,7 +60,6 @@ export default function CreateScreenModal({
       if (selectedType === "video") matchesType = file.type === "video";
       else if (selectedType === "image") matchesType = file.type === "image";
       else if (selectedType === "audio") matchesType = file.type === "audio";
-
       return matchesSearch && matchesType;
     });
   }, [transformedFiles, searchQuery, selectedType]);
@@ -81,64 +69,88 @@ export default function CreateScreenModal({
     return devicesData.data;
   }, [devicesData]);
 
+  // ─── Reset modal state when closed ───────────────────────────────────────────
+  const handleClose = () => {
+    setCurrentStep(1);
+    setSearchQuery("");
+    setSelectedType("video");
+    setFormData({
+      name: "",
+      description: "",
+      serene_size: "1920x1080",
+      status: WorkoutStatus.DRAFT,
+      content_ids: [],
+      device_ids: []
+    });
+    onClose();
+  };
+
   const handleNext = () => {
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
+    // Validate before moving forward
+    if (currentStep === 1) {
+      if (!formData.name.trim()) {
+        toast.error("Please enter a program name");
+        return;
+      }
+    }
+    if (currentStep === 2) {
+      if (formData.content_ids.length === 0) {
+        toast.error("Please select at least one content");
+        return;
+      }
+    }
+    if (currentStep < 3) setCurrentStep((s) => s + 1);
   };
 
   const handlePrevious = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1);
+    if (currentStep > 1) setCurrentStep((s) => s - 1);
   };
 
+  // ─── Toggle content selection (step 2) ───────────────────────────────────────
+  const toggleVideoSelection = (contentId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      content_ids: prev.content_ids.includes(contentId)
+        ? prev.content_ids.filter((id) => id !== contentId)
+        : [...prev.content_ids, contentId],
+    }));
+  };
+
+  // ─── Toggle device selection (step 3) ────────────────────────────────────────
+  const toggleDeviceSelection = (deviceId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      device_ids: prev.device_ids.includes(deviceId)
+        ? prev.device_ids.filter((id) => id !== deviceId)
+        : [...prev.device_ids, deviceId],
+    }));
+  };
+
+  // ─── Final submit ─────────────────────────────────────────────────────────────
   const handleCreate = async () => {
     if (!formData.name.trim()) {
       toast.error("Please enter a program name");
       setCurrentStep(1);
       return;
     }
-
-    if (formData.selectedVideos.length === 0) {
+    if (formData.content_ids.length === 0) {
       toast.error("Please select at least one content");
       setCurrentStep(2);
       return;
     }
 
     try {
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        content_ids: formData.selectedVideos,
-        device_ids: formData.selectedDevices,
-      };
-
-      const response = await createProgram(payload).unwrap();
+      console.log("Program Payload:", formData);
+      const response = await createProgram(formData).unwrap();
+      console.log("api response data", response);
 
       if (response.success) {
         toast.success(response.message || "Program created successfully");
-        setCurrentStep(1);
-        setFormData({ name: "", description: "", selectedVideos: [], selectedDevices: [] });
-        onClose();
+        handleClose();
       }
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to create program");
     }
-  };
-
-  const toggleVideoSelection = (videoId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      selectedVideos: prev.selectedVideos.includes(videoId)
-        ? prev.selectedVideos.filter((id) => id !== videoId)
-        : [...prev.selectedVideos, videoId],
-    }));
-  };
-
-  const toggleDeviceSelection = (deviceId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      selectedDevices: prev.selectedDevices.includes(deviceId)
-        ? prev.selectedDevices.filter((id) => id !== deviceId)
-        : [...prev.selectedDevices, deviceId],
-    }));
   };
 
   if (!isOpen) return null;
@@ -152,10 +164,7 @@ export default function CreateScreenModal({
           <h2 className="text-xl sm:text-3xl font-bold text-Headings dark:text-white text-nowrap">
             Create New Program
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-red-500 dark:hover:text-gray-300 transition-colors self-end sm:self-auto cursor-pointer"
-          >
+          <button onClick={handleClose} className="text-gray-400 hover:text-red-500 dark:hover:text-gray-300 transition-colors self-end sm:self-auto cursor-pointer">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -164,91 +173,65 @@ export default function CreateScreenModal({
         <div className="flex items-center justify-center md:justify-between px-6 py-5 border-b border-borderGray dark:border-gray-700 gap-4">
           {/* Step 1 */}
           <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep >= 1
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep > 1
+              ? "bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-800"
+              : currentStep === 1
                 ? "bg-blue-50 dark:bg-blue-900/20 border border-bgBlue dark:border-blue-700"
                 : "bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
-                } ${currentStep > 1 ? "border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-900/20" : ""}`}
-            >
-              {currentStep > 1 ? (
-                <CircleCheckBigIcon className="w-6 h-6 text-bgGreen" />
-              ) : (
-                <FileText
-                  className={`w-6 h-6 ${currentStep >= 1 ? "text-bgBlue" : "text-gray-400 dark:text-gray-500"
-                    }`}
-                />
-              )}
+              }`}>
+              {currentStep > 1
+                ? <CircleCheckBigIcon className="w-6 h-6 text-bgGreen" />
+                : <FileText className={`w-6 h-6 ${currentStep >= 1 ? "text-bgBlue" : "text-gray-400 dark:text-gray-500"}`} />
+              }
             </div>
             <div>
-              <div className={`sm:font-semibold font-normal text-xs sm:text-base ${currentStep >= 1 ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-500"}`}>
-                Step 1
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                Program Information
-              </div>
+              <div className={`sm:font-semibold font-normal text-xs sm:text-base ${currentStep >= 1 ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-500"}`}>Step 1</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Program Information</div>
             </div>
           </div>
 
           {/* Step 2 */}
           <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep >= 2
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep > 2
+              ? "bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-800"
+              : currentStep === 2
                 ? "bg-blue-50 dark:bg-blue-900/20 border border-bgBlue dark:border-blue-700"
                 : "bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
-                } ${currentStep > 2 ? "border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-900/20" : ""}`}
-            >
-              {currentStep > 2 ? (
-                <CircleCheckBigIcon className="w-6 h-6 text-bgGreen" />
-              ) : (
-                <Video
-                  className={`w-6 h-6 ${currentStep >= 2 ? "text-bgBlue" : "text-gray-400 dark:text-gray-500"
-                    }`}
-                />
-              )}
+              }`}>
+              {currentStep > 2
+                ? <CircleCheckBigIcon className="w-6 h-6 text-bgGreen" />
+                : <Video className={`w-6 h-6 ${currentStep >= 2 ? "text-bgBlue" : "text-gray-400 dark:text-gray-500"}`} />
+              }
             </div>
             <div>
-              <div className={`sm:font-semibold font-normal text-xs sm:text-base ${currentStep >= 2 ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-500"}`}>
-                Step 2
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                Content Selection
-              </div>
+              <div className={`sm:font-semibold font-normal text-xs sm:text-base ${currentStep >= 2 ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-500"}`}>Step 2</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Content Selection</div>
             </div>
           </div>
 
           {/* Step 3 */}
           <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
-            <div
-              className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep >= 3
-                ? "bg-blue-50 dark:bg-blue-900/20 border border-bgBlue dark:border-blue-700"
-                : "bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
-                }`}
-            >
-              <Monitor
-                className={`w-6 h-6 ${currentStep >= 3 ? "text-bgBlue" : "text-gray-400 dark:text-gray-500"
-                  }`}
-              />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${currentStep === 3
+              ? "bg-blue-50 dark:bg-blue-900/20 border border-bgBlue dark:border-blue-700"
+              : "bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
+              }`}>
+              <Monitor className={`w-6 h-6 ${currentStep >= 3 ? "text-bgBlue" : "text-gray-400 dark:text-gray-500"}`} />
             </div>
             <div>
-              <div className={`sm:font-semibold font-normal text-xs sm:text-base ${currentStep >= 3 ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-500"}`}>
-                Step 3
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                Device Selection
-              </div>
+              <div className={`sm:font-semibold font-normal text-xs sm:text-base ${currentStep >= 3 ? "text-gray-900 dark:text-white" : "text-gray-400 dark:text-gray-500"}`}>Step 3</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Device Selection</div>
             </div>
           </div>
         </div>
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
-          {/* Step 1 */}
+
+          {/* ── Step 1: Program Info ─────────────────────────────────────── */}
           {currentStep === 1 && (
             <div className="space-y-5">
               <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                  Name
-                </label>
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Name</label>
                 <input
                   type="text"
                   value={formData.name}
@@ -258,9 +241,7 @@ export default function CreateScreenModal({
                 />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                  Description
-                </label>
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -269,12 +250,34 @@ export default function CreateScreenModal({
                   className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Screen Size</label>
+                <Dropdown
+                  options={[
+                    { value: "1920x1080", label: "Full HD (1920x1080)" },
+                    { value: "1280x720", label: "HD (1280x720)" },
+                    { value: "3840x2160", label: "4K (3840x2160)" },
+                    { value: "1080x1920", label: "Portrait (1080x1920)" },
+                  ]}
+                  value={formData.serene_size}
+                  onChange={(value) => setFormData({ ...formData, serene_size: String(value) })}
+                  className="w-full cursor-pointer"
+                />
+              </div>
             </div>
           )}
 
-          {/* Step 2 */}
+          {/* ── Step 2: Content Selection ────────────────────────────────── */}
           {currentStep === 2 && (
             <div className="space-y-4">
+              {/* Selected count badge */}
+              {formData.content_ids.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
+                  <CircleCheckBigIcon className="w-4 h-4" />
+                  {formData.content_ids.length} content{formData.content_ids.length > 1 ? "s" : ""} selected
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -286,7 +289,6 @@ export default function CreateScreenModal({
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   />
                 </div>
-
                 <div className="w-full sm:w-[200px]">
                   <Dropdown
                     options={[
@@ -315,39 +317,30 @@ export default function CreateScreenModal({
                   filteredFiles.map((file) => (
                     <div
                       key={file.id}
-                      className="flex items-center gap-4 p-4 border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                      className={`flex items-center gap-4 p-4 border-b last:border-b-0 cursor-pointer transition-colors ${formData.content_ids.includes(file.id)
+                        ? "bg-blue-50 dark:bg-blue-900/20"
+                        : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                        }`}
                       onClick={() => toggleVideoSelection(file.id)}
                     >
                       <input
                         type="checkbox"
-                        checked={formData.selectedVideos.includes(file.id)}
+                        checked={formData.content_ids.includes(file.id)}
                         onChange={() => toggleVideoSelection(file.id)}
                         onClick={(e) => e.stopPropagation()}
                         className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500 cursor-pointer"
                       />
-                      <div className="w-20 h-14 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden">
+                      <div className="w-20 h-14 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                         {file.type === "image" && file.thumbnail ? (
-                          <Image
-                            src={file.thumbnail}
-                            alt={file.title}
-                            width={80}
-                            height={56}
-                            className="w-full h-full object-cover"
-                          />
+                          <Image src={file.thumbnail} alt={file.title} width={80} height={56} className="w-full h-full object-cover" />
                         ) : file.type === "video" && file.video ? (
-                          <video
-                            src={file.video}
-                            className="w-full h-full object-cover"
-                            muted
-                          />
+                          <video src={file.video} className="w-full h-full object-cover" muted />
                         ) : (
                           <div className="text-xs text-gray-400">No Preview</div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 dark:text-white truncate">
-                          {file.title}
-                        </div>
+                        <div className="font-medium text-gray-900 dark:text-white truncate">{file.title}</div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">{file.size}</div>
                       </div>
                     </div>
@@ -357,12 +350,20 @@ export default function CreateScreenModal({
             </div>
           )}
 
-          {/* Step 3 */}
+          {/* ── Step 3: Device Selection ─────────────────────────────────── */}
           {currentStep === 3 && (
             <div className="space-y-5">
+              {/* Selected count badge */}
+              {formData.device_ids.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
+                  <CircleCheckBigIcon className="w-4 h-4" />
+                  {formData.device_ids.length} device{formData.device_ids.length > 1 ? "s" : ""} selected
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                  Select Devices
+                  Select Devices <span className="text-gray-400 font-normal">(optional)</span>
                 </label>
                 <div className="border border-borderGray dark:border-gray-600 rounded-lg divide-y dark:divide-gray-700 max-h-64 overflow-y-auto">
                   {isDevicesLoading ? (
@@ -378,52 +379,37 @@ export default function CreateScreenModal({
                     devices.map((device: any) => (
                       <div
                         key={device.id}
-                        className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                        className={`flex items-center gap-4 p-4 cursor-pointer transition-colors ${formData.device_ids.includes(device.id)
+                          ? "bg-blue-50 dark:bg-blue-900/20"
+                          : "hover:bg-gray-50 dark:hover:bg-gray-800"
+                          }`}
                         onClick={() => toggleDeviceSelection(device.id)}
                       >
                         <input
                           type="checkbox"
-                          checked={formData.selectedDevices.includes(device.id)}
+                          checked={formData.device_ids.includes(device.id)}
                           onChange={() => toggleDeviceSelection(device.id)}
                           onClick={(e) => e.stopPropagation()}
                           className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500 cursor-pointer"
                         />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900 dark:text-white truncate">
-                              {device.name}
-                            </span>
-                            <span
-                              className={`text-xs px-2 py-1 border rounded-md flex items-center gap-1 ${device.status === "ONLINE"
-                                ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
-                                : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
-                                }`}
-                            >
-                              {device.status === "ONLINE" ? (
-                                <Wifi className="w-3 h-3" />
-                              ) : (
-                                <WifiOff className="w-3 h-3" />
-                              )}
+                            <span className="font-medium text-gray-900 dark:text-white truncate">{device.name}</span>
+                            <span className={`text-xs px-2 py-1 border rounded-md flex items-center gap-1 flex-shrink-0 ${device.status === "ONLINE"
+                              ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
+                              : "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                              }`}>
+                              {device.status === "ONLINE" ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
                               {device.status}
                             </span>
                           </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                            {device.deviceSerial}
-                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{device.deviceSerial}</div>
                         </div>
                       </div>
                     ))
                   )}
                 </div>
               </div>
-              {/* PIN Input */}
-              {/* <AddDevicePinInput
-                pin={pin}
-                setPin={setPin}
-                onOpenScanner={() => setIsScannerOpen(true)}
-                handleAddDevice={handleAddDevice}
-                selectedScreen={selectedScreen}
-              /> */}
             </div>
           )}
         </div>
@@ -433,8 +419,8 @@ export default function CreateScreenModal({
           <button
             onClick={handlePrevious}
             disabled={currentStep === 1}
-            className={`flex items-center gap-2 px-3 py-1.5 md:px-5 md:py-2.5 border border-borderGray dark:border-gray-600 rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer ${currentStep === 1
-              ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+            className={`flex items-center gap-2 px-3 py-1.5 md:px-5 md:py-2.5 border border-borderGray dark:border-gray-600 rounded-lg font-medium transition-colors shadow-customShadow ${currentStep === 1
+              ? "text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
               : "text-gray-700 dark:text-gray-300 hover:scale-[1.02] hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
               }`}
           >
@@ -456,13 +442,14 @@ export default function CreateScreenModal({
             <button
               onClick={handleCreate}
               disabled={isCreating}
-              className="px-6 py-2.5 bg-bgBlue hover:bg-blue-500 text-white rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer flex items-center gap-2"
+              className="px-6 py-2.5 bg-bgBlue hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer flex items-center gap-2"
             >
               {isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
               {isCreating ? "Creating..." : "Create"}
             </button>
           )}
         </div>
+
       </div>
     </div>
   );
