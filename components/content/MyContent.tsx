@@ -20,6 +20,7 @@ import ContentGrid from "./ContentGrid";
 import EmptyState from "./EmptyState";
 import CreateFolderDialog from "./CreateFolderDialog";
 import FolderOpenDialog from "./FolderOepnDialog";
+import AssignToDialog from "./AssignToDialog";
 import { useGetAllContentDataQuery, useUploadFileMutation, useUpdateFolderNameMutation, useUpdateFileNameMutation } from "@/redux/api/users/content/content.api";
 import CommonLoader from "@/common/CommonLoader";
 import { ContentItem, SelectOption } from "@/types/content";
@@ -52,6 +53,8 @@ const MyContent = () => {
   const [contentFilter, setContentFilter] = useState("all-content");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [open, setOpen] = useState(false);
+  const [openAssign, setOpenAssign] = useState(false);
+  const [assignContentId, setAssignContentId] = useState<string>("");
   const [isMounted, setIsMounted] = useState(false);
 
   console.log("all content data", allContentData);
@@ -107,6 +110,9 @@ const MyContent = () => {
         setSelectedItem({ id, title: "", type: "image", size: "" });
         setOpenMoveFolder(true);
       }
+    } else if (action === "assign") {
+      setAssignContentId(id);
+      setOpenAssign(true);
     } else if (action?.startsWith("rename:")) {
       const newName = action.split(":")[1];
       if (newName) {
@@ -124,7 +130,11 @@ const MyContent = () => {
     }
   };
 
-  const handleAssignClick = (id: string) => console.log("Assign:", id);
+  const handleAssignClick = (id: string) => {
+    console.log("Assign requested for:", id);
+    setAssignContentId(id);
+    setOpenAssign(true);
+  };
 
   // UPLOAD HANDLER
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -313,6 +323,13 @@ const MyContent = () => {
           folders={contentItems.filter(i => i.type === "folder").map(f => ({ id: f.id, name: f.title }))}
         />
       )}
+
+      {/* Assign to Program dialog */}
+      <AssignToDialog
+        open={openAssign}
+        setOpen={setOpenAssign}
+        contentId={assignContentId}
+      />
     </div>
   );
 };

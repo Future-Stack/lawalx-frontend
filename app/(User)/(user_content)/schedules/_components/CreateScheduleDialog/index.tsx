@@ -123,13 +123,13 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             ? new Date(step4Data.startDate + "T00:00:00Z").toISOString()
             : new Date().toISOString();
 
-        const endDate = step4Data.endDate
-            ? new Date(step4Data.endDate + "T23:59:59Z").toISOString()
+        const endDate = (step4Data.repeat === "run-once" ? step4Data.startDate : step4Data.endDate)
+            ? new Date((step4Data.repeat === "run-once" ? step4Data.startDate : step4Data.endDate) + "T23:59:59Z").toISOString()
             : new Date().toISOString();
 
         // Format startTime / endTime as epoch-based ISO (1970-01-01T...Z)
         const startTime = `1970-01-01T${step4Data.playTime}:00Z`;
-        const endTime = `1970-01-01T${step4Data.endTime}:00Z`;
+        const endTime = `1970-01-01T${step4Data.endTime || step4Data.playTime}:00Z`;
 
         // Map recurrence type
         const recurrenceType: RecurrenceType = step4Data.repeat === "run-once"
@@ -174,7 +174,12 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
         if (currentStep === 1) return !step1Data.name;
         if (currentStep === 2 && !showLowerThird) return !step2Data.selectedContent;
         if (currentStep === 3) return step3Data.selectedScreens.length === 0;
-        if (currentStep === 4) return !step4Data.playTime || !step4Data.startDate || !step4Data.endDate || !step4Data.endTime;
+        if (currentStep === 4) {
+            const isRunOnce = step4Data.repeat === "run-once";
+            const commonFields = !step4Data.playTime || !step4Data.startDate;
+            if (isRunOnce) return commonFields;
+            return commonFields || !step4Data.endDate || !step4Data.endTime;
+        }
         return false;
     };
 

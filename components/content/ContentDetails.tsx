@@ -203,7 +203,8 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
         <AssignToDialog
           open={openAssign}
           setOpen={setOpenAssign}
-          onAssign={(ids) => console.log("Assigned to screens:", ids)}
+          contentId={content.id}
+          onAssign={(ids) => console.log("Assigned to programs:", ids)}
         />
       )}
 
@@ -220,7 +221,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
       />
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4 md:gap-10">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.push("/content")}
@@ -242,7 +243,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setOpenRename(true)}
-              className="group flex items-center gap-2 px-6 py-2.5 border border-[#3CA9F3] text-[#3CA9F3] rounded-lg text-base font-semibold transition-all hover:bg-[#3CA9F3] hover:text-white shadow-customShadow bg-White cursor-pointer outline-none"
+              className="group flex items-center gap-2 px-6 py-2.5 border border-[#3CA9F3] text-[#3CA9F3] rounded-lg text-base font-semibold transition-all hover:bg-[#3CA9F3] hover:text-white shadow-customShadow bg-White cursor-pointer outline-none w-full"
             >
               <PencilLine className="w-5 h-5 transition-colors group-hover:text-white text-bgBlue" /> Rename
             </button>
@@ -478,6 +479,14 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
                 <div className="flex items-center justify-between py-4 border-b border-border">
                   <span className="text-sm md:text-base text-muted">Duration:</span>
                   <span className="text-muted text-xs md:text-sm">{content.duration}</span>
+                </div>
+              )}
+
+              {/* Uploaded Date */}
+              {content.uploadedDate && (
+                <div className="flex items-center justify-between py-4 border-b border-border">
+                  <span className="text-sm md:text-base text-muted">{content.type === "folder" ? "Created:" : "Uploaded:"}</span>
+                  <span className="text-muted text-xs md:text-sm">{content.uploadedDate}</span>
                 </div>
               )}
 

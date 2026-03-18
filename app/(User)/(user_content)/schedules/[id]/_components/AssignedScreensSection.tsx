@@ -1,6 +1,5 @@
 import React from "react";
-import { Plus, Trash2, Monitor, ChevronDown, ChevronRight, X } from "lucide-react";
-import { Program } from "@/redux/api/users/programs/programs.type";
+import { Plus, Trash2, ChevronDown, ChevronRight, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AssignedScreensSectionProps {
@@ -26,10 +25,10 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
                 <h2 className="text-xl font-bold text-headings dark:text-white">Assigned Program</h2>
                 <button
                     onClick={onAddScreen}
-                    className="flex items-center gap-2 px-4 py-2 bg-bgBlue text-white text-sm font-semibold rounded-lg hover:bg-blue-500 transition cursor-pointer shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 bg-bgBlue text-white text-sm font-semibold rounded-lg hover:bg-blue-500 transition cursor-pointer shadow-customShadow"
                 >
                     <Plus className="w-4 h-4" />
-                    Add Screen
+                    Add Program
                 </button>
             </div>
 

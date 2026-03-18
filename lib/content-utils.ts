@@ -1,8 +1,10 @@
 import { ContentItem } from "@/types/content";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
 
 dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 export const formatBytes = (bytes: number, decimals = 2) => {
     if (!bytes || bytes === 0) return "0 Bytes";
@@ -49,8 +51,8 @@ export const transformFile = (file: any, isMounted: boolean): ContentItem => ({
     thumbnail: file.type === "IMAGE" ? getUrl(file.url) : undefined,
     video: file.type === "VIDEO" ? getUrl(file.url) : undefined,
     audio: file.type === "AUDIO" ? getUrl(file.url) : undefined,
-    uploadedDate: isMounted ? dayjs(file.createdAt).fromNow() : "",
-    updatedAt: isMounted ? dayjs(file.updatedAt).fromNow() : "",
+    uploadedDate: isMounted ? dayjs.utc(file.createdAt).local().fromNow() : "",
+    updatedAt: isMounted ? dayjs.utc(file.updatedAt).local().fromNow() : "",
     fileExtension: file.fileType?.split("/")[1]?.toUpperCase(),
     assignedTo: [],
 });
@@ -61,8 +63,8 @@ export const transformFolder = (folder: any, isMounted: boolean): ContentItem =>
     type: "folder",
     size: formatBytes(folder.files?.reduce((acc: number, f: any) => acc + (f.size || 0), 0) || 0),
     fileCount: folder.files?.length || 0,
-    uploadedDate: isMounted ? dayjs(folder.createdAt).fromNow() : "",
-    updatedAt: isMounted ? dayjs(folder.updatedAt).fromNow() : "",
+    uploadedDate: isMounted ? dayjs.utc(folder.createdAt).local().fromNow() : "",
+    updatedAt: isMounted ? dayjs.utc(folder.updatedAt).local().fromNow() : "",
     children: folder.files?.map((f: any) => transformFile(f, isMounted)) || [],
     assignedTo: [],
 });

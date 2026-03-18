@@ -39,8 +39,8 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
         <BaseDialog
             open={isOpen}
             setOpen={onClose}
-            title="Add Screen"
-            description="Select screens to assign to this schedule"
+            title="Add Program"
+            description="Select programs to assign to this schedule"
             className="max-w-2xl"
         >
             <div className="space-y-6">
@@ -48,7 +48,7 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                     <input
                         type="text"
-                        placeholder="Search screen..."
+                        placeholder="Search program..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg"
@@ -91,13 +91,13 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
                 </div>
 
                 <div className="flex gap-3 justify-end pt-4 border-t border-border">
-                    <button onClick={onClose} className="px-6 py-2.5 text-muted hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition cursor-pointer">
+                    <button onClick={onClose} className="px-6 py-2.5 text-muted hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition cursor-pointer shadow-customShadow">
                         Cancel
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={selectedIds.length === 0}
-                        className="px-6 py-2.5 bg-bgBlue text-white rounded-lg font-semibold hover:bg-blue-500 transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-2.5 bg-bgBlue text-white rounded-lg font-semibold hover:bg-blue-500 transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow"
                     >
                         Add {selectedIds.length > 0 ? `${selectedIds.length} ` : ""}Program{selectedIds.length !== 1 ? "s" : ""}
                     </button>

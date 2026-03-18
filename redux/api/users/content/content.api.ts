@@ -78,7 +78,7 @@ const contentAPI = baseApi.injectEndpoints({
     }),
     assignProgram: build.mutation<any, { id: string; programId: string }>({
       query: ({ id, programId }) => ({
-        url: `/file/${id}/assign-program`,
+        url: `/content/${id}/assign-program`,
         method: "PATCH",
         body: { programId },
       }),

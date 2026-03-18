@@ -190,6 +190,7 @@ const ScreenCardDetails = () => {
             {activeTab === "timeline" && (
               <ContentTimeline
                 timeline={localTimeline}
+                programId={String(id)}
                 selectedId={localTimeline?.[playingIndex]?.id}
                 onSelect={(_, index) => {
                   setPlayingIndex(index);

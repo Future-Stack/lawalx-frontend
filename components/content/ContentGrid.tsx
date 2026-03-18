@@ -38,6 +38,7 @@ const ContentGrid = ({ items, viewMode, onItemSelect, onItemMenuClick, onAssignC
           viewMode="grid"
           onSelect={onItemSelect}
           onMenuClick={onItemMenuClick}
+          onAssignClick={onAssignClick}
         />
       ))}
     </div>
