@@ -18,7 +18,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, imageSrc = "/images/a
                 <div className="mb-8 lg:mb-12">
                     <Link href="/" className="inline-block">
                         <Image
-                            src="/tape.svg"
+                            src="/tape.png"
                             alt="Tape logo"
                             width={120}
                             height={40}

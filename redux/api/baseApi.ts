@@ -60,5 +60,5 @@ export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
   endpoints: () => ({}),
-  tagTypes: ["User", "NotificationPermission", "Notification", "Activity", "Content", "Devices", "Programs", "Schedules", "Device"],
+  tagTypes: ["User", "NotificationPermission", "Notification", "Activity", "Content", "Devices", "Programs", "Schedules", "Device", "AdminSettings"],
 });

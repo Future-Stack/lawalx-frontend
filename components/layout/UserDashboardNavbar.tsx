@@ -143,7 +143,7 @@ export default function UserDashboardNavbar() {
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center shrink-0">
             <Image
-              src="/tape.svg"
+              src="/tape.png"
               alt="DigitalSignage Logo"
               width={100}
               height={40}
