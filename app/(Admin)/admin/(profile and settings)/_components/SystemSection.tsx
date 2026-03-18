@@ -1,12 +1,35 @@
 'use client';
 
+import { useGetSystemInfoQuery } from '@/redux/api/admin/profile&settings/adminSettingsApi';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 export default function SystemSection() {
+    const { data: systemInfoData, isLoading, isError } = useGetSystemInfoQuery(undefined);
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center p-20">
+                <Loader2 className="w-8 h-8 animate-spin text-bgBlue" />
+            </div>
+        );
+    }
+
+    if (isError) {
+        return (
+            <div className="flex flex-col items-center justify-center p-20 text-red-500 gap-2">
+                <AlertCircle className="w-8 h-8" />
+                <p className="font-medium">Failed to load system information</p>
+            </div>
+        );
+    }
+
+    const data = systemInfoData?.data;
+
     const sysInfo = [
-        { label: 'Version', value: '2.5.8' },
-        { label: 'Last Updated', value: 'Oct 15, 2024' },
-        { label: 'Database', value: 'PostgreSQL 15.2' },
-        { label: 'Server', value: 'AWS (us-east-1)' },
+        { label: 'Version', value: data?.version || '—' },
+        { label: 'Last Updated', value: data?.lastUpdated || '—' },
+        { label: 'Database', value: data?.database || '—' },
+        { label: 'Server', value: data?.server || '—' },
     ];
 
     return (
