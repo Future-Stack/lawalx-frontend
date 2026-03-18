@@ -18,6 +18,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
+import Link from 'next/link';
 
 type DateRange = '1d' | '7d' | '1m' | '1y';
 
@@ -274,9 +275,9 @@ const SubscriptionDistribution: React.FC<{ dateRange: DateRange }> = ({ dateRang
         </>
       )}
 
-      <div className="flex justify-end mt-4">
+      <Link href="/admin/reports/subscription-&-billing-report" className="flex justify-end mt-4">
         <button className="text-xs text-black dark:text-white hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer font-medium px-3 py-1.5 border border-border shadow-customShadow rounded-md">View Details</button>
-      </div>
+      </Link>
 
     </div>
   );
@@ -454,9 +455,9 @@ const ContentUsageBreakdown: React.FC<{ title: string; subtitle: string; type: '
         </ResponsiveContainer>
       )}
 
-      <div className="flex justify-end mt-4">
+      <Link href="/admin/reports/content-and-programs" className="flex justify-end mt-4">
         <button className="text-xs text-black dark:text-white hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer font-medium px-3 py-1.5 border border-border shadow-customShadow rounded-md">View Details</button>
-      </div>
+      </Link>
 
     </div>
   );
