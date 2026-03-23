@@ -226,14 +226,14 @@ export default function Dashboard() {
       {/* Recent Devices & Activities */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent Devices */}
-        <div className="bg-white rounded-[20px] shadow-sm border border-borderGray overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 bg-[#FAFAFA] border-b border-borderGray">
-            <h2 className="text-[20px] font-semibold text-[#171717]" style={{ fontFamily: "Inter, sans-serif" }}>
+        <div className="bg-navbarBg rounded-[20px] shadow-sm border border-borderGray overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 bg-navbarBg border-b border-borderGray">
+            <h2 className="text-[20px] font-semibold text-headings" style={{ fontFamily: "Inter, sans-serif" }}>
               Recent Devices
             </h2>
             <Link
               href="/devices"
-              className="text-sm font-medium text-[#171717] border border-[#D4D4D4] px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue"
+              className="text-sm font-medium text-headings bg-navbarBg border border-border px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue"
               style={{ fontFamily: "Inter, sans-serif" }}
             >
               View All
@@ -247,12 +247,12 @@ export default function Dashboard() {
               devices.slice(0, 3).map((device, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-4 p-5 border border-[#D4D4D4] rounded-[20px] bg-white"
+                  className="flex items-center gap-4 p-5 border border-border rounded-[20px] bg-navbarBg"
                 >
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-3">
-                        <span className="text-[16px] font-semibold text-[#171717]" style={{ fontFamily: "Inter, sans-serif" }}>
+                        <span className="text-[16px] font-semibold text-headings" style={{ fontFamily: "Inter, sans-serif" }}>
                           {device.name}
                         </span>
                         <div
@@ -269,10 +269,10 @@ export default function Dashboard() {
                         <MoreVertical className="w-5 h-5" />
                       </button>
                     </div>
-                    <div className="text-[14px] text-gray-500 mb-1" style={{ fontFamily: "Inter, sans-serif" }}>
+                    <div className="text-[14px] text-muted mb-1" style={{ fontFamily: "Inter, sans-serif" }}>
                       3840 × 2160
                     </div>
-                    <div className="text-[14px] text-gray-400 font-medium uppercase" style={{ fontFamily: "Inter, sans-serif" }}>
+                    <div className="text-[14px] text-body font-medium uppercase" style={{ fontFamily: "Inter, sans-serif" }}>
                       {device.location || "LA, USA"}
                     </div>
                   </div>
@@ -283,28 +283,28 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Activities */}
-        <div className="bg-white rounded-[20px] shadow-sm border border-borderGray overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 bg-[#FAFAFA] border-b border-borderGray">
-            <h2 className="text-[20px] font-semibold text-[#171717]" style={{ fontFamily: "Inter, sans-serif" }}>
+        <div className="bg-navbarBg rounded-[20px] shadow-sm border border-borderGray overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 bg-navbarBg border-b border-borderGray">
+            <h2 className="text-[20px] font-semibold text-headings" style={{ fontFamily: "Inter, sans-serif" }}>
               Recent Activities
             </h2>
             <Link
               href="/activity"
-              className="text-sm font-medium text-[#171717] border border-[#D4D4D4] px-4 py-2 rounded-lg hover:bg-gray-100 hover:text-bgBlue transition-colors shadow-customShadow cursor-pointer"
+              className="text-sm font-medium text-headings bg-navbarBg border border-border px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue"
               style={{ fontFamily: "Inter, sans-serif" }}
             >
               View All
             </Link>
           </div>
 
-          <div className="px-6 py-2">
+          <div className="p-6 space-y-4">
             {activities.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">No recent activities</div>
+              <div className="text-center text-gray-500 py-4">No recent activities</div>
             ) : (
               activities.map((activity: any, index: number) => (
                 <div
                   key={`${activity.id}-${index}`}
-                  className="flex items-start gap-4 py-5"
+                  className="flex items-start gap-4 p-5 border border-border rounded-[20px] bg-navbarBg"
                 >
                   <div className="w-10 h-10 rounded-full bg-[rgba(21,93,252,0.08)] p-2.5 flex items-center justify-center shrink-0">
                     {activity.actionType.toLowerCase().includes("device") ? (
@@ -317,14 +317,14 @@ export default function Dashboard() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <h4 className="text-[15px] font-semibold text-[#171717] truncate" style={{ fontFamily: "Inter, sans-serif" }}>
+                      <h4 className="text-[15px] font-semibold text-headings truncate" style={{ fontFamily: "Inter, sans-serif" }}>
                         {activity.actionType}
                       </h4>
                       <span className="text-[13px] text-gray-400 shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>
                         {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
                       </span>
                     </div>
-                    <p className="text-[14px] text-gray-500 mt-1 line-clamp-1" style={{ fontFamily: "Inter, sans-serif" }}>
+                    <p className="text-[14px] text-body mt-1 line-clamp-1" style={{ fontFamily: "Inter, sans-serif" }}>
                       {activity.description}
                     </p>
                   </div>
