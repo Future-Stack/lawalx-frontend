@@ -2,15 +2,20 @@
 
 import { useMemo, useEffect, useState } from "react";
 import { Search, Plus } from "lucide-react";
+import { toast } from "sonner";
 import DashboardHeading from "@/common/DashboardHeading";
 import TemplateCard from "@/components/content/TemplateCard";
-import { useGetAllFilesQuery } from "@/redux/api/users/content/content.api";
+import { useGetAllFilesQuery, useUpdateFileNameMutation } from "@/redux/api/users/content/content.api";
 import CommonLoader from "@/common/CommonLoader";
 import { transformFile } from "@/lib/content-utils";
+import AssignToDialog from "@/components/content/AssignToDialog";
 
 const TemplateContent = () => {
+    const [updateFileName] = useUpdateFileNameMutation();
     const { data: allFiles, isLoading } = useGetAllFilesQuery(undefined);
     const [searchQuery, setSearchQuery] = useState("");
+    const [openAssign, setOpenAssign] = useState(false);
+    const [assignContentId, setAssignContentId] = useState("");
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
@@ -37,6 +42,26 @@ const TemplateContent = () => {
             item.title.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [transformedTemplates, searchQuery]);
+
+    const handleAssignClick = (id: string) => {
+        setAssignContentId(id);
+        setOpenAssign(true);
+    };
+
+    const handleMenuClick = (id: string, action?: string) => {
+        if (action?.startsWith("rename:")) {
+            const newName = action.split(":")[1];
+            if (newName) {
+                updateFileName({ id, name: newName })
+                    .unwrap()
+                    .then((res: any) => toast.success(res?.message || "Renamed successfully"))
+                    .catch((err: any) => {
+                        console.error("Rename failed:", err);
+                        toast.error(err?.data?.message || "Rename failed");
+                    });
+            }
+        }
+    };
 
     if (isLoading) {
         return (
@@ -80,10 +105,21 @@ const TemplateContent = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredTemplates.map((item) => (
-                        <TemplateCard key={item.id} item={item as any} />
+                        <TemplateCard
+                            key={item.id}
+                            item={item as any}
+                            onAssignClick={handleAssignClick}
+                            onMenuClick={handleMenuClick}
+                        />
                     ))}
                 </div>
             )}
+
+            <AssignToDialog
+                open={openAssign}
+                setOpen={setOpenAssign}
+                contentId={assignContentId}
+            />
         </div>
     );
 };

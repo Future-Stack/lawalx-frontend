@@ -10,7 +10,6 @@ import {
   User,
   Menu,
   X,
-  ChevronDown,
   ScreenShareIcon,
   FilePlus,
   CalendarPlus,
@@ -31,6 +30,12 @@ import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { logout } from "@/redux/features/auth/authSlice";
 import { useGetMyNotificationsQuery, useReadAllNotificationsMutation, useReadNotificationMutation } from "@/redux/api/users/notificationApi";
 import { formatDistanceToNow } from "date-fns";
+import NavbarNewDropdown from "./NavbarNewDropdown";
+import { useNavbarActions } from "@/hooks/useNavbarActions";
+import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
+import CreateFolderDialog from "@/components/content/CreateFolderDialog";
+import CreateScheduleDialog from "@/app/(User)/(user_content)/schedules/_components/CreateScheduleDialog";
+
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -40,21 +45,26 @@ const navItems = [
   { href: "/schedules", label: "Schedules" },
 ];
 
-// Notification Mock Removed
-
-// interface UserDashboardNavbarProps {
-//   isCollapsed?: boolean;
-//   setIsCollapsed?: (value: boolean) => void;
-// }
-
 export default function UserDashboardNavbar() {
   const pathname = usePathname();
   const [helpOpen, setHelpOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [newOpen, setNewOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dispatch = useAppDispatch();
+
+  const {
+    isAddDeviceOpen,
+    setIsAddDeviceOpen,
+    isCreateFolderOpen,
+    setIsCreateFolderOpen,
+    isCreateScheduleOpen,
+    setIsCreateScheduleOpen,
+    isUploading,
+    fileInputRef,
+    handleUploadClick,
+    handleFileChange,
+  } = useNavbarActions();
 
   // Dark Mode Setup
   const { theme, setTheme } = useTheme();
@@ -129,17 +139,6 @@ export default function UserDashboardNavbar() {
       <div className="px-5 sm:px-8 py-2 sm:py-4 flex items-center justify-between ">
         {/* Left section - Logo & Desktop Navigation */}
         <div className="flex items-center gap-4 lg:gap-8 flex-1">
-          {/* Sidebar Toggle Button (Desktop) */}
-          {/* {setIsCollapsed && (
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed!)}
-              className="hidden lg:flex p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0"
-              aria-label="Toggle sidebar"
-            >
-              <Menu className="w-6 h-6 text-gray-700 dark:text-gray-300" />
-            </button>
-          )} */}
-
           {/* Logo */}
           <Link href="/dashboard" className="flex items-center shrink-0">
             <Image
@@ -187,7 +186,6 @@ export default function UserDashboardNavbar() {
                 onClick={() => {
                   setHelpOpen(!helpOpen);
                   setProfileOpen(false);
-                  setNewOpen(false);
                   setNotificationOpen(false);
                 }}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
@@ -225,43 +223,13 @@ export default function UserDashboardNavbar() {
             </div>
 
             {/* New Button */}
-            <div className="relative">
-              <button
-                onClick={() => {
-                  setNewOpen(!newOpen);
-                  setHelpOpen(false);
-                  setProfileOpen(false);
-                  setNotificationOpen(false);
-                }}
-                className="px-3 lg:px-4 py-2 shadow-customShadow bg-bgBlue text-white rounded-lg hover:bg-blue-500 transition-colors flex items-center gap-1.5 text-sm font-medium cursor-pointer"
-              >
-                <span>New</span>
-                <ChevronDown className="sm:pl-1 sm:border-l border-l-0 border-gray-300 w-4 h-4 hidden lg:inline" />
-              </button>
-              {newOpen && (
-                <>
-                  <div className="fixed inset-0 z-30" onClick={() => setNewOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg overflow-hidden z-40 p-2">
-                    <button onClick={() => setNewOpen(false)} className="block w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
-                      <ScreenShareIcon className="w-4 h-4 inline-block mr-2" />
-                      Add Device
-                    </button>
-                    <button onClick={() => setNewOpen(false)} className="block w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 cursor-pointer">
-                      <FilePlus className="w-4 h-4 inline-block mr-2" />
-                      Upload Content
-                    </button>
-                    <button onClick={() => setNewOpen(false)} className="block w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 cursor-pointer">
-                      <CalendarPlus className="w-4 h-4 inline-block mr-2" />
-                      Schedule
-                    </button>
-                    <button onClick={() => setNewOpen(false)} className="block w-full text-left px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
-                      <FolderPlus className="w-4 h-4 inline-block mr-2" />
-                      New Folder
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            <NavbarNewDropdown
+              onAddDevice={() => setIsAddDeviceOpen(true)}
+              onUploadContent={handleUploadClick}
+              onSchedule={() => setIsCreateScheduleOpen(true)}
+              onNewFolder={() => setIsCreateFolderOpen(true)}
+              isUploading={isUploading}
+            />
           </div>
 
           {/* Always Visible: Notifications */}
@@ -271,7 +239,6 @@ export default function UserDashboardNavbar() {
                 setNotificationOpen(!notificationOpen);
                 setHelpOpen(false);
                 setProfileOpen(false);
-                setNewOpen(false);
               }}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors relative cursor-pointer"
             >
@@ -362,7 +329,6 @@ export default function UserDashboardNavbar() {
               onClick={() => {
                 setProfileOpen(!profileOpen);
                 setHelpOpen(false);
-                setNewOpen(false);
                 setNotificationOpen(false);
               }}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full bg-gray-100 dark:bg-gray-800 transition-colors cursor-pointer"
@@ -494,38 +460,43 @@ export default function UserDashboardNavbar() {
             {/* Create New Section */}
             <div className="px-4 py-2">
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Create New</p>
-              <button className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsAddDeviceOpen(true);
+                }}
+                className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400 cursor-pointer"
+              >
                 <ScreenShareIcon className="w-4 h-4 mr-3" /> Add Device
               </button>
-              <button className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleUploadClick();
+                }}
+                className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400 cursor-pointer"
+              >
                 <FilePlus className="w-4 h-4 mr-3" /> Upload Content
               </button>
-              <button className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsCreateScheduleOpen(true);
+                }}
+                className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400 cursor-pointer"
+              >
                 <CalendarPlus className="w-4 h-4 mr-3" /> Schedule
               </button>
-              <button className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsCreateFolderOpen(true);
+                }}
+                className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400 cursor-pointer"
+              >
                 <FolderPlus className="w-4 h-4 mr-3" /> New Folder
               </button>
             </div>
-
-            {/* <div className="border-t border-gray-200 dark:border-gray-700 my-2" /> */}
-
-            {/* Notifications Section */}
-            {/* <div className="px-4 py-2">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Notifications</p>
-                {notifications.length > 0 && (
-                  <span className="bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{notifications.length}</span>
-                )}
-              </div>
-              {notifications.slice(0, 2).map((notif) => (
-                <div key={notif.id} className="py-2 border-b border-gray-100 dark:border-gray-800 last:border-0">
-                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{notif.title}</p>
-                  <p className="text-xs text-gray-500 truncate">{notif.description}</p>
-                </div>
-              ))}
-              <button className="w-full text-left text-xs text-bgBlue dark:text-blue-400 font-medium py-1 mt-1">View All Notifications</button>
-            </div> */}
 
             <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
 
@@ -543,45 +514,6 @@ export default function UserDashboardNavbar() {
               </Link>
             </div>
 
-            {/* <div className="border-t border-gray-200 dark:border-gray-700 my-2" /> */}
-
-            {/* Profile & Settings & Theme */}
-            {/* <div className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg mx-2">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-medium">
-                  JD
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">James David</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">James@gmail.com</p>
-                </div>
-              </div>
-
-              <button
-                onClick={toggleTheme}
-                className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400"
-              >
-                {theme === 'dark' ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
-                {theme === 'dark' ? "Light Mode" : "Dark Mode"}
-              </button>
-
-              <Link href="/profile-settings/account" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400">
-                <UserRoundCogIcon className="w-4 h-4 mr-3" /> Edit Profile
-              </Link>
-              <Link href="/profile-settings/general" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400">
-                <SettingsIcon className="w-4 h-4 mr-3" /> Settings
-              </Link>
-
-              <div className="border-t border-gray-200 dark:border-gray-700 my-2" />
-
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full py-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 font-medium cursor-pointer"
-              >
-                <LogOutIcon className="w-4 h-4 mr-3" /> Sign Out
-              </button>
-            </div> */}
-
           </nav>
 
           <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3 space-y-3">
@@ -596,16 +528,40 @@ export default function UserDashboardNavbar() {
             {/* Mobile Quick Actions */}
             <div className="space-y-1">
               <p className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Quick Actions</p>
-              <button onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsAddDeviceOpen(true);
+                }}
+                className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2 cursor-pointer"
+              >
                 <ScreenShareIcon className="w-4 h-4" /> Add Device
               </button>
-              <button onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleUploadClick();
+                }}
+                className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2 cursor-pointer"
+              >
                 <FilePlus className="w-4 h-4" /> Upload Content
               </button>
-              <button onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsCreateScheduleOpen(true);
+                }}
+                className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2 cursor-pointer"
+              >
                 <CalendarPlus className="w-4 h-4" /> Schedule
               </button>
-              <button onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setIsCreateFolderOpen(true);
+                }}
+                className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2 cursor-pointer"
+              >
                 <FolderPlus className="w-4 h-4" /> New Folder
               </button>
             </div>
@@ -642,6 +598,29 @@ export default function UserDashboardNavbar() {
           </div>
         </div>
       )}
+      {/* Hidden File Input */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        multiple
+      />
+
+      {/* Modals */}
+      <AddDeviceModal
+        isOpen={isAddDeviceOpen}
+        onClose={() => setIsAddDeviceOpen(false)}
+      />
+      <CreateFolderDialog
+        open={isCreateFolderOpen}
+        setOpen={setIsCreateFolderOpen}
+      />
+      <CreateScheduleDialog
+        open={isCreateScheduleOpen}
+        setOpen={setIsCreateScheduleOpen}
+      />
     </header>
+
   );
 }

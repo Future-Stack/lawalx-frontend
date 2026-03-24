@@ -1,8 +1,13 @@
 import React from "react";
-import { Video, Clock, Play, Pause, Edit2, Trash2 } from "lucide-react";
+import { Video, Clock, Play, Edit2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Schedule } from "@/redux/api/users/schedules/schedules.type";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { useDeleteScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
+import { toast } from "sonner";
+import SchedulePreviewDialog from "./SchedulePreviewDialog";
+import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
 
 interface SchedulesTableProps {
     schedules: Schedule[];
@@ -36,6 +41,38 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
     totalPages,
     setCurrentPage,
 }) => {
+    const router = useRouter();
+    const [deleteSchedule] = useDeleteScheduleMutation();
+    const [openPreview, setOpenPreview] = React.useState(false);
+    const [selectedSchedule, setSelectedSchedule] = React.useState<Schedule | null>(null);
+    const [openDelete, setOpenDelete] = React.useState(false);
+    const [scheduleToDelete, setScheduleToDelete] = React.useState<Schedule | null>(null);
+
+    const handlePreviewClick = (schedule: Schedule) => {
+        setSelectedSchedule(schedule);
+        setOpenPreview(true);
+    };
+
+    const handleDeleteClick = (schedule: Schedule) => {
+        setScheduleToDelete(schedule);
+        setOpenDelete(true);
+    };
+
+    const handleDelete = async () => {
+        if (!scheduleToDelete) return;
+
+        try {
+            const res = await deleteSchedule(scheduleToDelete.id).unwrap();
+            if (res.success) {
+                toast.success(res.message || "Schedule deleted successfully");
+            }
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Failed to delete schedule");
+        } finally {
+            setOpenDelete(false);
+            setScheduleToDelete(null);
+        }
+    };
     return (
         <div className="bg-navbarBg border border-border rounded-xl overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
@@ -82,13 +119,19 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
                                 </td>
                                 <td className="px-6 py-5">
                                     <div className="flex items-center justify-end gap-3">
-                                        <button className={cn("p-2 rounded-lg transition-colors cursor-pointer", schedule.isActive ? "text-muted hover:bg-gray-100" : "text-green-500 hover:bg-green-100")}>
-                                            {schedule.isActive ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
+                                        <button
+                                            onClick={() => handlePreviewClick(schedule)}
+                                            className={cn("p-2 rounded-lg transition-colors cursor-pointer text-muted hover:bg-gray-100")}
+                                        >
+                                            <Play className="w-5 h-5" />
                                         </button>
                                         <Link href={`/schedules/${schedule.id}`} className="p-2 text-muted hover:text-bgBlue hover:bg-blue-50 rounded-lg transition-colors cursor-pointer">
                                             <Edit2 className="w-5 h-5" />
                                         </Link>
-                                        <button className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer">
+                                        <button
+                                            onClick={() => handleDeleteClick(schedule)}
+                                            className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                                        >
                                             <Trash2 className="w-5 h-5" />
                                         </button>
                                     </div>
@@ -121,6 +164,25 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
                     </button>
                 </div>
             </div>
+
+            <SchedulePreviewDialog
+                open={openPreview}
+                setOpen={setOpenPreview}
+                schedule={selectedSchedule}
+                onEdit={(id) => router.push(`/schedules/${id}`)}
+            />
+
+            <DeleteConfirmationModal
+                isOpen={openDelete}
+                onClose={() => {
+                    setOpenDelete(false);
+                    setScheduleToDelete(null);
+                }}
+                onConfirm={handleDelete}
+                title="Delete Schedule"
+                description="Are you sure you want to delete this schedule? This action cannot be undone."
+                itemName={scheduleToDelete?.name}
+            />
         </div>
     );
 };

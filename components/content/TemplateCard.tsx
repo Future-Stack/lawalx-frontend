@@ -32,26 +32,20 @@ interface TemplateItem {
 
 interface TemplateCardProps {
     item: TemplateItem;
+    onAssignClick?: (id: string) => void;
+    onMenuClick?: (id: string, action: string) => void;
 }
 
-const TemplateCard = ({ item }: TemplateCardProps) => {
+const TemplateCard = ({ item, onAssignClick, onMenuClick }: TemplateCardProps) => {
     const router = useRouter();
-    const [updateFileName] = useUpdateFileNameMutation();
     const [deleteFile] = useDeleteFileMutation();
     const [openVideo, setOpenVideo] = useState(false);
     const [openRename, setOpenRename] = useState(false);
     const [openDelete, setOpenDelete] = useState(false);
 
-    const handleRename = async (newName: string) => {
-        try {
-            const res = await updateFileName({ id: item.id, name: newName }).unwrap();
-            if (res.success) {
-                toast.success(res.message || "Renamed successfully");
-                setOpenRename(false);
-            }
-        } catch (error: any) {
-            toast.error(error?.data?.message || "Rename failed");
-        }
+    const handleRename = (newName: string) => {
+        onMenuClick?.(item.id, `rename:${newName}`);
+        setOpenRename(false);
     };
 
     const handleDelete = async () => {
@@ -61,6 +55,7 @@ const TemplateCard = ({ item }: TemplateCardProps) => {
                 toast.success(res.message || "Deleted successfully");
                 setOpenDelete(false);
                 router.refresh();
+                onMenuClick?.(item.id, "delete");
             }
         } catch (error: any) {
             toast.error(error?.data?.message || "Delete failed");
@@ -73,7 +68,7 @@ const TemplateCard = ({ item }: TemplateCardProps) => {
             label: "Assign to Program",
             value: "assign",
             icon: <ScreenShare className="w-5 h-5 text-headings" />,
-            onClick: () => console.log("Assign to Program", item.id)
+            onClick: () => onAssignClick?.(item.id)
         },
         // {
         //     label: "Edit",
@@ -81,12 +76,12 @@ const TemplateCard = ({ item }: TemplateCardProps) => {
         //     icon: <Pencil className="w-5 h-5" />,
         //     onClick: () => console.log("Edit", item.id)
         // },
-        {
-            label: "Schedule",
-            value: "schedule",
-            icon: <CalendarClock className="w-5 h-5 text-headings" />,
-            onClick: () => console.log("Schedule", item.id)
-        },
+        // {
+        //     label: "Schedule",
+        //     value: "schedule",
+        //     icon: <CalendarClock className="w-5 h-5 text-headings" />,
+        //     onClick: () => console.log("Schedule", item.id)
+        // },
         {
             label: "Rename",
             value: "rename",

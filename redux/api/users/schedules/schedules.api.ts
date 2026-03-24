@@ -26,8 +26,28 @@ const schedulesAPI = baseApi.injectEndpoints({
       }),
       providesTags: ["Schedules"],
     }),
-
+    updateSchedule: build.mutation<SuccessResponse, { id: string; data: Partial<any> }>({
+      query: ({ id, data }) => ({
+        url: `/schedule/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Schedules"],
+    }),
+    deleteSchedule: build.mutation<SuccessResponse, string>({
+      query: (id) => ({
+        url: `/schedule/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Schedules"],
+    }),
   }),
 });
 
-export const { useCreateScheduleMutation, useGetAllSchedulesDataQuery, useGetSingleScheduleDataQuery } = schedulesAPI;
+export const {
+  useCreateScheduleMutation,
+  useGetAllSchedulesDataQuery,
+  useGetSingleScheduleDataQuery,
+  useUpdateScheduleMutation,
+  useDeleteScheduleMutation,
+} = schedulesAPI;
