@@ -434,6 +434,7 @@ export default function DevicesPage() {
               >
                 Previous
               </button>
+              
               <button
                 type="button"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredDevices.length / itemsPerPage)))}
