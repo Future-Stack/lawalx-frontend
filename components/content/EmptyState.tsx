@@ -40,7 +40,7 @@ const EmptyState = ({ contentFilter, searchQuery }: EmptyStateProps) => {
     if (contentFilter === "folders") {
       setOpenFolderDialog(true);
     } else if (contentFilter === "playlists") {
-      console.log("Create playlist clicked");
+      fileInputRef.current?.click();
     } else {
       fileInputRef.current?.click();
     }

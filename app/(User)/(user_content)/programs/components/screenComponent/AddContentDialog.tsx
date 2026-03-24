@@ -149,17 +149,30 @@ const AddContentDialog = ({ open, setOpen, programId, onAdd }: AddContentDialogP
 
                 {/* Thumbnail */}
                 <div className="relative w-16 h-12 sm:w-20 sm:h-16 bg-gray-200 rounded overflow-hidden shrink-0 border border-border">
-                  <Image
-                    src={getUrl(item.url) || ""}
-                    alt={item.originalName}
-                    width={80}
-                    height={64}
-                    className="w-full h-full object-cover"
-                    unoptimized={true}
-                  />
+                  {item.type === "IMAGE" ? (
+                    <Image
+                      src={getUrl(item.url) || ""}
+                      alt={item.originalName}
+                      width={80}
+                      height={64}
+                      className="w-full h-full object-cover"
+                      unoptimized={true}
+                    />
+                  ) : (
+                    <video
+                      src={getUrl(item.url)}
+                      className="w-full h-full object-cover"
+                      muted
+                      preload="metadata"
+                      onError={(e: any) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-[10px] text-gray-400">No Preview</div>';
+                      }}
+                    />
+                  )}
                   {item.type === "VIDEO" && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/80 rounded-full flex items-center justify-center shadow-lg">
                         <Play className="h-3 w-3 sm:h-4 sm:w-4 text-bgBlue ml-0.5" fill="currentColor" />
                       </div>
                     </div>

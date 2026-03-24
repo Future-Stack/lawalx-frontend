@@ -309,7 +309,7 @@ export default function DevicesPage() {
       <div className="space-y-4">
         {/* Filtering Section - Moved Outside Table */}
         <div className="p-2 gap-2 rounded-[16px] border border-[#D4D4D4] bg-[#FAFAFA] dark:bg-gray-800/30 flex flex-col lg:flex-row items-center self-stretch">
-          <div className="flex p-3 items-center gap-2 rounded-lg border border-[#D4D4D4] bg-[#F9FAFB] dark:bg-gray-900 flex-1 w-full">
+          <div className="flex p-3 items-center gap-2 rounded-lg border border-border bg-input flex-1 w-full">
             <Search className="w-6 h-6 text-[#A3A3A3]" />
             <input
               type="text"
@@ -326,21 +326,21 @@ export default function DevicesPage() {
         </div>
 
         {/* Table Container */}
-        <div className="bg-white dark:bg-navbarBg rounded-xl border border-[#D4D4D4] overflow-hidden">
+        <div className="bg-navbarBg rounded-xl border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
-              <thead className="bg-[#F9FAFB] dark:bg-gray-800/50 border-b border-[#D4D4D4]">
+              <thead className="border-b border-border bg-bgGray/50 dark:bg-gray-800/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#404040] dark:text-gray-300">Device Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#404040] dark:text-gray-300">Location</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#404040] dark:text-gray-300">Program Playing</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#404040] dark:text-gray-300">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#404040] dark:text-gray-300">Last Synced</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-[#404040] dark:text-gray-300">Storage Usage</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Device Name</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Location</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Program Playing</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Status</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Last Synced</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Storage Usage</th>
                   <th className="px-6 py-4"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#D4D4D4] bg-white dark:bg-navbarBg">
+              <tbody className="divide-y divide-border bg-navbarBg">
                 {paginatedDevices.map((device) => (
                   <tr key={device.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-6 py-5">
@@ -407,12 +407,12 @@ export default function DevicesPage() {
               </tbody>
             </table>
             {paginatedDevices.length === 0 && !isLoading && (
-              <div className="p-12 text-center text-gray-500 font-medium bg-white dark:bg-navbarBg">
+              <div className="p-12 text-center text-gray-500 font-medium bg-navbarBg">
                 No devices found. Try adjusting your search or filters.
               </div>
             )}
             {isLoading && (
-              <div className="p-12 text-center text-gray-500 font-medium bg-white dark:bg-navbarBg flex items-center justify-center gap-2">
+              <div className="p-12 text-center text-gray-500 font-medium bg-navbarBg flex items-center justify-center gap-2">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Loading your devices...
               </div>
@@ -420,7 +420,7 @@ export default function DevicesPage() {
           </div>
 
           {/* Pagination */}
-          <div className="px-6 py-4 border-t border-[#D4D4D4] flex flex-col sm:flex-row justify-between items-center bg-white dark:bg-navbarBg gap-4 sm:gap-0">
+          <div className="px-6 py-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0 bg-bgGray/50 dark:bg-gray-800/50">
             <div className="text-sm text-[#737373] dark:text-gray-400 font-medium text-center sm:text-left">
               Showing {filteredDevices.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}-
               {Math.min(currentPage * itemsPerPage, filteredDevices.length)} of {filteredDevices.length} devices
@@ -430,7 +430,7 @@ export default function DevicesPage() {
                 type="button"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="flex-1 sm:flex-none px-4 py-2 border border-[#D4D4D4] rounded-lg text-sm font-semibold text-[#404040] dark:text-gray-300 shadow-sm disabled:opacity-50 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="flex-1 sm:flex-none px-4 py-2 border border-border rounded-lg text-sm font-semibold text-body cursor-pointer shadow-customShadow transition-colors"
               >
                 Previous
               </button>
@@ -438,7 +438,7 @@ export default function DevicesPage() {
                 type="button"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredDevices.length / itemsPerPage)))}
                 disabled={currentPage === 0 || currentPage >= Math.ceil(filteredDevices.length / itemsPerPage)}
-                className="flex-1 sm:flex-none px-4 py-2 border border-[#D4D4D4] rounded-lg text-sm font-semibold text-[#404040] dark:text-gray-300 shadow-sm disabled:opacity-50 cursor-pointer hover:bg-gray-50 transition-colors"
+                className="flex-1 sm:flex-none px-4 py-2 border border-border rounded-lg text-sm font-semibold text-body cursor-pointer shadow-customShadow transition-colors"
               >
                 Next
               </button>

@@ -56,6 +56,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [openRename, setOpenRename] = useState(false);
   const [openAssign, setOpenAssign] = useState(false);
+  const [assignContentId, setAssignContentId] = useState<string>("");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -203,7 +204,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
         <AssignToDialog
           open={openAssign}
           setOpen={setOpenAssign}
-          contentId={content.id}
+          contentId={assignContentId || content.id}
           onAssign={(ids) => console.log("Assigned to programs:", ids)}
         />
       )}
@@ -290,7 +291,13 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
         )}
 
         {!isFolder && (
-          <button onClick={() => setOpenAssign(true)} className="flex items-center gap-2 px-4 py-2 sm:py-3 border border-border rounded-lg text-sm sm:text-base font-medium text-headings cursor-pointer shadow-customShadow hover:text-bgBlue transition-colors">
+          <button
+            onClick={() => {
+              setAssignContentId(content.id);
+              setOpenAssign(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 sm:py-3 border border-border rounded-lg text-sm sm:text-base font-medium text-headings cursor-pointer shadow-customShadow hover:text-bgBlue transition-colors"
+          >
             <Plus className="w-5 h-5 text-headings hover:text-bgBlue transition-colors" /> Assign To
           </button>
         )}
@@ -394,7 +401,10 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
                   console.log("Menu:", id, action);
                 }
               }}
-              onAssignClick={(id: string) => console.log("Assign:", id)}
+              onAssignClick={(id: string) => {
+                setAssignContentId(id);
+                setOpenAssign(true);
+              }}
             />
           </div>
         </div>

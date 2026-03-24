@@ -164,7 +164,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
           <h2 className="text-xl sm:text-3xl font-bold text-Headings dark:text-white text-nowrap">
             Create New Program
           </h2>
-          <button onClick={handleClose} className="text-gray-400 hover:text-red-500 dark:hover:text-gray-300 transition-colors self-end sm:self-auto cursor-pointer">
+          <button onClick={handleClose} className="text-gray-400 hover:text-red-500 hover:bg-gray-100 md:p-2 p-1 rounded-full dark:hover:text-gray-300 transition-colors self-end sm:self-auto cursor-pointer">
             <X className="w-6 h-6" />
           </button>
         </div>

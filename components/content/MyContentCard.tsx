@@ -30,7 +30,7 @@ import RenameDialog from "./RenameDialog";
 import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
 import { useDeleteFileMutation, useDeleteFolderMutation } from "@/redux/api/users/content/content.api";
 import { toast } from "sonner";
-import AssignToDialog from "./AssignToDialog";
+
 
 interface ContentCardProps {
   item: ContentItem;
@@ -57,7 +57,6 @@ const MyContentCard = ({
   const [openRename, setOpenRename] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openImage, setOpenImage] = useState(false);
-  const [openAssign, setOpenAssign] = useState(false);
 
   console.log("this is all content item", item);
 
@@ -214,10 +213,9 @@ const MyContentCard = ({
       ];
     }
 
-    // Video/Image: Full options - Assign to Program, Schedule, Rename, Move to Folder, Delete, View Details
     return [
-      { label: "Assign to Program", value: "assign", icon: <ScreenShare className="w-5 h-5 text-headings" />, onClick: () => { setOpenAssign(true); onAssignClick?.(item.id); } },
-      { label: "Schedule", value: "schedule", icon: <CalendarClock className="w-5 h-5 text-headings" />, onClick: () => onMenuClick?.(item.id, "schedule") },
+      { label: "Assign to Program", value: "assign", icon: <ScreenShare className="w-5 h-5 text-headings" />, onClick: () => { onAssignClick?.(item.id); } },
+      // { label: "Schedule", value: "schedule", icon: <CalendarClock className="w-5 h-5 text-headings" />, onClick: () => onMenuClick?.(item.id, "schedule") },
       { label: "Rename", value: "rename", icon: <Pencil className="w-5 h-5" />, onClick: () => setOpenRename(true) },
       { label: "Move to Folder", value: "move", icon: <Folder className="w-5 h-5 text-headings" />, onClick: () => onMenuClick?.(item.id, "move") },
       { label: "Delete", value: "delete", icon: <Trash2 className="w-5 h-5 text-red-500" />, danger: true, onClick: () => setOpenDeleteDialog(true) },
@@ -248,18 +246,7 @@ const MyContentCard = ({
         />
       )}
 
-      {openAssign && (
-        <AssignToDialog
-          open={openAssign}
-          setOpen={setOpenAssign}
-          contentId={item.id}
-          onAssign={(selectedIds) => {
-            console.log("Assigned to programs:", selectedIds);
-            // The mutation inside AssignToDialog invalidates "Content" tag, 
-            // which should trigger a refresh of the content data.
-          }}
-        />
-      )}
+
 
       <DeleteConfirmationModal
         isOpen={openDeleteDialog}

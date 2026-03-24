@@ -71,7 +71,7 @@ const AssignToDialog = ({ open, setOpen, contentId, onAssign }: AssignToDialogPr
             maxHeight="lg"
             className="rounded-2xl"
         >
-            <div className="flex flex-col h-full gap-4">
+            <div className="flex flex-col h-full gap-4 px-0.5">
                 <div className="border-t border-border -mx-2 mb-2" />
 
                 {/* Search Box - Sticky-like placement inside BaseDialog */}
