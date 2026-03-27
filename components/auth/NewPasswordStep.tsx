@@ -78,13 +78,8 @@ const NewPasswordStep: React.FC<NewPasswordStepProps> = ({ email, onReset }) => 
                 <div className="space-y-4">
                     <AuthInput
                         label="Password"
-                        placeholder="lawal@tape.com"
-                        type="password" // The mockup shows email as placeholder but label is Password? Image 5 shows "Password" and value "lawal@tape.com" but type seems to be password (hidden/masked or visible?).
-                        // Wait, Image 5 shows "Password" label, Input has text "lawal@tape.com". This is weird. "lawal@tape.com" is an email, not a password.
-                        // Ah, maybe the user wants the input to just LOOK like the design, but functionally should be a password input. 
-                        // I will assume it's a password input. I will use "New Password" as label or just "Password" to match mockup.
-                        // I will put a proper password placeholder. Keeping "lawal@tape.com" as placeholder for password is weird, but maybe that's what they want? 
-                        // No, likely the mockup just copy-pasted the email into the password field. I'll use a normal placeholder.
+                        placeholder="Enter your password"
+                        type="password" 
                         required
                         icon={HelpCircle}
                         {...register("password")}
@@ -106,7 +101,7 @@ const NewPasswordStep: React.FC<NewPasswordStepProps> = ({ email, onReset }) => 
 
                 <AuthInput
                     label="Confirm Password"
-                    placeholder="lawal@tape.com"
+                    placeholder="Enter your confirm password"
                     type="password"
                     required
                     icon={HelpCircle}

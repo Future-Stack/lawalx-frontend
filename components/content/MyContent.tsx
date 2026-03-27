@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   CloudUpload,
   Grid2X2,
@@ -21,7 +21,8 @@ import EmptyState from "./EmptyState";
 import CreateFolderDialog from "./CreateFolderDialog";
 import FolderOpenDialog from "./FolderOepnDialog";
 import AssignToDialog from "./AssignToDialog";
-import { useGetAllContentDataQuery, useUploadFileMutation, useUpdateFolderNameMutation, useUpdateFileNameMutation } from "@/redux/api/users/content/content.api";
+import UploadFileModal from "./UploadFileModal";
+import { useGetAllContentDataQuery, useUpdateFolderNameMutation, useUpdateFileNameMutation } from "@/redux/api/users/content/content.api";
 import CommonLoader from "@/common/CommonLoader";
 import { ContentItem, SelectOption } from "@/types/content";
 import { transformFile, transformFolder } from "@/lib/content-utils";
@@ -44,18 +45,19 @@ export const allContent: SelectOption[] = [
 ];
 
 const MyContent = () => {
-  const [uploadFile, { isLoading }] = useUploadFileMutation();
   const [updateFolderName] = useUpdateFolderNameMutation();
   const [updateFileName] = useUpdateFileNameMutation();
-  const { data: allContentData, isLoading: isAllContentLoading } = useGetAllContentDataQuery(undefined);
+  const { data: allContentData, isLoading: isAllContentLoading, isFetching } = useGetAllContentDataQuery(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("");
   const [contentFilter, setContentFilter] = useState("all-content");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [open, setOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [openAssign, setOpenAssign] = useState(false);
   const [assignContentId, setAssignContentId] = useState<string>("");
   const [isMounted, setIsMounted] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
 
   console.log("all content data", allContentData);
 
@@ -136,46 +138,8 @@ const MyContent = () => {
     setOpenAssign(true);
   };
 
-  // UPLOAD HANDLER
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    // Build FormData
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append("file", files[i]);
-    }
-
-    try {
-      const res = await uploadFile(formData).unwrap();
-      console.log(res);
-
-      toast.success(res?.message || "File(s) uploaded successfully");
-      // reset file input so same file can be re-selected later
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (err: any) {
-      console.error("Upload failed:", err);
-      toast.error(err?.data?.message || "Upload failed. Please try again.");
-    }
-  };
-
   return (
     <div className="space-y-6 md:space-y-8">
-      {/* Hidden File Input for Upload */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        multiple // Allow selecting multiple files
-      />
 
       {/* Header */}
       <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-3 mb-6">
@@ -187,19 +151,11 @@ const MyContent = () => {
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
           {/* UPLOAD BUTTON */}
           <button
-            onClick={handleUploadClick}
+            onClick={() => setIsUploadModalOpen(true)}
             className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center justify-center gap-2 text-sm md:text-base font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow min-w-40"
-            disabled={isLoading}
-            aria-busy={isLoading}
           >
-            {isLoading ? (
-              <CommonLoader size={24} color="text-white" text="Uploading..." className="m-0" />
-            ) : (
-              <>
-                <CloudUpload className="w-5 h-5" />
-                <span className="truncate">Upload Content</span>
-              </>
-            )}
+            <CloudUpload className="w-5 h-5" />
+            <span className="truncate">Upload Content</span>
           </button>
 
           <button
@@ -284,7 +240,11 @@ const MyContent = () => {
           <CommonLoader size={48} text="Loading content..." />
         </div>
       ) : filteredContent.length === 0 ? (
-        <EmptyState contentFilter={contentFilter} searchQuery={searchQuery} />
+        <EmptyState
+          contentFilter={contentFilter}
+          searchQuery={searchQuery}
+          onUploadClick={() => setIsUploadModalOpen(true)}
+        />
       ) : (
         <div className={`flex flex-col ${viewMode === "list" ? "bg-navbarBg rounded-xl border border-border overflow-hidden" : ""} min-h-[600px] md:min-h-[750px]`}>
           <div className="flex-1 overflow-x-auto">
@@ -313,6 +273,23 @@ const MyContent = () => {
       )}
 
       {open && <CreateFolderDialog open={open} setOpen={setOpen} />}
+
+      {/* Upload File Modal */}
+      <UploadFileModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        setIsPageLoading={setIsPageLoading}
+      />
+
+      {/* Full Page Loader Overlay - Lower z-index to stay BEHIND the modal but cover the content */}
+      {(isPageLoading || isFetching) && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+          <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-gray-200 dark:border-gray-700">
+            <CommonLoader size={56} text="Uploading files..." />
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium animate-pulse">Please do not close this page</p>
+          </div>
+        </div>
+      )}
 
       {/* Move to Folder dialog - reuse FolderOpenDialog component */}
       {selectedItem && (

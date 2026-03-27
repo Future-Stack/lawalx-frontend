@@ -16,14 +16,15 @@ import ContentTimeline from "../components/screenComponent/ContentTimeline";
 import ContentSchedule from "../components/screenComponent/ContentSchedule";
 import ScreenSettings from "../components/screenComponent/ScreenSettings";
 import MapLocation from "../components/screenComponent/MapLocation";
+import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import Breadcrumb from "@/common/BreadCrumb";
 import { useGetSingleProgramDataQuery, useUpdateSingleProgramMutation } from "@/redux/api/users/programs/programs.api";
 import { toast } from "sonner";
-import { Timeline } from "@/redux/api/users/programs/programs.type";
+import { Program, Device, Timeline } from "@/redux/api/users/programs/programs.type";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 
 dayjs.extend(relativeTime);
 
@@ -44,6 +45,8 @@ const ScreenCardDetails = () => {
   // Lifted state for ScreenSettings
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [localDevices, setLocalDevices] = useState<Device[]>([]);
+  const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
@@ -53,6 +56,9 @@ const ScreenCardDetails = () => {
     if (program) {
       if (program.timeline) {
         setLocalTimeline(program.timeline);
+      }
+      if (program.devices) {
+        setLocalDevices(program.devices);
       }
       setName(program.name || "");
       setDescription(program.description || "");
@@ -105,7 +111,7 @@ const ScreenCardDetails = () => {
   const handleSave = async () => {
     try {
       const content_ids = localTimeline.map((item) => item.fileId);
-      const device_ids = program.devices?.map((d) => d.id) || [];
+      const device_ids = localDevices.map((d) => d.id);
 
       const res = await updateProgram({
         id: String(id),
@@ -158,14 +164,14 @@ const ScreenCardDetails = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-navbarBg rounded-full border border-border p-1 mb-6 inline-flex overflow-x-auto max-w-full">
+        <div className="bg-navbarBg rounded-full border border-border p-1 mb-6 inline-flex overflow-x-auto w-fit">
           {(["timeline", "schedule", "settings"] as const).map((tab) => {
             const isActiveTab = activeTab === tab;
             return (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm sm:text-base rounded-full mr-2 font-medium whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${isActiveTab
+                className={`px-4 py-2 text-sm sm:text-base rounded-full gap-2 font-medium whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${isActiveTab
                   ? "bg-blue-50 dark:bg-blue-900/20 shadow-customShadow"
                   : "hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
@@ -207,6 +213,9 @@ const ScreenCardDetails = () => {
                 setName={setName}
                 description={description}
                 setDescription={setDescription}
+                localDevices={localDevices}
+                setLocalDevices={setLocalDevices}
+                openAddDevice={() => setIsAddDeviceModalOpen(true)}
               />
             )}
           </div>
@@ -324,6 +333,10 @@ const ScreenCardDetails = () => {
           </div>
         </div>
       </div>
+      <AddDeviceModal
+        isOpen={isAddDeviceModalOpen}
+        onClose={() => setIsAddDeviceModalOpen(false)}
+      />
     </div>
   );
 };

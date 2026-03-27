@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { X } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -28,15 +28,26 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
   const [addDevice] = useAddDeviceMutation();
   const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
   const [pin, setPin] = useState("");
-  const [selectedScreen, setSelectedScreen] = useState("All Content");
+  const [selectedScreen, setSelectedScreen] = useState("All Programs");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const programOptions = useMemo(() => {
     const fetched = programsData?.data?.map(p => ({ id: p.id, name: p.name })) || [];
-    return [{ id: "all-content", name: "All Content" }, ...fetched];
+    return [{ id: "all-programs", name: "All Programs" }, ...fetched];
   }, [programsData]);
 
+  // Handle body scroll locking
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
 
   const handleAddDevice = async ({ pin, name }: { pin: string, name?: string }) => {
     try {
@@ -171,6 +182,11 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
                     {option.name}
                   </SelectItem>
                 ))}
+                {!isLoadingPrograms && programsData?.data?.length === 0 && (
+                  <div className="py-2 px-8 text-sm text-gray-400 italic pointer-events-none">
+                    No programs found
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>

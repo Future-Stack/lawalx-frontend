@@ -32,7 +32,7 @@ export default function DeleteConfirmationModal({
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-md p-0 bg-white dark:bg-gray-900 border-none rounded-3xl overflow-hidden focus:outline-none shadow-2xl">
                 <div className="p-8 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center border border-red-100 dark:border-red-800 mx-auto mb-6">
+                    <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center border border-red-100 dark:border-red-800 mx-auto mb-6 shadow-customShadow">
                         <Trash2 className="w-8 h-8 text-red-500" />
                     </div>
 
@@ -52,14 +52,13 @@ export default function DeleteConfirmationModal({
 
                     <div className="mt-8 flex items-center gap-4">
                         <Button
-                            variant="outline"
-                            className="flex-1 rounded-xl h-12 font-bold border-gray-200 dark:border-gray-700 shadow-none hover:bg-gray-50 dark:hover:bg-gray-800"
+                            className="flex-1 rounded-xl h-12 font-bold border-border hover:bg-gray-50 shadow-customShadow text-body"
                             onClick={onClose}
                         >
                             Cancel
                         </Button>
                         <Button
-                            className="flex-1 rounded-xl h-12 font-bold bg-red-500 hover:bg-red-600 text-white shadow-lg shadow-red-500/20"
+                            className="flex-1 rounded-xl h-12 font-bold bg-red-500 hover:bg-red-600 text-white shadow-customShadow"
                             onClick={() => {
                                 onConfirm();
                                 onClose();
