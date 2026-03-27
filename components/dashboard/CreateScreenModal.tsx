@@ -271,12 +271,12 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
           {currentStep === 2 && (
             <div className="space-y-4">
               {/* Selected count badge */}
-              {programData.content_ids.length > 0 && (
+              {/* {programData.content_ids.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
                   <CircleCheckBigIcon className="w-4 h-4" />
                   {programData.content_ids.length} content{programData.content_ids.length > 1 ? "s" : ""} selected
                 </div>
-              )}
+              )} */}
 
               <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
                 <div className="relative flex-1">
@@ -354,12 +354,12 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
           {currentStep === 3 && (
             <div className="space-y-5">
               {/* Selected count badge */}
-              {programData.device_ids.length > 0 && (
+              {/* {programData.device_ids.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
                   <CircleCheckBigIcon className="w-4 h-4" />
                   {programData.device_ids.length} device{programData.device_ids.length > 1 ? "s" : ""} selected
                 </div>
-              )}
+              )} */}
 
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">

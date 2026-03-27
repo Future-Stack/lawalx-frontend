@@ -75,14 +75,6 @@ const SignInPasswordStep: React.FC<SignInPasswordStepProps> = ({ email, onLogin,
 
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        {/* <input
-                            type="checkbox"
-                            id="remember"
-                            className="w-4 h-4 rounded border-gray-300 text-bgBlue focus:ring-bgBlue"
-                        />
-                        <label htmlFor="remember" className="text-sm text-headings cursor-pointer">
-                            Remember me
-                        </label> */}
                     </div>
                     <Link href="/forget-password" className="text-sm text-bgBlue font-medium hover:underline">
                         Forget Password

@@ -2,8 +2,7 @@
 "use client";
 
 import { FC, useState, useEffect } from "react";
-import { Trash2, Loader2 } from "lucide-react";
-import AddDeviceDialog from "./AddDeviceDialog";
+import { Trash2, Loader2, Plus, WifiOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
@@ -17,6 +16,9 @@ interface ScreenSettingsProps {
     setName: (name: string) => void;
     description: string;
     setDescription: (desc: string) => void;
+    localDevices: Device[];
+    setLocalDevices: React.Dispatch<React.SetStateAction<Device[]>>;
+    openAddDevice: () => void;
 }
 
 const ScreenSettings: FC<ScreenSettingsProps> = ({
@@ -25,18 +27,17 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
     setName,
     description: desc,
     setDescription: setDesc,
+    localDevices,
+    setLocalDevices,
+    openAddDevice,
 }) => {
     const router = useRouter();
     const [deleteProgram, { isLoading: isDeleting }] = useDeleteProgramMutation();
-    const [connectedDevices, setConnectedDevices] = useState<Device[]>([]);
-    const [open, setOpen] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-    useEffect(() => {
-        if (program) {
-            setConnectedDevices(program.devices || []);
-        }
-    }, [program]);
+    const handleRemoveDevice = (id: string) => {
+        setLocalDevices(localDevices.filter((device) => device.id !== id));
+    };
 
     // const handleRemoveDevice = (id: string) => {
     //     setConnectedDevices(connectedDevices.filter((device) => device.id !== id));
@@ -54,109 +55,99 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
 
     return (
         <div className="mx-auto min-h-screen">
-            <div className="bg-navbarBg rounded-xl border border-borderGray p-4 sm:p-6">
+            <div className="bg-navbarBg rounded-xl border border-border p-4 sm:p-6 shadow-sm">
                 {/* Header */}
                 <div className="mb-6">
-                    <h2 className="text-xl sm:text-2xl font-semibold text-headings mb-2">Screen Settings</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-headings dark:text-white mb-1">Program Settings</h2>
                     <p className="text-sm sm:text-base text-muted">
                         Manage device configuration and connected screens
                     </p>
                 </div>
 
                 <div className="mb-6">
-                    <label className="block text-sm sm:text-base font-medium text-headings mb-2">Screen Name</label>
+                    <label className="block text-sm font-semibold text-headings dark:text-white mb-2">Program Name</label>
                     <input
                         type="text"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        placeholder="Conference Room Display"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm sm:text-base text-gray-900 bg-input placeholder:text-muted"
+                        placeholder="Main Lobby Display"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm sm:text-base text-gray-900 bg-[#F9FAFB] placeholder:text-muted"
                     />
                 </div>
 
                 {/* Description */}
-                <div className="mb-6">
-                    <label className="block text-sm sm:text-base font-medium text-headings mb-2">Description</label>
+                <div className="mb-8">
+                    <label className="block text-sm font-semibold text-headings dark:text-white mb-2">Description</label>
                     <textarea
                         value={desc}
                         onChange={(e) => setDesc(e.target.value)}
                         placeholder="Display for meeting room presentations and schedules"
-                        rows={3}
-                        className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-300 text-sm sm:text-base text-gray-900 resize-none placeholder:text-muted bg-input"
+                        rows={4}
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm sm:text-base text-gray-900 resize-none placeholder:text-muted bg-[#F9FAFB]"
                     />
                 </div>
 
                 {/* Connected Devices */}
-                {/* <div className="mb-6">
-                    <h3 className="text-base sm:text-xl font-medium text-headings mb-2">Connected Devices</h3>
-                    <p className="text-sm sm:text-base text-muted mb-4">
-                        Manage devices connected to this screen
-                    </p>
+                <div className="mb-8">
+                    <label className="block text-sm font-semibold text-headings dark:text-white mb-4">Connected Devices</label>
 
-                    <div className="space-y-3 mb-6">
-                        {connectedDevices.map((device) => (
+                    <div className="space-y-3 mb-4">
+                        {localDevices.map((device) => (
                             <div
                                 key={device.id}
-                                className="flex  items-start sm:items-center gap-3 sm:gap-4 p-4 sm:p-6 bg-bgGray border border-borderGray rounded-xl hover:border-gray-300 transition-colors"
+                                className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border border-border rounded-xl shadow-sm"
                             >
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                                        <span className="font-semibold text-base sm:text-lg text-headings">{device.name}</span>
-                                        {device.status === "ONLINE" && (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs sm:text-sm font-medium rounded-full w-fit">
-                                                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                                                Online
-                                            </span>
-                                        )}
+                                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                                        <span className="font-bold text-sm sm:text-base text-headings dark:text-white">{device.name}</span>
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${device.status === "ONLINE"
+                                            ? "bg-green-50 text-green-600 border border-green-200"
+                                            : "bg-red-50 text-red-600 border border-red-200"
+                                            }`}>
+                                            <span className={`w-2 h-2 rounded-full ${device.status === "ONLINE" ? "bg-green-500" : "bg-red-500"}`}></span>
+                                            {device.status === "ONLINE" ? "Online" : "Offline"}
+                                        </span>
                                     </div>
-                                    <p className="text-sm sm:text-base text-muted">{device.location || "No location"}</p>
+                                    <p className="text-xs sm:text-sm text-muted uppercase tracking-wider">{device.location || "No location"}</p>
                                 </div>
                                 <button
                                     onClick={() => handleRemoveDevice(device.id)}
-                                    className="shrink-0 p-2 border border-border bg-white cursor-pointer hover:bg-gray-200 rounded-lg shadow-customShadow transition-colors"
+                                    className="p-2 border border-border rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
                                 >
-                                    <Trash2 className="w-5 sm:w-6 h-5 sm:h-6 text-gray-600" />
+                                    <Trash2 className="w-5 h-5 text-gray-600" />
                                 </button>
                             </div>
                         ))}
                     </div>
 
                     <button
-                        onClick={() => setOpen(true)}
-                        className="w-full py-2.5 border-2 border-bgBlue text-bgBlue hover:bg-gray-100 rounded-lg text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                        onClick={openAddDevice}
+                        className="w-full py-3.5 border border-bgBlue text-bgBlue hover:bg-blue-50 transition-all rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 cursor-pointer shadow-sm"
                     >
-                        <Plus className="w-4 sm:w-6 h-4 sm:h-6 text-bgBlue font-semibold" />
+                        <Plus className="w-5 h-5" />
                         Add Devices
                     </button>
-                </div> */}
+                </div>
 
-                {/* Delete Screen */}
-                <div className="mt-6 p-4 sm:p-6 rounded-xl bg-red-50">
-                    <div className="p-3 rounded-lg flex items-start">
-                        <p className="text-sm sm:text-base text-[#991B1B]">
-                            These actions cannot be undone. Please proceed with caution.
-                        </p>
-                    </div>
+                {/* Danger Zone */}
+                <div className="mt-10 p-4 sm:p-6 rounded-2xl bg-red-50 border border-red-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <p className="text-sm sm:text-base text-[#B91C1C] font-medium max-w-md">
+                        These actions cannot be undone. Please proceed with caution.
+                    </p>
                     <button
                         onClick={() => setOpenDeleteDialog(true)}
                         disabled={isDeleting}
-                        className="w-full sm:w-auto px-4 sm:px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm sm:text-base font-semibold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-customShadow disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#EF4444] hover:bg-[#DC2626] text-white rounded-xl text-sm sm:text-base font-bold transition-all cursor-pointer shadow-sm disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                         {isDeleting ? (
-                            <>
-                                <Loader2 className="w-4 sm:w-5 h-4 sm:h-5 animate-spin" />
-                                Deleting...
-                            </>
+                            <Loader2 className="w-5 h-5 animate-spin" />
                         ) : (
-                            <>
-                                <Trash2 className="w-4 sm:w-5 h-4 sm:h-5" />
-                                Delete Screen
-                            </>
+                            <Trash2 className="w-5 h-5" />
                         )}
+                        Delete Screen
                     </button>
                 </div>
             </div>
-            {open && <AddDeviceDialog open={open} setOpen={setOpen} />}
             <DeleteConfirmationModal
                 isOpen={openDeleteDialog}
                 onClose={() => setOpenDeleteDialog(false)}

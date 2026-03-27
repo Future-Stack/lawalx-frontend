@@ -171,6 +171,11 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
                     {option.name}
                   </SelectItem>
                 ))}
+                {!isLoadingPrograms && programsData?.data?.length === 0 && (
+                  <div className="py-2 px-8 text-sm text-gray-400 italic pointer-events-none">
+                    No programs found
+                  </div>
+                )}
               </SelectContent>
             </Select>
           </div>

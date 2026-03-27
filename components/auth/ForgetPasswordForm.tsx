@@ -103,7 +103,7 @@ const ForgetPasswordForm = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <AuthInput
                     label="Email"
-                    placeholder="lawal@tape.com"
+                    placeholder="Enter your email"
                     type="email"
                     required
                     icon={HelpCircle}
