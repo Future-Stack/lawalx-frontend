@@ -97,7 +97,10 @@ const SignUpPage = () => {
                         <div className="pt-4">
                             <button
                                 className="w-full h-[52px] bg-bgBlue text-white rounded-2xl font-bold text-lg hover:opacity-90 transition-all shadow-xl shadow-bgBlue/20 active:scale-95"
-                                onClick={() => window.location.href = "/"}
+                                onClick={() => {
+                                    localStorage.setItem("is_new_user", "true");
+                                    window.location.href = "/";
+                                }}
                             >
                                 Go to Dashboard
                             </button>

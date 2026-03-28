@@ -47,6 +47,7 @@ const SignInForm = () => {
                     token: accessToken,
                     refreshToken
                 }));
+                localStorage.setItem("is_new_user", "true");
                 router.push("/dashboard");
             }
         } catch (error) {
