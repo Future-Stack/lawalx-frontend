@@ -33,6 +33,8 @@ import { formatDistanceToNow } from "date-fns";
 import NavbarNewDropdown from "./NavbarNewDropdown";
 import { useNavbarActions } from "@/hooks/useNavbarActions";
 import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
+import CreateScreenModal from "@/components/dashboard/CreateScreenModal";
+import UploadFileModal from "@/components/content/UploadFileModal";
 import CreateFolderDialog from "@/components/content/CreateFolderDialog";
 import CreateScheduleDialog from "@/app/(User)/(user_content)/schedules/_components/CreateScheduleDialog";
 
@@ -60,6 +62,15 @@ export default function UserDashboardNavbar() {
     setIsCreateFolderOpen,
     isCreateScheduleOpen,
     setIsCreateScheduleOpen,
+    isCreateProgramOpen,
+    setIsCreateProgramOpen,
+    isUploadModalOpen,
+    setIsUploadModalOpen,
+    isPageLoading,
+    setIsPageLoading,
+    onboardingStep,
+    startOnboarding,
+    completeStep,
     isUploading,
     fileInputRef,
     handleUploadClick,
@@ -73,6 +84,11 @@ export default function UserDashboardNavbar() {
   // Avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
+    // Check for new user onboarding
+    const isNewUser = localStorage.getItem("is_new_user");
+    if (isNewUser === "true" && !onboardingStep) {
+      startOnboarding();
+    }
   }, []);
 
   const toggleTheme = () => {
@@ -591,7 +607,8 @@ export default function UserDashboardNavbar() {
                   }}
                   className="w-full text-left px-2 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded flex items-center gap-2 cursor-pointer"
                 >
-                  <LogOutIcon className="w-4 h-4" /> Sign Out
+                  <LogOutIcon className="w-4 h-4 mr-2" />
+                  Sign Out
                 </button>
               </div>
             </div>
@@ -610,7 +627,25 @@ export default function UserDashboardNavbar() {
       {/* Modals */}
       <AddDeviceModal
         isOpen={isAddDeviceOpen}
-        onClose={() => setIsAddDeviceOpen(false)}
+        onClose={() => {
+          setIsAddDeviceOpen(false);
+          completeStep("add-device");
+        }}
+      />
+      <UploadFileModal
+        isOpen={isUploadModalOpen}
+        onClose={() => {
+          setIsUploadModalOpen(false);
+          completeStep("upload");
+        }}
+        setIsPageLoading={setIsPageLoading}
+      />
+      <CreateScreenModal
+        isOpen={isCreateProgramOpen}
+        onClose={() => {
+          setIsCreateProgramOpen(false);
+          completeStep("program");
+        }}
       />
       <CreateFolderDialog
         open={isCreateFolderOpen}
@@ -618,7 +653,10 @@ export default function UserDashboardNavbar() {
       />
       <CreateScheduleDialog
         open={isCreateScheduleOpen}
-        setOpen={setIsCreateScheduleOpen}
+        setOpen={(open) => {
+          setIsCreateScheduleOpen(open);
+          if (!open) completeStep("schedule");
+        }}
       />
     </header>
 

@@ -9,7 +9,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 interface DeleteConfirmationModalProps {
     isOpen: boolean;

@@ -196,10 +196,10 @@ export default function ScheduleModal({
               <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${step > s.id
-                      ? "bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-800"
-                      : step === s.id
-                        ? "bg-blue-50 dark:bg-blue-900/30 border border-bgBlue"
-                        : "bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
+                    ? "bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-800"
+                    : step === s.id
+                      ? "bg-blue-50 dark:bg-blue-900/30 border border-bgBlue"
+                      : "bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600"
                     }`}
                 >
                   {step > s.id ? (
@@ -345,8 +345,8 @@ export default function ScheduleModal({
                       <span className="font-medium text-gray-900 dark:text-white">{screen.name}</span>
                     </div>
                     <span className={`text-xs px-3 py-1 rounded-full font-medium ${screen.status === "online"
-                        ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
-                        : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
+                      ? "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
+                      : "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
                       }`}>
                       {screen.status}
                     </span>
@@ -387,8 +387,8 @@ export default function ScheduleModal({
                           setForm({ ...form, days: updated });
                         }}
                         className={`py-3 rounded-lg font-medium text-sm transition-all ${(form.days ?? []).includes(day)
-                            ? "bg-bgBlue text-white"
-                            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                          ? "bg-bgBlue text-white"
+                          : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                           }`}
                       >
                         {day}
@@ -418,8 +418,8 @@ export default function ScheduleModal({
                             setForm({ ...form, monthlyDays: updated });
                           }}
                           className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${selected
-                              ? "bg-bgBlue text-white"
-                              : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
+                            ? "bg-bgBlue text-white"
+                            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
                             }`}
                         >
                           {num}
@@ -523,8 +523,8 @@ export default function ScheduleModal({
             onClick={prev}
             disabled={step === 1}
             className={`flex items-center gap-2 px-3 py-1.5 md:px-5 md:py-2.5 border border-borderGray dark:border-gray-600 rounded-lg font-medium transition-colors ${step === 1
-                ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
-                : "text-gray-700 dark:text-gray-300 hover:scale-[1.02] hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+              ? "text-gray-400 dark:text-gray-500 cursor-not-allowed"
+              : "text-gray-700 dark:text-gray-300 hover:scale-[1.02] hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
               }`}
           >
             <ChevronLeft className="w-5 h-5" />

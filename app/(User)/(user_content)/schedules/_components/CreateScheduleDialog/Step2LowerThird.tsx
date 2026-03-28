@@ -151,14 +151,14 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
 
                         {/* MEDIA */}
                         <div className="relative w-full aspect-video bg-gray-900 overflow-hidden">
-                            {data.selectedContent.type === "video" ? (
+                            {data.selectedContent.type === "video" && data.selectedContent.video ? (
                                 <BaseVideoPlayer
-                                    src={data.selectedContent.video || data.selectedContent.audio || ""}
+                                    src={data.selectedContent.video}
                                     poster={data.selectedContent.thumbnail}
                                     autoPlay={false}
                                     rounded="rounded-none"
                                 />
-                            ) : data.selectedContent.type === "audio" ? (
+                            ) : data.selectedContent.type === "audio" && data.selectedContent.audio ? (
                                 <div className="w-full h-full flex items-center justify-center">
                                     <Music className="w-16 h-16 text-white" />
                                 </div>
