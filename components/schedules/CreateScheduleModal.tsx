@@ -239,7 +239,7 @@ export default function ScheduleModal({
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="e.g. Morning Welcome"
-                  className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-bgBlue text-gray-900 dark:text-white"
+                  className="w-full px-4 py-3 border border-border bg-white dark:bg-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-bgBlue text-gray-900 dark:text-white"
                 />
               </div>
               <div>

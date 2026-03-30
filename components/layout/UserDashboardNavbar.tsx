@@ -30,6 +30,7 @@ import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { logout } from "@/redux/features/auth/authSlice";
 import { useGetMyNotificationsQuery, useReadAllNotificationsMutation, useReadNotificationMutation } from "@/redux/api/users/notificationApi";
 import { formatDistanceToNow } from "date-fns";
+import CommonLoader from "@/common/CommonLoader";
 import NavbarNewDropdown from "./NavbarNewDropdown";
 import { useNavbarActions } from "@/hooks/useNavbarActions";
 import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
@@ -71,10 +72,7 @@ export default function UserDashboardNavbar() {
     onboardingStep,
     startOnboarding,
     completeStep,
-    isUploading,
-    fileInputRef,
     handleUploadClick,
-    handleFileChange,
   } = useNavbarActions();
 
   // Dark Mode Setup
@@ -244,7 +242,7 @@ export default function UserDashboardNavbar() {
               onUploadContent={handleUploadClick}
               onSchedule={() => setIsCreateScheduleOpen(true)}
               onNewFolder={() => setIsCreateFolderOpen(true)}
-              isUploading={isUploading}
+              isUploading={isPageLoading}
             />
           </div>
 
@@ -615,14 +613,6 @@ export default function UserDashboardNavbar() {
           </div>
         </div>
       )}
-      {/* Hidden File Input */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        multiple
-      />
 
       {/* Modals */}
       <AddDeviceModal
@@ -658,6 +648,16 @@ export default function UserDashboardNavbar() {
           if (!open) completeStep("schedule");
         }}
       />
+
+      {/* Full Page Loader Overlay */}
+      {isPageLoading && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+          <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-gray-200 dark:border-gray-700">
+            <CommonLoader size={56} text="Uploading files..." />
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium animate-pulse">Please do not close this page</p>
+          </div>
+        </div>
+      )}
     </header>
 
   );

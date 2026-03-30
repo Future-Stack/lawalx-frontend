@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../../baseApi";
-import { CreateFolderPayload, SuccessResponse } from "../content/content.type";
+import { SuccessResponse } from "../content/content.type";
 import { AddDevicePin, DeviceListResponse } from "./devices.type";
 
 const devicesAPI = baseApi.injectEndpoints({

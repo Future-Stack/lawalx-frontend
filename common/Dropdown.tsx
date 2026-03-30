@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 
 type DropdownOption = {
   value: string | number;
@@ -24,6 +24,25 @@ export default function Dropdown({
   className = "",
 }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleSelect = (option: DropdownOption) => {
     onChange(option.value);
@@ -34,7 +53,7 @@ export default function Dropdown({
     options.find((opt) => opt.value === value)?.label || placeholder;
 
   return (
-    <div className={`relative w-full ${className}`}>
+    <div ref={dropdownRef} className={`relative w-full ${className}`}>
       {label && (
         <label className="block mb-2 text-sm font-medium text-gray-700">
           {label}
@@ -65,7 +84,9 @@ export default function Dropdown({
             <li
               key={option.value}
               onClick={() => handleSelect(option)}
-              className={`px-4 py-2 cursor-pointer hover:bg-blue-500 ${value === option.value ? "bg-cardBackground font-medium" : ""
+              className={`px-4 py-3 cursor-pointer text-sm transition-colors ${value === option.value
+                ? "bg-bgBlue text-white font-medium"
+                : "text-gray-700 dark:text-gray-300 hover:bg-bgBlue hover:text-white"
                 }`}
             >
               {option.label}

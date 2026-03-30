@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { Music } from "lucide-react";
+import { AudioLines, FilePlay, GalleryThumbnails, Music } from "lucide-react";
 import NextImage from "next/image";
 import BaseSelect from "@/common/BaseSelect";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
@@ -20,7 +20,7 @@ const FIELD_SIZE = "h-11 px-4 py-2 text-sm rounded-md";
 
 interface Step2LowerThirdProps {
     data: {
-        selectedContent: ContentItem;
+        selectedContent: ContentItem | null;
         lowerThirdConfig: {
             backgroundColor: string;
             backgroundOpacity: number;
@@ -38,11 +38,13 @@ interface Step2LowerThirdProps {
         };
     };
     onChange: (data: any) => void;
+    onContentTypeChange?: (type: string) => void;
 }
 
 const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
     data,
     onChange,
+    onContentTypeChange,
 }) => {
     const updateConfig = (key: string, value: any) => {
         onChange({
@@ -85,6 +87,13 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
         { label: "Montserrat", value: "Montserrat" },
     ];
 
+    const contentTypeOptions = [
+        { label: "Select Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-muted" /> },
+        { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-muted" /> },
+        { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-muted" /> },
+        { label: "Lower Third", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-muted" /> }
+    ];
+
     // const relatedContent = mockContent
     //     .filter((item) => item.id !== data.selectedContent.id)
     //     .slice(0, 6);
@@ -96,9 +105,10 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
             {/* Content Type */}
             <BaseSelect
                 label="Content Type"
-                options={[{ label: "Lower third", value: "lower-third" }]}
+                options={contentTypeOptions}
                 value="lower-third"
-                disabled
+                onChange={(v) => onContentTypeChange?.(v)}
+                required
             />
 
             <div className="flex flex-col lg:flex-row gap-6 w-full">
@@ -151,28 +161,12 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
 
                         {/* MEDIA */}
                         <div className="relative w-full aspect-video bg-gray-900 overflow-hidden">
-                            {data.selectedContent.type === "video" && data.selectedContent.video ? (
-                                <BaseVideoPlayer
-                                    src={data.selectedContent.video}
-                                    poster={data.selectedContent.thumbnail}
-                                    autoPlay={false}
-                                    rounded="rounded-none"
-                                />
-                            ) : data.selectedContent.type === "audio" && data.selectedContent.audio ? (
-                                <div className="w-full h-full flex items-center justify-center">
-                                    <Music className="w-16 h-16 text-white" />
-                                </div>
-                            ) : (
-                                data.selectedContent.thumbnail && (
-                                    <NextImage
-                                        src={data.selectedContent.thumbnail}
-                                        alt={data.selectedContent.title}
-                                        width={1920}
-                                        height={1080}
-                                        className="w-full h-full object-cover"
-                                    />
-                                )
-                            )}
+                            <BaseVideoPlayer
+                                src="/detailsVideo.mp4"
+                                poster=""
+                                autoPlay={true}
+                                rounded="rounded-none"
+                            />
                         </div>
 
                         {/* BOTTOM TICKER */}

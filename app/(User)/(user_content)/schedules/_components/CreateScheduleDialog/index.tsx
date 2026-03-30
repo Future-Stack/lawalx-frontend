@@ -70,7 +70,12 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     const handleContentSelect = (content: ContentItem) => {
         setStep2Data({ ...step2Data, selectedContent: content });
         setLowerThirdData({ ...lowerThirdData, selectedContent: content });
-        setShowLowerThird(true);
+
+        if (step2Data.contentType === "lower-third") {
+            setShowLowerThird(true);
+        } else {
+            setCurrentStep(3);
+        }
     };
 
     const handleNext = () => {
@@ -238,15 +243,26 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                             {currentStep === 2 && !showLowerThird && (
                                 <Step2ContentSelection
                                     data={step2Data}
-                                    onChange={setStep2Data}
+                                    onChange={(newData) => {
+                                        setStep2Data(newData);
+                                        if (newData.contentType === "lower-third") {
+                                            setShowLowerThird(true);
+                                        }
+                                    }}
                                     onContentSelect={handleContentSelect}
                                 />
                             )}
 
-                            {showLowerThird && lowerThirdData.selectedContent && (
+                            {showLowerThird && (
                                 <Step2LowerThird
                                     data={lowerThirdData as any}
                                     onChange={setLowerThirdData}
+                                    onContentTypeChange={(type) => {
+                                        setStep2Data(prev => ({ ...prev, contentType: type }));
+                                        if (type !== "lower-third") {
+                                            setShowLowerThird(false);
+                                        }
+                                    }}
                                 />
                             )}
 

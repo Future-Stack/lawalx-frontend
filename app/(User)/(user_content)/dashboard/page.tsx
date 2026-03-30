@@ -29,19 +29,19 @@ import Link from "next/link";
 import DashboardBannerSystem from "@/components/dashboard/DashboardBannerSystem";
 import { formatDistanceToNow } from "date-fns";
 import { useGetAllActivitiesQuery, useGetAllStatsQuery, useGetAllDevicesQuery } from "@/redux/api/users/dashboard/activityApi";
-import { useUploadFileMutation } from "@/redux/api/users/content/content.api";
 import CommonLoader from "@/common/CommonLoader";
 import CreateScheduleDialog from "../schedules/_components/CreateScheduleDialog";
+import UploadFileModal from "@/components/content/UploadFileModal";
 
 export default function Dashboard() {
   const { data: statsData } = useGetAllStatsQuery(undefined);
   const { data: devicesData } = useGetAllDevicesQuery();
-  const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   console.log("statsData", statsData);
 
   const { data: activityData } = useGetAllActivitiesQuery();
@@ -58,44 +58,11 @@ export default function Dashboard() {
     setIsScheduleModalOpen(false);
   }
 
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-
-    // Build FormData
-    const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-      formData.append("file", files[i]);
-    }
-
-    try {
-      const res = await uploadFile(formData).unwrap();
-      toast.success(res?.message || "File(s) uploaded successfully");
-      // reset file input so same file can be re-selected later
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    } catch (err: any) {
-      console.error("Upload failed:", err);
-      toast.error(err?.data?.message || "Upload failed. Please try again.");
-    }
-  };
 
   return (
     <div className="min-h-screen">
       {/* Header Section - Banner System */}
       <DashboardBannerSystem />
-
-      {/* Hidden File Input for Upload */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        className="hidden"
-        multiple
-      />
 
       {/* Stats Cards - Redesigned to match image */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -194,21 +161,14 @@ export default function Dashboard() {
             <span className="ml-auto bg-gray-50 dark:bg-gray-800 p-2 rounded-full"><Plus className="w-4 h-4 text-bgBlue" /></span>
           </button>
           <button
-            onClick={handleUploadClick}
-            disabled={isUploading}
+            onClick={() => setIsUploadModalOpen(true)}
             className="flex items-center gap-2 px-3 sm:px-4 py-3 rounded-xl bg-navbarBg cursor-pointer transition-colors hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed min-w-[160px]"
           >
-            {isUploading ? (
-              <CommonLoader size={24} color="text-bgBlue" text="Uploading..." className="m-0" />
-            ) : (
-              <>
-                <Video className="w-8 h-8 text-[#155DFC] p-2 bg-blue-50 dark:bg-blue-900/50 rounded-md" />
-                <div className="text-left">
-                  <div className="font-medium text-gray-900 dark:text-white">Upload Content</div>
-                </div>
-                <span className="ml-auto bg-gray-50 dark:bg-gray-800 p-2 rounded-full"><CloudUpload className="w-4 h-4 text-bgBlue" /></span>
-              </>
-            )}
+            <Video className="w-8 h-8 text-[#155DFC] p-2 bg-blue-50 dark:bg-blue-900/50 rounded-md" />
+            <div className="text-left">
+              <div className="font-medium text-gray-900 dark:text-white">Upload Content</div>
+            </div>
+            <span className="ml-auto bg-gray-50 dark:bg-gray-800 p-2 rounded-full"><CloudUpload className="w-4 h-4 text-bgBlue" /></span>
           </button>
           <button
             onClick={() => setIsScheduleModalOpen(true)}
@@ -340,6 +300,23 @@ export default function Dashboard() {
       <AddDeviceModal isOpen={isAddDeviceModalOpen} onClose={() => setIsAddDeviceModalOpen(false)} />
       {/* Create Schedule Dialog */}
       <CreateScheduleDialog open={isScheduleModalOpen} setOpen={setIsScheduleModalOpen} />
+
+      {/* Upload File Modal */}
+      <UploadFileModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        setIsPageLoading={setIsPageLoading}
+      />
+
+      {/* Full Page Loader Overlay */}
+      {isPageLoading && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+          <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-gray-200 dark:border-gray-700">
+            <CommonLoader size={56} text="Uploading files..." />
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium animate-pulse">Please do not close this page</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

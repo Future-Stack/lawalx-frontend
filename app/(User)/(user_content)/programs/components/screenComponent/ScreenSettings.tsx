@@ -60,7 +60,7 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                 <div className="mb-6">
                     <h2 className="text-xl sm:text-2xl font-bold text-headings dark:text-white mb-1">Program Settings</h2>
                     <p className="text-sm sm:text-base text-muted">
-                        Manage device configuration and connected screens
+                        Manage device configuration and connected programs
                     </p>
                 </div>
 
@@ -120,13 +120,22 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                         ))}
                     </div>
 
-                    <button
-                        onClick={openAddDevice}
-                        className="w-full py-3.5 border border-bgBlue text-bgBlue hover:bg-blue-50 transition-all rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 cursor-pointer shadow-sm"
-                    >
-                        <Plus className="w-5 h-5" />
-                        Add Devices
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                        <button
+                            onClick={openAddDevice}
+                            className="flex-1 py-3.5 border border-bgBlue text-bgBlue hover:bg-blue-50 transition-all rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 cursor-pointer shadow-customShadow"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Add New Device
+                        </button>
+                        <button
+                            onClick={openAddDevice} // Trigger same modal for now
+                            className="flex-1 py-3.5 bg-bgBlue text-white hover:bg-blue-600 transition-all rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 cursor-pointer shadow-customShadow"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Add Existing Device
+                        </button>
+                    </div>
                 </div>
 
                 {/* Danger Zone */}
@@ -144,7 +153,7 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                         ) : (
                             <Trash2 className="w-5 h-5" />
                         )}
-                        Delete Screen
+                        Delete Program
                     </button>
                 </div>
             </div>

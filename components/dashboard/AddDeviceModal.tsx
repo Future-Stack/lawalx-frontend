@@ -28,12 +28,12 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
   const [addDevice] = useAddDeviceMutation();
   const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
   const [pin, setPin] = useState("");
-  const [selectedScreen, setSelectedScreen] = useState("All Programs");
+  const [selectedScreen, setSelectedScreen] = useState("Select a Program");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const programOptions = useMemo(() => {
     const fetched = programsData?.data?.map(p => ({ id: p.id, name: p.name })) || [];
-    return [{ id: "all-programs", name: "All Programs" }, ...fetched];
+    return [{ id: "all-programs", name: "Select a Program" }, ...fetched];
   }, [programsData]);
 
   // Handle body scroll locking

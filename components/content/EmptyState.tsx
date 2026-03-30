@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Folder, ListMusic, FileVideo, CloudUpload, FolderPlus, Video } from "lucide-react";
 import ContentButton from "@/common/ContentButton";
 import CreateFolderDialog from "./CreateFolderDialog";
@@ -52,7 +52,7 @@ const EmptyState = ({ contentFilter, searchQuery, onUploadClick }: EmptyStatePro
             ? "Try adjusting your search criteria"
             : "Upload your first file to get started",
           buttonIcon: FileVideo,
-          buttonTitle: "Upload Video",
+          buttonTitle: "Upload Files",
         };
       default:
         return {

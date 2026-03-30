@@ -1,7 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Crown } from "lucide-react";
+import { Crown, Loader2 } from "lucide-react";
+import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
+import { useGetProfileQuery } from "@/redux/api/users/settings/personalApi";
+import { useCreatePaymentMutation } from "@/redux/api/subscription/subscription.api";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useAppSelector } from "@/redux/store/hook";
+import { selectCurrentEmail } from "@/redux/features/auth/authSlice";
 
 const plans = [
   {
@@ -26,6 +33,13 @@ const plans = [
     buttonText: "Current Plan",
     buttonStyle: "border",
     recommended: false,
+    metadata: {
+      deviceLimit: 2,
+      storageGB: 1,
+      uploadFileLimit: 50,
+      durationDays: 14,
+      amount: 0,
+    }
   },
   {
     title: "Basic",
@@ -48,6 +62,13 @@ const plans = [
     buttonText: "Choose Basic",
     buttonStyle: "white",
     recommended: false,
+    metadata: {
+      deviceLimit: 5,
+      storageGB: 10,
+      uploadFileLimit: 500,
+      monthlyAmount: 29,
+      yearlyAmount: 348,
+    }
   },
   {
     title: "Premium",
@@ -70,6 +91,13 @@ const plans = [
     buttonText: "Upgrade to Premium",
     buttonStyle: "black",
     recommended: true,
+    metadata: {
+      deviceLimit: 20,
+      storageGB: 50,
+      uploadFileLimit: 2000,
+      monthlyAmount: 49,
+      yearlyAmount: 588,
+    },
     badge: "Recommended",
   },
   {
@@ -92,13 +120,65 @@ const plans = [
     buttonText: "Contact Sales",
     buttonStyle: "white",
     recommended: false,
+    metadata: {
+      deviceLimit: 1000, // Unlimited
+      storageGB: 1000,   // Custom
+      uploadFileLimit: 10000,
+      monthlyAmount: 199, // Custom placeholder
+      yearlyAmount: 2388,
+    },
     badge: "Custom",
     badgeColor: "purple",
   },
 ];
 
 export default function ChoosePlanPage() {
+  const router = useRouter();
   const [isAnnual, setIsAnnual] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+
+  const { data: userData } = useGetUserProfileQuery();
+  const { data: profileData } = useGetProfileQuery();
+  const authEmail = useAppSelector(selectCurrentEmail);
+  const [createPayment, { isLoading: isCreatingPayment }] = useCreatePaymentMutation();
+
+  const handleChoosePlan = async (plan: any) => {
+    if (plan.title === "Trial") return;
+    if (!userData?.data && !profileData?.data) {
+      toast.error("Please login to continue");
+      return;
+    }
+
+    setSelectedPlan(plan);
+
+    try {
+      const user = profileData?.data || userData?.data;
+      const payload = {
+        email: authEmail || user?.email || user?.username,
+        amount: isAnnual ? plan.metadata.yearlyAmount : plan.metadata.monthlyAmount,
+        transactionId: `TXN-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        planName: plan.title,
+        billingCycle: isAnnual ? "YEARLY" : "MONTHLY",
+        deviceLimit: plan.metadata.deviceLimit,
+        storageGB: plan.metadata.storageGB,
+        uploadFileLimit: plan.metadata.uploadFileLimit,
+        durationDays: isAnnual ? 365 : 30,
+        subscription: true,
+        userId: user.id || user._id,
+      };
+
+      const res = await createPayment(payload).unwrap();
+      if (res?.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        toast.success(res.message || "Subscription successful!");
+        router.push("/dashboard");
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Something went wrong. Please try again.");
+      setSelectedPlan(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
@@ -124,28 +204,26 @@ export default function ChoosePlanPage() {
         {/* Toggle */}
         <div className="flex items-center justify-center gap-3 mb-8">
           <span
-            className={`text-sm ${
-              !isAnnual ? "text-gray-900 font-medium" : "text-gray-600"
-            }`}
+            onClick={() => setIsAnnual(false)}
+            className={`text-sm transition-colors ${!isAnnual ? "text-blue-600 font-bold" : "text-gray-400"
+              }`}
           >
             Monthly
           </span>
           <button
             onClick={() => setIsAnnual(!isAnnual)}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-              isAnnual ? "bg-blue-500" : "bg-gray-300"
-            }`}
-          >
-            <span
-              className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                isAnnual ? "right-1" : "left-1"
+            className={`relative w-12 h-6 rounded-full transition-colors flex items-center p-1 cursor-pointer ${isAnnual ? "bg-blue-500" : "bg-gray-300"
               }`}
-            ></span>
+          >
+            <div
+              className={`w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${isAnnual ? "translate-x-6" : "translate-x-0"
+                }`}
+            ></div>
           </button>
           <span
-            className={`text-sm ${
-              isAnnual ? "text-gray-900 font-medium" : "text-gray-600"
-            }`}
+            onClick={() => setIsAnnual(true)}
+            className={`text-sm transition-colors ${isAnnual ? "text-blue-600 font-bold" : "text-gray-400"
+              }`}
           >
             Annual
           </span>
@@ -156,18 +234,20 @@ export default function ChoosePlanPage() {
           {plans.map((plan, idx) => (
             <div
               key={idx}
-              className={`bg-white border-2 rounded-xl p-6 relative ${
-                plan.recommended ? "border-blue-500" : "border-gray-200"
-              }`}
+              className={`bg-white border-2 rounded-xl p-6 relative transition-all duration-300 ${selectedPlan?.title === plan.title
+                ? "border-blue-600 shadow-lg scale-[1.02]"
+                : plan.recommended
+                  ? "border-blue-500 shadow-sm"
+                  : "border-gray-200"
+                }`}
             >
               {plan.badge && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                   <span
-                    className={`${
-                      plan.badgeColor === "purple"
-                        ? "bg-purple-600"
-                        : "bg-blue-500"
-                    } text-white text-xs px-3 py-1 rounded-full font-medium`}
+                    className={`${plan.badgeColor === "purple"
+                      ? "bg-purple-600"
+                      : "bg-blue-500"
+                      } text-white text-xs px-3 py-1 rounded-full font-medium`}
                   >
                     {plan.badge}
                   </span>
@@ -198,15 +278,22 @@ export default function ChoosePlanPage() {
               )}
 
               <button
-                className={`w-full py-2.5 rounded-lg font-medium mb-6 text-sm ${
-                  plan.buttonStyle === "black"
-                    ? "bg-gray-900 text-white hover:bg-gray-800"
+                onClick={() => handleChoosePlan(plan)}
+                disabled={isCreatingPayment || plan.title === "Trial"}
+                className={`w-full py-2.5 rounded-lg font-medium mb-6 text-sm flex items-center justify-center gap-2 transition-all ${selectedPlan?.title === plan.title
+                  ? "bg-blue-600 text-white border-blue-600 cursor-default"
+                  : plan.buttonStyle === "black"
+                    ? "bg-gray-900 text-white hover:bg-gray-800 cursor-pointer shadow-sm hover:shadow-md"
                     : plan.buttonStyle === "border"
-                    ? "border-2 border-gray-900 text-gray-900"
-                    : "border-2 border-gray-200 text-gray-900 hover:border-gray-300"
-                }`}
+                      ? "border-2 border-gray-900 text-gray-900 cursor-default opacity-70"
+                      : "border-2 border-gray-200 text-gray-900 hover:border-gray-300 cursor-pointer hover:bg-gray-50"
+                  } ${isCreatingPayment && selectedPlan?.title === plan.title ? "opacity-90 cursor-not-allowed" : ""}`}
               >
-                {plan.buttonText}
+                {isCreatingPayment && selectedPlan?.title === plan.title && (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                )}
+                {plan.title === "Trial" ? "Current Plan" :
+                  isCreatingPayment && selectedPlan?.title === plan.title ? "Processing..." : plan.buttonText}
               </button>
 
               <ul className="space-y-2.5 text-sm">
@@ -221,9 +308,8 @@ export default function ChoosePlanPage() {
                       className="flex items-start gap-2.5 text-gray-700"
                     >
                       <span
-                        className={`mt-0.5 ${
-                          badge === "ai" ? "text-blue-500" : "text-green-500"
-                        }`}
+                        className={`mt-0.5 ${badge === "ai" ? "text-blue-500" : "text-green-500"
+                          }`}
                       >
                         ✓
                       </span>
