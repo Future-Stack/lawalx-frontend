@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Image as ImageIcon, Video, AudioLines, FilePlay, ArrowRight, Play, Loader2 } from "lucide-react";
+import { Search, Image as ImageIcon, Video, AudioLines, FilePlay, ArrowRight, Play, Loader2, GalleryThumbnails } from "lucide-react";
 import NextImage from "next/image";
 import BaseSelect from "@/common/BaseSelect";
 import { Input } from "@/components/ui/input";
@@ -42,12 +42,12 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
     const [searchQuery, setSearchQuery] = useState("");
 
     const contentTypeOptions = [
-        { label: "All Content", value: "all", icon: <FilePlay className="w-5 h-5 text-body" /> },
+        { label: "Select Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-body" /> },
         { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-body" /> },
-        { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-body" /> }
+        { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-body" /> },
+        { label: "Lower Third", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-body" /> }
     ];
 
-    // Filter content based on selected type and search query
     // Filter content based on selected type and search query
     const filteredContent = transformedContent.filter((item: any) => {
         const matchesType =
@@ -92,7 +92,7 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
             </div>
 
             {/* Content Grid */}
-            <div className="max-h-[300px] overflow-y-auto pr-2 space-y-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="max-h-[300px] overflow-y-auto space-y-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-12 text-muted">
                         <Loader2 className="w-8 h-8 animate-spin mb-2" />

@@ -11,6 +11,7 @@ interface User {
 
 interface AuthState {
   user: User | null;
+  email: string | null;
   token: string | null;
   refreshToken: string | null;
   isHydrated: boolean;
@@ -23,7 +24,7 @@ const getUserFromToken = (token: string): User | null => {
     // Matching the payload structure from the image: userId, role, userEmail
     return {
       id: decoded.userId || decoded.id || decoded.sub || "1",
-      email: decoded.userEmail || decoded.email || "",
+      email: decoded.userEmail || decoded.email || decoded.username || "",
       role: decoded.role || "user",
       name: decoded.name || decoded.userName || "",
     };
@@ -35,7 +36,7 @@ const getUserFromToken = (token: string): User | null => {
 // Helper to get initial state from cookies
 const getInitialState = (): AuthState => {
   if (typeof window === "undefined") {
-    return { user: null, token: null, refreshToken: null, isHydrated: false };
+    return { user: null, email: null, token: null, refreshToken: null, isHydrated: false };
   }
 
   const token = Cookies.get("token") || null;
@@ -44,6 +45,7 @@ const getInitialState = (): AuthState => {
 
   return {
     user,
+    email: user?.email || null,
     token,
     refreshToken,
     isHydrated: true,
@@ -56,16 +58,24 @@ const authSlice = createSlice({
   reducers: {
     setUser: (
       state,
-      action: PayloadAction<{ user?: User; token: string; refreshToken: string }>
+      action: PayloadAction<{ user?: User; token: string; refreshToken: string; email?: string }>
     ) => {
       const { token, refreshToken } = action.payload;
-      
-      // Automatically decode from token to ensure role/info are accurate as per JWT
+
       const decodedUser = getUserFromToken(token);
-      
+      const combinedUser = decodedUser || action.payload.user || null;
+
+      // Strictly prioritize the email explicitly passed during login
+      const finalEmail = action.payload.email || combinedUser?.email || null;
+
+      if (combinedUser && finalEmail) {
+        combinedUser.email = finalEmail;
+      }
+
       state.token = token;
       state.refreshToken = refreshToken;
-      state.user = decodedUser || action.payload.user || null;
+      state.user = combinedUser;
+      state.email = finalEmail;
       state.isHydrated = true;
 
       // Save tokens to cookies (Secure & SameSite for security)
@@ -82,9 +92,9 @@ const authSlice = createSlice({
       Cookies.remove("refreshToken");
     },
     setToken: (state, action: PayloadAction<{ token: string }>) => {
-        state.token = action.payload.token;
-        state.user = getUserFromToken(action.payload.token);
-        Cookies.set("token", action.payload.token, { expires: 7, secure: true, sameSite: 'strict' });
+      state.token = action.payload.token;
+      state.user = getUserFromToken(action.payload.token);
+      Cookies.set("token", action.payload.token, { expires: 7, secure: true, sameSite: 'strict' });
     }
   },
 });
@@ -98,3 +108,4 @@ export const selectCurrentToken = (state: { auth: AuthState }) => state.auth.tok
 export const selectCurrentRefreshToken = (state: { auth: AuthState }) => state.auth.refreshToken;
 export const selectIsHydrated = (state: { auth: AuthState }) => state.auth.isHydrated;
 export const selectCurrentRole = (state: { auth: AuthState }) => state.auth.user?.role || null;
+export const selectCurrentEmail = (state: { auth: AuthState }) => state.auth.email;
