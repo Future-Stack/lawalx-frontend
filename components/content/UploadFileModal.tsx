@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -71,6 +70,7 @@ export default function UploadFileModal({
     const fileInputRef = useRef<HTMLInputElement>(null);
     const progressIntervalsRef = useRef<Record<string, ReturnType<typeof setInterval>>>({});
     const simulationPromisesRef = useRef<Record<string, Promise<void>>>({});
+    const stuckTimeoutsRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
     useEffect(() => {
         if (isOpen) {
@@ -99,41 +99,99 @@ export default function UploadFileModal({
 
     const runProgressSimulation = useCallback(
         (id: string, fileSize: number): Promise<void> => {
+
             const promise = new Promise<void>((resolve) => {
-                // Mark as simulating
                 setFiles((prev) =>
                     prev.map((f) =>
-                        f.id === id ? { ...f, status: "simulating", progress: 0 } : f
+                        f.id === id ? { ...f, status: "simulating", progress: 5 } : f
                     )
                 );
+
+                const maybeSetStuckTimeout = (progress: number) => {
+                    if (progress >= 90 && !stuckTimeoutsRef.current[id]) {
+                        stuckTimeoutsRef.current[id] = setTimeout(() => {
+                            setFiles((prev) =>
+                                prev.map((f) =>
+                                    f.id === id
+                                        ? { ...f, progress: 100, uploaded: fileSize, status: "simulating" }
+                                        : f
+                                )
+                            );
+                            setTimeout(() => {
+                                setFiles((prev) =>
+                                    prev.map((f) =>
+                                        f.id === id
+                                            ? { ...f, status: "ready" }
+                                            : f
+                                    )
+                                );
+                                clearInterval(interval);
+                                delete progressIntervalsRef.current[id];
+                                delete simulationPromisesRef.current[id];
+                                clearTimeout(stuckTimeoutsRef.current[id]);
+                                delete stuckTimeoutsRef.current[id];
+                                resolve();
+                            }, 300);
+                        }, 2000);
+                    }
+                };
 
                 const interval = setInterval(() => {
                     setFiles((prev) => {
                         const entry = prev.find((f) => f.id === id);
                         if (!entry) {
                             clearInterval(interval);
+                            if (stuckTimeoutsRef.current[id]) {
+                                clearTimeout(stuckTimeoutsRef.current[id]);
+                                delete stuckTimeoutsRef.current[id];
+                            }
                             resolve();
                             return prev;
                         }
 
-                        const increment = Math.floor(Math.random() * 10) + 5;
-                        const nextProgress = Math.min(entry.progress + increment, 100);
+                        // Progress increment depends on file size
+                        let increment = 10;
+                        if (fileSize <= 2 * 1024 * 1024) { // ≤ 2MB
+                            increment = 15;
+                        } else if (fileSize <= 10 * 1024 * 1024) { // ≤ 10MB
+                            increment = 10;
+                        } else { // > 10MB
+                            increment = 5;
+                        }
+                        let nextProgress = entry.progress + increment;
+                        let forceComplete = false;
+                        if (nextProgress >= 95) {
+                            nextProgress = 100;
+                            forceComplete = true;
+                        }
                         const nextUploaded = Math.round((nextProgress / 100) * fileSize);
 
-                        // When progress reaches 100% — stop interval and resolve promise
-                        if (nextProgress >= 100) {
+                        maybeSetStuckTimeout(nextProgress);
+
+                        if (nextProgress >= 100 || forceComplete) {
                             clearInterval(interval);
-                            delete progressIntervalsRef.current[id];
-                            delete simulationPromisesRef.current[id];
-                            // small delay so user sees 100% bar before API fires
-                            setTimeout(() => resolve(), 300);
+                            if (stuckTimeoutsRef.current[id]) {
+                                clearTimeout(stuckTimeoutsRef.current[id]);
+                                delete stuckTimeoutsRef.current[id];
+                            }
+                            setTimeout(() => {
+                                setFiles((prev2) =>
+                                    prev2.map((f) =>
+                                        f.id === id
+                                            ? { ...f, status: "ready" }
+                                            : f
+                                    )
+                                );
+                                delete progressIntervalsRef.current[id];
+                                delete simulationPromisesRef.current[id];
+                                resolve();
+                            }, 300);
                             return prev.map((f) =>
                                 f.id === id
-                                    ? { ...f, progress: 100, uploaded: fileSize, status: "ready" }
+                                    ? { ...f, progress: 100, uploaded: fileSize, status: "simulating" }
                                     : f
                             );
                         }
-
 
                         return prev.map((f) =>
                             f.id === id
@@ -187,7 +245,7 @@ export default function UploadFileModal({
         setIsPageLoading(true);
 
         try {
-            // Include files that are ready, pending, OR simulating
+            // Only upload files that are ready, pending, or simulating
             const filesToUpload = files.filter(f =>
                 f.status === "ready" ||
                 f.status === "pending" ||
@@ -202,18 +260,20 @@ export default function UploadFileModal({
             let hasErrorOccurred = false;
             const BATCH_SIZE = 4;
 
-            // Process uploads in batches to optimize performance and prevent network issues
+            // Process uploads in batches
             for (let i = 0; i < filesToUpload.length; i += BATCH_SIZE) {
                 const batch = filesToUpload.slice(i, i + BATCH_SIZE);
 
                 await Promise.all(batch.map(async (entry) => {
-                    // 1. Wait for its simulation to finish if it's still running
-                    const simulationPromise = simulationPromisesRef.current[entry.id];
-                    if (simulationPromise) {
-                        await simulationPromise;
+                    // Wait for simulation to finish if not already ready
+                    if (entry.status !== "ready") {
+                        const simulationPromise = simulationPromisesRef.current[entry.id];
+                        if (simulationPromise) {
+                            await simulationPromise;
+                        }
                     }
 
-                    // 2. Perform the actual API upload
+                    // Perform the actual API upload
                     const formData = new FormData();
                     formData.append("file", entry.file);
 
@@ -230,7 +290,7 @@ export default function UploadFileModal({
                         setFiles((prev) =>
                             prev.map((f) =>
                                 f.id === entry.id
-                                    ? { ...f, status: "done", progress: 100, uploaded: entry.file.size }
+                                    ? { ...f, status: "done" }
                                     : f
                             )
                         );

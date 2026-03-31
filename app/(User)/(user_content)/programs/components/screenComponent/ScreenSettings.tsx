@@ -126,15 +126,15 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                             className="flex-1 py-3.5 border border-bgBlue text-bgBlue hover:bg-blue-50 transition-all rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 cursor-pointer shadow-customShadow"
                         >
                             <Plus className="w-5 h-5" />
-                            Add New Device
+                            Add Device
                         </button>
-                        <button
+                        {/* <button
                             onClick={openAddDevice} // Trigger same modal for now
                             className="flex-1 py-3.5 bg-bgBlue text-white hover:bg-blue-600 transition-all rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 cursor-pointer shadow-customShadow"
                         >
                             <Plus className="w-5 h-5" />
                             Add Existing Device
-                        </button>
+                        </button> */}
                     </div>
                 </div>
 
