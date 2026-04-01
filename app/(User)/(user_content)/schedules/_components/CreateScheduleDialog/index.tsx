@@ -281,8 +281,6 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                         </div>
                     </div>
                 </div>
-
-
                 {/* Footer - Sticky at bottom */}
                 <div className="p-6 border-t border-border flex items-center justify-between bg-navbarBg/80 backdrop-blur-md">
                     <button

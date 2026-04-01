@@ -28,6 +28,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
   const [addDevice] = useAddDeviceMutation();
   const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
   const [pin, setPin] = useState("");
+  const [deviceName, setDeviceName] = useState("");
   const [selectedScreen, setSelectedScreen] = useState("Select a Program");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
 
@@ -51,14 +52,16 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
 
   const handleAddDevice = async ({ pin, name }: { pin: string, name?: string }) => {
     try {
+      // Only send deviceName as name, not selectedScreen
       const res = await addDevice({ pin, name }).unwrap();
       console.log(res);
-
       if (res.success) {
+        setPin(""); // Clear the PIN input
+        setDeviceName(""); // Clear the device name input
         onClose();
         toast.success(res.message || "Device added successfully");
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       const error = err as { data?: { message?: string } };
       toast.error(error?.data?.message || "Failed to add device");
     }
@@ -72,14 +75,14 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
       }}
     >
       <div
-        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] border border-gray-200 dark:border-gray-700 z-[101] flex flex-col overflow-hidden cursor-default"
+        className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] border border-gray-200 dark:border-gray-700 z-[101] flex flex-col overflow-hidden cursor-default"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border shrink-0">
           <h2 className="text-xl sm:text-2xl font-semibold text-Headings dark:text-white">
             Add New Device
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-red-500 hover:bg-gray-100 md:p-2 p-1 rounded-full dark:hover:text-gray-300 transition-colors self-end sm:self-auto cursor-pointer">
+          <button onClick={onClose} className="text-gray-400 hover:text-red-500 hover:bg-gray-100 md:p-2 p-1 rounded-full dark:hover:text-gray-300 transition-colors self-end sm:self-auto cursor-pointer dark:hover:text-red-500">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -154,16 +157,36 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
             </div>
           </div>
 
-          {/* PIN Input */}
-          <AddDevicePinInput
-            pin={pin}
-            setPin={setPin}
-            onOpenScanner={() => setIsScannerOpen(true)}
-            handleAddDevice={handleAddDevice}
-            selectedScreen={selectedScreen}
-          />
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
+              Input PIN
+            </label>
+            {/* PIN Input */}
+            <AddDevicePinInput
+              pin={pin}
+              setPin={setPin}
+              onOpenScanner={() => setIsScannerOpen(true)}
+              handleAddDevice={handleAddDevice}
+              selectedScreen={selectedScreen}
+            />
+          </div>
 
-          {/* Select Screen Dropdown */}
+               {/* Device Name Input */}
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
+              Device Name
+            </label>
+            <input
+              type="text"
+              value={deviceName}
+              onChange={e => setDeviceName(e.target.value)}
+              placeholder="Enter device name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+            />
+          </div>
+
+          {/* Select Screen Dropdown (commented out, not sent anymore) */}
+
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
               Select a Program
@@ -190,6 +213,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
               </SelectContent>
             </Select>
           </div>
+
         </div>
 
         {/* Footer */}
@@ -201,7 +225,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
             Cancel
           </button>
           <button
-            onClick={() => handleAddDevice({ pin, name: selectedScreen })}
+            onClick={() => handleAddDevice({ pin, name: deviceName })}
             className="px-5 cursor-pointer sm:px-6 py-2 sm:py-2.5 bg-bgBlue text-white rounded-lg font-medium text-sm sm:text-base hover:bg-blue-600 transition-colors shadow-customShadow"
           >
             Add Device

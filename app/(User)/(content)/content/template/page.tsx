@@ -80,9 +80,9 @@ const TemplateContent = () => {
                     <p className="text-sm text-textGray mt-1">Upload, create and manage your content</p>
                 </div>
 
-                {/* <button className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center gap-2 text-sm md:text-base font-semibold cursor-pointer transition-all duration-300 ease-in-out w-full sm:w-auto justify-center shadow-customShadow">
+                <button className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center gap-2 text-sm md:text-base font-semibold cursor-pointer transition-all duration-300 ease-in-out w-full sm:w-auto justify-center shadow-customShadow">
                     <Plus className="w-5 h-5" /> Create Content
-                </button> */}
+                </button>
             </div>
 
             {/* Search Bar */}
