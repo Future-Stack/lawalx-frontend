@@ -215,13 +215,13 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
       }}
     >
       <div
-        className="relative w-full max-w-6xl bg-white dark:bg-navbarBg rounded-[24px] shadow-2xl overflow-hidden max-h-[95vh] flex flex-col border border-border dark:border-gray-800 animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-6xl bg-input rounded-[24px] shadow-2xl overflow-hidden max-h-[95vh] flex flex-col border border-border animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-white dark:bg-navbarBg">
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-navbarBg">
           <div>
-            <h2 className="text-xl font-bold text-[#171717] dark:text-white leading-tight">
+            <h2 className="text-xl font-bold text-headings leading-tight">
               {currentDevice.name || currentDevice.device || "Unnamed Device"}
             </h2>
             <p className="text-sm text-[#737373] dark:text-gray-400 mt-1">
@@ -230,7 +230,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
           </div>
           <button
             onClick={onClose}
-            className="text-[#A3A3A3] hover:text-gray-600 dark:hover:text-gray-200 transition-colors p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full cursor-pointer"
+            className="text-[#A3A3A3] hover:text-red-500 transition-colors p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full cursor-pointer"
           >
             <X className="h-6 w-6" />
           </button>
@@ -298,7 +298,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
               {/* Bottom Controls Area */}
               <div className="flex flex-col sm:flex-row gap-4">
                 {/* Volume & Brightness Card */}
-                <div className="flex-1 bg-white dark:bg-navbarBg rounded-[20px] p-6 shadow-sm border border-border flex flex-col gap-6">
+                <div className="flex-1 bg-white dark:bg-input rounded-[20px] p-6 shadow-sm border border-border flex flex-col gap-6">
                   {/* Volume Slider */}
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 min-w-[100px]">
@@ -327,7 +327,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 min-w-[100px]">
                       <Sun className="h-5 w-5 text-[#737373]" />
-                      <span className="text-sm font-medium text-[#737373] dark:text-gray-400">Brightness</span>
+                      <span className="text-sm font-medium text-headings">Brightness</span>
                     </div>
                     <div className="flex-1 flex items-center gap-3">
                       <div className="relative flex-1 h-2 flex items-center">
@@ -361,8 +361,8 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
             </div>
 
             {/* Right Column - Device Details */}
-            <div className="w-full lg:w-[350px] bg-white dark:bg-navbarBg rounded-[24px] p-6 shadow-sm border border-border flex flex-col gap-6">
-              <h3 className="text-xl font-bold text-[#171717] dark:text-white">Device Details</h3>
+            <div className="w-full lg:w-[350px] bg-navbarBg rounded-[24px] p-6 shadow-sm border border-border flex flex-col gap-6">
+              <h3 className="text-xl font-bold text-headings">Device Details</h3>
 
               <div className="flex flex-col gap-5">
                 {/* Status Row */}

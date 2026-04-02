@@ -4,7 +4,16 @@ import { Plus, GripVertical, MoreVertical, Trash2, ArrowUp, ArrowDown, ChevronDo
 import { useState, useRef, useEffect } from "react";
 import AddContentDialog from "./AddContentDialog";
 
-import { Timeline, FileData } from "@/redux/api/users/programs/programs.type";
+import { Timeline } from "@/redux/api/users/programs/programs.type";
+
+type FileData = {
+  id: string;
+  duration?: number;
+  originalName?: string;
+  fileType?: string;
+  [key: string]: any;
+};
+
 import { useDeleteProgramMutation } from "@/redux/api/users/programs/programs.api";
 import { toast } from "sonner";
 import { useUploadFileMutation } from "@/redux/api/users/content/content.api";

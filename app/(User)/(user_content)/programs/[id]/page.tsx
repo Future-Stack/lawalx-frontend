@@ -105,7 +105,7 @@ const ScreenCardDetails = () => {
   const previewUrl = getFileUrl(selectedContent?.file?.url || "");
   const currentFileName = selectedContent?.file?.originalName || program.name;
   const lastUpdated = dayjs(program.updated_at).fromNow();
-  const isActive = program.status.toLowerCase() === "publish" || program.status === "active" || program.status === "PUBLISH";
+  const isActive = program.status === "PUBLISH";
   const assignedContent = `${videos} videos, ${images} content`;
 
   const handleSave = async () => {

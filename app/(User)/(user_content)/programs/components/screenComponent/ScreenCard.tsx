@@ -29,8 +29,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   const navigate = useRouter();
 
   // More robust status check
-  const status = program.status?.toLowerCase() || "";
-  const isActive = status === "publish" || status === "published" || status === "active";
+  const isActive = program.status === "PUBLISH";
 
   const lastUpdated = dayjs(program.updated_at).fromNow();
   const videos = program.timeline?.filter((t) => t.file?.type === "VIDEO")?.length || 0;

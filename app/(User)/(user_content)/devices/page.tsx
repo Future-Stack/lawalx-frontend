@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { TvMinimal, Radio, WifiOff, Search, ChevronDown, MoreVertical, Trash2, Eye, PenLine, Plus, MapPin, Loader2 } from "lucide-react";
+import { WifiOff, Search, ChevronDown, MoreVertical, Trash2, Eye, PenLine, Plus, MapPin, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
@@ -9,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Link from "next/link";
 import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 import PreviewDeviceModal from "@/components/devices/modals/PreviewDeviceModal";
 import LeafletMapModal from "@/components/shared/modals/LeafletMapModal";
@@ -77,7 +76,7 @@ const Dropdown = ({ value, options, onChange, icon: Icon }: any) => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer flex items-center gap-2 p-3 text-black dark:text-white bg-[#F9FAFB] dark:bg-gray-800 border border-[#D4D4D4] rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium w-full sm:w-auto justify-between sm:justify-start"
+        className="cursor-pointer flex items-center gap-2 p-3 text-black dark:text-white bg-[#F9FAFB] dark:bg-gray-800 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium w-full sm:w-auto justify-between sm:justify-start"
       >
         <div className="flex items-center gap-2">
           {Icon && <Icon className="w-5 h-5" />}
@@ -308,8 +307,8 @@ export default function DevicesPage() {
       {/* Management + Table */}
       <div className="space-y-4">
         {/* Filtering Section - Moved Outside Table */}
-        <div className="p-2 gap-2 rounded-[16px] border border-[#D4D4D4] bg-[#FAFAFA] dark:bg-gray-800/30 flex flex-col lg:flex-row items-center self-stretch">
-          <div className="flex p-3 items-center gap-2 rounded-lg border border-border bg-input flex-1 w-full">
+        <div className="p-2 md:p-4 gap-2 rounded-[16px] border border-border bg-navbarBg flex flex-col lg:flex-row items-center self-stretch">
+          <div className="flex p-3 items-center gap-2 rounded-xl bg-input dark:bg-gray-800 flex-1 w-full">
             <Search className="w-6 h-6 text-[#A3A3A3]" />
             <input
               type="text"

@@ -100,12 +100,12 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                                 <div className="flex-1 min-w-0">
                                     <div className="flex flex-wrap items-center gap-2 mb-1">
                                         <span className="font-bold text-sm sm:text-base text-headings dark:text-white">{device.name}</span>
-                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${device.status === "ONLINE"
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${device.status === "PAIRED"
                                             ? "bg-green-50 text-green-600 border border-green-200"
                                             : "bg-red-50 text-red-600 border border-red-200"
                                             }`}>
-                                            <span className={`w-2 h-2 rounded-full ${device.status === "ONLINE" ? "bg-green-500" : "bg-red-500"}`}></span>
-                                            {device.status === "ONLINE" ? "Online" : "Offline"}
+                                            <span className={`w-2 h-2 rounded-full ${device.status === "PAIRED" ? "bg-green-500" : "bg-red-500"}`}></span>
+                                            {device.status === "PAIRED" ? "Online" : "Offline"}
                                         </span>
                                     </div>
                                     <p className="text-xs sm:text-sm text-muted uppercase tracking-wider">{device.location || "No location"}</p>

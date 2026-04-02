@@ -12,8 +12,6 @@ interface EmptyStateProps {
 const EmptyState = ({ contentFilter, searchQuery, onUploadClick }: EmptyStateProps) => {
   const [openFolderDialog, setOpenFolderDialog] = useState(false);
 
-
-
   const handleButtonClick = () => {
     if (contentFilter === "folders") {
       setOpenFolderDialog(true);

@@ -110,7 +110,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                 <div className="flex items-center justify-end gap-3 pt-2">
                     <Button
                         variant="outline"
-                        className="flex items-center gap-2 h-11 px-6 border-border text-headings font-semibold hover:bg-bgGray transition-all disabled:opacity-50"
+                        className="flex items-center gap-2 h-11 px-6 border-border text-headings font-semibold hover:bg-bgGray transition-all disabled:opacity-50 shadow-customShadow"
                         onClick={handlePause}
                         disabled={isUpdating}
                     >
@@ -122,7 +122,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                         {isUpdating ? "Processing..." : (schedule.status === "paused" ? "play" : "pasue")}
                     </Button>
                     <Button
-                        className="flex items-center gap-2 h-11 px-8 bg-bgBlue hover:bg-bgBlue/90 text-white font-semibold transition-all shadow-md"
+                        className="flex items-center gap-2 h-11 px-8 bg-bgBlue hover:bg-bgBlue/90 text-white font-semibold transition-all shadow-customShadow"
                         onClick={() => {
                             onEdit?.(schedule.id);
                             setOpen(false);

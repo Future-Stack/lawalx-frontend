@@ -1,5 +1,5 @@
 import React from "react";
-import { Video, Clock, Play, Trash2, PenLine } from "lucide-react";
+import { Video, Clock, Trash2, PenLine, Eye } from "lucide-react";
 import Link from "next/link";
 import { Schedule } from "@/redux/api/users/schedules/schedules.type";
 import { cn } from "@/lib/utils";
@@ -82,7 +82,7 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
                             <th className="px-6 py-4 text-sm font-semibold text-muted">Name</th>
                             <th className="px-6 py-4 text-sm font-semibold text-muted">Play</th>
                             <th className="px-6 py-4 text-sm font-semibold text-muted">Schedule Time</th>
-                            <th className="px-6 py-4 text-sm font-semibold text-muted">Assigned Screens</th>
+                            <th className="px-6 py-4 text-sm font-semibold text-muted">Assigned Device</th>
                             <th className="px-6 py-4 text-sm font-semibold text-muted text-right">Actions</th>
                         </tr>
                     </thead>
@@ -105,15 +105,11 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
                                     </div>
                                 </td>
                                 <td className="px-6 py-5">
-                                    <div className="flex flex-col gap-1">
+                                    <div className="text-sm text-muted">
                                         {schedule.programs && schedule.programs.length > 0 ? (
-                                            schedule.programs.map((program) => (
-                                                <div key={program.id} className="text-sm text-muted">
-                                                    {program.name}
-                                                </div>
-                                            ))
+                                            schedule.programs.map((p) => p.name).join(", ")
                                         ) : (
-                                            <div className="text-sm text-muted">No programs assigned</div>
+                                            "No device assigned"
                                         )}
                                     </div>
                                 </td>
@@ -121,9 +117,9 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
                                     <div className="flex items-center justify-end gap-3">
                                         <button
                                             onClick={() => handlePreviewClick(schedule)}
-                                            className={cn("p-2 rounded-lg transition-colors cursor-pointer text-muted hover:bg-gray-100")}
+                                            className={cn("p-2 rounded-lg transition-colors cursor-pointer text-muted hover:bg-gray-100 hover:text-bgBlue")}
                                         >
-                                            <Play className="w-5 h-5" />
+                                            <Eye className="w-5 h-5" />
                                         </button>
                                         <Link href={`/schedules/${schedule.id}`} className="p-2 text-muted hover:text-bgBlue hover:bg-blue-50 rounded-lg transition-colors cursor-pointer">
                                             <PenLine className="w-5 h-5" />
