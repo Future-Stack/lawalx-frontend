@@ -2,7 +2,7 @@
 
 import { useAppSelector } from "@/redux/store/hook";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { selectCurrentToken, selectIsHydrated, selectCurrentUser } from "@/redux/features/auth/authSlice";
 
 interface ProtectedRouteProps {
@@ -11,6 +11,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+    const [mounted, setMounted] = useState(false);
     const token = useAppSelector(selectCurrentToken);
     const isHydrated = useAppSelector(selectIsHydrated);
     const user = useAppSelector(selectCurrentUser);
@@ -19,6 +20,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     const isAuthorized = !allowedRoles || (user && allowedRoles.includes(user.role));
 
     useEffect(() => {
+        setMounted(true);
         if (isHydrated) {
             if (!token) {
                 const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
@@ -35,7 +37,8 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
         }
     }, [token, router, isHydrated, allowedRoles, user]);
 
-    if (!isHydrated || !token || !isAuthorized) {
+    // To prevent hydration mismatch, return null on server and first client render
+    if (!mounted || !isHydrated || !token || !isAuthorized) {
         return null;
     }
 

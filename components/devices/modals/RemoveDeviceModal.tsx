@@ -28,9 +28,9 @@ export default function RemoveDeviceModal({ isOpen, onClose, deviceName, onConfi
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
+            className="text-gray-400 hover:text-red-600 transition-colors cursor-pointer p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -43,14 +43,14 @@ export default function RemoveDeviceModal({ isOpen, onClose, deviceName, onConfi
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-6 py-2.5 rounded-xl font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="px-6 py-2.5 rounded-xl font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-customShadow"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium flex items-center gap-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed min-w-[120px] justify-center cursor-pointer shadow-lg shadow-red-500/20"
+            className="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium flex items-center gap-2 transition-colors disabled:opacity-70 disabled:cursor-not-allowed min-w-[120px] justify-center cursor-pointer shadow-customShadow"
           >
             {isLoading ? (
               <>

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../../baseApi";
 import { SuccessResponse } from "../content/content.type";
-import { AddDevicePin, DeviceListResponse } from "./devices.type";
+import { AddDevicePin, DeviceListResponse, DeviceResponse } from "./devices.type";
 
 const devicesAPI = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -24,6 +24,14 @@ const devicesAPI = baseApi.injectEndpoints({
     getMyDevicesData: build.query<DeviceListResponse, void>({
       query: () => ({
         url: "/device/my-devices",
+        method: "GET",
+      }),
+      providesTags: ["Devices"],
+    }),
+    // get device pin wise data 
+    getDevicePinWiseData: build.query<DeviceResponse, { devicePin: string }>({
+      query: ({ devicePin }) => ({
+        url: `/device/info/${devicePin}`,
         method: "GET",
       }),
       providesTags: ["Devices"],
@@ -53,4 +61,4 @@ const devicesAPI = baseApi.injectEndpoints({
   }),
 });
 
-export const { useAddDeviceMutation, useGetMyDevicesDataQuery, useGetSingleDeviceDataQuery, useDeleteDeviceMutation, useRenameDeviceMutation } = devicesAPI;
+export const { useAddDeviceMutation, useGetMyDevicesDataQuery, useGetSingleDeviceDataQuery, useDeleteDeviceMutation, useRenameDeviceMutation, useGetDevicePinWiseDataQuery } = devicesAPI;
