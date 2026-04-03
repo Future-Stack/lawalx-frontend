@@ -59,8 +59,6 @@ const MyContent = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(false);
 
-  console.log("all content data", allContentData);
-
   useEffect(() => {
     setIsMounted(true);
   }, []);
