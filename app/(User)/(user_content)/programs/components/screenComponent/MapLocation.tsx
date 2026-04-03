@@ -6,17 +6,7 @@ import { ZoomIn, ZoomOut, Monitor } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// Fix TypeScript error for modifying Leaflet default icon URLs
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl:
-    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
+
 
 // Custom DivIcon (Monitor Marker)
 const customIcon = L.divIcon({
@@ -72,6 +62,19 @@ const MapLocation: React.FC = () => {
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Fix TypeScript error for modifying Leaflet default icon URLs
+      // @ts-ignore
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+        iconUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+        shadowUrl:
+          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+      });
+    }
     setIsMounted(true);
   }, []);
 
@@ -94,7 +97,7 @@ const MapLocation: React.FC = () => {
     );
   }
 
-  const position: [number, number] = [45.6, -114.0];
+  const position: [number, number] = [23.8103, 90.4125]; // Static Dhaka coordinates
 
   return (
     <div className="relative">
@@ -131,36 +134,8 @@ const MapLocation: React.FC = () => {
               <Popup>
                 <div className="text-center p-2">
                   <Monitor className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Main Location</p>
-                  <p className="text-sm text-gray-600">Idaho/Montana Region</p>
-                </div>
-              </Popup>
-            </Marker>
-
-            {/* Extra Markers */}
-            <Marker position={[47.6062, -122.3321]}>
-              <Popup>
-                <div className="p-1">
-                  <p className="font-semibold">Seattle</p>
-                  <p className="text-sm text-gray-600">Washington</p>
-                </div>
-              </Popup>
-            </Marker>
-
-            <Marker position={[49.2827, -123.1207]}>
-              <Popup>
-                <div className="p-1">
-                  <p className="font-semibold">Vancouver</p>
-                  <p className="text-sm text-gray-600">British Columbia</p>
-                </div>
-              </Popup>
-            </Marker>
-
-            <Marker position={[49.8951, -97.1384]}>
-              <Popup>
-                <div className="p-1">
-                  <p className="font-semibold">Winnipeg</p>
-                  <p className="text-sm text-gray-600">Manitoba</p>
+                  <p className="font-semibold text-gray-900">Device Location</p>
+                  <p className="text-sm text-gray-600">Dhaka, Bangladesh</p>
                 </div>
               </Popup>
             </Marker>

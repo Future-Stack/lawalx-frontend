@@ -45,6 +45,36 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     return deviceDetail || device;
   }, [deviceDetail, device]);
 
+  // Static cache for geolocations inside the modal session
+  const [addressLabel, setAddressLabel] = useState<string>("Loading Location...");
+  const devLocation = currentDevice?.location;
+
+  useEffect(() => {
+    if (devLocation && typeof devLocation === 'object' && devLocation.lat && devLocation.lng) {
+      const fetchAddress = async () => {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${devLocation.lat}&lon=${devLocation.lng}&zoom=10`);
+          const data = await res.json();
+          if (data.display_name) {
+            const a = data.address;
+            const city = a.city || a.town || a.village || a.suburb || a.county || '';
+            const country = a.country || '';
+            setAddressLabel(city && country ? `${city}, ${country}` : data.display_name.split(',').slice(0, 2).join(','));
+          } else {
+            setAddressLabel(`${devLocation.lat.toFixed(2)}, ${devLocation.lng.toFixed(2)}`);
+          }
+        } catch (e) {
+          setAddressLabel(`${devLocation.lat.toFixed(2)}, ${devLocation.lng.toFixed(2)}`);
+        }
+      };
+      fetchAddress();
+    } else if (typeof devLocation === 'string' && devLocation.includes('Location')) {
+      setAddressLabel(devLocation);
+    } else {
+      setAddressLabel("Unknown Location");
+    }
+  }, [devLocation]);
+
   const videoSrc = useMemo(() => {
     if (currentDevice?.program?.videoUrl) {
       const url = currentDevice.program.videoUrl;
@@ -153,17 +183,18 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
   const parseStorage = (storage: any) => {
     if (!storage) return { used: 0, total: 100, formatted: "N/A" };
 
-    // If it's the structure from API metadata or storage field
-    if (typeof storage === 'object') {
-      const used = parseFloat(storage.used) || 0;
-      const total = parseFloat(storage.total) || 100;
+    // If it's pure bytes as a string (e.g. from API)
+    if (!isNaN(Number(storage))) {
+      const bytes = Number(storage);
+      const totalGB = bytes / (1024 * 1024 * 1024);
       return {
-        used,
-        total,
-        formatted: `${used.toFixed(1)} GB / ${total.toFixed(1)} GB`
+        used: 0, // No used field in API yet
+        total: totalGB,
+        formatted: `0 / ${totalGB.toFixed(1)} GB`
       };
     }
 
+    // If it's already a formatted string (e.g. from table data)
     const match = String(storage).match(/([\d.]+)?\s*(?:GB)?\s*\/\s*([\d.]+)\s*GB/);
     if (match) {
       const used = match[1] ? parseFloat(match[1]) : 0;
@@ -173,12 +204,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
         total,
         formatted: `${used.toFixed(1)} GB / ${total.toFixed(1)} GB`,
       };
-    }
-
-    const singleMatch = String(storage).match(/([\d.]+)\s*GB/);
-    if (singleMatch) {
-      const used = parseFloat(singleMatch[1]);
-      return { used, total: 100, formatted: `${used.toFixed(1)} GB / 100.0 GB` };
     }
 
     return { used: 0, total: 100, formatted: "N/A" };
@@ -205,6 +230,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
+
 
 
   return (
@@ -390,6 +416,14 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                   </span>
                 </div>
 
+                {/* Location Row */}
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Location</span>
+                  <span className="text-[#171717] dark:text-white text-sm font-bold text-right truncate ml-4 max-w-[180px]">
+                    {addressLabel}
+                  </span>
+                </div>
+
                 {/* Storage Row */}
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
@@ -415,32 +449,31 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                 <div className="flex flex-col gap-4">
                   <div className="flex justify-between">
                     <span className="text-[#737373] dark:text-gray-400 text-sm font-medium text-nowrap">Device ID: </span>
-                    <span className="text-[#171717] dark:text-white text-sm font-bold font-mono">
+                    <span className="text-[#171717] dark:text-white text-[13px] font-bold font-mono truncate ml-2">
                       {currentDevice.id || "N/A"}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">OS</span>
+                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Platform</span>
                     <div className="text-right">
                       <p className="text-[#171717] dark:text-white text-sm font-bold leading-tight">
                         {currentDevice.deviceType || currentDevice.platform || "Android TV"}
                       </p>
-                      <p className="text-[10px] text-[#A3A3A3] font-medium leading-tight">9.0</p>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">IP Address</span>
                     <span className="text-[#171717] dark:text-white text-sm font-bold font-mono">
-                      {currentDevice.ip || "192.168.1.45"}
+                      {currentDevice.ip || "---"}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Screen Playing</span>
                     <span className="text-[#171717] dark:text-white text-sm font-bold truncate ml-4 max-w-[150px]">
-                      {currentDevice.program?.name || "No Screen Playing"}
+                      {currentDevice.program?.name || "No screen assigned"}
                     </span>
                   </div>
                 </div>

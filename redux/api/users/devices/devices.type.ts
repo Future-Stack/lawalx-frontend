@@ -2,7 +2,51 @@
 export interface AddDevicePin {
     pin: string;
     name?: string;
+    programId?: string;
 }
+
+export type TimelineFile = {
+  id: string;
+  originalName: string;
+  size: number;
+  userId: string;
+  folderId: string | null;
+  createdAt: string;
+  updatedAt: string;
+  filePath: string;
+  fileType: string;
+  url: string;
+  type: string;
+  duration: number;
+};
+
+export type TimelineItem = {
+  id: string;
+  programId: string;
+  position: number;
+  duration: number;
+  createdAt: string;
+  fileId: string;
+  file: TimelineFile;
+};
+
+export type Program = {
+  id: string;
+  name: string;
+  description: string;
+  serene_size: string; // Backend uses serene_size instead of screen_size
+  status: string;
+  userId: string;
+  created_at: string;
+  updated_at: string;
+  videoUrl: string;
+  timeline: TimelineItem[];
+};
+
+export type Location = {
+  lat: number;
+  lng: number;
+};
 
 // get my devices type 
 export type Device = {
@@ -22,15 +66,15 @@ export type Device = {
   deviceType: string | null;
   model: string | null;
   ip: string;
-  location: string | null;
+  location: Location | null;
   metadata: any | null;
-  storage: any | null;
+  storage: string; // The JSON says this is a string "64000000000"
   isActive: boolean;
   userId: string;
   programId: string | null;
   createdAt: string;
   updatedAt: string;
-  program: any | null;
+  program: Program | null;
 };
 
 export type DeviceListResponse = {
@@ -40,7 +84,20 @@ export type DeviceListResponse = {
   data: Device[];
 };
 
-// device pin create type 
-// export interface CreateDevicePin {
-//   deviceSerial: string;
-// }
+// get device data api type 
+export type ApiResponse<T> = {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: T;
+};
+
+export type DeviceData = {
+  name: string;
+  status: "WAITING" | "ACTIVE" | "INACTIVE";
+  deviceSerial: string;
+  location: Location;
+  storage: string;
+};
+
+export type DeviceResponse = ApiResponse<DeviceData>;

@@ -42,7 +42,6 @@ export default function Dashboard() {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(false);
-  console.log("statsData", statsData);
 
   const { data: activityData } = useGetAllActivitiesQuery();
   const activities = activityData?.data?.slice(0, 4) || [];
@@ -213,7 +212,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-3">
                         <span className="text-[16px] font-semibold text-headings" style={{ fontFamily: "Inter, sans-serif" }}>
-                          {device.name}
+                          {typeof device.name === 'object' ? 'Device' : (device.name || "Unknown Device")}
                         </span>
                         <div
                           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[12px] font-medium ${device.status === "ONLINE"
@@ -233,7 +232,7 @@ export default function Dashboard() {
                       3840 × 2160
                     </div>
                     <div className="text-[14px] text-body font-medium uppercase" style={{ fontFamily: "Inter, sans-serif" }}>
-                      {device.location || "LA, USA"}
+                      {typeof device.location === 'object' ? 'Location Info' : (device.location || "LA, USA")}
                     </div>
                   </div>
                 </div>
@@ -278,14 +277,14 @@ export default function Dashboard() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <h4 className="text-[15px] font-semibold text-headings truncate" style={{ fontFamily: "Inter, sans-serif" }}>
-                        {activity.actionType}
+                        {typeof activity.actionType === 'object' ? 'Activity' : (activity.actionType || "Activity")}
                       </h4>
                       <span className="text-[13px] text-gray-400 shrink-0" style={{ fontFamily: "Inter, sans-serif" }}>
                         {formatDistanceToNow(new Date(activity.createdAt), { addSuffix: true })}
                       </span>
                     </div>
                     <p className="text-[14px] text-body mt-1 line-clamp-1" style={{ fontFamily: "Inter, sans-serif" }}>
-                      {activity.description}
+                      {typeof activity.description === 'object' ? 'Activity Details' : (activity.description || "No description provided")}
                     </p>
                   </div>
                 </div>

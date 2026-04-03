@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { X } from "lucide-react";
+import { ScreenShare, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const QrScanner = dynamic(() => import("@/components/common/QrScanner"), {
   ssr: false,
 });
 import AddDevicePinInput from "./AddDevicePinInput";
+import CreateScreenModal from "./CreateScreenModal";
+
 import {
   Select,
   SelectContent,
@@ -15,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAddDeviceMutation } from "@/redux/api/users/devices/devices.api";
+import { useAddDeviceMutation, useGetDevicePinWiseDataQuery } from "@/redux/api/users/devices/devices.api";
 import { useGetAllProgramsDataQuery } from "@/redux/api/users/programs/programs.api";
 import { toast } from "sonner";
 
@@ -23,14 +25,32 @@ interface AddDeviceModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
 function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
-  const [addDevice] = useAddDeviceMutation();
-  const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
   const [pin, setPin] = useState("");
   const [deviceName, setDeviceName] = useState("");
-  const [selectedScreen, setSelectedScreen] = useState("Select a Program");
+
+  const [addDevice] = useAddDeviceMutation();
+  const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
+
+  const cleanedPin = useMemo(() => pin.replace("-", ""), [pin]);
+  const { data: devicePinWiseData, error: pinError } = useGetDevicePinWiseDataQuery(
+    { devicePin: pin },
+    { skip: cleanedPin.length < 8 }
+  );
+
+  // Automatically set device name when PIN fetching is successful
+  useEffect(() => {
+    if (cleanedPin.length === 8 && devicePinWiseData?.success && devicePinWiseData?.data?.name) {
+      setDeviceName(devicePinWiseData.data.name);
+    } else if (cleanedPin.length < 8) {
+      setDeviceName("");
+    }
+  }, [devicePinWiseData, cleanedPin]);
+
+  const [selectedScreen, setSelectedScreen] = useState("all-programs");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isCreateProgramModalOpen, setIsCreateProgramModalOpen] = useState(false);
+
 
   const programOptions = useMemo(() => {
     const fetched = programsData?.data?.map(p => ({ id: p.id, name: p.name })) || [];
@@ -49,15 +69,16 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
 
   if (!isOpen) return null;
 
-
-  const handleAddDevice = async ({ pin, name }: { pin: string, name?: string }) => {
+  const handleAddDevice = async ({ pin, name, programId }: { pin: string, name?: string, programId?: string }) => {
     try {
-      // Only send deviceName as name, not selectedScreen
-      const res = await addDevice({ pin, name }).unwrap();
-      console.log(res);
+      // Only send programId if it's not the placeholder
+      const cleanedProgramId = programId === "all-programs" ? undefined : programId;
+      const res = await addDevice({ pin, name, programId: cleanedProgramId }).unwrap();
+
       if (res.success) {
         setPin(""); // Clear the PIN input
         setDeviceName(""); // Clear the device name input
+        setSelectedScreen("all-programs"); // Reset selection
         onClose();
         toast.success(res.message || "Device added successfully");
       }
@@ -171,7 +192,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
             />
           </div>
 
-               {/* Device Name Input */}
+          {/* Device Name Input */}
           <div>
             <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
               Device Name
@@ -186,11 +207,18 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
           </div>
 
           {/* Select Screen Dropdown (commented out, not sent anymore) */}
-
           <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5 sm:mb-2">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
               Select a Program
             </label>
+            <button
+              onClick={() => setIsCreateProgramModalOpen(true)}
+              className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow flex items-center gap-2 shrink-0"
+            >
+              <ScreenShare className="w-5 h-5" /> Create New Program
+            </button>
+            </div>
             <Select
               value={selectedScreen}
               onValueChange={setSelectedScreen}
@@ -201,7 +229,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
               </SelectTrigger>
               <SelectContent>
                 {programOptions.map((option) => (
-                  <SelectItem key={option.id} value={option.name}>
+                  <SelectItem key={option.id} value={option.id}>
                     {option.name}
                   </SelectItem>
                 ))}
@@ -225,7 +253,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
             Cancel
           </button>
           <button
-            onClick={() => handleAddDevice({ pin, name: deviceName })}
+            onClick={() => handleAddDevice({ pin, name: deviceName, programId: selectedScreen })}
             className="px-5 cursor-pointer sm:px-6 py-2 sm:py-2.5 bg-bgBlue text-white rounded-lg font-medium text-sm sm:text-base hover:bg-blue-600 transition-colors shadow-customShadow"
           >
             Add Device
@@ -282,7 +310,13 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
           toast.success("QR Code scanned successfully");
         }}
       />
+
+      <CreateScreenModal
+        isOpen={isCreateProgramModalOpen}
+        onClose={() => setIsCreateProgramModalOpen(false)}
+      />
     </div>
+
   );
 }
 

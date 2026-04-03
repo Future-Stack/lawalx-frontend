@@ -173,8 +173,14 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-300">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-bgGray dark:border-gray-700 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+    <div 
+      className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 transition-all duration-300 cursor-pointer"
+      onClick={(e) => e.target === e.currentTarget && handleClose()}
+    >
+      <div 
+        className="relative bg-white dark:bg-gray-900 rounded-2xl border border-bgGray dark:border-gray-700 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
 
         {/* Header */}
         <div className="flex items-start sm:items-center justify-between p-6 gap-4 sm:gap-0">

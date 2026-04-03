@@ -58,9 +58,6 @@ const MyContentCard = ({
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openImage, setOpenImage] = useState(false);
 
-  console.log("this is all content item", item);
-
-
   const getTypeLabel = () => {
     switch (item.type) {
       case "folder": return "Folder";
@@ -78,7 +75,6 @@ const MyContentCard = ({
   //     default: return "";
   //   }
   // };
-
 
   const getThumbnailIcon = () => {
     if (item.thumbnail) {

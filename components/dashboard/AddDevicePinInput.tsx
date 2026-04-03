@@ -8,12 +8,13 @@ interface AddDevicePinInputProps {
     selectedScreen: string;
 }
 
-const formatPin = (value: string): string => {
-    // Remove all non-alphanumeric characters
+const formatPin = (value: string, isDeleting: boolean): string => {
     const cleaned = value.replace(/[^a-zA-Z0-9]/g, "");
-    // Insert hyphen after 4th character
     if (cleaned.length > 4) {
         return `${cleaned.slice(0, 4)}-${cleaned.slice(4, 8)}`;
+    }
+    if (cleaned.length === 4 && !isDeleting) {
+        return `${cleaned}-`;
     }
     return cleaned;
 };
@@ -25,7 +26,9 @@ const AddDevicePinInput = ({
 }: AddDevicePinInputProps) => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const formatted = formatPin(e.target.value);
+        const newValue = e.target.value;
+        const isDeleting = newValue.length < pin.length;
+        const formatted = formatPin(newValue, isDeleting);
         setPin(formatted);
     };
 

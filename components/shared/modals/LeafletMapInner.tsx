@@ -6,16 +6,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import "leaflet/dist/leaflet.css";
 
-// Fix Leaflet icon issue
-if (typeof window !== 'undefined') {
-    // @ts-ignore - _getIconUrl is an internal Leaflet property
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
-    L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-    });
-}
+
 
 // Custom Zoom Controls Component
 const ZoomControls = () => {
@@ -49,6 +40,18 @@ interface Props {
 }
 
 const LeafletMapInner: React.FC<Props> = ({ lat, lng, device }) => {
+    React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            // @ts-ignore - _getIconUrl is an internal Leaflet property
+            delete (L.Icon.Default.prototype as any)._getIconUrl;
+            L.Icon.Default.mergeOptions({
+                iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+                iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+                shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+            });
+        }
+    }, []);
+
     // Custom Icon for Leaflet (Monitor Pointer)
     const customIcon = L.divIcon({
         className: "custom-div-icon",
@@ -95,8 +98,12 @@ const LeafletMapInner: React.FC<Props> = ({ lat, lng, device }) => {
                         <div className="bg-blue-50 dark:bg-blue-900/30 p-2 rounded-lg mb-2 flex justify-center">
                             <Monitor className="w-5 h-5 text-blue-600" />
                         </div>
-                        <p className="font-bold text-sm text-gray-900 dark:text-white">{device?.device}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{device?.location}</p>
+                        <p className="font-bold text-sm text-gray-900 dark:text-white">
+                            {typeof device?.device === 'object' ? (device?.device?.name || 'Unknown Device') : (device?.device || 'Unknown Device')}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {typeof device?.location === 'object' ? 'Device Location' : (device?.location || 'Unknown Location')}
+                        </p>
                     </div>
                 </Popup>
             </Marker>
