@@ -12,6 +12,13 @@ export enum WorkoutStatus {
 // Programs API Types
 // =======================
 
+export interface SuccessResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data?: any;
+}
+
 export interface ProgramsResponse {
   statusCode: number;
   success: boolean;
@@ -27,7 +34,7 @@ export interface GetProgramByIdResponse {
 }
 
 // =======================
-// Create Program Payload
+// Create/Update Program Payload
 // =======================
 
 export interface CreateProgramPayload {
@@ -48,7 +55,7 @@ export interface Program {
   name: string;
   description: string;
   serene_size: string;
-  status: WorkoutStatus;
+  status: WorkoutStatus | string;
   userId: string;
   created_at: string;
   updated_at: string;
@@ -95,12 +102,16 @@ export interface ProgramFile {
 export interface Device {
   id: string;
   name: string;
-  status: "PAIRED" | "UNPAIRED";
+  status: "ONLINE" | "OFFLINE" | "PAIRED" | "UNPAIRED" | string;
   deviceSerial: string;
   ip: string;
-  location: string | null;
+  location: {
+    lat: number;
+    lng: number;
+  } | null;
+  isActive?: boolean;
   adminBlock: boolean;
-  targets: any[]; // update if structure known
+  targets: any[];
 }
 
 // =======================
@@ -111,8 +122,8 @@ export interface Schedule {
   id: string;
   name: string;
   description: string;
-  contentType: "IMAGE_VIDEO" | "AUDIO";
-  recurrenceType: "once" | "daily" | "weekly" | "monthly";
+  contentType: string;
+  recurrenceType: "once" | "daily" | "weekly" | "monthly" | string;
   startDate: string;
   endDate: string;
   startTime: string;
@@ -124,14 +135,15 @@ export interface Schedule {
   createdAt: string;
   lowerThirdId: string | null;
   fileId: string;
-
   dayOfMonth: number[];
   daysOfWeek: string[];
-
-  targets: Target[];
+  targets: ScheduleTarget[];
+  file: {
+    originalName: string;
+  };
 }
 
-export interface Target {
+export interface ScheduleTarget {
   id: string;
   scheduleId: string;
   deviceId: string | null;
@@ -139,91 +151,8 @@ export interface Target {
   programId: string;
 }
 
-
-
-
-// export enum WorkoutStatus {
-//   DRAFT = "DRAFT",
-//   PUBLISH = "PUBLISH",
-//   ARCHIVE = "ARCHIVE",
-// }
-
-// export interface CreateProgramPayload {
-//   name: string;
-//   description: string;
-//   serene_size?: string;
-//   status?: WorkoutStatus;
-//   content_ids: string[];
-//   device_ids: string[];
-// }
-
-// // get all programs data type 
-// export interface ApiResponse<T> {
-//   statusCode: number;
-//   success: boolean;
-//   message: string;
-//   data: T;
-// }
-
-// // Use this type for shared Program structure
-// export interface Program {
-//   id: string;
-//   name: string;
-//   description: string;
-//   serene_size: string;
-//   status: string; // e.g., "DRAFT"
-//   userId: string;
-//   created_at: string;
-//   updated_at: string;
-//   timeline: Timeline[];
-//   devices: Device[];
-//   schedules: Schedule[];
-// }
-
-// export interface Timeline {
-//   id: string;
-//   programId: string;
-//   fileId: string;
-//   position: number;
-//   duration: number;
-//   createdAt: string;
-//   file: FileData;
-// }
-
-// export interface FileData {
-//   id: string;
-//   url: string;
-//   filePath: string;
-//   fileType: string; // e.g., "video/mp4"
-//   originalName: string;
-//   size: number;
-//   type: string; // e.g., "VIDEO"
-//   duration: number;
-//   userId: string;
-//   folderId: string | null;
-//   createdAt: string;
-//   updatedAt: string;
-// }
-
-// export interface Device {
-//   id: string;
-//   name: string;
-//   status: string; // e.g., "ONLINE" | "OFFLINE"
-//   deviceSerial: string;
-//   ip: string;
-//   location: string | null;
-//   adminBlock: boolean;
-//   targets: any[];
-// }
-
-// export interface Schedule {
-//   // empty array in your examples
-// }
-
-// // ✅ Usage examples:
-
-// // For GET ALL programs
-// export type GetAllProgramsResponse = ApiResponse<Program[]>;
-
-// // For GET SINGLE program by ID
-// export type GetProgramByIdResponse = ApiResponse<Program>;
+// Legacy / Alternative naming aliases
+export type ApiResponse = GetProgramByIdResponse;
+export type TimelineItem = Timeline;
+export type File = ProgramFile;
+export type Target = ScheduleTarget;

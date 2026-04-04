@@ -2,15 +2,37 @@
 
 import React from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import { ZoomIn, ZoomOut, Monitor } from "lucide-react";
+import { ZoomIn, ZoomOut, Monitor, MapPin } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { Device } from "@/redux/api/users/programs/programs.type";
+import ResolvedLocation from "@/common/ResolvedLocation";
 
+// --- Re-center and Fit Bounds Hook/Component ---
+const ReCenterMap: React.FC<{ devices: Device[] }> = ({ devices }) => {
+  const map = useMap();
 
+  React.useEffect(() => {
+    if (devices.length > 0) {
+      const validLocations = devices
+        .filter((d) => d.location && typeof d.location.lat === "number" && typeof d.location.lng === "number")
+        .map((d) => [d.location!.lat, d.location!.lng] as [number, number]);
+
+      if (validLocations.length === 1) {
+        map.setView(validLocations[0], 12, { animate: true });
+      } else if (validLocations.length > 1) {
+        const bounds = L.latLngBounds(validLocations);
+        map.fitBounds(bounds, { padding: [50, 50], animate: true });
+      }
+    }
+  }, [devices, map]);
+
+  return null;
+};
 
 // Custom DivIcon (Monitor Marker)
 const customIcon = L.divIcon({
-  className: "bg-transparent border-none",
+  className: "border-none",
   html: `
     <div style="position: relative;">
       <svg width="60" height="80" viewBox="0 0 60 80" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -58,21 +80,21 @@ const ZoomControls: React.FC = () => {
   );
 };
 
-const MapLocation: React.FC = () => {
+interface MapLocationProps {
+  devices?: Device[];
+}
+
+const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
-      // Fix TypeScript error for modifying Leaflet default icon URLs
       // @ts-ignore
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
-        iconRetinaUrl:
-          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-        iconUrl:
-          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-        shadowUrl:
-          "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+        iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
       });
     }
     setIsMounted(true);
@@ -82,12 +104,12 @@ const MapLocation: React.FC = () => {
     return (
       <div className="relative">
         <div className="mb-6">
-          <h1 className="text-xl md:text-2xl font-semibold text-headings mb-3">
-            Locations
-          </h1>
+          <h1 className="text-xl md:text-2xl font-semibold text-headings mb-3">Locations</h1>
           <div className="flex justify-between items-center">
             <h2 className="text-base text-muted">Map</h2>
-            <h2 className="text-base text-muted">Time Zone: <span className="text-headings font-semibold">Asia/Dhaka</span></h2>
+            <h2 className="text-base text-muted">
+              Time Zone: <span className="text-headings font-semibold">Asia/Dhaka</span>
+            </h2>
           </div>
         </div>
         <div className="relative bg-white rounded-xl shadow-sm border border-border overflow-hidden h-96 flex items-center justify-center bg-gray-50">
@@ -97,18 +119,22 @@ const MapLocation: React.FC = () => {
     );
   }
 
-  const position: [number, number] = [23.8103, 90.4125]; // Static Dhaka coordinates
+  const defaultPosition: [number, number] = [23.8103, 90.4125];
+  const centerPosition: [number, number] =
+    devices.length > 0 && devices[0].location ? [devices[0].location.lat, devices[0].location.lng] : defaultPosition;
 
   return (
     <div className="relative">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl md:text-2xl font-semibold text-headings mb-3">
-          Locations
-        </h1>
+        <div className="flex justify-between items-center mb-3">
+          <h1 className="text-xl md:text-2xl font-semibold text-headings">Locations</h1>
+        </div>
         <div className="flex justify-between items-center">
           <h2 className="text-base text-muted">Map</h2>
-          <h2 className="text-base text-muted">Time Zone: <span className="text-headings font-semibold">Asia/Dhaka</span></h2>
+          <h2 className="text-base text-muted">
+            Time Zone: <span className="text-headings font-semibold">Asia/Dhaka</span>
+          </h2>
         </div>
       </div>
 
@@ -116,8 +142,8 @@ const MapLocation: React.FC = () => {
       <div className="relative bg-white rounded-xl shadow-sm border border-border overflow-hidden z-0">
         <div className="relative h-96 overflow-hidden rounded-xl">
           <MapContainer
-            center={position}
-            zoom={6}
+            center={centerPosition}
+            zoom={devices.length > 0 ? 12 : 6}
             zoomControl={false}
             className="rounded-xl z-0"
             style={{ height: "100%", width: "100%" }}
@@ -127,30 +153,52 @@ const MapLocation: React.FC = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
 
-            {/* Custom Zoom Buttons */}
             <ZoomControls />
-            {/* Main Custom Marker */}
-            <Marker position={position} icon={customIcon}>
-              <Popup>
-                <div className="text-center p-2">
-                  <Monitor className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <p className="font-semibold text-gray-900">Device Location</p>
-                  <p className="text-sm text-gray-600">Dhaka, Bangladesh</p>
-                </div>
-              </Popup>
-            </Marker>
+            <ReCenterMap devices={devices} />
+
+            {devices.map((device) =>
+              device.location ? (
+                <Marker key={device.id} position={[device.location.lat, device.location.lng]} icon={customIcon}>
+                  <Popup>
+                    <div className="text-center p-3 min-w-[180px]">
+                      <Monitor className="w-10 h-10 text-blue-600 mx-auto mb-2" />
+                      <p className="font-bold text-gray-900 text-sm">{device.name}</p>
+                      <div className="flex items-center justify-center gap-1.5 mt-1.5 text-gray-600">
+                        <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                        <p className="text-xs font-medium">
+                          <ResolvedLocation lat={device.location.lat} lng={device.location.lng} />
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 mt-2">
+                        <span className={`w-2 h-2 rounded-full ${device.status?.toUpperCase() === "ONLINE" || device.status?.toUpperCase() === "PAIRED" ? "bg-green-500" : "bg-red-500"}`} />
+                        <span className="text-[10px] text-gray-400 font-mono uppercase tracking-widest">
+                          {device.status}
+                        </span>
+                      </div>
+                    </div>
+                  </Popup>
+                </Marker>
+              ) : null
+            )}
+
+            {devices.length === 0 && (
+              <Marker position={defaultPosition} icon={customIcon}>
+                <Popup>
+                  <div className="text-center p-2">
+                    <Monitor className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                    <p className="font-semibold text-gray-900">Default Location</p>
+                    <p className="text-sm text-gray-600">Dhaka, Bangladesh</p>
+                  </div>
+                </Popup>
+              </Marker>
+            )}
           </MapContainer>
         </div>
       </div>
 
-      {/* Time Zone Info */}
-      {/* <div className="mt-6">
-        <div className="text-gray-600 font-semibold">Time Zone</div>
-        <div className="text-gray-900 mt-1">Asia/Dhaka</div>
-      </div> */}
-
       {/* Tailwind inline override for Leaflet internal layers */}
-      <style>{`
+      <style>
+        {`
         .leaflet-container {
           z-index: 0 !important;
           border-radius: 0.75rem; /* matches rounded-xl */
@@ -165,6 +213,13 @@ const MapLocation: React.FC = () => {
         }
         .leaflet-popup {
           z-index: 10 !important;
+        }
+        .leaflet-popup-content-wrapper {
+          border-radius: 12px;
+          padding: 0;
+        }
+        .leaflet-popup-content {
+          margin: 0;
         }
       `}
       </style>
