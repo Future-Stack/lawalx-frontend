@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { useUploadFileMutation } from "@/redux/api/users/content/content.api";
 import { baseApi } from "@/redux/api/baseApi";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { cn } from "@/lib/utils";
 
 type UploadStatus = "pending" | "simulating" | "ready" | "uploading" | "done" | "error";
 
@@ -21,6 +23,7 @@ interface UploadFileModalProps {
     isOpen: boolean;
     onClose: () => void;
     setIsPageLoading: (loading: boolean) => void;
+    onSuccess?: (files: any[]) => void;
 }
 
 const ALLOWED_TYPES = [
@@ -62,6 +65,7 @@ export default function UploadFileModal({
     isOpen,
     onClose,
     setIsPageLoading,
+    onSuccess,
 }: UploadFileModalProps) {
     const dispatch = useDispatch();
     const [uploadFile] = useUploadFileMutation();
@@ -149,13 +153,12 @@ export default function UploadFileModal({
                             return prev;
                         }
 
-                        // Progress increment depends on file size
                         let increment = 10;
-                        if (fileSize <= 2 * 1024 * 1024) { // ≤ 2MB
+                        if (fileSize <= 2 * 1024 * 1024) {
                             increment = 15;
-                        } else if (fileSize <= 10 * 1024 * 1024) { // ≤ 10MB
+                        } else if (fileSize <= 10 * 1024 * 1024) {
                             increment = 10;
-                        } else { // > 10MB
+                        } else {
                             increment = 5;
                         }
                         let nextProgress = entry.progress + increment;
@@ -175,8 +178,8 @@ export default function UploadFileModal({
                                 delete stuckTimeoutsRef.current[id];
                             }
                             setTimeout(() => {
-                                setFiles((prev2) =>
-                                    prev2.map((f) =>
+                                setFiles((prev) =>
+                                    prev.map((f) =>
                                         f.id === id
                                             ? { ...f, status: "ready" }
                                             : f
@@ -229,13 +232,11 @@ export default function UploadFileModal({
         }));
         setFiles((prev) => [...prev, ...entries]);
 
-        // ─── Trigger simulation immediately for each file ───────────────────
         entries.forEach((entry) => {
             runProgressSimulation(entry.id, entry.file.size);
         });
     }, [runProgressSimulation]);
 
-    // ─── handleDone ───────────────────────────────────────────────────────────
     const handleDone = async () => {
         if (files.length === 0) {
             onClose();
@@ -245,7 +246,6 @@ export default function UploadFileModal({
         setIsPageLoading(true);
 
         try {
-            // Only upload files that are ready, pending, or simulating
             const filesToUpload = files.filter(f =>
                 f.status === "ready" ||
                 f.status === "pending" ||
@@ -260,12 +260,10 @@ export default function UploadFileModal({
             let hasErrorOccurred = false;
             const BATCH_SIZE = 4;
 
-            // Process uploads in batches
             for (let i = 0; i < filesToUpload.length; i += BATCH_SIZE) {
                 const batch = filesToUpload.slice(i, i + BATCH_SIZE);
 
                 await Promise.all(batch.map(async (entry) => {
-                    // Wait for simulation to finish if not already ready
                     if (entry.status !== "ready") {
                         const simulationPromise = simulationPromisesRef.current[entry.id];
                         if (simulationPromise) {
@@ -273,12 +271,10 @@ export default function UploadFileModal({
                         }
                     }
 
-                    // Perform the actual API upload
                     const formData = new FormData();
                     formData.append("file", entry.file);
 
                     try {
-                        // Mark as actually uploading
                         setFiles((prev) =>
                             prev.map((f) =>
                                 f.id === entry.id ? { ...f, status: "uploading" } : f
@@ -290,7 +286,7 @@ export default function UploadFileModal({
                         setFiles((prev) =>
                             prev.map((f) =>
                                 f.id === entry.id
-                                    ? { ...f, status: "done" }
+                                    ? ({ ...f, status: "done", responseData: res.data } as any)
                                     : f
                             )
                         );
@@ -312,8 +308,11 @@ export default function UploadFileModal({
 
             dispatch(baseApi.util.invalidateTags(["Content"] as any));
 
-            // Only close if all files in this attempt were successful
             if (!hasErrorOccurred) {
+                const uploadedData = files.filter(f => f.status === "done").map(f => (f as any).responseData).filter(Boolean);
+                if (uploadedData.length > 0 && onSuccess) {
+                    onSuccess(uploadedData);
+                }
                 onClose();
             }
         } catch (error: any) {
@@ -324,7 +323,6 @@ export default function UploadFileModal({
             setIsPageLoading(false);
         }
     };
-    // ─────────────────────────────────────────────────────────────────────────
 
     const handleDropZoneClick = useCallback(
         () => fileInputRef.current?.click(),
@@ -357,344 +355,199 @@ export default function UploadFileModal({
         [addFiles]
     );
 
-    if (!isOpen) return null;
-
     const hasFiles = files.length > 0;
     const isUploading = files.some((f) => f.status === "uploading");
 
     return (
-        <div
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 cursor-pointer"
-            onClick={(e) => {
-                if (e.target === e.currentTarget) onClose();
-            }}
-        >
-            <div
-                className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-[560px] max-h-[90vh] flex flex-col overflow-hidden cursor-default border border-gray-200 dark:border-gray-700"
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-200 dark:border-gray-700 shrink-0">
-                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
-                        Upload File
-                    </h2>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full transition-colors cursor-pointer"
+        <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => { if (!open && !isUploading) onClose(); }}>
+            <DialogPrimitive.Portal>
+                <DialogPrimitive.Overlay
+                    className="fixed inset-0 z-[2147483647] bg-black/50"
+                />
+                <DialogPrimitive.Content
+                    className="fixed top-[50%] left-[50%] z-[2147483647] w-full max-w-[560px] translate-x-[-50%] translate-y-[-50%] outline-none"
+                    onPointerDownOutside={(e) => { if (isUploading) e.preventDefault(); }}
+                >
+                    <div
+                        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh] border border-gray-200 dark:border-gray-700"
                     >
-                        <X className="w-5 h-5" />
-                    </button>
-                </div>
-
-                {/* Body */}
-                <div className="flex-1 overflow-y-auto">
-                    <div className="px-5 sm:px-6 pt-5 pb-3 space-y-4">
-                        {/* Drop zone */}
-                        <div
-                            onClick={handleDropZoneClick}
-                            onDragOver={handleDragOver}
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                            className={`cursor-pointer border-2 border-dashed rounded-xl flex flex-col items-center justify-center py-8 sm:py-10 px-4 transition-colors select-none ${isDragging
-                                ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
-                                : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
-                                }`}
-                        >
-                            <div className="w-12 h-12 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center mb-3 shadow-sm">
-                                <UploadCloud className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                                <span className="font-semibold text-[#7F56D9] cursor-pointer hover:underline">
-                                    Click to upload
-                                </span>{" "}
-                                or drag and drop
-                            </p>
-                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-center">
-                                MP4, PNG, JPG or GIF (max. 500MB)
-                            </p>
+                        <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-200 dark:border-gray-700 shrink-0">
+                            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                                Upload File
+                            </h2>
+                            <button
+                                onClick={onClose}
+                                disabled={isUploading}
+                                className="text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full transition-colors cursor-pointer"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        {/* Hidden file input */}
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="video/mp4,video/x-matroska,.mkv,audio/mpeg,audio/mp3,image/png,image/jpeg,image/gif,image/webp"
-                            multiple
-                            className="hidden"
-                            onChange={handleInputChange}
-                        />
+                        <div className="flex-1 overflow-y-auto">
+                            <div className="px-5 sm:px-6 pt-5 pb-3 space-y-4">
+                                <div
+                                    onClick={handleDropZoneClick}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    className={`cursor-pointer border-2 border-dashed rounded-xl flex flex-col items-center justify-center py-8 sm:py-10 px-4 transition-colors select-none ${isDragging
+                                        ? "border-blue-400 bg-blue-50 dark:bg-blue-900/20"
+                                        : "border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 hover:border-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/10"
+                                        }`}
+                                >
+                                    <div className="w-12 h-12 rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 flex items-center justify-center mb-3 shadow-sm">
+                                        <UploadCloud className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+                                    </div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                                        <span className="font-semibold text-[#7F56D9] cursor-pointer hover:underline">
+                                            Click to upload
+                                        </span>{" "}
+                                        or drag and drop
+                                    </p>
+                                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-center">
+                                        MP4, PNG, JPG or GIF (max. 500MB)
+                                    </p>
+                                </div>
 
-                        {/* File list */}
-                        {hasFiles && (
-                            <div className="space-y-3 pb-1">
-                                {files.map((entry) => {
-                                    const badge = getExtBadge(entry.file);
-                                    const isDone = entry.status === "done";
-                                    const isError = entry.status === "error";
-                                    const isEntryUploading = entry.status === "uploading";
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept="video/mp4,video/x-matroska,.mkv,audio/mpeg,audio/mp3,image/png,image/jpeg,image/gif,image/webp"
+                                    multiple
+                                    className="hidden"
+                                    onChange={handleInputChange}
+                                />
 
-                                    return (
-                                        <div
-                                            key={entry.id}
-                                            className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800"
-                                        >
-                                            {/* File icon */}
-                                            <div className="relative shrink-0 mt-0.5">
-                                                <svg
-                                                    width="36"
-                                                    height="44"
-                                                    viewBox="0 0 36 44"
-                                                    fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    className="text-gray-200 dark:text-gray-600"
+                                {hasFiles && (
+                                    <div className="space-y-3 pb-1">
+                                        {files.map((entry) => {
+                                            const badge = getExtBadge(entry.file);
+                                            const isDone = entry.status === "done";
+                                            const isError = entry.status === "error";
+                                            const isEntryUploading = entry.status === "uploading";
+
+                                            return (
+                                                <div
+                                                    key={entry.id}
+                                                    className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800"
                                                 >
-                                                    <path
-                                                        d="M0 4C0 1.79086 1.79086 0 4 0H22L36 14V40C36 42.2091 34.2091 44 32 44H4C1.79086 44 0 42.2091 0 40V4Z"
-                                                        fill="currentColor"
-                                                    />
-                                                    <path
-                                                        d="M22 0L36 14H26C23.7909 14 22 12.2091 22 10V0Z"
-                                                        fill="#D1D5DB"
-                                                    />
-                                                </svg>
-                                                <span
-                                                    className="absolute bottom-1 left-1/2 -translate-x-1/2 text-white text-[8px] font-bold px-1 py-0.5 rounded"
-                                                    style={{ backgroundColor: badge.bg }}
-                                                >
-                                                    {badge.label}
-                                                </span>
-                                            </div>
-
-                                            {/* Info + Progress */}
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate leading-tight mb-0.5">
-                                                    {entry.file.name}
-                                                </p>
-                                                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mb-2 flex-wrap">
-                                                    <span>
-                                                        {formatBytes(entry.uploaded)} of{" "}
-                                                        {formatBytes(entry.file.size)}
-                                                    </span>
-                                                    <span className="text-gray-300 dark:text-gray-600">|</span>
-                                                    {isDone || entry.status === "ready" ? (
-                                                        <span className="flex items-center gap-1 text-green-500 font-medium">
-                                                            <CheckCircle className="w-3.5 h-3.5" />
-                                                            Complete
+                                                    <div className="relative shrink-0 mt-0.5">
+                                                        <svg
+                                                            width="36"
+                                                            height="44"
+                                                            viewBox="0 0 36 44"
+                                                            fill="none"
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            className="text-gray-200 dark:text-gray-600"
+                                                        >
+                                                            <path
+                                                                d="M0 4C0 1.79086 1.79086 0 4 0H22L36 14V40C36 42.2091 34.2091 44 32 44H4C1.79086 44 0 42.2091 0 40V4Z"
+                                                                fill="currentColor"
+                                                            />
+                                                            <path
+                                                                d="M22 0L36 14H26C23.7909 14 22 12.2091 22 10V0Z"
+                                                                fill="#D1D5DB"
+                                                            />
+                                                        </svg>
+                                                        <span
+                                                            className="absolute bottom-1 left-1/2 -translate-x-1/2 text-white text-[8px] font-bold px-1 py-0.5 rounded"
+                                                            style={{ backgroundColor: badge.bg }}
+                                                        >
+                                                            {badge.label}
                                                         </span>
-                                                    ) : isError ? (
-                                                        <span className="text-red-500 font-medium">Failed</span>
-                                                    ) : isEntryUploading || entry.status === "simulating" ? (
-                                                        <span className="flex items-center gap-1 text-blue-500 font-medium">
-                                                            <UploadCloud className="w-3.5 h-3.5 animate-bounce" />
-                                                            {isEntryUploading ? "Uploading..." : "Processing..."}
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-gray-400 dark:text-gray-500">
-                                                            Ready to upload
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Progress bar */}
-                                                <div className="flex items-center gap-2">
-                                                    <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                                                        <div
-                                                            className={`h-full rounded-full transition-all duration-300 ${isError
-                                                                ? "bg-red-400"
-                                                                : isDone || entry.status === "ready"
-                                                                    ? "bg-green-400"
-                                                                    : "bg-violet-500"
-                                                                }`}
-                                                            style={{ width: `${entry.progress}%` }}
-                                                        />
                                                     </div>
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right shrink-0">
-                                                        {entry.progress}%
-                                                    </span>
+
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate leading-tight mb-0.5">
+                                                            {entry.file.name}
+                                                        </p>
+                                                        <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mb-2 flex-wrap">
+                                                            <span>
+                                                                {formatBytes(entry.uploaded)} of{" "}
+                                                                {formatBytes(entry.file.size)}
+                                                            </span>
+                                                            <span className="text-gray-300 dark:text-gray-600">|</span>
+                                                            {isDone || entry.status === "ready" ? (
+                                                                <span className="flex items-center gap-1 text-green-500 font-medium">
+                                                                    <CheckCircle className="w-3.5 h-3.5" />
+                                                                    Complete
+                                                                </span>
+                                                            ) : isError ? (
+                                                                <span className="text-red-500 font-medium">Failed</span>
+                                                            ) : isEntryUploading || entry.status === "simulating" ? (
+                                                                <span className="flex items-center gap-1 text-blue-500 font-medium">
+                                                                    <UploadCloud className="w-3.5 h-3.5 animate-bounce" />
+                                                                    {isEntryUploading ? "Uploading..." : "Processing..."}
+                                                                </span>
+                                                            ) : (
+                                                                <span className="text-gray-400 dark:text-gray-500">
+                                                                    Ready to upload
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                                                                <div
+                                                                    className={`h-full rounded-full transition-all duration-300 ${isError
+                                                                        ? "bg-red-400"
+                                                                        : isDone || entry.status === "ready"
+                                                                            ? "bg-green-400"
+                                                                            : "bg-violet-500"
+                                                                        }`}
+                                                                    style={{ width: `${entry.progress}%` }}
+                                                                />
+                                                            </div>
+                                                            <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right shrink-0">
+                                                                {entry.progress}%
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => handleRemove(entry.id)}
+                                                        disabled={isEntryUploading}
+                                                        className={`shrink-0 transition-colors mt-0.5 p-0.5 ${isEntryUploading
+                                                            ? "text-gray-200 dark:text-gray-600 cursor-not-allowed"
+                                                            : "text-gray-400 hover:text-red-500 cursor-pointer"
+                                                            }`}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
                                                 </div>
-                                            </div>
-
-                                            {/* Remove */}
-                                            <button
-                                                onClick={() => handleRemove(entry.id)}
-                                                disabled={isEntryUploading}
-                                                className={`shrink-0 transition-colors mt-0.5 p-0.5 ${isEntryUploading
-                                                    ? "text-gray-200 dark:text-gray-600 cursor-not-allowed"
-                                                    : "text-gray-400 hover:text-red-500 cursor-pointer"
-                                                    }`}
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    );
-                                })}
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                </div>
+                        </div>
 
-                {/* Footer */}
-                <div className="shrink-0 flex items-center gap-3 px-5 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-                    <button
-                        onClick={onClose}
-                        disabled={isUploading}
-                        className={`flex-1 py-2.5 border border-border rounded-xl text-sm font-medium transition-colors shadow-customShadow ${isUploading
-                            ? "text-gray-300 cursor-not-allowed"
-                            : "text-body hover:bg-gray-50 cursor-pointer"
-                            }`}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleDone}
-                        disabled={isUploading || !hasFiles}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-customShadow text-white ${isUploading || !hasFiles
-                            ? "bg-blue-300 cursor-not-allowed"
-                            : "bg-bgBlue hover:bg-blue-500 cursor-pointer"
-                            }`}
-                    >
-                        {isUploading ? "Uploading..." : "Upload"}
-                    </button>
-                </div>
-            </div>
-        </div>
+                        <div className="shrink-0 flex items-center gap-3 px-5 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                                onClick={onClose}
+                                disabled={isUploading}
+                                className={`flex-1 py-2.5 border border-border rounded-xl text-sm font-medium transition-colors shadow-customShadow ${isUploading
+                                    ? "text-gray-300 cursor-not-allowed"
+                                    : "text-body hover:bg-gray-50 cursor-pointer"
+                                    }`}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDone}
+                                disabled={isUploading || !hasFiles}
+                                className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-customShadow text-white ${isUploading || !hasFiles
+                                    ? "bg-blue-300 cursor-not-allowed"
+                                    : "bg-bgBlue hover:bg-blue-500 cursor-pointer"
+                                    }`}
+                            >
+                                {isUploading ? "Uploading..." : "Upload Content"}
+                            </button>
+                        </div>
+                    </div>
+                </DialogPrimitive.Content>
+            </DialogPrimitive.Portal>
+        </DialogPrimitive.Root>
     );
 }
-
-
-//                         {/* File list */}
-//                         {hasFiles && (
-//                             <div className="space-y-3 pb-1">
-//                                 {files.map((entry) => {
-//                                     const badge = getExtBadge(entry.file);
-//                                     const isDone = entry.status === "done";
-//                                     const isError = entry.status === "error";
-//                                     const isEntryUploading = entry.status === "uploading";
-
-//                                     return (
-//                                         <div
-//                                             key={entry.id}
-//                                             className="flex items-start gap-3 p-3 rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800"
-//                                         >
-//                                             {/* File icon */}
-//                                             <div className="relative shrink-0 mt-0.5">
-//                                                 <svg
-//                                                     width="36"
-//                                                     height="44"
-//                                                     viewBox="0 0 36 44"
-//                                                     fill="none"
-//                                                     xmlns="http://www.w3.org/2000/svg"
-//                                                     className="text-gray-200 dark:text-gray-600"
-//                                                 >
-//                                                     <path
-//                                                         d="M0 4C0 1.79086 1.79086 0 4 0H22L36 14V40C36 42.2091 34.2091 44 32 44H4C1.79086 44 0 42.2091 0 40V4Z"
-//                                                         fill="currentColor"
-//                                                     />
-//                                                     <path
-//                                                         d="M22 0L36 14H26C23.7909 14 22 12.2091 22 10V0Z"
-//                                                         fill="#D1D5DB"
-//                                                     />
-//                                                 </svg>
-//                                                 <span
-//                                                     className="absolute bottom-1 left-1/2 -translate-x-1/2 text-white text-[8px] font-bold px-1 py-0.5 rounded"
-//                                                     style={{ backgroundColor: badge.bg }}
-//                                                 >
-//                                                     {badge.label}
-//                                                 </span>
-//                                             </div>
-
-//                                             {/* Info + Progress */}
-//                                             <div className="flex-1 min-w-0">
-//                                                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate leading-tight mb-0.5">
-//                                                     {entry.file.name}
-//                                                 </p>
-//                                                 <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400 mb-2 flex-wrap">
-//                                                     <span>
-//                                                         {formatBytes(entry.uploaded)} of{" "}
-//                                                         {formatBytes(entry.file.size)}
-//                                                     </span>
-//                                                     <span className="text-gray-300 dark:text-gray-600">|</span>
-//                                                     {isDone ? (
-//                                                         <span className="flex items-center gap-1 text-green-500 font-medium">
-//                                                             <CheckCircle className="w-3.5 h-3.5" />
-//                                                             Complete
-//                                                         </span>
-//                                                     ) : isError ? (
-//                                                         <span className="text-red-500 font-medium">Failed</span>
-//                                                     ) : isEntryUploading ? (
-//                                                         <span className="flex items-center gap-1 text-blue-500 font-medium">
-//                                                             <UploadCloud className="w-3.5 h-3.5 animate-bounce" />
-//                                                             Uploading...
-//                                                         </span>
-//                                                     ) : (
-//                                                         <span className="text-gray-400 dark:text-gray-500">
-//                                                             Ready to upload
-//                                                         </span>
-//                                                     )}
-//                                                 </div>
-
-//                                                 {/* Progress bar */}
-//                                                 <div className="flex items-center gap-2">
-//                                                     <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-//                                                         <div
-//                                                             className={`h-full rounded-full transition-all duration-300 ${isError
-//                                                                     ? "bg-red-400"
-//                                                                     : isDone
-//                                                                         ? "bg-green-400"
-//                                                                         : "bg-violet-500"
-//                                                                 }`}
-//                                                             style={{ width: `${entry.progress}%` }}
-//                                                         />
-//                                                     </div>
-//                                                     <span className="text-xs text-gray-500 dark:text-gray-400 w-8 text-right shrink-0">
-//                                                         {entry.progress}%
-//                                                     </span>
-//                                                 </div>
-//                                             </div>
-
-//                                             {/* Remove */}
-//                                             <button
-//                                                 onClick={() => handleRemove(entry.id)}
-//                                                 disabled={isEntryUploading}
-//                                                 className={`shrink-0 transition-colors mt-0.5 p-0.5 ${isEntryUploading
-//                                                         ? "text-gray-200 dark:text-gray-600 cursor-not-allowed"
-//                                                         : "text-gray-400 hover:text-red-500 cursor-pointer"
-//                                                     }`}
-//                                             >
-//                                                 <Trash2 className="w-4 h-4" />
-//                                             </button>
-//                                         </div>
-//                                     );
-//                                 })}
-//                             </div>
-//                         )}
-//                     </div>
-//                 </div>
-
-//                 {/* Footer */}
-//                 <div className="shrink-0 flex items-center gap-3 px-5 sm:px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-//                     <button
-//                         onClick={onClose}
-//                         disabled={isUploading}
-//                         className={`flex-1 py-2.5 border border-border rounded-xl text-sm font-medium transition-colors shadow-customShadow ${isUploading
-//                                 ? "text-gray-300 cursor-not-allowed"
-//                                 : "text-body hover:bg-gray-50 cursor-pointer"
-//                             }`}
-//                     >
-//                         Cancel
-//                     </button>
-//                     <button
-//                         onClick={handleDone}
-//                         disabled={isUploading || !hasFiles}
-//                         className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-customShadow text-white ${isUploading || !hasFiles
-//                                 ? "bg-blue-300 cursor-not-allowed"
-//                                 : "bg-bgBlue hover:bg-blue-500 cursor-pointer"
-//                             }`}
-//                     >
-//                         {isUploading ? "Uploading..." : "Upload"}
-//                     </button>
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// }

@@ -115,7 +115,7 @@ const AddContentDialog = ({ open, setOpen, programId, onAdd }: AddContentDialogP
       </div>
 
       {/* Content List */}
-      <div className="divide-y divide-border overflow-y-auto pr-1 sm:pr-2" style={{ maxHeight: "calc(100vh - 350px)", minHeight: "200px" }}>
+      <div className="divide-y divide-border overflow-y-auto pr-1 sm:pr-2" style={{ maxHeight: "calc(100vh - 400px)", minHeight: "200px" }}>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted">
             <Loader2 className="w-8 h-8 animate-spin" />

@@ -9,6 +9,7 @@ import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmatio
 
 import { Program, Device } from "@/redux/api/users/programs/programs.type";
 import { useDeleteProgramMutation } from "@/redux/api/users/programs/programs.api";
+import ResolvedLocation from "@/common/ResolvedLocation";
 
 interface ScreenSettingsProps {
     program: Program;
@@ -108,7 +109,11 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                                             {device.status === "PAIRED" ? "Online" : "Offline"}
                                         </span>
                                     </div>
-                                    <p className="text-xs sm:text-sm text-muted uppercase tracking-wider">{device.location || "No location"}</p>
+                                    <p className="text-xs sm:text-sm text-muted uppercase tracking-wider">
+                                        {device.location ? (
+                                            <ResolvedLocation lat={device.location.lat} lng={device.location.lng} fallback={`${device.location.lat.toFixed(4)}, ${device.location.lng.toFixed(4)}`} />
+                                        ) : "No location"}
+                                    </p>
                                 </div>
                                 <button
                                     onClick={() => handleRemoveDevice(device.id)}

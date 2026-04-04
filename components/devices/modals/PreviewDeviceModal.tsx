@@ -473,7 +473,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                   <div className="flex items-center justify-between">
                     <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Screen Playing</span>
                     <span className="text-[#171717] dark:text-white text-sm font-bold truncate ml-4 max-w-[150px]">
-                      {currentDevice.program?.name || "No screen assigned"}
+                      {currentDevice.program?.name || "No device assigned"}
                     </span>
                   </div>
                 </div>

@@ -224,9 +224,9 @@ export default function Dashboard() {
                           {device.status === "ONLINE" ? "Online" : "Offline"}
                         </div>
                       </div>
-                      <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
+                      {/* <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
                         <MoreVertical className="w-5 h-5" />
-                      </button>
+                      </button> */}
                     </div>
                     <div className="text-[14px] text-muted mb-1" style={{ fontFamily: "Inter, sans-serif" }}>
                       3840 × 2160

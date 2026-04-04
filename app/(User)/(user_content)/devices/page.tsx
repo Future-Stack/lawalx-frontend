@@ -208,7 +208,7 @@ export default function DevicesPage() {
         resolution: device.program?.serene_size || "1920x1080",
         location: device.location ? `Location (${device.location.lat.toFixed(2)}, ${device.location.lng.toFixed(2)})` : "Unknown Location",
         type: device.deviceType || "Unknown Type",
-        programName: device.program?.name || "No screen assigned",
+        programName: device.program?.name || "No device assigned",
         status: status,
         storage: storageDisplay,
         lastSync: calculateTimeAgo(device.lastSeen),
@@ -369,7 +369,7 @@ export default function DevicesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <div className={`text-sm font-bold ${device.programName === "No screen assigned" ? "text-[#A3A3A3] font-normal" : "text-[#171717] dark:text-white"}`}>
+                      <div className={`text-sm font-bold ${device.programName === "No device assigned" ? "text-[#A3A3A3] font-normal" : "text-[#171717] dark:text-white"}`}>
                         {device.programName}
                       </div>
                     </td>
