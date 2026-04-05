@@ -5,11 +5,13 @@ import { useState, useMemo, useEffect } from "react";
 import {
   X, FileText, Video, Monitor, CircleCheckBigIcon,
   Wifi, WifiOff, Search, ChevronLeft, ChevronRight, Loader2, Headphones, Plus,
+  ArrowRight, Play, GalleryThumbnails, AudioLines, Image as ImageIcon
 } from "lucide-react";
 import Dropdown from "@/common/Dropdown";
 import Image from "next/image";
-import { useGetAllFilesQuery } from "@/redux/api/users/content/content.api";
-import { transformFile } from "@/lib/content-utils";
+import { useGetAllContentDataQuery } from "@/redux/api/users/content/content.api";
+import { transformFile, transformFolder } from "@/lib/content-utils";
+import folderIcon from "@/public/icons/folder.svg";
 import { useCreateProgramMutation } from "@/redux/api/users/programs/programs.api";
 import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { WorkoutStatus } from "@/redux/api/users/programs/programs.type";
@@ -30,9 +32,11 @@ interface CreateScreenModalProps {
 }
 
 export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModalProps) {
-  const { data: allFiles, isLoading: isFilesLoading } = useGetAllFilesQuery(undefined);
+  const { data: allContentData, isLoading: isContentLoading } = useGetAllContentDataQuery(undefined);
   const { data: devicesData, isLoading: isDevicesLoading } = useGetMyDevicesDataQuery(undefined);
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
+
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
 
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedType, setSelectedType] = useState("all");
@@ -72,22 +76,35 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
     };
   }, [isOpen]);
 
-  const transformedFiles = useMemo(() => {
-    if (!allFiles?.data) return [];
-    return allFiles.data.map((file: any) => transformFile(file, isMounted));
-  }, [allFiles, isMounted]);
+  const transformedContent = useMemo(() => {
+    if (!allContentData?.data) return [];
+    
+    const folders = allContentData.data.folders.map((folder: any) => transformFolder(folder, isMounted));
+    const rootFiles = allContentData.data.rootFiles.map((file: any) => transformFile(file, isMounted));
+    
+    return [...folders, ...rootFiles];
+  }, [allContentData, isMounted]);
 
-  const filteredFiles = useMemo(() => {
-    return transformedFiles.filter((file) => {
-      const matchesSearch = file.title.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredContent = useMemo(() => {
+    return transformedContent.filter((item) => {
+      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
       let matchesType = true;
-      if (selectedType === "video") matchesType = file.type === "video";
-      else if (selectedType === "image") matchesType = file.type === "image";
-      else if (selectedType === "audio") matchesType = file.type === "audio";
-      else if (selectedType === "all") matchesType = true;
+      if (selectedType === "video") matchesType = item.type === "video" || item.type === "folder";
+      else if (selectedType === "image") matchesType = item.type === "image" || item.type === "folder";
+      else if (selectedType === "audio") matchesType = item.type === "audio" || item.type === "folder";
       return matchesSearch && matchesType;
     });
-  }, [transformedFiles, searchQuery, selectedType]);
+  }, [transformedContent, searchQuery, selectedType]);
+
+  const toggleFolder = (e: React.MouseEvent, folderId: string) => {
+    e.stopPropagation();
+    setExpandedFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else next.add(folderId);
+      return next;
+    });
+  };
 
   const devices = useMemo(() => {
     if (!devicesData?.data) return [];
@@ -149,6 +166,87 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
         ? prev.device_ids.filter((id) => id !== deviceId)
         : [...prev.device_ids, deviceId],
     }));
+  };
+
+  // ─── Final submit ─────────────────────────────────────────────────────────────
+  // ─── Recursive content item renderer ──────────────────────────────────────────
+  const renderContentItem = (item: any, depth = 0) => {
+    const isSelected = programData.content_ids.includes(item.id);
+    const isExpanded = expandedFolders.has(item.id);
+
+    return (
+      <div key={item.id} className="space-y-2">
+        <div
+          onClick={(e) => {
+            if (item.type === "folder") toggleFolder(e, item.id);
+            else toggleVideoSelection(item.id);
+          }}
+          className={`flex items-center gap-3 p-3 rounded-lg border border-borderGray dark:border-gray-700 bg-white dark:bg-gray-800 transition-all group ${
+            isSelected 
+              ? "border-bgBlue bg-blue-50/50 dark:bg-blue-950/20" 
+              : "hover:border-bgBlue hover:bg-blue-50 dark:hover:bg-blue-950/20"
+          } cursor-pointer`}
+          style={{ marginLeft: depth > 0 ? `${depth * 1.5}rem` : 0 }}
+        >
+          {/* Checkbox for files */}
+          <div className="flex-shrink-0">
+            {item.type !== "folder" && (
+              <div 
+                className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                  isSelected 
+                    ? "bg-bgBlue border-bgBlue text-white" 
+                    : "border-gray-300 dark:border-gray-600 group-hover:border-bgBlue"
+                }`}
+              >
+                {isSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1">
+            {item.type === "folder" && (
+              <ChevronRight
+                className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+              />
+            )}
+
+            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden flex-shrink-0">
+              {item.type === "audio" ? (
+                <div className="w-full h-full flex items-center justify-center bg-blue-50 dark:bg-blue-950/20">
+                  <AudioLines className="w-5 h-5 text-bgBlue" />
+                  <audio src={item.audio} muted={false} />
+                </div>
+              ) : item.type === "video" ? (
+                <video src={item.video} className="w-full h-full object-cover" muted />
+              ) : item.type === "folder" ? (
+                <Image src={folderIcon} alt="folder" width={24} height={24} />
+              ) : item.thumbnail ? (
+                <Image src={item.thumbnail} alt={item.title} width={40} height={40} className="w-full h-full object-cover" />
+              ) : (
+                <ImageIcon className="w-5 h-5 text-bgBlue" />
+              )}
+            </div>
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-gray-900 dark:text-white group-hover:text-bgBlue transition-colors truncate text-sm">
+              {item.title}
+            </p>
+            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">
+              {item.type === "folder" ? `${item.fileCount || 0} items` : `${item.size} ${item.duration ? `• ${item.duration}` : ""}`}
+            </p>
+          </div>
+
+        </div>
+
+        {/* Nested items */}
+        {item.type === "folder" && isExpanded && item.children && (
+          <div className="space-y-2">
+            {item.children.map((child: any) => renderContentItem(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   // ─── Final submit ─────────────────────────────────────────────────────────────
@@ -348,50 +446,18 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                 </div>
               </div>
 
-              <div className="border border-borderGray dark:border-gray-600 rounded-lg max-h-76 overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {isFilesLoading ? (
-                  <div className="flex flex-col items-center justify-center p-8 text-gray-400">
+              <div className="max-h-[350px] overflow-y-auto space-y-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pr-1">
+                {isContentLoading || !isMounted ? (
+                  <div className="flex flex-col items-center justify-center p-12 text-gray-400">
                     <Loader2 className="w-8 h-8 animate-spin mb-2" />
-                    <span>Loading files...</span>
+                    <span>Loading your content...</span>
                   </div>
-                ) : filteredFiles.length === 0 ? (
+                ) : filteredContent.length === 0 ? (
                   <div className="p-8 text-center text-gray-500 dark:text-gray-400">
                     No files found matching your search.
                   </div>
                 ) : (
-                  filteredFiles.map((file) => (
-                    <div
-                      key={file.id}
-                      className={`flex items-center gap-4 p-4 border-b last:border-b-0 cursor-pointer transition-colors ${programData.content_ids.includes(file.id)
-                        ? "bg-blue-50 dark:bg-blue-900/20"
-                        : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                        }`}
-                      onClick={() => toggleVideoSelection(file.id)}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={programData.content_ids.includes(file.id)}
-                        onChange={() => toggleVideoSelection(file.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500 cursor-pointer"
-                      />
-                      <div className="w-20 h-14 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
-                        {file.type === "image" && file.thumbnail ? (
-                          <Image src={file.thumbnail} alt={file.title} width={80} height={56} className="w-full h-full object-cover" />
-                        ) : file.type === "video" && file.video ? (
-                          <video src={file.video} className="w-full h-full object-cover" muted />
-                        ) : file.type === "audio" ? (
-                          <Headphones className="w-8 h-8 text-blue-500" />
-                        ) : (
-                          <div className="text-xs text-gray-400">No Preview</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-gray-900 dark:text-white truncate">{file.title}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{file.size}</div>
-                      </div>
-                    </div>
-                  ))
+                  filteredContent.map((item) => renderContentItem(item))
                 )}
               </div>
             </div>
@@ -412,7 +478,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
                   Select Devices <span className="text-gray-400 font-normal">(optional)</span>
                 </label>
-                <div className="border border-borderGray dark:border-gray-600 rounded-lg divide-y dark:divide-gray-700 max-h-64 overflow-y-auto">
+                <div className="border border-borderGray dark:border-gray-600 rounded-lg divide-y dark:divide-gray-700 max-h-64 overflow-y-auto scrollbar-hide">
                   {isDevicesLoading ? (
                     <div className="flex flex-col items-center justify-center p-8 text-gray-400">
                       <Loader2 className="w-8 h-8 animate-spin mb-2" />

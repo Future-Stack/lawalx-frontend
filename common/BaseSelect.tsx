@@ -83,10 +83,10 @@ const BaseSelect = ({
             <SelectItem
               key={idx}
               value={opt.value}
-              className="focus:bg-bgBlue focus:text-white hover:bg-bgBlue hover:text-white flex items-center gap-2 cursor-pointer group transition-colors"
+              className="focus:bg-bgBlue hover:bg-bgBlue flex items-center gap-2 cursor-pointer group transition-colors"
             >
-              {opt.icon && <span className="transition-colors group-focus:text-white group-hover:text-white">{opt.icon}</span>}
-              <span className="transition-colors group-focus:text-white group-hover:text-white">{opt.label}</span>
+              {opt.icon && <span className="transition-colors">{opt.icon}</span>}
+              <span className="transition-colors">{opt.label}</span>
             </SelectItem>
           ))}
         </SelectContent>

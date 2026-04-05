@@ -42,8 +42,8 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
     setCurrentPage,
 }) => {
     const router = useRouter();
-    const [deleteSchedule] = useDeleteScheduleMutation();
     const [openPreview, setOpenPreview] = React.useState(false);
+    const [deleteSchedule] = useDeleteScheduleMutation();
     const [selectedSchedule, setSelectedSchedule] = React.useState<Schedule | null>(null);
     const [openDelete, setOpenDelete] = React.useState(false);
     const [scheduleToDelete, setScheduleToDelete] = React.useState<Schedule | null>(null);
@@ -165,7 +165,7 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
                 open={openPreview}
                 setOpen={setOpenPreview}
                 schedule={selectedSchedule}
-                onEdit={(id) => router.push(`/schedules/${id}`)}
+                onEdit={(id: string) => router.push(`/schedules/${id}`)}
             />
 
             <DeleteConfirmationModal

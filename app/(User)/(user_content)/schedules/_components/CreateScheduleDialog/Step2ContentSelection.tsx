@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Image as ImageIcon, AudioLines, FilePlay, ArrowRight, Play, Loader2, GalleryThumbnails, ChevronRight } from "lucide-react";
+import { Search, Image as ImageIcon, AudioLines, FilePlay, ArrowRight, Play, Loader2, GalleryThumbnails, ChevronRight, CircleCheckBigIcon } from "lucide-react";
 import NextImage from "next/image";
 import folderIcon from "@/public/icons/folder.svg";
 import BaseSelect from "@/common/BaseSelect";
@@ -14,9 +14,9 @@ import { ContentItem } from "@/types/content";
 interface Step2Props {
     data: {
         contentType: string;
-        selectedContent: ContentItem | null;
+        selectedContent: ContentItem[];
     };
-    onChange: (data: { contentType: string; selectedContent: ContentItem | null }) => void;
+    onChange: (data: { contentType: string; selectedContent: ContentItem[] }) => void;
     onContentSelect: (content: ContentItem) => void;
 }
 
@@ -91,26 +91,41 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
     }, [transformedContent, data.contentType, searchQuery]);
 
     const renderContentItem = (item: any, depth = 0) => {
+        const isSelected = data.selectedContent.some(c => c.id === item.id);
         const isExpanded = expandedFolders.has(item.id);
 
         return (
             <React.Fragment key={item.id}>
                 <div
-                    onClick={() => {
+                    onClick={(e) => {
                         if (item.type === "folder") {
-                            // On the content page, clicking a folder toggles expansion in list view
-                            setExpandedFolders(prev => {
-                                const next = new Set(prev);
-                                if (next.has(item.id)) next.delete(item.id);
-                                else next.add(item.id);
-                                return next;
-                            });
+                            // Toggle folder expansion
+                            toggleFolder(e, item.id);
                         } else {
                             onContentSelect(item);
                         }
                     }}
-                    className={`flex items-center gap-3 p-3 rounded-lg border border-border bg-input hover:border-bgBlue hover:bg-blue-50 dark:hover:bg-blue-950/20 cursor-pointer transition-all group`}
+                    className={`flex items-center gap-3 p-3 rounded-lg border border-border bg-input transition-all group ${
+                        isSelected 
+                            ? "border-bgBlue bg-blue-50/50 dark:bg-blue-950/20" 
+                            : "hover:border-bgBlue hover:bg-blue-50 dark:hover:bg-blue-950/20"
+                    } cursor-pointer`}
                 >
+                    {/* Multi-select check or icon */}
+                    <div className="flex-shrink-0">
+                        {item.type !== "folder" && (
+                            <div 
+                                className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                                    isSelected 
+                                        ? "bg-bgBlue border-bgBlue text-white" 
+                                        : "border-borderGray group-hover:border-bgBlue"
+                                }`}
+                            >
+                                {isSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
+                            </div>
+                        )}
+                    </div>
+
                     {/* Expand Arrow for Folders */}
                     <div className="flex items-center gap-1">
                         {item.type === "folder" && (
@@ -171,9 +186,13 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                     </div>
 
                     {/* Action Icon */}
-                    <div className="w-6 h-6 md:w-8 md:h-8 rounded-full bg-bgBlue text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-customShadow">
-                        {item.type === "video" ? (
-                            <Play className="w-4 h-4" />
+                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full bg-bgBlue text-white flex items-center justify-center transition-opacity shadow-customShadow ${
+                        isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    }`}>
+                        {isSelected ? (
+                            <CircleCheckBigIcon className="w-4 h-4" />
+                        ) : item.type === "video" ? (
+                            <Play className="w-4 h-4 ml-0.5" />
                         ) : (
                             <ArrowRight className="w-4 h-4" />
                         )}
@@ -198,39 +217,45 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                 placeholder="Select content type"
                 options={contentTypeOptions}
                 value={data.contentType}
-                onChange={(value) => onChange({ ...data, contentType: value, selectedContent: null })}
+                onChange={(value) => onChange({ ...data, contentType: value, selectedContent: [] })}
                 required
             />
 
-            {/* Select Content Field */}
-            <div className="space-y-3">
-                <label className="block text-sm font-semibold text-headings">
+            {/* Selection Summary */}
+            <div className="flex items-center justify-between px-1">
+                <p className="text-sm font-bold text-headings">
                     Select Content
-                </label>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                    <Input
-                        type="text"
-                        placeholder="Search Content"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 bg-input border-borderGray text-headings"
-                    />
+                </p>
+                <div className="text-xs font-bold text-bgBlue bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-full">
+                    {data.selectedContent.length} items selected
                 </div>
             </div>
 
+            {/* Search Field */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                <Input
+                    type="text"
+                    placeholder="Search Content in your library..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-input border-borderGray text-headings h-11"
+                />
+            </div>
+
             {/* Content Grid */}
-            <div className="max-h-[300px] overflow-y-auto space-y-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="max-h-[350px] overflow-y-auto space-y-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pr-1">
                 {isLoading || !isMounted ? (
                     <div className="flex flex-col items-center justify-center py-12 text-muted">
                         <Loader2 className="w-8 h-8 animate-spin mb-2" />
-                        <span>Loading content...</span>
+                        <span>Loading your content...</span>
                     </div>
                 ) : (
                     <>
                         {filteredContent.length === 0 ? (
-                            <div className="text-center py-8 text-muted">
-                                No content found
+                            <div className="text-center py-8 text-muted flex flex-col items-center gap-2">
+                                <Search className="w-8 h-8 opacity-20" />
+                                <span>No content found matching your search</span>
                             </div>
                         ) : (
                             filteredContent.map((item) => renderContentItem(item))

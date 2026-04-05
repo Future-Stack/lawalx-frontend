@@ -35,8 +35,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     const [step1Data, setStep1Data] = useState({ name: "", description: "" });
     const [step2Data, setStep2Data] = useState<{
         contentType: string;
-        selectedContent: ContentItem | null;
-    }>({ contentType: "all", selectedContent: null });
+        selectedContent: ContentItem[];
+    }>({ contentType: "all", selectedContent: [] });
 
     const [lowerThirdData, setLowerThirdData] = useState({
         selectedContent: null as ContentItem | null,
@@ -68,14 +68,20 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     });
 
     const handleContentSelect = (content: ContentItem) => {
-        setStep2Data({ ...step2Data, selectedContent: content });
+        const isSelected = step2Data.selectedContent.some(c => c.id === content.id);
+        const newSelection = isSelected 
+            ? step2Data.selectedContent.filter(c => c.id !== content.id)
+            : [...step2Data.selectedContent, content];
+
+        setStep2Data({ ...step2Data, selectedContent: newSelection });
+        
+        // Lower third selection still works on single item for config
         setLowerThirdData({ ...lowerThirdData, selectedContent: content });
 
         if (step2Data.contentType === "lower-third") {
             setShowLowerThird(true);
-        } else {
-            setCurrentStep(3);
         }
+        // Note: We no longer auto-jump to step 3 to allow multiple selection
     };
 
     const handleNext = () => {
@@ -94,11 +100,11 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     const handleBack = () => {
         if (showLowerThird) {
             setShowLowerThird(false);
-            setStep2Data({ contentType: "all", selectedContent: null });
+            setStep2Data({ contentType: "all", selectedContent: [] });
         } else if (currentStep > 1) {
             // If going back to Step 2, reset contentType to 'all' and clear selectedContent
             if (currentStep - 1 === 2) {
-                setStep2Data({ contentType: "all", selectedContent: null });
+                setStep2Data({ contentType: "all", selectedContent: [] });
             }
             setCurrentStep(currentStep - 1);
         }
@@ -109,20 +115,25 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
         setCurrentStep(1);
         setShowLowerThird(false);
         setStep1Data({ name: "", description: "" });
-        setStep2Data({ contentType: "all", selectedContent: null });
+        setStep2Data({ contentType: "all", selectedContent: [] });
         setStep3Data({ selectedScreens: [] });
+        setLowerThirdData({ ...lowerThirdData, selectedContent: null });
         setStep4Data({ repeat: "run-once", selectedDays: [], selectedDates: [], playTime: "03:00", endTime: "05:00", startDate: "", endDate: "" });
         setOpen(false);
     };
 
     const handleSubmit = async () => {
         // Determine active content (file selected in Step 2)
-        const activeContent = showLowerThird ? lowerThirdData.selectedContent : step2Data.selectedContent;
+        const activeContent = showLowerThird 
+            ? (lowerThirdData.selectedContent ? [lowerThirdData.selectedContent] : []) 
+            : step2Data.selectedContent;
+
+        const firstSelected = activeContent[0];
 
         // Map contentType from selected content to API enum
         // API accepts: IMAGE_VIDEO, AUDIO, LOWERTHIRD
         let contentType: ContentType = "IMAGE_VIDEO";
-        if (activeContent?.type === "audio") {
+        if (firstSelected?.type === "audio") {
             contentType = "AUDIO";
         } else if (showLowerThird) {
             contentType = "LOWERTHIRD";
@@ -160,7 +171,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             dayOfMonth: step4Data.selectedDates,
             programIds: step3Data.selectedScreens,
             deviceIds: [],
-            fileId: activeContent?.id || "",
+            fileId: firstSelected?.id || "",
             lowerThirdId: showLowerThird ? lowerThirdData.selectedContent?.id : undefined,
             status: "playing",
         };
@@ -182,7 +193,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
 
     const isNextDisabled = () => {
         if (currentStep === 1) return !step1Data.name;
-        if (currentStep === 2 && !showLowerThird) return !step2Data.selectedContent;
+        if (currentStep === 2 && !showLowerThird) return step2Data.selectedContent.length === 0;
         if (currentStep === 3) return step3Data.selectedScreens.length === 0;
         if (currentStep === 4) {
             const isRunOnce = step4Data.repeat === "run-once";

@@ -15,6 +15,8 @@ export default function SchedulesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  console.log("all schedules", schedulesData);
+
   const sortOptions = [
     { label: "Recent", value: "Recent" },
     { label: "Name A-Z", value: "A-Z" },

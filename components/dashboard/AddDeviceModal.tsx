@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useAddDeviceMutation, useGetDevicePinWiseDataQuery } from "@/redux/api/users/devices/devices.api";
 import { useGetAllProgramsDataQuery } from "@/redux/api/users/programs/programs.api";
+import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { toast } from "sonner";
 
 interface AddDeviceModalProps {
@@ -31,6 +32,8 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
 
   const [addDevice] = useAddDeviceMutation();
   const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
+  const { data: userProfile } = useGetUserProfileQuery();
+  const userInfo = userProfile?.data;
 
   const cleanedPin = useMemo(() => pin.replace("-", ""), [pin]);
   const { data: devicePinWiseData, error: pinError } = useGetDevicePinWiseDataQuery(
@@ -206,41 +209,43 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
             />
           </div>
 
-          {/* Select Screen Dropdown (commented out, not sent anymore) */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
-              Select a Program
-            </label>
-            <button
-              onClick={() => setIsCreateProgramModalOpen(true)}
-              className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow flex items-center gap-2 shrink-0"
-            >
-              <ScreenShare className="w-5 h-5" /> Create New Program
-            </button>
+          {/* Select Screen Dropdown */}
+          {userInfo?.firstTimeLogin !== false && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Select a Program
+                </label>
+                <button
+                  onClick={() => setIsCreateProgramModalOpen(true)}
+                  className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow flex items-center gap-2 shrink-0"
+                >
+                  <ScreenShare className="w-5 h-5" /> Create New Program
+                </button>
+              </div>
+              <Select
+                value={selectedScreen}
+                onValueChange={setSelectedScreen}
+                disabled={isLoadingPrograms}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={isLoadingPrograms ? "Loading programs..." : "Select a Program"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {programOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                  {!isLoadingPrograms && programsData?.data?.length === 0 && (
+                    <div className="py-2 px-8 text-sm text-gray-400 italic pointer-events-none">
+                      No programs found
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-            <Select
-              value={selectedScreen}
-              onValueChange={setSelectedScreen}
-              disabled={isLoadingPrograms}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder={isLoadingPrograms ? "Loading programs..." : "Select a Program"} />
-              </SelectTrigger>
-              <SelectContent>
-                {programOptions.map((option) => (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-                {!isLoadingPrograms && programsData?.data?.length === 0 && (
-                  <div className="py-2 px-8 text-sm text-gray-400 italic pointer-events-none">
-                    No programs found
-                  </div>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+          )}
 
         </div>
 

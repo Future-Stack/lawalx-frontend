@@ -55,7 +55,7 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
                     />
                 </div>
 
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-hide">
                     {isLoading ? (
                         <div className="py-20 text-center text-muted">Loading programs...</div>
                     ) : (

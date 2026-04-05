@@ -16,7 +16,7 @@ import {
   Eye,
 } from "lucide-react";
 import { ContentItem } from "@/types/content";
-import { Checkbox } from "../ui/checkbox";
+// import { Checkbox } from "../ui/checkbox";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -260,12 +260,12 @@ const MyContentCard = ({
         <>
           <div className="bg-navbarBg w-full border-b last:border-b-0 border-border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             <div className="flex flex-col md:flex-row justify-between w-full p-4 items-center gap-4 md:gap-0">
-              <div className="flex items-center gap-4 w-full md:w-[30%]">
+              <div className="flex items-center w-full md:w-[30%]">
                 <div className="flex items-center gap-2 shrink-0">
-                  <Checkbox
+                  {/* <Checkbox
                     onCheckedChange={() => onSelect?.(item.id)}
                     className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                  />
+                  /> */}
                   {item.type === "folder" && (
                     <ChevronRight
                       className={`w-5 h-5 text-textGray dark:text-gray-400 cursor-pointer transition-transform ${expanded ? "rotate-90" : ""}`}
@@ -378,12 +378,12 @@ const MyContentCard = ({
       ) : (
         <div className="bg-navbarBg border border-border rounded-xl overflow-hidden hover:shadow-md dark:hover:shadow-xl transition-shadow">
           <div className="relative bg-[#F0FAFF] dark:bg-gray-800 h-48 flex items-center justify-center">
-            <div className="absolute top-3 left-3">
+            {/* <div className="absolute top-3 left-3">
               <Checkbox
                 onCheckedChange={() => onSelect?.(item.id)}
                 className="w-5 h-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
               />
-            </div>
+            </div> */}
 
             {item.thumbnail ? (
               <div className="relative w-full h-full cursor-pointer" onClick={() => item.type === "image" && setOpenImage(true)}>

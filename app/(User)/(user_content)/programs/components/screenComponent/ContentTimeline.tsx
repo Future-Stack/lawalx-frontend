@@ -1,12 +1,12 @@
 "use client";
 // Version: 1.0.2 - Shadcn/ui Dropdowns for better layering
 
-import { Plus, GripVertical, MoreVertical, Trash2, ArrowUp, ArrowDown, ChevronDown, FilePlay, CloudUpload } from "lucide-react";
+import { Plus, GripVertical, Trash2, ChevronDown, FilePlay, CloudUpload } from "lucide-react";
 import { useState, useEffect } from "react";
 import AddContentDialog from "./AddContentDialog";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import { Timeline } from "@/redux/api/users/programs/programs.type";
-import { useDeleteProgramMutation } from "@/redux/api/users/programs/programs.api";
+import { useDeleteFileMutation } from "@/redux/api/users/content/content.api";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -40,7 +40,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   selectedId,
   onChange,
 }) => {
-  const [contentDelete] = useDeleteProgramMutation();
+  const [deleteFile] = useDeleteFileMutation();
   const [items, setItems] = useState<Timeline[]>([]);
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -58,15 +58,17 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
     return `${String(minutes).padStart(2, "0")} min ${String(seconds).padStart(2, "0")} sec`;
   };
 
-  const handleRemove = async (id: string) => {
+  const handleRemove = async (item: Timeline) => {
     try {
-      const res = await contentDelete({ id }).unwrap();
-      toast.success(res?.message || "Content removed successfully");
-      const updatedItems = items.filter((item) => item.id !== id);
+      // Calling the deleteFile API with the file's ID from content.api
+      const res = await deleteFile({ id: item.fileId }).unwrap();
+      toast.success(res?.message || "File deleted successfully");
+      
+      const updatedItems = items.filter((i) => i.id !== item.id);
       setItems(updatedItems);
       onChange?.(updatedItems);
     } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to remove content");
+      toast.error(error?.data?.message || "Failed to delete file");
     }
   };
 
@@ -242,40 +244,16 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
                     className="w-14 text-sm font-semibold text-bgBlue bg-cardBackground px-2 py-1 rounded border border-border focus:ring-1 focus:ring-bgBlue outline-none text-center"
                   />
                   
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="p-1 hover:bg-navbarBg/80 rounded-full transition-colors cursor-pointer outline-none active:scale-90"
-                        >
-                          <MoreVertical className="w-4 h-4 text-muted" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-36 bg-navbarBg border-border shadow-xl z-[2147483647]">
-                        <DropdownMenuItem
-                          onClick={() => handleRemove(item.id)}
-                          className="px-3 py-2 text-xs text-red-500 hover:bg-red-50 cursor-pointer flex items-center gap-2 focus:bg-red-50 focus:text-red-600"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Remove
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator className="bg-border" />
-                        <DropdownMenuItem
-                          onClick={() => handleMove(index, "up")}
-                          disabled={index === 0}
-                          className="px-3 py-2 text-xs text-body hover:bg-gray-50 cursor-pointer flex items-center gap-2 disabled:opacity-30"
-                        >
-                          <ArrowUp className="w-3.5 h-3.5 text-bgBlue" /> Move Up
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleMove(index, "down")}
-                          disabled={index === items.length - 1}
-                          className="px-3 py-2 text-xs text-body hover:bg-gray-50 cursor-pointer flex items-center gap-2 disabled:opacity-30"
-                        >
-                          <ArrowDown className="w-3.5 h-3.5 text-bgBlue" /> Move Down
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemove(item);
+                    }}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer outline-none active:scale-90"
+                    title="Remove item"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
             ))

@@ -48,7 +48,12 @@ const SignInForm = () => {
                     refreshToken,
                     email,
                 }));
-                localStorage.setItem("is_new_user", "true");
+
+                if (res.data.firstTimeLogin === false) {
+                    localStorage.setItem("is_new_user", "true");
+                } else {
+                    localStorage.removeItem("is_new_user");
+                }
                 router.push("/dashboard");
             }
         } catch (error) {

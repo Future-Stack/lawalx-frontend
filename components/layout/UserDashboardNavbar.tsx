@@ -38,6 +38,7 @@ import CreateScreenModal from "@/components/dashboard/CreateScreenModal";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import CreateFolderDialog from "@/components/content/CreateFolderDialog";
 import CreateScheduleDialog from "@/app/(User)/(user_content)/schedules/_components/CreateScheduleDialog";
+import LogoutConfirmModal from "@/components/common/LogoutConfirmModal";
 
 
 const navItems = [
@@ -54,6 +55,7 @@ export default function UserDashboardNavbar() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const dispatch = useAppDispatch();
 
   const {
@@ -94,6 +96,10 @@ export default function UserDashboardNavbar() {
   };
 
   const handleLogout = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const confirmLogout = () => {
     dispatch(logout());
   };
 
@@ -647,6 +653,12 @@ export default function UserDashboardNavbar() {
           setIsCreateScheduleOpen(open);
           if (!open) completeStep("schedule");
         }}
+      />
+
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={confirmLogout}
       />
 
       {/* Full Page Loader Overlay */}

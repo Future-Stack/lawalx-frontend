@@ -20,12 +20,20 @@ export const authApi = baseApi.injectEndpoints({
                 refreshToken: data.data.refreshToken,
               })
             );
+
+            // Handle onboarding modal trigger
+            if (data.data.firstTimeLogin === false) {
+              localStorage.setItem("is_new_user", "true");
+            } else {
+              localStorage.removeItem("is_new_user");
+            }
           }
         } catch (error) {
           // console.error("Login failed:", error);
         }
       },
     }),
+    
     forgotPassword: builder.mutation({
       query: (data: { email: string }) => ({
         url: "/auth/forgot-password",
