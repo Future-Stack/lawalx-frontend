@@ -117,10 +117,10 @@ const DashboardHeader: React.FC<{ onExport: () => void; onExportExcel: () => voi
             </div>
           )}
         </div>
-        <button className="text-nowrap px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 bg-navbarBg border border-red-200 dark:border-red-900/50 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1.5 transition-colors">
+        {/* <button className="text-nowrap px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 bg-navbarBg border border-red-200 dark:border-red-900/50 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1.5 transition-colors">
           <AlertCircle className="w-3.5 h-3.5" />
           <span className='hidden lg:block'>View Critical Alerts</span>
-        </button>
+        </button> */}
         <button
           onClick={onAddClientClick}
           className="text-nowrap px-3 py-2 text-xs font-medium text-white bg-bgBlue rounded-md shadow-customShadow hover:bg-blue-500 dark:hover:bg-blue-500 flex items-center gap-1.5 transition-colors"

@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon } from 'lucide-react';
 import GoogleMapModal from '@/components/shared/modals/GoogleMapModal';
+import ReverseGeocode from '@/components/shared/ReverseGeocode';
 import { useDeleteDeviceMutation, useGetDeviceDetailsQuery, useGetGlobalDevicesQuery, useLazyExportGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
@@ -279,12 +280,14 @@ export default function GlobalDevices() {
     return apiDevices.map((device: any, index: number) => {
       const daysAgo = device.lastSeen ? Math.max(0, Math.round((Date.now() - new Date(device.lastSeen).getTime()) / (1000 * 60 * 60 * 24))) : 365;
       const uptime = data?.data?.stats?.avgUptime ?? 'N/A';
+      const locationObj = typeof device.location === 'object' && device.location !== null ? device.location : null;
+      const locationLabel = locationObj ? `${locationObj.lat}, ${locationObj.lng}` : (device.location ?? 'N/A');
       return {
         id: device.id,
         device: device.name ?? 'N/A',
         model: device.model ?? 'N/A',
         customer: device.user?.full_name ?? 'N/A',
-        location: device.location ?? 'N/A',
+        location: locationLabel,
         type: device.deviceType ?? 'N/A',
         status: device.status ?? 'Offline',
         storage: device.storage ? String(device.storage) : 'N/A',
@@ -292,8 +295,8 @@ export default function GlobalDevices() {
         daysAgo,
         lastSync: device.last_Sync ? new Date(device.last_Sync).toLocaleString() : 'N/A',
         last_Sync: device.last_Sync,
-        lat: device.location ? 23.8103 : 0,
-        lng: device.location ? 90.4125 : 0,
+        lat: locationObj ? locationObj.lat : (device.location ? 23.8103 : 0),
+        lng: locationObj ? locationObj.lng : (device.location ? 90.4125 : 0),
       } as Device;
     });
   }, [data]);
@@ -387,10 +390,14 @@ export default function GlobalDevices() {
   const getStatusBadge = (status: Device['status']): string => {
     const styles: StatusBadgeMap = {
       Online: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+      ONLINE: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
       Offline: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+      OFFLINE: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
       Syncing: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+      PAIRED: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+      WAITING: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
     };
-    return styles[status] ?? '';
+    return styles[status] ?? 'bg-gray-100 dark:bg-gray-900/30 text-gray-700 dark:text-gray-400';
   };
 
   const renderModalContent = () => {
@@ -408,7 +415,11 @@ export default function GlobalDevices() {
                 <div><strong>Model:</strong> {deviceDetails.data?.model || 'N/A'}</div>
                 <div><strong>Type:</strong> {deviceDetails.data?.deviceType || 'N/A'}</div>
                 <div><strong>Status:</strong> {deviceDetails.data?.status || 'N/A'}</div>
-                <div><strong>Location:</strong> {deviceDetails.data?.location || 'N/A'}</div>
+                <div><strong>Location:</strong> {
+                  typeof deviceDetails.data?.location === 'object' && deviceDetails.data?.location !== null 
+                    ? `${deviceDetails.data.location.lat}, ${deviceDetails.data.location.lng}` 
+                    : (deviceDetails.data?.location || 'N/A')
+                }</div>
                 <div><strong>IP:</strong> {deviceDetails.data?.ip || 'N/A'}</div>
                 <div><strong>Last Seen:</strong> {deviceDetails.data?.lastSeen ? new Date(deviceDetails.data.lastSeen).toLocaleString() : 'N/A'}</div>
                 <div><strong>Storage:</strong> {deviceDetails.data?.storage || 'N/A'}</div>
@@ -559,14 +570,14 @@ export default function GlobalDevices() {
               </div>
               <Dropdown
                 value={statusFilter}
-                options={['All Status', 'Online', 'Offline', 'Syncing']}
+                options={['All Status', 'WAITING', 'ONLINE', 'OFFLINE', 'PAIRED']}
                 onChange={setStatusFilter}
               />
-              <Dropdown
+              {/* <Dropdown
                 value={typeFilter}
                 options={['All Types', 'Android TV', 'Fire TV', 'Samsung Tizen', 'LG webOS']}
                 onChange={setTypeFilter}
-              />
+              /> */}
             </div>
           </div>
 
@@ -608,7 +619,7 @@ export default function GlobalDevices() {
                               }}
                               className="text-bgBlue hover:underline cursor-pointer transition-all"
                             >
-                              {device.location}
+                              <ReverseGeocode lat={device.lat} lng={device.lng} fallback={device.location} />
                             </button>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.type}</td>
@@ -687,7 +698,7 @@ export default function GlobalDevices() {
                             }}
                             className="ml-2 text-bgBlue hover:underline cursor-pointer transition-all"
                           >
-                            {device.location}
+                            <ReverseGeocode lat={device.lat} lng={device.lng} fallback={device.location} />
                           </button>
                         </div>
                       )}
