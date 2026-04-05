@@ -29,10 +29,47 @@ interface LeafletMapModalProps {
 
 const LeafletMapModal: React.FC<LeafletMapModalProps> = ({ isOpen, onClose, lat, lng, device }) => {
     const [isMounted, setIsMounted] = useState(false);
+    const [timezone, setTimezone] = useState<string>("Loading...");
 
     useEffect(() => {
         setIsMounted(true);
     }, []);
+
+    useEffect(() => {
+        if (isOpen && lat && lng) {
+            // First check if metadata already has timezone
+            const metadataTz = device?.original?.metadata?.timezone;
+            if (metadataTz) {
+                setTimezone(metadataTz);
+                return;
+            }
+
+            const fetchTimezone = async () => {
+                try {
+                    const response = await fetch(
+                        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+                    );
+                    const data = await response.json();
+                    
+                    // The BigDataCloud API provides timezone in the informative section
+                    const tzInfo = data.localityInfo?.informative?.find((i: any) => 
+                        i.description === 'time zone' || (i.name && i.name.includes('/'))
+                    );
+                    
+                    if (tzInfo) {
+                        setTimezone(tzInfo.name);
+                    } else {
+                        // Fallback
+                        setTimezone("UTC"); 
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch timezone:", error);
+                    setTimezone("Asia/Dhaka"); // Default fallback
+                }
+            };
+            fetchTimezone();
+        }
+    }, [isOpen, lat, lng, device]);
 
     if (!isMounted) return null;
 
@@ -41,7 +78,7 @@ const LeafletMapModal: React.FC<LeafletMapModalProps> = ({ isOpen, onClose, lat,
             open={isOpen}
             setOpen={(val) => !val && onClose()}
             title="Locations"
-            description={device?.device || "Device Location"}
+            description={typeof device?.device === 'object' ? "Device Location" : (device?.device || "Device Location")}
             maxWidth="4xl"
             maxHeight="xl"
             className="project-font"
@@ -54,7 +91,7 @@ const LeafletMapModal: React.FC<LeafletMapModalProps> = ({ isOpen, onClose, lat,
                         <span>Map View</span>
                     </div>
                     <div className="text-sm text-[#737373] dark:text-gray-400">
-                        Time Zone: <span className="text-[#171717] dark:text-white font-bold ml-1">Asia/Dhaka</span>
+                        Time Zone: <span className="text-[#171717] dark:text-white font-bold ml-1">{timezone}</span>
                     </div>
                 </div>
 

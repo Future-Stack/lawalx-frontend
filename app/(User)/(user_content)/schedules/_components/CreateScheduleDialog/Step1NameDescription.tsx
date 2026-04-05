@@ -19,7 +19,7 @@ const Step1NameDescription: React.FC<Step1Props> = ({ data, onChange }) => {
             {/* Name Field */}
             <div className="space-y-2">
                 <Label className="text-sm font-medium text-headings">
-                    Name <span className="text-red-500">*</span>
+                    Schedule name <span className="text-red-500">*</span>
                 </Label>
                 <Input
                     type="text"
@@ -33,7 +33,7 @@ const Step1NameDescription: React.FC<Step1Props> = ({ data, onChange }) => {
             {/* Description Field */}
             <div className="space-y-2">
                 <Label className="text-sm font-medium text-headings">
-                    Description (Optional)
+                   Schedule description (Optional)
                 </Label>
                 <Textarea
                     placeholder="Enter schedule description"

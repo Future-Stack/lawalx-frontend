@@ -8,19 +8,18 @@ import {
   Power,
   PowerOff,
   Tv,
-  CalendarClock,
   Settings,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import ContentTimeline from "../components/screenComponent/ContentTimeline";
-import ContentSchedule from "../components/screenComponent/ContentSchedule";
 import ScreenSettings from "../components/screenComponent/ScreenSettings";
 import MapLocation from "../components/screenComponent/MapLocation";
+import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import Breadcrumb from "@/common/BreadCrumb";
 import { useGetSingleProgramDataQuery, useUpdateSingleProgramMutation } from "@/redux/api/users/programs/programs.api";
 import { toast } from "sonner";
-import { Timeline } from "@/redux/api/users/programs/programs.type";
+import { Device, Timeline } from "@/redux/api/users/programs/programs.type";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Loader2 } from "lucide-react";
@@ -33,7 +32,7 @@ const ScreenCardDetails = () => {
   const [updateProgram, { isLoading: isUpdating }] = useUpdateSingleProgramMutation();
   const program = programResponse?.data;
 
-  const [activeTab, setActiveTab] = useState<"timeline" | "schedule" | "settings">(
+  const [activeTab, setActiveTab] = useState<"timeline" | "settings">(
     "timeline"
   );
   const [playingIndex, setPlayingIndex] = useState<number>(0);
@@ -44,6 +43,8 @@ const ScreenCardDetails = () => {
   // Lifted state for ScreenSettings
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [localDevices, setLocalDevices] = useState<Device[]>([]);
+  const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
@@ -53,6 +54,9 @@ const ScreenCardDetails = () => {
     if (program) {
       if (program.timeline) {
         setLocalTimeline(program.timeline);
+      }
+      if (program.devices) {
+        setLocalDevices(program.devices);
       }
       setName(program.name || "");
       setDescription(program.description || "");
@@ -99,13 +103,31 @@ const ScreenCardDetails = () => {
   const previewUrl = getFileUrl(selectedContent?.file?.url || "");
   const currentFileName = selectedContent?.file?.originalName || program.name;
   const lastUpdated = dayjs(program.updated_at).fromNow();
-  const isActive = program.status.toLowerCase() === "publish" || program.status === "active" || program.status === "PUBLISH";
+  const isActive = program.status === "PUBLISH";
   const assignedContent = `${videos} videos, ${images} content`;
+
+  const handleToggleStatus = async () => {
+    try {
+      const newStatus = program.status === "PUBLISH" ? "DRAFT" : "PUBLISH";
+      const res = await updateProgram({
+        id: String(id),
+        data: {
+          ...program,
+          status: newStatus as any,
+          content_ids: localTimeline.map((item) => item.fileId),
+          device_ids: localDevices.map((d) => d.id),
+        },
+      }).unwrap();
+      toast.success(res.message || `Program ${newStatus === "PUBLISH" ? "published" : "set to draft"}`);
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to update status");
+    }
+  };
 
   const handleSave = async () => {
     try {
       const content_ids = localTimeline.map((item) => item.fileId);
-      const device_ids = program.devices?.map((d) => d.id) || [];
+      const device_ids = localDevices.map((d) => d.id);
 
       const res = await updateProgram({
         id: String(id),
@@ -158,14 +180,14 @@ const ScreenCardDetails = () => {
         </div>
 
         {/* Tabs */}
-        <div className="bg-navbarBg rounded-full border border-border p-1 mb-6 inline-flex overflow-x-auto max-w-full">
-          {(["timeline", "schedule", "settings"] as const).map((tab) => {
+        <div className="bg-navbarBg rounded-full border border-border p-1 mb-6 inline-flex overflow-x-auto w-fit">
+          {(["timeline", "settings"] as const).map((tab) => {
             const isActiveTab = activeTab === tab;
             return (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm sm:text-base rounded-full mr-2 font-medium whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${isActiveTab
+                className={`px-4 py-2 text-sm sm:text-base rounded-full gap-2 font-medium whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${isActiveTab
                   ? "bg-blue-50 dark:bg-blue-900/20 shadow-customShadow"
                   : "hover:bg-gray-50 dark:hover:bg-gray-800"
                   }`}
@@ -175,7 +197,6 @@ const ScreenCardDetails = () => {
                     }`}
                 >
                   {tab === "timeline" && <ListTree className="w-4 h-4" />}
-                  {tab === "schedule" && <CalendarClock className="w-4 h-4" />}
                   {tab === "settings" && <Settings className="w-4 h-4" />}
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </span>
@@ -196,10 +217,18 @@ const ScreenCardDetails = () => {
                   setPlayingIndex(index);
                   setIsAutoPlay(true);
                 }}
-                onChange={setLocalTimeline}
+                onChange={(newTimeline) => {
+                  const currentId = localTimeline[playingIndex]?.id;
+                  setLocalTimeline(newTimeline);
+                  if (currentId) {
+                    const newIndex = newTimeline.findIndex(item => item.id === currentId);
+                    if (newIndex !== -1) {
+                      setPlayingIndex(newIndex);
+                    }
+                  }
+                }}
               />
             )}
-            {activeTab === "schedule" && <ContentSchedule schedules={program.schedules || []} />}
             {activeTab === "settings" && (
               <ScreenSettings
                 program={program}
@@ -207,6 +236,9 @@ const ScreenCardDetails = () => {
                 setName={setName}
                 description={description}
                 setDescription={setDescription}
+                localDevices={localDevices}
+                setLocalDevices={setLocalDevices}
+                openAddDevice={() => setIsAddDeviceModalOpen(true)}
               />
             )}
           </div>
@@ -249,6 +281,8 @@ const ScreenCardDetails = () => {
                   {currentFileName}
                 </h3>
                 <button
+                  onClick={handleToggleStatus}
+                  disabled={isUpdating}
                   className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
                             ${isActive
                       ? "bg-bgBlue hover:bg-blue-500"
@@ -256,7 +290,9 @@ const ScreenCardDetails = () => {
                     }`}
                   title={isActive ? "Turn Off" : "Turn On"}
                 >
-                  {isActive ? (
+                  {isUpdating ? (
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                  ) : isActive ? (
                     <Power className="w-4 h-4 sm:w-5 sm:h-5" />
                   ) : (
                     <PowerOff className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -302,6 +338,19 @@ const ScreenCardDetails = () => {
                   </div>
                 </div>
 
+                {/* Resolution */}
+                <div className="flex justify-between items-center py-2 border-b border-borderGray">
+                  <div className="flex items-center gap-2 sm:gap-3 w-[60%]">
+                    <ListTree className="w-5 h-5 text-body" />
+                    <span className="text-sm sm:text-base text-body truncate">
+                      Resolution
+                    </span>
+                  </div>
+                  <div className="text-sm sm:text-base font-medium text-body text-right w-[40%] truncate">
+                    {program.serene_size || "1920x1080"}
+                  </div>
+                </div>
+
                 {/* Last Updated */}
                 <div className="flex justify-between items-center py-2">
                   <div className="flex items-center gap-2 sm:gap-3 w-[60%]">
@@ -319,11 +368,15 @@ const ScreenCardDetails = () => {
 
             {/* Map Section */}
             <div className="rounded-xl border border-border p-4 sm:p-6 bg-navbarBg">
-              <MapLocation />
+              <MapLocation devices={program.devices} />
             </div>
           </div>
         </div>
       </div>
+      <AddDeviceModal
+        isOpen={isAddDeviceModalOpen}
+        onClose={() => setIsAddDeviceModalOpen(false)}
+      />
     </div>
   );
 };

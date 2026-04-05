@@ -90,6 +90,21 @@ body {
   cursor: default;
 }
 
+/* Ensure Plyr container doesn't overlap portaled modals */
+.plyr {
+  z-index: 0 !important;
+}
+
+.plyr--fullscreen {
+  z-index: 1000 !important;
+}
+
+/* Ensure Radix UI Dialogs are at the absolute top of the stacking context */
+[data-slot="dialog-content"],
+[data-slot="dialog-overlay"] {
+  z-index: 2147483647 !important;
+}
+
 /* ------------------------------------------------ */
 
 

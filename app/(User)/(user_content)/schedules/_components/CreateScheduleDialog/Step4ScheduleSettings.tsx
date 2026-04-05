@@ -84,7 +84,7 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
                                 type="button"
                                 onClick={() => toggleDay(day.short)}
                                 className={cn(
-                                    "px-4 py-2 rounded-lg border transition-all font-medium text-sm",
+                                    "px-4 py-2 rounded-lg border transition-all font-medium text-sm cursor-pointer",
                                     data.selectedDays.includes(day.short)
                                         ? "bg-bgBlue text-white border-bgBlue"
                                         : "bg-input text-headings border-borderGray hover:border-bgBlue"
@@ -108,7 +108,7 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
                                 type="button"
                                 onClick={() => toggleDate(date)}
                                 className={cn(
-                                    "aspect-square rounded-lg border transition-all font-medium text-sm flex items-center justify-center",
+                                    "aspect-square rounded-lg border transition-all font-medium text-sm flex items-center justify-center cursor-pointer",
                                     data.selectedDates.includes(date)
                                         ? "bg-bgBlue text-white border-bgBlue"
                                         : "bg-input text-headings border-borderGray hover:border-bgBlue"

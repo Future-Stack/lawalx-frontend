@@ -1,6 +1,6 @@
 import { baseApi } from "../../baseApi";
 import { SuccessResponse } from "../content/content.type";
-import { CreateProgramPayload, GetAllProgramsResponse, GetProgramByIdResponse } from "./programs.type";
+import { CreateProgramPayload, ProgramsResponse, GetProgramByIdResponse } from "./programs.type";
 
 const programsAPI = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -12,7 +12,7 @@ const programsAPI = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Programs"],
     }),
-    getAllProgramsData: build.query<GetAllProgramsResponse, void>({
+    getAllProgramsData: build.query<ProgramsResponse, void>({
       query: () => ({
         url: "/program/my-programs",
         method: "GET",

@@ -70,7 +70,12 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     const handleContentSelect = (content: ContentItem) => {
         setStep2Data({ ...step2Data, selectedContent: content });
         setLowerThirdData({ ...lowerThirdData, selectedContent: content });
-        setShowLowerThird(true);
+
+        if (step2Data.contentType === "lower-third") {
+            setShowLowerThird(true);
+        } else {
+            setCurrentStep(3);
+        }
     };
 
     const handleNext = () => {
@@ -89,7 +94,12 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     const handleBack = () => {
         if (showLowerThird) {
             setShowLowerThird(false);
+            setStep2Data({ contentType: "all", selectedContent: null });
         } else if (currentStep > 1) {
+            // If going back to Step 2, reset contentType to 'all' and clear selectedContent
+            if (currentStep - 1 === 2) {
+                setStep2Data({ contentType: "all", selectedContent: null });
+            }
             setCurrentStep(currentStep - 1);
         }
     };
@@ -238,15 +248,26 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                             {currentStep === 2 && !showLowerThird && (
                                 <Step2ContentSelection
                                     data={step2Data}
-                                    onChange={setStep2Data}
+                                    onChange={(newData) => {
+                                        setStep2Data(newData);
+                                        if (newData.contentType === "lower-third") {
+                                            setShowLowerThird(true);
+                                        }
+                                    }}
                                     onContentSelect={handleContentSelect}
                                 />
                             )}
 
-                            {showLowerThird && lowerThirdData.selectedContent && (
+                            {showLowerThird && (
                                 <Step2LowerThird
                                     data={lowerThirdData as any}
                                     onChange={setLowerThirdData}
+                                    onContentTypeChange={(type) => {
+                                        setStep2Data(prev => ({ ...prev, contentType: type }));
+                                        if (type !== "lower-third") {
+                                            setShowLowerThird(false);
+                                        }
+                                    }}
                                 />
                             )}
 
@@ -260,8 +281,6 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                         </div>
                     </div>
                 </div>
-
-
                 {/* Footer - Sticky at bottom */}
                 <div className="p-6 border-t border-border flex items-center justify-between bg-navbarBg/80 backdrop-blur-md">
                     <button

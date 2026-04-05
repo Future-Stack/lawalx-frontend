@@ -66,7 +66,7 @@ const BaseDialog = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         className={clsx(
-          "flex flex-col overflow-hidden",
+          "flex flex-col overflow-hidden z-[2147483647]",
           heightMap[maxHeight],
           fullWidth ? "w-full max-w-none" : widthMap[maxWidth],
           className

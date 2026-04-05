@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from "react";
 import {
   X, FileText, Video, Monitor, CircleCheckBigIcon,
-  Wifi, WifiOff, Search, ChevronLeft, ChevronRight, Loader2,
+  Wifi, WifiOff, Search, ChevronLeft, ChevronRight, Loader2, Headphones, Plus,
 } from "lucide-react";
 import Dropdown from "@/common/Dropdown";
 import Image from "next/image";
@@ -13,7 +13,16 @@ import { transformFile } from "@/lib/content-utils";
 import { useCreateProgramMutation } from "@/redux/api/users/programs/programs.api";
 import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { WorkoutStatus } from "@/redux/api/users/programs/programs.type";
+import UploadFileModal from "@/components/content/UploadFileModal";
 import { toast } from "sonner";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CreateScreenModalProps {
   isOpen: boolean;
@@ -26,9 +35,11 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
 
   const [currentStep, setCurrentStep] = useState(1);
-  const [selectedType, setSelectedType] = useState("video");
+  const [selectedType, setSelectedType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
 
   const [programData, setProgramData] = useState<{
     name: string;
@@ -46,7 +57,20 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
     device_ids: [],
   });
 
-  useEffect(() => { setIsMounted(true); }, []);
+  useEffect(() => {
+    setIsMounted(true);
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      document.body.style.height = "100vh";
+    } else {
+      document.body.style.overflow = "unset";
+      document.body.style.height = "auto";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+      document.body.style.height = "auto";
+    };
+  }, [isOpen]);
 
   const transformedFiles = useMemo(() => {
     if (!allFiles?.data) return [];
@@ -60,6 +84,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
       if (selectedType === "video") matchesType = file.type === "video";
       else if (selectedType === "image") matchesType = file.type === "image";
       else if (selectedType === "audio") matchesType = file.type === "audio";
+      else if (selectedType === "all") matchesType = true;
       return matchesSearch && matchesType;
     });
   }, [transformedFiles, searchQuery, selectedType]);
@@ -73,7 +98,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
   const handleClose = () => {
     setCurrentStep(1);
     setSearchQuery("");
-    setSelectedType("video");
+    setSelectedType("all");
     setProgramData({
       name: "",
       description: "",
@@ -156,8 +181,14 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-bgGray dark:border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div 
+      className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 transition-all duration-300 cursor-pointer"
+      onClick={(e) => e.target === e.currentTarget && handleClose()}
+    >
+      <div 
+        className="relative bg-white dark:bg-gray-900 rounded-2xl border border-bgGray dark:border-gray-700 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default"
+        onClick={(e) => e.stopPropagation()}
+      >
 
         {/* Header */}
         <div className="flex items-start sm:items-center justify-between p-6 gap-4 sm:gap-0">
@@ -252,17 +283,20 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
               </div>
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Screen Size</label>
-                <Dropdown
-                  options={[
-                    { value: "1920x1080", label: "Full HD (1920x1080)" },
-                    { value: "1280x720", label: "HD (1280x720)" },
-                    { value: "3840x2160", label: "4K (3840x2160)" },
-                    { value: "1080x1920", label: "Portrait (1080x1920)" },
-                  ]}
+                <Select
                   value={programData.serene_size}
-                  onChange={(value) => setProgramData({ ...programData, serene_size: String(value) })}
-                  className="w-full cursor-pointer"
-                />
+                  onValueChange={(val: string) => setProgramData({ ...programData, serene_size: val })}
+                >
+                  <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-borderGray dark:border-gray-600 py-2.5 md:py-3.5 h-auto rounded-lg">
+                    <SelectValue placeholder="Select screen size" />
+                  </SelectTrigger>
+                  <SelectContent className="z-[2147483647]">
+                    <SelectItem value="1920x1080">Full HD (1920x1080)</SelectItem>
+                    <SelectItem value="1280x720">HD (1280x720)</SelectItem>
+                    <SelectItem value="3840x2160">4K (3840x2160)</SelectItem>
+                    <SelectItem value="1080x1920">Portrait (1080x1920)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           )}
@@ -271,15 +305,15 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
           {currentStep === 2 && (
             <div className="space-y-4">
               {/* Selected count badge */}
-              {programData.content_ids.length > 0 && (
+              {/* {programData.content_ids.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
                   <CircleCheckBigIcon className="w-4 h-4" />
                   {programData.content_ids.length} content{programData.content_ids.length > 1 ? "s" : ""} selected
                 </div>
-              )}
+              )} */}
 
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-                <div className="relative flex-1">
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+                <div className="relative w-full sm:w-1/2">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                   <input
                     type="text"
@@ -289,17 +323,28 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                   />
                 </div>
-                <div className="w-full sm:w-[200px]">
-                  <Dropdown
-                    options={[
-                      { value: "video", label: "Videos" },
-                      { value: "image", label: "Images" },
-                      { value: "audio", label: "Audio" },
-                    ]}
-                    value={selectedType}
-                    onChange={(value) => setSelectedType(String(value))}
-                    className="w-full cursor-pointer"
-                  />
+                <div className="flex items-center gap-2 w-full sm:w-1/2">
+                  <div className="flex-1">
+                    <Dropdown
+                      options={[
+                        { value: "all", label: "All Content" },
+                        { value: "video", label: "Videos" },
+                        { value: "image", label: "Images" },
+                        { value: "audio", label: "Audio" },
+                      ]}
+                      value={selectedType}
+                      onChange={(value) => setSelectedType(String(value))}
+                      className="w-full cursor-pointer"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsUploadModalOpen(true)}
+                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-bgBlue hover:bg-blue-600 text-white rounded-lg font-medium transition-colors cursor-pointer shrink-0 shadow-customShadow"
+                  >
+                    <Plus className="w-5 h-5" />
+                    <span>Upload Content</span>
+                  </button>
                 </div>
               </div>
 
@@ -335,6 +380,8 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                           <Image src={file.thumbnail} alt={file.title} width={80} height={56} className="w-full h-full object-cover" />
                         ) : file.type === "video" && file.video ? (
                           <video src={file.video} className="w-full h-full object-cover" muted />
+                        ) : file.type === "audio" ? (
+                          <Headphones className="w-8 h-8 text-blue-500" />
                         ) : (
                           <div className="text-xs text-gray-400">No Preview</div>
                         )}
@@ -354,12 +401,12 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
           {currentStep === 3 && (
             <div className="space-y-5">
               {/* Selected count badge */}
-              {programData.device_ids.length > 0 && (
+              {/* {programData.device_ids.length > 0 && (
                 <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
                   <CircleCheckBigIcon className="w-4 h-4" />
                   {programData.device_ids.length} device{programData.device_ids.length > 1 ? "s" : ""} selected
                 </div>
-              )}
+              )} */}
 
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
@@ -451,6 +498,23 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
         </div>
 
       </div>
+
+      <UploadFileModal
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+        setIsPageLoading={setIsPageLoading}
+      />
+
+      {/* Full Page Loader Overlay */}
+      {isPageLoading && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+          <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-gray-200 dark:border-gray-700">
+            <Loader2 className="w-14 h-14 animate-spin text-bgBlue mb-2" />
+            <p className="text-xl font-bold text-Headings dark:text-white">Uploading files...</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium animate-pulse">Please do not close this page</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

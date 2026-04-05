@@ -109,14 +109,18 @@ const MyScreensPage: React.FC = () => {
               <div className="flex flex-col items-center justify-center text-center max-w-md w-full">
                 <Monitor className="w-20 h-20 text-gray-900 dark:text-gray-300 stroke-[1.5] mb-6" />
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  No Screens Found
+                  No Programs Found
                 </h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-8">
                   {searchQuery || sortOption !== "all"
                     ? "Try adjusting your search or filter criteria"
-                    : "Create your first screen to get started"}
+                    : "Create your first program to get started"}
                 </p>
-                <AddButton icon={<ScreenShare />} text="Create New Screen" />
+                <AddButton
+                  onClick={() => setIsModalOpen(true)}
+                  icon={<ScreenShare />}
+                  text="Create New Program"
+                />
               </div>
             </div>
           ) : (

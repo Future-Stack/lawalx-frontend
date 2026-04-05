@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { TvMinimal, Radio, WifiOff, Search, ChevronDown, MoreVertical, Trash2, Eye, PenLine, Plus, MapPin, Loader2 } from "lucide-react";
+import { WifiOff, Search, ChevronDown, MoreVertical, Trash2, Eye, PenLine, Plus, MapPin, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
@@ -9,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Link from "next/link";
 import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 import PreviewDeviceModal from "@/components/devices/modals/PreviewDeviceModal";
 import LeafletMapModal from "@/components/shared/modals/LeafletMapModal";
@@ -36,6 +35,49 @@ type DeviceView = {
   lng: number;
   original: ApiDevice;
 };
+
+// Simple cache for geocoding results to avoid redundant API calls
+const geocodeCache: { [key: string]: string } = {};
+
+const DeviceLocation = ({ lat, lng }: { lat: number; lng: number }) => {
+  const [address, setAddress] = useState<string>(`Lat: ${lat.toFixed(2)}, Lng: ${lng.toFixed(2)}`);
+
+  useEffect(() => {
+    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    if (geocodeCache[cacheKey]) {
+      setAddress(geocodeCache[cacheKey]);
+      return;
+    }
+
+    const fetchAddress = async () => {
+      try {
+        // Using Nominatim (OpenStreetMap) for free reverse geocoding
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`, 
+          { headers: { 'User-Agent': 'Lawalx-Frontend/1.0' } }
+        );
+        const data = await response.json();
+        
+        if (data.display_name) {
+          const a = data.address;
+          const city = a.city || a.town || a.village || a.suburb || a.county || '';
+          const country = a.country || '';
+          const formatted = city && country ? `${city}, ${country}` : data.display_name.split(',').slice(0, 2).join(',');
+          
+          geocodeCache[cacheKey] = formatted;
+          setAddress(formatted);
+        }
+      } catch (error) {
+        console.error("Geocoding error:", error);
+      }
+    };
+
+    const timer = setTimeout(fetchAddress, 500); // Debounce to respect rate limits
+    return () => clearTimeout(timer);
+  }, [lat, lng]);
+
+  return <span>{address}</span>;
+}
 
 const calculateTimeAgo = (dateString: string | null) => {
   if (!dateString) return "---";
@@ -77,7 +119,7 @@ const Dropdown = ({ value, options, onChange, icon: Icon }: any) => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer flex items-center gap-2 p-3 text-black dark:text-white bg-[#F9FAFB] dark:bg-gray-800 border border-[#D4D4D4] rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium w-full sm:w-auto justify-between sm:justify-start"
+        className="cursor-pointer flex items-center gap-2 p-3 text-black dark:text-white bg-[#F9FAFB] dark:bg-gray-800 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium w-full sm:w-auto justify-between sm:justify-start"
       >
         <div className="flex items-center gap-2">
           {Icon && <Icon className="w-5 h-5" />}
@@ -142,10 +184,10 @@ const ActionMenu = ({ device, onAction }: any) => {
 };
 
 export default function DevicesPage() {
-  const { data: devicesData, isLoading, isError } = useGetMyDevicesDataQuery();
+  const { data: devicesData, isLoading } = useGetMyDevicesDataQuery(undefined);
   const [deleteDevice, { isLoading: isDeleting }] = useDeleteDeviceMutation();
-  const [renameDeviceApi, { isLoading: isRenaming }] = useRenameDeviceMutation();
-
+  const [renameDeviceApi] = useRenameDeviceMutation();
+  console.log("devicesData", devicesData);
   const allDevices: DeviceView[] = useMemo(() => {
     if (!devicesData?.data) return [];
 
@@ -154,19 +196,24 @@ export default function DevicesPage() {
       if (device.status === "PAIRED" || device.status === "ONLINE") status = "Online";
       else if (device.status === "OFFLINE") status = "Offline";
 
+      // Format storage from bytes to GB
+      const totalBytes = parseInt(device.storage) || 0;
+      const totalGB = (totalBytes / (1024 * 1024 * 1024)).toFixed(1);
+      const storageDisplay = `0 / ${totalGB} GB`; // Assuming 0 used as API doesn't provide used storage yet
+
       return {
         id: device.id,
         device: device.name || device.deviceSerial || "Unknown Device",
         model: device.model || "Unknown Model",
-        resolution: "3840 × 2160", // Mock resolution as seen in image
-        location: device.location || "Unknown Location",
+        resolution: device.program?.serene_size || "1920x1080",
+        location: device.location ? `Location (${device.location.lat.toFixed(2)}, ${device.location.lng.toFixed(2)})` : "Unknown Location",
         type: device.deviceType || "Unknown Type",
-        programName: device.program?.name || "No screen assigned",
+        programName: device.program?.name || "No device assigned",
         status: status,
-        storage: device.storage ? (typeof device.storage === 'string' ? device.storage : "1.2 / 10 GB") : "1.2 / 10 GB", // Fallback to mock string if N/A
+        storage: storageDisplay,
         lastSync: calculateTimeAgo(device.lastSeen),
-        lat: device.metadata?.lat || 40.7128, // Example: NYC or from metadata
-        lng: device.metadata?.lng || -74.0060,
+        lat: device.location?.lat || 23.8103, // Default to Dhaka if null
+        lng: device.location?.lng || 90.4125,
         original: device
       };
     });
@@ -256,60 +303,13 @@ export default function DevicesPage() {
         </button>
       </div>
 
-      {/* Stats Cards */}
-      {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        <div className="bg-navbarBg rounded-xl shadow-sm p-6 border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full border border-borderGray dark:border-gray-600 flex items-center justify-center">
-              <TvMinimal className="w-5 h-5 text-navGray dark:text-gray-400" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Total Devices</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{allDevices.length}</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-gray-500 dark:text-gray-400">You can add 16 more devices</p>
-            <Link href="/choose-plan">
-              <button className="py-2 px-4 bg-gray-900 hover:scale-[1.02] transition-transform shadow-customShadow text-white text-sm font-medium rounded-lg hover:bg-gray-800 cursor-pointer">
-                Upgrade Plan
-              </button>
-            </Link>
-          </div>
-        </div>
-
-        <div className="bg-navbarBg rounded-xl shadow-sm p-6 border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center">
-              <Radio className="w-5 h-5 text-green-500" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Online</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{onlineCount}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-navbarBg rounded-xl shadow-sm p-6 border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full border border-border flex items-center justify-center">
-              <WifiOff className="w-5 h-5 text-red-500" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Offline</p>
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">{offlineCount}</p>
-            </div>
-          </div>
-        </div>
-      </div> */}
-
       <h2 className="text-xl font-semibold text-[#1A1A1A] dark:text-white mb-4">{allDevices.length} Devices</h2>
 
       {/* Management + Table */}
       <div className="space-y-4">
         {/* Filtering Section - Moved Outside Table */}
-        <div className="p-2 gap-2 rounded-[16px] border border-[#D4D4D4] bg-[#FAFAFA] dark:bg-gray-800/30 flex flex-col lg:flex-row items-center self-stretch">
-          <div className="flex p-3 items-center gap-2 rounded-lg border border-border bg-input flex-1 w-full">
+        <div className="p-2 md:p-4 gap-2 rounded-[16px] border border-border bg-navbarBg flex flex-col lg:flex-row items-center self-stretch">
+          <div className="flex p-3 items-center gap-2 rounded-xl bg-input dark:bg-gray-800 flex-1 w-full">
             <Search className="w-6 h-6 text-[#A3A3A3]" />
             <input
               type="text"
@@ -344,8 +344,12 @@ export default function DevicesPage() {
                 {paginatedDevices.map((device) => (
                   <tr key={device.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-6 py-5">
-                      <div className="text-[15px] font-bold text-[#171717] dark:text-white leading-tight">{device.device}</div>
-                      <div className="text-[13px] text-[#737373] dark:text-gray-400 mt-0.5">{device.resolution}</div>
+                      <div className="text-[15px] font-bold text-[#171717] dark:text-white leading-tight">
+                        {device.device}
+                      </div>
+                      <div className="text-[13px] text-[#737373] dark:text-gray-400 mt-0.5">
+                        {device.resolution}
+                      </div>
                     </td>
                     <td className="px-6 py-5 text-sm">
                       <div
@@ -361,11 +365,11 @@ export default function DevicesPage() {
                         }}
                       >
                         <MapPin className="w-4 h-4 text-[#737373] group-hover:text-bgBlue" />
-                        <span>{device.location}</span>
+                        <DeviceLocation lat={device.lat} lng={device.lng} />
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <div className={`text-sm font-bold ${device.programName === "No screen assigned" ? "text-[#A3A3A3] font-normal" : "text-[#171717] dark:text-white"}`}>
+                      <div className={`text-sm font-bold ${device.programName === "No device assigned" ? "text-[#A3A3A3] font-normal" : "text-[#171717] dark:text-white"}`}>
                         {device.programName}
                       </div>
                     </td>
@@ -434,6 +438,7 @@ export default function DevicesPage() {
               >
                 Previous
               </button>
+
               <button
                 type="button"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredDevices.length / itemsPerPage)))}

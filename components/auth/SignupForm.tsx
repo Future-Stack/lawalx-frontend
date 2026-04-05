@@ -61,7 +61,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onNext }) => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <AuthInput
                     label="Full Name"
-                    placeholder="Lawal"
+                    placeholder="Enter your name"
                     required
                     icon={User}
                     {...register("fullName")}
@@ -71,7 +71,7 @@ const SignupForm: React.FC<SignupFormProps> = ({ onNext }) => {
 
                 <AuthInput
                     label="Email"
-                    placeholder="lawal@tape.com"
+                    placeholder="Enter your email"
                     type="email"
                     required
                     icon={Mail}

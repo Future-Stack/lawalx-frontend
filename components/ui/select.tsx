@@ -37,21 +37,19 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "border-border data-placeholder:text-gray-500 dark:data-placeholder:text-gray-400 [&_svg:not([class*='text-'])]:text-gray-500 dark:[&_svg:not([class*='text-'])]:text-gray-400 " +
+        "group border-border data-placeholder:text-gray-500 dark:data-placeholder:text-gray-400 [&_svg:not([class*='text-'])]:text-gray-500 dark:[&_svg:not([class*='text-'])]:text-gray-400 " +
         "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 " +
         "aria-invalid:border-destructive bg-navbarBg hover:bg-gray-50 dark:hover:bg-gray-700 flex w-fit items-center justify-between gap-2 " +
         "rounded-md border text-gray-700 dark:text-gray-300 px-4 py-1.5 md:py-3 text-base whitespace-nowrap shadow-xs transition-colors outline-none " +
         "disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex " +
         "*:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 " +
-        "[&_svg:not([class*='size-'])]:size-4 cursor-pointer",
+        "cursor-pointer data-[state=open]:[&_svg]:rotate-180",
         className
       )}
       {...props}
     >
       {children}
-      <SelectPrimitive.Icon asChild>
-        <ChevronDownIcon className="size-4 md:size-5 text-gray-500 dark:text-gray-400" />
-      </SelectPrimitive.Icon>
+      <ChevronDownIcon className="size-4 md:size-5 text-gray-500 dark:text-gray-400 transition-transform duration-300 ease-in-out" />
     </SelectPrimitive.Trigger>
   )
 }
@@ -68,7 +66,7 @@ function SelectContent({
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          "bg-navbarBg text-gray-700 dark:text-gray-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[150] max-h-[var(--radix-select-content-available-height)] min-w-32 origin-[var(--radix-select-content-transform-origin)] overflow-x-hidden overflow-y-auto rounded-md border border-border shadow-lg",
+          "bg-navbarBg text-gray-700 dark:text-gray-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-[150] max-h-[var(--radix-select-content-available-height)] min-w-32 origin-[var(--radix-select-content-transform-origin)] overflow-x-hidden overflow-y-auto rounded-lg border border-border shadow-lg",
           position === "popper" &&
           "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className

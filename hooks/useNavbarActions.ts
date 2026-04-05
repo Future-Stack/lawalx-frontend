@@ -1,38 +1,42 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { toast } from "sonner";
-import { useUploadFileMutation } from "@/redux/api/users/content/content.api";
+import { useState } from "react";
+
+export type OnboardingStep = "add-device" | "upload" | "program" | "schedule" | null;
 
 export function useNavbarActions() {
     const [isAddDeviceOpen, setIsAddDeviceOpen] = useState(false);
     const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
     const [isCreateScheduleOpen, setIsCreateScheduleOpen] = useState(false);
+    const [isCreateProgramOpen, setIsCreateProgramOpen] = useState(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>(null);
+    const [isPageLoading, setIsPageLoading] = useState(false);
 
-    const [uploadFile, { isLoading: isUploading }] = useUploadFileMutation();
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleUploadClick = () => {
-        fileInputRef.current?.click();
+    const startOnboarding = () => {
+        setOnboardingStep("add-device");
+        setIsAddDeviceOpen(true);
     };
 
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files;
-        if (!files || files.length === 0) return;
+    const completeStep = (step: OnboardingStep) => {
+        if (onboardingStep !== step) return;
 
-        const formData = new FormData();
-        for (let i = 0; i < files.length; i++) {
-            formData.append("file", files[i]);
+        if (step === "add-device") {
+            setOnboardingStep("upload");
+            setIsUploadModalOpen(true);
+        } else if (step === "upload") {
+            setOnboardingStep("program");
+            setIsCreateProgramOpen(true);
+        } else if (step === "program") {
+            setOnboardingStep(null);
+            localStorage.removeItem("is_new_user");
+        } else if (step === "schedule") {
+            setOnboardingStep(null);
         }
+    };
 
-        try {
-            const res = await uploadFile(formData).unwrap();
-            toast.success(res?.message || "File(s) uploaded successfully");
-            if (fileInputRef.current) fileInputRef.current.value = "";
-        } catch (err: any) {
-            console.error("Upload failed:", err);
-            toast.error(err?.data?.message || "Upload failed. Please try again.");
-        }
+    const handleUploadClick = () => {
+        setIsUploadModalOpen(true);
     };
 
     return {
@@ -42,9 +46,15 @@ export function useNavbarActions() {
         setIsCreateFolderOpen,
         isCreateScheduleOpen,
         setIsCreateScheduleOpen,
-        isUploading,
-        fileInputRef,
+        isCreateProgramOpen,
+        setIsCreateProgramOpen,
+        isUploadModalOpen,
+        setIsUploadModalOpen,
+        isPageLoading,
+        setIsPageLoading,
+        onboardingStep,
+        startOnboarding,
+        completeStep,
         handleUploadClick,
-        handleFileChange,
     };
 }

@@ -33,7 +33,7 @@ const ContentSection: React.FC<ContentSectionProps> = ({ contentType, setContent
                         value={contentType}
                         onChange={setContentType}
                         options={[
-                            { label: "All Content", value: "all", icon: <FilePlay className="w-5 h-5 text-body" /> },
+                            { label: "Select content type", value: "all", icon: <FilePlay className="w-5 h-5 text-body" /> },
                             { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-body" /> },
                             { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-body" /> }
                         ]}

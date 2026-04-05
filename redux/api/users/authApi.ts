@@ -1,3 +1,4 @@
+import { setUser } from "../../features/auth/authSlice";
 import { baseApi } from "../../api/baseApi";
 
 export const authApi = baseApi.injectEndpoints({
@@ -8,6 +9,22 @@ export const authApi = baseApi.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
+      invalidatesTags: ["User"],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          if (data.success && data.data) {
+            dispatch(
+              setUser({
+                token: data.data.accessToken,
+                refreshToken: data.data.refreshToken,
+              })
+            );
+          }
+        } catch (error) {
+          // console.error("Login failed:", error);
+        }
+      },
     }),
     forgotPassword: builder.mutation({
       query: (data: { email: string }) => ({
@@ -32,9 +49,9 @@ export const authApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { 
-  useLoginMutation, 
-  useForgotPasswordMutation, 
+export const {
+  useLoginMutation,
+  useForgotPasswordMutation,
   useResetPasswordMutation,
   useGoogleLoginQuery
 } = authApi;

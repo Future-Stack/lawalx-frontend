@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Shuffle, Download, Eye, MoreVertical, Edit2 } from "lucide-react";
+import { Download, Edit2 } from "lucide-react";
 import TablePagination from "@/components/shared/TablePagination";
 
 const paymentHistory = [

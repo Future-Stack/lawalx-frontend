@@ -45,8 +45,10 @@ const SignInForm = () => {
 
                 dispatch(setUser({
                     token: accessToken,
-                    refreshToken
+                    refreshToken,
+                    email,
                 }));
+                localStorage.setItem("is_new_user", "true");
                 router.push("/dashboard");
             }
         } catch (error) {
