@@ -135,7 +135,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction, isLastRows, i
 
   const actions = [
     // { label: 'View Details', icon: Monitor, color: 'text-blue-600 dark:text-blue-400' },
-    { label: 'Delete Client', icon: Trash2, color: 'text-red-600 dark:text-red-400' },
+    { label: 'Delete Device', icon: Trash2, color: 'text-red-600 dark:text-red-400' },
   ];
 
   return (
