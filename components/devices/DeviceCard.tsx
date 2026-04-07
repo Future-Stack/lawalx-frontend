@@ -1,6 +1,7 @@
 import { Monitor, MapPin } from "lucide-react";
 import { Device } from "@/types/device";
 import DeviceActionsMenu from "./DeviceActionsMenu";
+import DeviceLocation from "@/components/common/DeviceLocation";
 import { useState } from "react";
 
 interface Props {
@@ -28,19 +29,32 @@ export default function DeviceCard({ device, isSelected, onToggle, onPreview, on
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{device.mac}</p>
             <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-2">
-              <MapPin className="w-3 h-3" /> {device.location}
+              <MapPin className="w-3 h-3" /> 
+              {device.lat && device.lng ? (
+                <DeviceLocation lat={device.lat} lng={device.lng} fallbackLabel={device.location} />
+              ) : (
+                device.location
+              )}
             </div>
             <div className="mb-2">
-              {device.status === "Online" ? (
+              {device.status === "ONLINE" ? (
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs rounded-full">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online
                 </span>
-              ) : device.status === "Offline" ? (
+              ) : device.status === "OFFLINE" ? (
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 text-xs rounded-full">
                   <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Offline
                 </span>
+              ) : device.status === "PAIRED" ? (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Paired
+                </span>
+              ) : device.status === "WAITING" ? (
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-full">
+                  <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span> Waiting
+                </span>
               ) : (
-                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-lg">In Disconnect</span>
+                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-lg">{device.status}</span>
               )}
             </div>
             <p className="text-xs text-gray-500">Last synced: {device.lastSynced}</p>

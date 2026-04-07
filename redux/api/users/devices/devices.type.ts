@@ -56,7 +56,7 @@ export type Device = {
   pinExpiresAt: string;
   deviceToken: string;
   name: string;
-  status: "PAIRED" | "OFFLINE" | "ONLINE" | string;
+  status: "WAITING" | "PAIRED" | "ONLINE" | "OFFLINE" | string;
   lastSeen: string;
   pinUsed: boolean;
   failedAttempts: number;
@@ -94,7 +94,7 @@ export type ApiResponse<T> = {
 
 export type DeviceData = {
   name: string;
-  status: "WAITING" | "ACTIVE" | "INACTIVE";
+  status: "WAITING" | "PAIRED" | "ONLINE" | "OFFLINE";
   deviceSerial: string;
   location: Location;
   storage: string;

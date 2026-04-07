@@ -3,6 +3,7 @@
 import { X, Power, Camera, Maximize, Volume2, Sun, Play, Pause, Trash2, RefreshCw } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.api";
+import DeviceLocation from "@/components/common/DeviceLocation";
 
 interface Props {
   isOpen: boolean;
@@ -45,35 +46,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     return deviceDetail || device;
   }, [deviceDetail, device]);
 
-  // Static cache for geolocations inside the modal session
-  const [addressLabel, setAddressLabel] = useState<string>("Loading Location...");
-  const devLocation = currentDevice?.location;
 
-  useEffect(() => {
-    if (devLocation && typeof devLocation === 'object' && devLocation.lat && devLocation.lng) {
-      const fetchAddress = async () => {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${devLocation.lat}&lon=${devLocation.lng}&zoom=10`);
-          const data = await res.json();
-          if (data.display_name) {
-            const a = data.address;
-            const city = a.city || a.town || a.village || a.suburb || a.county || '';
-            const country = a.country || '';
-            setAddressLabel(city && country ? `${city}, ${country}` : data.display_name.split(',').slice(0, 2).join(','));
-          } else {
-            setAddressLabel(`${devLocation.lat.toFixed(2)}, ${devLocation.lng.toFixed(2)}`);
-          }
-        } catch (e) {
-          setAddressLabel(`${devLocation.lat.toFixed(2)}, ${devLocation.lng.toFixed(2)}`);
-        }
-      };
-      fetchAddress();
-    } else if (typeof devLocation === 'string' && devLocation.includes('Location')) {
-      setAddressLabel(devLocation);
-    } else {
-      setAddressLabel("Unknown Location");
-    }
-  }, [devLocation]);
 
   const videoSrc = useMemo(() => {
     if (currentDevice?.program?.videoUrl) {
@@ -394,16 +367,28 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                 {/* Status Row */}
                 <div className="flex items-center justify-between">
                   <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Status</span>
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${currentDevice.status === "PAIRED" || currentDevice.status === "Online"
+                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${currentDevice.status === "ONLINE"
                     ? "bg-[#ECFDF5] border-[#D1FAE5] text-[#059669]"
-                    : "bg-[#FEF2F2] border-[#FEE2E2] text-[#DC2626]"
+                    : currentDevice.status === "OFFLINE"
+                      ? "bg-[#FEF2F2] border-[#FEE2E2] text-[#DC2626]"
+                      : currentDevice.status === "PAIRED"
+                        ? "bg-blue-50 border-blue-200 text-blue-700"
+                        : currentDevice.status === "WAITING"
+                          ? "bg-orange-50 border-orange-200 text-orange-700"
+                          : "bg-gray-100 border-gray-200 text-gray-700"
                     }`}>
-                    <span className={`w-2 h-2 rounded-full ${currentDevice.status === "PAIRED" || currentDevice.status === "Online"
+                    <span className={`w-2 h-2 rounded-full ${currentDevice.status === "ONLINE"
                       ? "bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.5)]"
-                      : "bg-[#EF4444] shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+                      : currentDevice.status === "OFFLINE"
+                        ? "bg-[#EF4444] shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+                        : currentDevice.status === "PAIRED"
+                          ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                          : currentDevice.status === "WAITING"
+                            ? "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                            : "bg-gray-500"
                       }`} />
                     <span className="text-xs font-bold uppercase tracking-wider">
-                      {currentDevice.status === "PAIRED" ? "Online" : (currentDevice.status === "OFFLINE" ? "Offline" : currentDevice.status)}
+                      {currentDevice.status}
                     </span>
                   </div>
                 </div>
@@ -420,7 +405,11 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                 <div className="flex items-center justify-between py-1">
                   <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Location</span>
                   <span className="text-[#171717] dark:text-white text-sm font-bold text-right truncate ml-4 max-w-[180px]">
-                    {addressLabel}
+                    {currentDevice?.location && typeof currentDevice.location === 'object' && currentDevice.location.lat && currentDevice.location.lng ? (
+                      <DeviceLocation lat={currentDevice.location.lat} lng={currentDevice.location.lng} />
+                    ) : (
+                      currentDevice?.location || "Unknown Location"
+                    )}
                   </span>
                 </div>
 
