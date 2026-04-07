@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface ReverseGeocodeProps {
   lat: number;
@@ -9,12 +9,17 @@ interface ReverseGeocodeProps {
   onAddressResolved?: (address: string) => void;
 }
 
-const ReverseGeocode: React.FC<ReverseGeocodeProps> = ({ lat, lng, fallback = "N/A", onAddressResolved }) => {
+const ReverseGeocode: React.FC<ReverseGeocodeProps> = ({
+  lat,
+  lng,
+  fallback = "N/A",
+  onAddressResolved,
+}) => {
   const [address, setAddress] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (!lat || !lng) {
+    if (!lat || !lng || (lat === 0 && lng === 0)) {
       setAddress(fallback);
       setLoading(false);
       return;
@@ -24,42 +29,46 @@ const ReverseGeocode: React.FC<ReverseGeocodeProps> = ({ lat, lng, fallback = "N
       setLoading(true);
       try {
         const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+        // Try to use JS Geocoder if available (it might already be loaded by other components)
+        // @ts-ignore
+        if (typeof window !== 'undefined' && window.google?.maps?.Geocoder) {
+          // @ts-ignore
+          const geocoder = new window.google.maps.Geocoder();
+          const response = await geocoder.geocode({ location: { lat, lng } });
+          if (response.results && response.results[0]) {
+            const result = response.results[0].formatted_address;
+            setAddress(result);
+            if (onAddressResolved) onAddressResolved(result);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fallback to direct HTTP fetch if JS Geocoder is not ready or failed
         if (!apiKey) {
-          setAddress(`${lat.toFixed(2)}, ${lng.toFixed(2)}`);
+          console.warn("ReverseGeocode: Missing Google Maps API Key");
+          setAddress(fallback);
           setLoading(false);
           return;
         }
 
-        const response = await fetch(
-          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
-        );
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+        const response = await fetch(url);
         const data = await response.json();
 
         if (data.status === "OK" && data.results.length > 0) {
-          // Find a clean address (e.g., suburb/city instead of full street if possible, or just formatted_address)
-          const result = data.results[0];
-          const formattedAddress = result.formatted_address;
-          
-          // Optional: Parse address components to find a shorter name (e.g. area/city)
-          let shortAddress = formattedAddress;
-          const route = result.address_components.find((c: any) => c.types.includes("route"))?.long_name;
-          const sublocality = result.address_components.find((c: any) => c.types.includes("sublocality"))?.long_name;
-          const locality = result.address_components.find((c: any) => c.types.includes("locality"))?.long_name;
-          
-          if (sublocality && locality) {
-            shortAddress = `${sublocality}, ${locality}`;
-          } else if (locality) {
-            shortAddress = locality;
-          }
-
-          setAddress(shortAddress);
-          if (onAddressResolved) onAddressResolved(shortAddress);
+          const formattedAddress = data.results[0].formatted_address;
+          setAddress(formattedAddress);
+          if (onAddressResolved) onAddressResolved(formattedAddress);
         } else {
-          setAddress(`${lat.toFixed(2)}, ${lng.toFixed(2)}`);
+          console.error(`ReverseGeocode Error (${data.status}):`, data.error_message || "No results found");
+          // If falling back, show the coordinates with more precision maybe? Or just use fallback
+          setAddress(fallback);
         }
       } catch (error) {
-        console.error("Geocoding error:", error);
-        setAddress(`${lat.toFixed(2)}, ${lng.toFixed(2)}`);
+        console.error("ReverseGeocode Fetch Exception:", error);
+        setAddress(fallback);
       } finally {
         setLoading(false);
       }
@@ -69,10 +78,15 @@ const ReverseGeocode: React.FC<ReverseGeocodeProps> = ({ lat, lng, fallback = "N
   }, [lat, lng, fallback, onAddressResolved]);
 
   if (loading) {
-    return <span className="animate-pulse text-gray-400">Resolving...</span>;
+    return (
+      <span className="flex items-center gap-1.5 text-gray-400">
+        <div className="w-1.5 h-1.5 rounded-full bg-bgBlue animate-ping shrink-0" />
+        <span className="text-[10px] font-bold uppercase tracking-widest animate-pulse">Resolving...</span>
+      </span>
+    );
   }
 
-  return <span>{address}</span>;
+  return <span className="whitespace-nowrap">{address || fallback}</span>;
 };
 
 export default ReverseGeocode;
