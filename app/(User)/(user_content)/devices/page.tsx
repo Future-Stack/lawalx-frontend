@@ -28,7 +28,7 @@ type DeviceView = {
   location: string;
   type: string;
   programName: string;
-  status: "Online" | "Offline" | "Disconnected" | string;
+  status: "ONLINE" | "OFFLINE" | "PAIRED" | "WAITING" | string;
   storage: string;
   lastSync: string;
   lat: number;
@@ -36,48 +36,7 @@ type DeviceView = {
   original: ApiDevice;
 };
 
-// Simple cache for geocoding results to avoid redundant API calls
-const geocodeCache: { [key: string]: string } = {};
-
-const DeviceLocation = ({ lat, lng }: { lat: number; lng: number }) => {
-  const [address, setAddress] = useState<string>(`Lat: ${lat.toFixed(2)}, Lng: ${lng.toFixed(2)}`);
-
-  useEffect(() => {
-    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-    if (geocodeCache[cacheKey]) {
-      setAddress(geocodeCache[cacheKey]);
-      return;
-    }
-
-    const fetchAddress = async () => {
-      try {
-        // Using Nominatim (OpenStreetMap) for free reverse geocoding
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`, 
-          { headers: { 'User-Agent': 'Lawalx-Frontend/1.0' } }
-        );
-        const data = await response.json();
-        
-        if (data.display_name) {
-          const a = data.address;
-          const city = a.city || a.town || a.village || a.suburb || a.county || '';
-          const country = a.country || '';
-          const formatted = city && country ? `${city}, ${country}` : data.display_name.split(',').slice(0, 2).join(',');
-          
-          geocodeCache[cacheKey] = formatted;
-          setAddress(formatted);
-        }
-      } catch (error) {
-        console.error("Geocoding error:", error);
-      }
-    };
-
-    const timer = setTimeout(fetchAddress, 500); // Debounce to respect rate limits
-    return () => clearTimeout(timer);
-  }, [lat, lng]);
-
-  return <span>{address}</span>;
-}
+import DeviceLocation from "@/components/common/DeviceLocation";
 
 const calculateTimeAgo = (dateString: string | null) => {
   if (!dateString) return "---";
@@ -192,9 +151,7 @@ export default function DevicesPage() {
     if (!devicesData?.data) return [];
 
     return devicesData.data.map((device) => {
-      let status: "Online" | "Offline" | "Disconnected" = "Disconnected";
-      if (device.status === "PAIRED" || device.status === "ONLINE") status = "Online";
-      else if (device.status === "OFFLINE") status = "Offline";
+      let status = device.status || "OFFLINE";
 
       // Format storage from bytes to GB
       const totalBytes = parseInt(device.storage) || 0;
@@ -222,6 +179,12 @@ export default function DevicesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [typeFilter, setTypeFilter] = useState('All Types');
+
+  const statusOptions = ['All Status', 'ONLINE', 'OFFLINE', 'WAITING', 'PAIRED'];
+  const typeOptions = useMemo(() => {
+    const types = Array.from(new Set(allDevices.map(d => d.type).filter(Boolean)));
+    return ['All Types', ...types];
+  }, [allDevices]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -253,8 +216,8 @@ export default function DevicesPage() {
 
   useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, typeFilter]);
 
-  const onlineCount = allDevices.filter(d => d.status === "Online").length;
-  const offlineCount = allDevices.filter(d => d.status === "Offline").length;
+  const onlineCount = allDevices.filter(d => d.status === "ONLINE").length;
+  const offlineCount = allDevices.filter(d => d.status === "OFFLINE").length;
 
   const handleAction = (action: string, device: DeviceView) => {
     if (action === 'Preview') setPreviewDevice(device);
@@ -320,8 +283,8 @@ export default function DevicesPage() {
             />
           </div>
           <div className="flex gap-2 w-full lg:w-auto">
-            <Dropdown value={statusFilter} options={['All Status', 'Online', 'Offline', 'Disconnected']} onChange={setStatusFilter} />
-            <Dropdown value={typeFilter} options={['All Types', 'Android TV', 'Fire TV', 'Samsung Tizen', 'LG webOS']} onChange={setTypeFilter} />
+            <Dropdown value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
+            <Dropdown value={typeFilter} options={typeOptions} onChange={setTypeFilter} />
           </div>
         </div>
 
@@ -374,19 +337,29 @@ export default function DevicesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      {device.status === "Online" ? (
+                      {device.status === "ONLINE" ? (
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-xs font-semibold">
                           <span className="w-2 h-2 rounded-full bg-[#10B981]" />
                           Online
                         </div>
-                      ) : device.status === "Offline" ? (
+                      ) : device.status === "OFFLINE" ? (
                         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-xs font-semibold">
                           <WifiOff className="w-3.5 h-3.5" />
                           Offline
                         </div>
+                      ) : device.status === "PAIRED" ? (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                          <span className="w-2 h-2 rounded-full bg-blue-500" />
+                          Paired
+                        </div>
+                      ) : device.status === "WAITING" ? (
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold">
+                          <span className="w-2 h-2 rounded-full bg-orange-500" />
+                          Waiting
+                        </div>
                       ) : (
                         <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] text-[#737373] text-xs font-semibold">
-                          Disconnected
+                          {device.status}
                         </div>
                       )}
                     </td>

@@ -22,7 +22,7 @@ interface CreateScheduleDialogProps {
 const STEPS = [
     { number: 1, icon: <FileText />, label: "Name and Description", sublabel: "" },
     { number: 2, icon: <Video />, label: "Content Selection", sublabel: "" },
-    { number: 3, icon: <TvMinimal />, label: "Screen Selection", sublabel: "" },
+    { number: 3, icon: <TvMinimal />, label: "Device Selection", sublabel: "" },
     { number: 4, icon: <Settings />, label: "Schedule Settings", sublabel: "" }
 ];
 

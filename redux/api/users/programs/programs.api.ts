@@ -10,7 +10,7 @@ const programsAPI = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Programs"],
+      invalidatesTags: ["Programs", "Devices"],
     }),
     getAllProgramsData: build.query<ProgramsResponse, void>({
       query: () => ({

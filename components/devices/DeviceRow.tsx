@@ -1,6 +1,7 @@
 import { Monitor, MapPin } from "lucide-react";
 import { Device } from "@/types/device";
 import DeviceActionsMenu from "./DeviceActionsMenu";
+import DeviceLocation from "@/components/common/DeviceLocation";
 import { useState } from "react";
 import Dropdown from "@/components/shared/Dropdown";
 
@@ -50,7 +51,12 @@ export default function DeviceRow({
 
       <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
         <div className="flex items-center gap-1">
-          <MapPin className="w-4 h-4" /> {device.location}
+          <MapPin className="w-4 h-4" /> 
+          {device.lat && device.lng ? (
+            <DeviceLocation lat={device.lat} lng={device.lng} fallbackLabel={device.location} />
+          ) : (
+            device.location
+          )}
         </div>
       </td>
 
@@ -64,17 +70,25 @@ export default function DeviceRow({
       </td>
 
       <td className="px-4 py-4">
-        {device.status === "Online" ? (
+        {device.status === "ONLINE" ? (
           <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded-full border border-green-200 dark:border-green-800">
             <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online
           </span>
-        ) : device.status === "Offline" ? (
+        ) : device.status === "OFFLINE" ? (
           <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs rounded-full border border-red-200 dark:border-red-800">
             <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Offline
           </span>
+        ) : device.status === "PAIRED" ? (
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs rounded-full border border-blue-200 dark:border-blue-800">
+            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Paired
+          </span>
+        ) : device.status === "WAITING" ? (
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs rounded-full border border-orange-200 dark:border-orange-800">
+            <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span> Waiting
+          </span>
         ) : (
           <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-xs rounded-lg border border-gray-300 dark:border-gray-600">
-            In Disconnect
+            {device.status}
           </span>
         )}
       </td>
