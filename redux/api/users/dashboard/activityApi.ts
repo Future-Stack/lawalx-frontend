@@ -22,7 +22,7 @@ export const activityApi = baseApi.injectEndpoints({
         url: "/userdashboard/stats",
         method: "GET",
       }),
-      providesTags: ["Activity"],
+      providesTags: ["Activity", "Devices", "Content", "Programs"],
     }),
     deleteActivity: build.mutation<any, string>({
       query: (id) => ({

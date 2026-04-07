@@ -29,7 +29,7 @@ export interface StoreMorningPromo {
   daysOfWeek?: DayOfWeek[];
   dayOfMonth?: number[];
 
-  programIds: string[];
+  programIds?: string[];
   deviceIds: string[];
 
   fileId: string;

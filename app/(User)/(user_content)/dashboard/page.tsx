@@ -16,11 +16,9 @@ import {
   Plus,
   CloudUpload,
   Activity,
-  MoreVertical,
   TvMinimal,
   UserRoundCog,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import ActionCardButton from "@/common/ActionCardButton";
 import CreateScreenModal from "@/components/dashboard/CreateScreenModal";
