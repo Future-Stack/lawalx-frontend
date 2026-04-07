@@ -194,7 +194,7 @@ const MyContentCard = ({
     // Folder: only Rename and Delete
     if (item.type === "folder") {
       return [
-        { label: "Rename", value: "rename", icon: <Pencil className="w-5 h-5" />, onClick: () => setOpenRename(true) },
+        { label: "Rename", value: "rename", icon: <Pencil className="w-5 h-5 text-headings" />, onClick: () => setOpenRename(true) },
         { label: "Delete", value: "delete", icon: <Trash2 className="w-5 h-5 text-red-500" />, danger: true, onClick: () => setOpenDeleteDialog(true) },
       ];
     }
@@ -202,7 +202,7 @@ const MyContentCard = ({
     // Audio/Playlist: Rename, Move to Folder, Delete, View Details
     if (item.type === "playlist") {
       return [
-        { label: "Rename", value: "rename", icon: <Pencil className="w-5 h-5" />, onClick: () => setOpenRename(true) },
+        { label: "Rename", value: "rename", icon: <Pencil className="w-5 h-5 text-headings" />, onClick: () => setOpenRename(true) },
         { label: "Move to Folder", value: "move", icon: <Folder className="w-5 h-5 text-headings" />, onClick: () => onMenuClick?.(item.id, "move") },
         { label: "Delete", value: "delete", icon: <Trash2 className="w-5 h-5 text-red-500" />, danger: true, onClick: () => setOpenDeleteDialog(true) },
         { label: "View Details", value: "view", icon: <Eye className="w-5 h-5 text-headings" />, onClick: () => router.push(`/content/${item.id}`) },
@@ -212,7 +212,7 @@ const MyContentCard = ({
     return [
       { label: "Assign to Program", value: "assign", icon: <ScreenShare className="w-5 h-5 text-headings" />, onClick: () => { onAssignClick?.(item.id); } },
       // { label: "Schedule", value: "schedule", icon: <CalendarClock className="w-5 h-5 text-headings" />, onClick: () => onMenuClick?.(item.id, "schedule") },
-      { label: "Rename", value: "rename", icon: <Pencil className="w-5 h-5" />, onClick: () => setOpenRename(true) },
+      { label: "Rename", value: "rename", icon: <Pencil className="w-5 h-5 text-headings" />, onClick: () => setOpenRename(true) },
       { label: "Move to Folder", value: "move", icon: <Folder className="w-5 h-5 text-headings" />, onClick: () => onMenuClick?.(item.id, "move") },
       { label: "Delete", value: "delete", icon: <Trash2 className="w-5 h-5 text-red-500" />, danger: true, onClick: () => setOpenDeleteDialog(true) },
       { label: "View Details", value: "view", icon: <Eye className="w-5 h-5 text-headings" />, onClick: () => router.push(`/content/${item.id}`) },
