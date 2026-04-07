@@ -332,7 +332,7 @@ export default function DevicesPage() {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <div className={`text-sm font-bold ${device.programName === "No device assigned" ? "text-[#A3A3A3] font-normal" : "text-[#171717] dark:text-white"}`}>
+                      <div className={`text-sm font-bold ${device.programName === "No program assigned" ? "text-[#A3A3A3] font-normal" : "text-[#171717] dark:text-white"}`}>
                         {device.programName}
                       </div>
                     </td>
