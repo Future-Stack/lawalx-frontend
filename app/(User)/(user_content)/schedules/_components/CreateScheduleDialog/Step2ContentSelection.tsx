@@ -105,21 +105,19 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                             onContentSelect(item);
                         }
                     }}
-                    className={`flex items-center gap-3 p-3 rounded-lg border border-border bg-input transition-all group ${
-                        isSelected 
-                            ? "border-bgBlue bg-blue-50/50 dark:bg-blue-950/20" 
+                    className={`flex items-center gap-3 p-3 rounded-lg border border-border bg-input transition-all group ${isSelected
+                            ? "border-bgBlue bg-blue-50/50 dark:bg-blue-950/20"
                             : "hover:border-bgBlue hover:bg-blue-50 dark:hover:bg-blue-950/20"
-                    } cursor-pointer`}
+                        } cursor-pointer`}
                 >
                     {/* Multi-select check or icon */}
                     <div className="flex-shrink-0">
                         {item.type !== "folder" && (
-                            <div 
-                                className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
-                                    isSelected 
-                                        ? "bg-bgBlue border-bgBlue text-white" 
+                            <div
+                                className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isSelected
+                                        ? "bg-bgBlue border-bgBlue text-white"
                                         : "border-borderGray group-hover:border-bgBlue"
-                                }`}
+                                    }`}
                             >
                                 {isSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
                             </div>
@@ -186,9 +184,8 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                     </div>
 
                     {/* Action Icon */}
-                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full bg-bgBlue text-white flex items-center justify-center transition-opacity shadow-customShadow ${
-                        isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                    }`}>
+                    <div className={`w-6 h-6 md:w-8 md:h-8 rounded-full bg-bgBlue text-white flex items-center justify-center transition-opacity shadow-customShadow ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                        }`}>
                         {isSelected ? (
                             <CircleCheckBigIcon className="w-4 h-4" />
                         ) : item.type === "video" ? (

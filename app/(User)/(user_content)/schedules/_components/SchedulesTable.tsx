@@ -5,6 +5,7 @@ import { Schedule } from "@/redux/api/users/schedules/schedules.type";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useDeleteScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
+import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { toast } from "sonner";
 import SchedulePreviewDialog from "./SchedulePreviewDialog";
 import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
@@ -41,12 +42,22 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
     totalPages,
     setCurrentPage,
 }) => {
+    const { data: devicesData } = useGetMyDevicesDataQuery();
     const router = useRouter();
     const [openPreview, setOpenPreview] = React.useState(false);
     const [deleteSchedule] = useDeleteScheduleMutation();
     const [selectedSchedule, setSelectedSchedule] = React.useState<Schedule | null>(null);
     const [openDelete, setOpenDelete] = React.useState(false);
     const [scheduleToDelete, setScheduleToDelete] = React.useState<Schedule | null>(null);
+
+    // Create a map for quick device lookup
+    const deviceMap = React.useMemo(() => {
+        const map: Record<string, string> = {};
+        devicesData?.data.forEach(device => {
+            map[device.id] = device.name;
+        });
+        return map;
+    }, [devicesData]);
 
     const handlePreviewClick = (schedule: Schedule) => {
         setSelectedSchedule(schedule);
@@ -105,9 +116,12 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
                                     </div>
                                 </td>
                                 <td className="px-6 py-5">
-                                    <div className="text-sm text-muted">
-                                        {schedule.programs && schedule.programs.length > 0 ? (
-                                            schedule.programs.map((p) => p.name).join(", ")
+                                    <div className="text-sm text-headings">
+                                        {schedule.targets && schedule.targets.length > 0 ? (
+                                            schedule.targets
+                                                .map((target) => (target.deviceId ? deviceMap[target.deviceId] : null))
+                                                .filter(Boolean)
+                                                .join(", ") || "No device assigned"
                                         ) : (
                                             "No device assigned"
                                         )}
