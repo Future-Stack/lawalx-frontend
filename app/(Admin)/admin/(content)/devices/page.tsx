@@ -1,11 +1,12 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon } from 'lucide-react';
+import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon, ArrowUpRight } from 'lucide-react';
 import GoogleMapModal from '@/components/shared/modals/GoogleMapModal';
 import ReverseGeocode from '@/components/shared/ReverseGeocode';
-import { useDeleteDeviceMutation, useGetDeviceDetailsQuery, useGetGlobalDevicesQuery, useLazyExportGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
+import { useDeleteDeviceMutation, useGetGlobalDeviceDetailsQuery, useGetGlobalDevicesQuery, useLazyExportGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -134,14 +135,17 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction, isLastRows, i
   const [isOpen, setIsOpen] = useState(false);
 
   const actions = [
-    // { label: 'View Details', icon: Monitor, color: 'text-blue-600 dark:text-blue-400' },
+    { label: 'View Details', icon: ArrowUpRight, color: 'text-blue-600 dark:text-blue-400' },
     { label: 'Delete Device', icon: Trash2, color: 'text-red-600 dark:text-red-400' },
   ];
 
   return (
     <div className="relative">
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
         className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 cursor-pointer"
       >
         <MoreVertical className="w-5 h-5" />
@@ -155,7 +159,8 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction, isLastRows, i
             {actions.map((action) => (
               <button
                 key={action.label}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   onAction(action.label, device);
                   setIsOpen(false);
                 }}
@@ -173,6 +178,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction, isLastRows, i
 };
 
 export default function GlobalDevices() {
+  const router = useRouter();
   const [timeRange, setTimeRange] = useState('Last 30 days');
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [typeFilter, setTypeFilter] = useState('All Types');
@@ -261,10 +267,7 @@ export default function GlobalDevices() {
     }
   };
 
-  const { data: deviceDetails, isLoading: isLoadingDetails } = useGetDeviceDetailsQuery(
-    { id: modalContent.device?.id },
-    { skip: !modalOpen || modalContent.action !== 'View Details' || !modalContent.device?.id }
-  );
+  // Removed useGetGlobalDeviceDetailsQuery from here as we navigate to a new page
 
   const { data, isLoading, isError, refetch } = useGetGlobalDevicesQuery({
     page: currentPage,
@@ -280,8 +283,28 @@ export default function GlobalDevices() {
     return apiDevices.map((device: any, index: number) => {
       const daysAgo = device.lastSeen ? Math.max(0, Math.round((Date.now() - new Date(device.lastSeen).getTime()) / (1000 * 60 * 60 * 24))) : 365;
       const uptime = data?.data?.stats?.avgUptime ?? 'N/A';
-      const locationObj = typeof device.location === 'object' && device.location !== null ? device.location : null;
-      const locationLabel = locationObj ? `${locationObj.lat}, ${locationObj.lng}` : (device.location ?? 'N/A');
+      
+      // Improved Location Parsing
+      let lat = 0;
+      let lng = 0;
+      let locationLabel = 'N/A';
+
+      if (device.location) {
+        if (typeof device.location === 'object') {
+          lat = device.location.lat || 0;
+          lng = device.location.lng || 0;
+          locationLabel = `${lat}, ${lng}`;
+        } else if (typeof device.location === 'string') {
+          locationLabel = device.location;
+          const coordRegex = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/;
+          if (coordRegex.test(device.location.trim())) {
+            const [latStr, lngStr] = device.location.split(',');
+            lat = parseFloat(latStr.trim()) || 0;
+            lng = parseFloat(lngStr.trim()) || 0;
+          }
+        }
+      }
+
       return {
         id: device.id,
         device: device.name ?? 'N/A',
@@ -295,8 +318,8 @@ export default function GlobalDevices() {
         daysAgo,
         lastSync: device.last_Sync ? new Date(device.last_Sync).toLocaleString() : 'N/A',
         last_Sync: device.last_Sync,
-        lat: locationObj ? locationObj.lat : (device.location ? 23.8103 : 0),
-        lng: locationObj ? locationObj.lng : (device.location ? 90.4125 : 0),
+        lat,
+        lng,
       } as Device;
     });
   }, [data]);
@@ -329,6 +352,16 @@ export default function GlobalDevices() {
 
   // Calculate stats based on filtered devices
   const stats = useMemo(() => {
+    if (data?.data?.stats) {
+      const s = data.data.stats;
+      return {
+        total: s.totalDevices,
+        online: s.onlineDevices,
+        offline: s.offlineDevices,
+        avgUptime: s.avgUptime,
+        trendText: `${s.onlinePercentage}% Online`
+      };
+    }
     const total = devicesInRange.length;
     const online = devicesInRange.filter((d: Device) => d.status === 'Online' || d.status === 'ONLINE').length;
     const offline = devicesInRange.filter((d: Device) => d.status === 'Offline' || d.status === 'OFFLINE').length;
@@ -339,7 +372,7 @@ export default function GlobalDevices() {
     const trend = total - previousDevices.length;
     const trendText = trend > 0 ? `+${trend} from last period` : trend < 0 ? `${trend} from last period` : 'No change';
     return { total, online, offline, avgUptime, trendText };
-  }, [devicesInRange, allDevices, timeRange]);
+  }, [devicesInRange, allDevices, timeRange, data]);
 
   // Filter devices by search and filters
   const filteredDevices = useMemo(() => {
@@ -375,6 +408,10 @@ export default function GlobalDevices() {
   }
 
   const handleAction = (action: string, device: Device): void => {
+    if (action === 'View Details') {
+      router.push(`/admin/devices/${device.id}`);
+      return;
+    }
     const content: ModalContent = { title: action, device, action };
     setModalContent(content);
     setModalOpen(true);
@@ -404,32 +441,6 @@ export default function GlobalDevices() {
     if (!modalContent.device) return null;
 
     switch (modalContent.action) {
-      case 'View Details':
-        return (
-          <div className="space-y-4">
-            {isLoadingDetails ? (
-              <div className="text-center py-4">Loading device details...</div>
-            ) : deviceDetails ? (
-              <div className="space-y-2">
-                <div><strong>Name:</strong> {deviceDetails.data?.name || 'N/A'}</div>
-                <div><strong>Model:</strong> {deviceDetails.data?.model || 'N/A'}</div>
-                <div><strong>Type:</strong> {deviceDetails.data?.deviceType || 'N/A'}</div>
-                <div><strong>Status:</strong> {deviceDetails.data?.status || 'N/A'}</div>
-                <div><strong>Location:</strong> {
-                  typeof deviceDetails.data?.location === 'object' && deviceDetails.data?.location !== null 
-                    ? `${deviceDetails.data.location.lat}, ${deviceDetails.data.location.lng}` 
-                    : (deviceDetails.data?.location || 'N/A')
-                }</div>
-                <div><strong>IP:</strong> {deviceDetails.data?.ip || 'N/A'}</div>
-                <div><strong>Last Seen:</strong> {deviceDetails.data?.lastSeen ? new Date(deviceDetails.data.lastSeen).toLocaleString() : 'N/A'}</div>
-                <div><strong>Storage:</strong> {deviceDetails.data?.storage || 'N/A'}</div>
-                <div><strong>User:</strong> {deviceDetails.data?.user?.full_name || 'N/A'}</div>
-              </div>
-            ) : (
-              <div className="text-center py-4">No details available</div>
-            )}
-          </div>
-        );
 
       case 'Delete Client':
         return (
@@ -494,29 +505,37 @@ export default function GlobalDevices() {
               options={['Last 1 day', 'Last 7 days', 'Last 30 days', 'Last 1 year']}
               onChange={setTimeRange}
             />
-            <div className="relative">
+            <div className="relative w-44">
               <button
                 onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-                className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-bgBlue text-white rounded-lg hover:bg-blue-500 transition-colors text-sm"
+                className="w-full text-nowrap px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
-                <Download className="w-4 h-4" />
-                Export Devices
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span className="hidden lg:block">Export Devices</span>
               </button>
               {exportDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setExportDropdownOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-32 bg-navbarBg border border-border rounded-lg shadow-lg z-20">
+                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 w-full overflow-hidden">
                     <button
-                      onClick={() => handleExport('pdf')}
-                      className="w-full cursor-pointer text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg"
+                      onClick={() => {
+                        handleExport('pdf');
+                        setExportDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                     >
-                      PDF
+                      📄 PDF
                     </button>
                     <button
-                      onClick={() => handleExport('excel')}
-                      className="w-full cursor-pointer text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 last:rounded-b-lg"
+                      onClick={() => {
+                        handleExport('excel');
+                        setExportDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                     >
-                      Excel
+                      📊 Excel
                     </button>
                   </div>
                 </>
@@ -605,7 +624,11 @@ export default function GlobalDevices() {
                       const isLastRows = index >= paginatedDevices.length - 2;
                       const isFirstRows = index < 2;
                       return (
-                        <tr key={device.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <tr 
+                          key={device.id} 
+                          onClick={() => router.push(`/admin/devices/${device.id}`)}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+                        >
                           <td className="px-6 py-4">
                             <div className="text-sm font-medium text-gray-900 dark:text-white">{device.device}</div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">{device.model}</div>
@@ -613,7 +636,8 @@ export default function GlobalDevices() {
                           <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.customer}</td>
                           <td className="px-6 py-4 text-sm">
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 setSelectedLocation({ lat: device.lat, lng: device.lng, label: device.location, device: device });
                                 setMapModalOpen(true);
                               }}
@@ -660,7 +684,11 @@ export default function GlobalDevices() {
                   const isLastRows = index >= paginatedDevices.length - 2;
                   const isFirstRows = index < 2;
                   return (
-                    <div key={device.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
+                    <div 
+                      key={device.id} 
+                      onClick={() => router.push(`/admin/devices/${device.id}`)}
+                      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 cursor-pointer hover:shadow-md transition-shadow"
+                    >
                       {/* Header */}
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
@@ -692,7 +720,8 @@ export default function GlobalDevices() {
                         <div className="text-sm">
                           <span className="text-gray-500 dark:text-gray-400">Location:</span>
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation();
                               setSelectedLocation({ lat: device.lat, lng: device.lng, label: device.location, device: device });
                               setMapModalOpen(true);
                             }}

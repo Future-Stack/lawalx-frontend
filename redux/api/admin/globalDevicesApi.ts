@@ -43,6 +43,8 @@ export type GlobalDevicesStats = {
   pairedDevices: number;
   onlinePercentage: number;
   avgUptime: string;
+  totalStorage: string;
+  usedStorage: string;
 };
 
 export type GlobalDevicesMeta = {
@@ -61,6 +63,55 @@ export type GlobalDevicesResponse = {
     stats: GlobalDevicesStats;
     devices: GlobalDevice[];
     meta: GlobalDevicesMeta;
+  };
+};
+
+export type GlobalDeviceDetailsResponse = {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: {
+    header: {
+      name: string;
+      serial: string;
+      id: string;
+    };
+    deviceInfo: {
+      owner: {
+        name: string;
+        email: string;
+      };
+      model: string;
+      screenSize: string;
+      operatingSystem: string;
+      osVersion: string;
+      firmware: string;
+    };
+    status: {
+      connection: string;
+      lastSync: string;
+      uptime: string;
+    };
+    location: {
+      address: string;
+      timezone: string;
+      coordinates: {
+        lat: number;
+        lng: number;
+      };
+    };
+    storage: {
+      used: string;
+      total: string;
+      percentageFree: string;
+      cache: string;
+    };
+    activityLogs: Array<{
+      id: string;
+      action: string;
+      timestamp: string;
+      details: string;
+    }>;
   };
 };
 
@@ -120,12 +171,12 @@ const globalDevicesApi = baseApi.injectEndpoints({
       },
       providesTags: ["Device"],
     }),
-    getDeviceDetails: build.query({
-      query: ({ id }) => ({
-        url: `/device/${id}`,
+    getGlobalDeviceDetails: build.query<GlobalDeviceDetailsResponse, string>({
+      query: (id) => ({
+        url: `/device/global/${id}`,
         method: "GET",
       }),
-      providesTags: (result, error, arg) => [{ type: "Device", id: arg.id }],
+      providesTags: (result, error, id) => [{ type: "Device", id }],
     }),
     deleteDevice: build.mutation({
       query: ({ id }) => ({
@@ -148,7 +199,7 @@ const globalDevicesApi = baseApi.injectEndpoints({
 export const {
   useGetGlobalDevicesQuery,
   useLazyExportGlobalDevicesQuery,
-  useGetDeviceDetailsQuery,
+  useGetGlobalDeviceDetailsQuery,
   useDeleteDeviceMutation,
   useRenameDeviceMutation,
 } = globalDevicesApi;
