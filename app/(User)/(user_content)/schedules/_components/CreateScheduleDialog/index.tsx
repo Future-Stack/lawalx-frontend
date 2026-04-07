@@ -13,6 +13,7 @@ import { ContentItem } from "@/types/content";
 import { FileText, Settings, TvMinimal, Video, X } from "lucide-react";
 import { useCreateScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
 import { StoreMorningPromo, ContentType, RecurrenceType, DayOfWeek } from "@/redux/api/users/schedules/schedules.type";
+import dayjs from "dayjs";
 
 interface CreateScheduleDialogProps {
     open: boolean;
@@ -69,12 +70,12 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
 
     const handleContentSelect = (content: ContentItem) => {
         const isSelected = step2Data.selectedContent.some(c => c.id === content.id);
-        const newSelection = isSelected 
+        const newSelection = isSelected
             ? step2Data.selectedContent.filter(c => c.id !== content.id)
             : [...step2Data.selectedContent, content];
 
         setStep2Data({ ...step2Data, selectedContent: newSelection });
-        
+
         // Lower third selection still works on single item for config
         setLowerThirdData({ ...lowerThirdData, selectedContent: content });
 
@@ -124,8 +125,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
 
     const handleSubmit = async () => {
         // Determine active content (file selected in Step 2)
-        const activeContent = showLowerThird 
-            ? (lowerThirdData.selectedContent ? [lowerThirdData.selectedContent] : []) 
+        const activeContent = showLowerThird
+            ? (lowerThirdData.selectedContent ? [lowerThirdData.selectedContent] : [])
             : step2Data.selectedContent;
 
         const firstSelected = activeContent[0];
@@ -139,41 +140,29 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             contentType = "LOWERTHIRD";
         }
 
-        // Format startDate / endDate as full ISO strings
-        const startDate = step4Data.startDate
-            ? new Date(step4Data.startDate + "T00:00:00Z").toISOString()
-            : new Date().toISOString();
-
-        const endDate = (step4Data.repeat === "run-once" ? step4Data.startDate : step4Data.endDate)
-            ? new Date((step4Data.repeat === "run-once" ? step4Data.startDate : step4Data.endDate) + "T23:59:59Z").toISOString()
-            : new Date().toISOString();
-
         // Format startTime / endTime as epoch-based ISO (1970-01-01T...Z)
         const startTime = `1970-01-01T${step4Data.playTime}:00Z`;
         const endTime = `1970-01-01T${step4Data.endTime || step4Data.playTime}:00Z`;
 
-        // Map recurrence type
-        const recurrenceType: RecurrenceType = step4Data.repeat === "run-once"
-            ? "once"
-            : (step4Data.repeat as RecurrenceType);
-
-        // Construct the API payload matching StoreMorningPromo
+        const selectedPrograms = activeContent.filter(c => (c as any).isProgram).map(c => c.id);
+        
+        // Construct the API payload matching user provided specification
         const payload: StoreMorningPromo = {
             name: step1Data.name,
             description: step1Data.description,
             contentType,
-            recurrenceType,
-            startDate,
-            endDate,
+            recurrenceType: (step4Data.repeat === "run-once" ? "once" : step4Data.repeat) as "once" | "daily" | "weekly" | "monthly",
+            startDate: step4Data.startDate ? dayjs(step4Data.startDate).startOf('day').toISOString() : dayjs().startOf('day').toISOString(),
+            endDate: step4Data.endDate ? dayjs(step4Data.endDate).endOf('day').toISOString() : (step4Data.startDate ? dayjs(step4Data.startDate).endOf('day').toISOString() : dayjs().endOf('day').toISOString()),
             startTime,
             endTime,
             daysOfWeek: step4Data.selectedDays as DayOfWeek[],
             dayOfMonth: step4Data.selectedDates,
-            programIds: [],
+            programIds: selectedPrograms.length > 0 ? selectedPrograms : undefined,
             deviceIds: step3Data.selectedScreens,
             fileId: firstSelected?.id || "",
-            lowerThirdId: showLowerThird ? lowerThirdData.selectedContent?.id : undefined,
             status: "playing",
+            lowerThirdId: showLowerThird ? lowerThirdData.selectedContent?.id : undefined,
         };
 
         console.log("=== SUBMITTING SCHEDULE PAYLOAD ===");

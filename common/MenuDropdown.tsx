@@ -62,12 +62,12 @@ const MenuDropdown = ({
             className={cn(
               "flex items-center gap-2 px-3 py-2 text-sm cursor-pointer rounded-md transition-colors",
               opt.danger
-                ? "text-red-600 hover:text-red-700 focus:text-red-700"
-                : "text-headings hover:text-gray-900"
+                ? "text-red-600 focus:bg-red-600 focus:text-white focus:[&_svg]:text-white"
+                : "text-headings focus:bg-bgBlue focus:text-white focus:[&_svg]:text-white"
             )}
           >
-            {opt.icon && <span className="text-headings">{opt.icon}</span>}
-            <span className="text-headings">{opt.label}</span>
+            {opt.icon && <span className="flex items-center justify-center">{opt.icon}</span>}
+            <span className="font-medium">{opt.label}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
