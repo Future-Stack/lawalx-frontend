@@ -106,7 +106,7 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
                                 <td className="px-6 py-5">
                                     <div className="flex items-center gap-2 text-sm text-headings">
                                         <Video className="w-4 h-4 text-muted" />
-                                        <span>{schedule.file?.originalName || "No content"}</span>
+                                        <span>{schedule.files?.[0]?.originalName || schedule.programs?.[0]?.name || "No content"}</span>
                                     </div>
                                 </td>
                                 <td className="px-6 py-5">

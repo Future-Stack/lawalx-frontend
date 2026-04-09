@@ -24,6 +24,7 @@ export default function SchedulesPage() {
   ];
 
   const allSchedules = schedulesData?.data || [];
+  console.log("all schedules", allSchedules);
 
   const filteredSchedules = useMemo(() => {
     let result = [...allSchedules].filter((s) =>

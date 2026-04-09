@@ -129,18 +129,27 @@ export default function ScheduleDetailPage() {
   // Map API file data to ContentItem[] for ContentSection
   const content: ContentItem[] = localFile
     ? [localFile as ContentItem]
-    : (schedule?.file
+    : (schedule?.files && schedule.files.length > 0
       ? [
         {
-          id: schedule.file.id,
-          title: schedule.file.originalName,
-          type: schedule.file.type === "VIDEO" ? "video" : "image",
-          thumbnail: schedule.file.type === "IMAGE" ? getUrl(schedule.file.url) : (schedule.file.url ? getUrl(schedule.file.url) : ""),
-          video: schedule.file.type === "VIDEO" ? getUrl(schedule.file.url) : undefined,
-          size: `${(schedule.file.size / (1024 * 1024)).toFixed(0)} MB`,
+          id: schedule.files[0].id,
+          title: schedule.files[0].originalName,
+          type: schedule.files[0].type === "VIDEO" ? "video" : "image",
+          thumbnail: schedule.files[0].type === "IMAGE" ? getUrl(schedule.files[0].url) : (schedule.files[0].url ? getUrl(schedule.files[0].url) : ""),
+          video: schedule.files[0].type === "VIDEO" ? getUrl(schedule.files[0].url) : undefined,
+          size: `${(schedule.files[0].size / (1024 * 1024)).toFixed(0)} MB`,
         },
       ]
-      : []);
+      : schedule?.programs && schedule.programs.length > 0 ? [
+        {
+          id: schedule.programs[0].id,
+          title: schedule.programs[0].name,
+          type: "video",
+          thumbnail: getUrl(schedule.programs[0].videoUrl || ""),
+          video: getUrl(schedule.programs[0].videoUrl || ""),
+          size: "Program",
+        }
+      ] : []);
 
   // Build schedule time display
   const scheduleTimeDisplay = schedule
