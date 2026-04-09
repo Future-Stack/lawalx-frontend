@@ -83,6 +83,7 @@ export interface Program {
   userId: string;
   created_at: string;
   updated_at: string;
+  videoUrl?: string;
 }
 
 export interface Schedule {
@@ -111,7 +112,7 @@ export interface Schedule {
   updatedAt: string;
 
   targets: ScheduleTarget[];
-  file: FileData;
+  files: FileData[];
   programs: Program[];
 }
 

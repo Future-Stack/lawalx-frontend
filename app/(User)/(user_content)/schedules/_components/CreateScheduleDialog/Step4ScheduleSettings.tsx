@@ -160,7 +160,7 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label className="text-sm font-medium text-headings">
-                        Start Date <span className="text-red-500">*</span>
+                        {data.repeat === "run-once" ? "Select Date" : "Start Date"} <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative cursor-pointer" onClick={() => handleIconClick(startDateRef)}>
                         <Input
@@ -174,21 +174,23 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <Label className="text-sm font-medium text-headings">
-                        End Date <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative cursor-pointer" onClick={() => handleIconClick(endDateRef)}>
-                        <Input
-                            ref={endDateRef}
-                            type="date"
-                            value={data.endDate || ""}
-                            onChange={(e) => onChange({ ...data, endDate: e.target.value })}
-                            className="bg-input border-borderGray text-headings cursor-pointer pr-10"
-                        />
-                        <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                {data.repeat !== "run-once" && (
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-headings">
+                            End Date <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="relative cursor-pointer" onClick={() => handleIconClick(endDateRef)}>
+                            <Input
+                                ref={endDateRef}
+                                type="date"
+                                value={data.endDate || ""}
+                                onChange={(e) => onChange({ ...data, endDate: e.target.value })}
+                                className="bg-input border-borderGray text-headings cursor-pointer pr-10"
+                            />
+                            <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

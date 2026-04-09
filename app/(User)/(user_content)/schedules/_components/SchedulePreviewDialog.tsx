@@ -124,27 +124,33 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
             <div className="flex flex-col gap-6 py-2">
                 {/* Media Preview Section */}
                 <div className="relative w-full rounded-2xl overflow-hidden bg-bgGray dark:bg-gray-800 border border-border group shadow-sm">
-                    {schedule.file?.type === "VIDEO" ? (
+                    {schedule.files && schedule.files.length > 0 ? (
+                        schedule.files[0].type === "VIDEO" ? (
+                            <BaseVideoPlayer
+                                src={getUrl(schedule.files[0].url) || ""}
+                                autoPlay={false}
+                                rounded="rounded-none"
+                            />
+                        ) : (
+                            <div className="relative aspect-video">
+                                <Image
+                                    src={getUrl(schedule.files[0].url) || "/placeholder.png"}
+                                    alt={schedule.files[0].originalName || "Preview"}
+                                    fill
+                                    className="object-cover"
+                                    unoptimized
+                                />
+                            </div>
+                        )
+                    ) : schedule.programs && schedule.programs.length > 0 ? (
                         <BaseVideoPlayer
-                            src={getUrl(schedule.file.url) || ""}
+                            src={getUrl(schedule.programs[0].videoUrl || "") || ""}
                             autoPlay={false}
                             rounded="rounded-none"
                         />
                     ) : (
-                        <div className="relative aspect-video">
-                            <Image
-                                src={getUrl(schedule.file?.url) || "/placeholder.png"}
-                                alt={schedule.file?.originalName || "Preview"}
-                                fill
-                                className="object-cover"
-                                unoptimized
-                            />
-                            {/* Play Button Overlay (from image design) */}
-                            {/* <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="w-11 h-11 bg-bgBlue rounded-full flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform cursor-pointer">
-                                    <Play className="w-5 h-5 text-white fill-white ml-0.5" />
-                                </div>
-                            </div> */}
+                        <div className="relative aspect-video bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+                            <span className="text-gray-500">No preview available</span>
                         </div>
                     )}
                 </div>
@@ -154,7 +160,12 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     <div className="flex items-center gap-2">
                         <FileText className="w-5 h-5 text-muted" />
                         <span className="font-medium truncate max-w-[200px] sm:max-w-xs capitalize">
-                            {schedule.file?.type?.toLowerCase() || "video"}: {schedule.file?.originalName}
+                            {schedule.files && schedule.files.length > 0 
+                                ? `${schedule.files[0].type?.toLowerCase() || "video"}: ${schedule.files[0].originalName}`
+                                : schedule.programs && schedule.programs.length > 0
+                                ? `program: ${schedule.programs[0].name}`
+                                : "No content assigned"
+                            }
                         </span>
                     </div>
 

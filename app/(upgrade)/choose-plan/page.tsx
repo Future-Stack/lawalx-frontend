@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Crown, Loader2 } from "lucide-react";
+import { Crown, Loader2, ArrowLeft } from "lucide-react";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { useGetProfileQuery } from "@/redux/api/users/settings/personalApi";
 import { useCreatePaymentMutation } from "@/redux/api/subscription/subscription.api";
@@ -183,6 +183,17 @@ export default function ChoosePlanPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
       <div className="bg-gray-50 rounded-2xl max-w-6xl w-full p-8 relative">
+        {/* Dashboard Navigation Button */}
+        <div className="absolute top-4 left-4 sm:left-8">
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="flex items-center gap-2 px-4 py-2 bg-bgBlue border border-gray-200 rounded-lg shadow-customShadow text-sm font-semibold text-white hover:bg-blue-600 transition-all cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Dashboard
+          </button>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
           <Crown className="w-12 h-12 text-blue-500 mx-auto mb-4" />

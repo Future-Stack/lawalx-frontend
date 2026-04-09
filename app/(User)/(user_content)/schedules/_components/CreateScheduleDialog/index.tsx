@@ -185,7 +185,10 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
         if (currentStep === 2 && !showLowerThird) return step2Data.selectedContent.length === 0;
         if (currentStep === 3) return step3Data.selectedScreens.length === 0;
         if (currentStep === 4) {
-            return !step4Data.playTime || !step4Data.endTime || !step4Data.startDate || !step4Data.endDate;
+            const isRunOnce = step4Data.repeat === "run-once";
+            const commonFields = !step4Data.playTime || !step4Data.startDate;
+            if (isRunOnce) return commonFields;
+            return commonFields || !step4Data.endDate || !step4Data.endTime;
         }
         return false;
     };
