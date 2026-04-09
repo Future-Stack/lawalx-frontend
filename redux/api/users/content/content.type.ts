@@ -3,8 +3,8 @@ export type CreateFolderPayload = {
   name: string;
   parentId?: string;
 };
-// Upload payload will be sent as FormData (files + optional folderId)
-export type UploadFilePayload = FormData | { formData: FormData; folderId?: string };
+// Upload payload will be sent as FormData (files + optional folderId/programId)
+export type UploadFilePayload = FormData | { formData: FormData; folderId?: string; programId?: string };
 
 // all content get route type definition
 export type ContentType = "FOLDER" | "IMAGE" | "VIDEO" | "AUDIO" | "FILE";
@@ -52,6 +52,7 @@ export interface FileItem {
   duration: number;
   userId: string;
   folderId: string | null;
+  programId: string | null;
   createdAt: string;
   updatedAt: string;
 }

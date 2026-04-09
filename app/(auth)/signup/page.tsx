@@ -26,7 +26,7 @@ const SignUpPage = () => {
         } else if (step === "verification") {
             setStep("password");
         } else if (step === "password") {
-            setStep("plans");
+            setStep("success");
         }
     };
 
@@ -99,7 +99,7 @@ const SignUpPage = () => {
                                 className="w-full h-[52px] bg-bgBlue text-white rounded-2xl font-bold text-lg hover:opacity-90 transition-all shadow-xl shadow-bgBlue/20 active:scale-95"
                                 onClick={() => {
                                     localStorage.setItem("is_new_user", "true");
-                                    window.location.href = "/";
+                                    window.location.href = "/dashboard";
                                 }}
                             >
                                 Go to Dashboard

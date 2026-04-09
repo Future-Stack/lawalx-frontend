@@ -41,12 +41,12 @@ const AddDevicePinInput = ({
                     onChange={handleChange}
                     maxLength={9} // 4 chars + hyphen + 4 chars
                     placeholder="Enter the PIN or scan the QR code"
-                    className="flex-1 px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    className="flex-1 h-12 px-4 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
                 <button
                     type="button"
                     onClick={onOpenScanner}
-                    className="p-3 border border-borderGray dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0 shadow-customShadow cursor-pointer"
+                    className="h-12 w-12 flex items-center justify-center border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shrink-0 shadow-customShadow cursor-pointer"
                 >
                     <QrCode className="w-6 h-6 text-gray-600 dark:text-gray-400" />
                 </button>

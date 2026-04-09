@@ -18,7 +18,7 @@ export interface DashboardStatsResponse {
 export type Device = {
   name: string;
   status: "ONLINE" | "OFFLINE";
-  location: string | null;
+  location: { lat: number; lng: number } | string | null;
   metadata: Record<string, any> | null;
   updatedAt: string;
 };

@@ -10,20 +10,28 @@ const contentAPI = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
-      invalidatesTags: ["Content"],
+      invalidatesTags: ["Content", "Programs"],
     }),
     uploadFile: build.mutation<any, UploadFilePayload>({
       query: (arg) => {
         const isObject = !(arg instanceof FormData);
         const body = isObject ? (arg as any).formData : arg;
         const folderId = isObject ? (arg as any).folderId : undefined;
+        const programId = isObject ? (arg as any).programId : undefined;
+
+        const params = new URLSearchParams();
+        if (folderId) params.append("folderId", folderId);
+        if (programId) params.append("programId", programId);
+
+        const queryString = params.toString();
+
         return {
-          url: `/content/upload-file${folderId ? `?folderId=${folderId}` : ""}`,
+          url: `/content/upload-file${queryString ? `?${queryString}` : ""}`,
           method: "POST",
           body,
         };
       },
-      invalidatesTags: ["Content"],
+      invalidatesTags: ["Content", "Programs"],
     }),
     getAllContentData: build.query<GetAllDataResponse, void>({
       query: () => ({

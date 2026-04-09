@@ -73,15 +73,23 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
     <div className="group bg-navbarBg border border-border rounded-xl overflow-hidden hover:shadow-md dark:hover:shadow-xl transition-all h-full flex flex-col">
       {/* Video Section (ONLY this has p-3) */}
       <div className="p-3">
-        <div className="relative overflow-hidden rounded-lg">
-          <video
-            src={previewVideo}
-            className="w-full h-[120px] sm:h-[180px] object-cover transition-transform duration-300 group-hover:scale-105"
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
+        <div className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+          {(program.timeline?.[0]?.file?.type === "IMAGE" || program.timeline?.[0]?.file?.type === "CONTENT") ? (
+            <img
+              src={previewVideo}
+              alt={program.name}
+              className="w-full h-[120px] sm:h-[180px] object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <video
+              src={previewVideo}
+              className="w-full h-[120px] sm:h-[180px] object-cover transition-transform duration-300 group-hover:scale-105"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          )}
         </div>
       </div>
 

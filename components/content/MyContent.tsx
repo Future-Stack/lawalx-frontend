@@ -47,7 +47,7 @@ export const allContent: SelectOption[] = [
 const MyContent = () => {
   const [updateFolderName] = useUpdateFolderNameMutation();
   const [updateFileName] = useUpdateFileNameMutation();
-  const { data: allContentData, isLoading: isAllContentLoading, isFetching } = useGetAllContentDataQuery(undefined);
+  const { data: allContentData, isLoading: isAllContentLoading } = useGetAllContentDataQuery(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("");
   const [contentFilter, setContentFilter] = useState("all-content");
@@ -79,9 +79,11 @@ const MyContent = () => {
         let matchesType = true;
 
         if (contentFilter === "folders") matchesType = item.type === "folder";
-        else if (contentFilter === "playlists") matchesType = item.type === "playlist";
+        else if (contentFilter === "playlists")
+          matchesType = item.type === "playlist" || item.type === "audio";
         else if (contentFilter === "files")
-          matchesType = item.type === "video" || item.type === "image";
+          matchesType =
+            item.type === "video" || item.type === "image" || item.type === "audio";
 
         return matchesSearch && matchesType;
       })
@@ -148,13 +150,15 @@ const MyContent = () => {
 
         <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
           {/* UPLOAD BUTTON */}
-          <button
-            onClick={() => setIsUploadModalOpen(true)}
-            className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center justify-center gap-2 text-sm md:text-base font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow min-w-40"
-          >
-            <CloudUpload className="w-5 h-5" />
-            <span className="truncate">Upload Content</span>
-          </button>
+          {contentItems.length > 0 && (
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center justify-center gap-2 text-sm md:text-base font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow min-w-40"
+            >
+              <CloudUpload className="w-5 h-5" />
+              <span className="truncate">Upload Content</span>
+            </button>
+          )}
 
           <button
             onClick={() => setOpen(true)}

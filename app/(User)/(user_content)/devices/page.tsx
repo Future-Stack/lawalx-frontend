@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { WifiOff, Search, ChevronDown, MoreVertical, Trash2, Eye, PenLine, Plus, MapPin, Loader2 } from "lucide-react";
+import { WifiOff, Search, ChevronDown, MoreVertical, Trash2, Eye, PenLine, PencilLine, Plus, MapPin, Loader2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
@@ -165,7 +165,7 @@ export default function DevicesPage() {
         resolution: device.program?.serene_size || "1920x1080",
         location: device.location ? `Location (${device.location.lat.toFixed(2)}, ${device.location.lng.toFixed(2)})` : "Unknown Location",
         type: device.deviceType || "Unknown Type",
-        programName: device.program?.name || "No device assigned",
+        programName: device.program?.name || "No program assigned",
         status: status,
         storage: storageDisplay,
         lastSync: calculateTimeAgo(device.lastSeen),
@@ -376,8 +376,39 @@ export default function DevicesPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5 text-right">
-                      <ActionMenu device={device} onAction={handleAction} />
+                    <td className="px-6 py-5">
+                      <div className="flex items-center justify-end gap-3 px-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAction('Preview', device);
+                          }}
+                          className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 hover:text-bgBlue rounded-md transition-all cursor-pointer"
+                          title="Preview"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAction('Rename', device);
+                          }}
+                          className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 hover:text-bgBlue rounded-md transition-all cursor-pointer"
+                          title="Rename"
+                        >
+                          <PencilLine className="w-5 h-5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAction('Remove Device', device);
+                          }}
+                          className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 rounded-md transition-all cursor-pointer"
+                          title="Remove Device"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

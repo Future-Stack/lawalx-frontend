@@ -10,6 +10,8 @@ import Link from "next/link";
 import { useRegisterCompleteMutation } from "@/redux/features/auth/authApi";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/redux/store/hook";
+import { setUser } from "@/redux/features/auth/authSlice";
 
 const passwordSchema = z.object({
     password: z.string()
@@ -36,6 +38,7 @@ const SetPasswordForm: React.FC<SetPasswordFormProps> = ({ email, fullName, onNe
     const [strength, setStrength] = useState(0);
     const [registerComplete, { isLoading }] = useRegisterCompleteMutation();
     const router = useRouter();
+    const dispatch = useAppDispatch();
 
     const {
         register,
@@ -68,8 +71,18 @@ const SetPasswordForm: React.FC<SetPasswordFormProps> = ({ email, fullName, onNe
 
             if (res.success) {
                 toast.success(res.message || "User registered successfully");
-                // onNext(res.data);
-                router.push("/signin");
+                
+                // Auto-login if tokens are provided
+                if (res.data?.accessToken && res.data?.refreshToken) {
+                    dispatch(setUser({
+                        token: res.data.accessToken,
+                        refreshToken: res.data.refreshToken,
+                        email,
+                    }));
+                }
+
+                localStorage.setItem("is_new_user", "true");
+                router.push("/dashboard");
             }
         } catch (error: any) {
             toast.error(error?.data?.message || "Registration failed. Please try again.");

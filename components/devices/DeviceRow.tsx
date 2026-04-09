@@ -51,7 +51,7 @@ export default function DeviceRow({
 
       <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
         <div className="flex items-center gap-1">
-          <MapPin className="w-4 h-4" /> 
+          <MapPin className="w-4 h-4" />
           {device.lat && device.lng ? (
             <DeviceLocation lat={device.lat} lng={device.lng} fallbackLabel={device.location} />
           ) : (
@@ -60,13 +60,12 @@ export default function DeviceRow({
         </div>
       </td>
 
-      <td className="px-4 py-4">
-        <Dropdown
-          value={device.screen}
-          options={[device.screen]}
-          onChange={() => {}}
-          className="w-full"
-        />
+      <td className="px-4 py-4 text-sm text-gray-900 dark:text-white">
+        {device.screen && device.screen !== "No device assigned" ? (
+          device.screen
+        ) : (
+          <span className="text-gray-400 italic">No program assigned</span>
+        )}
       </td>
 
       <td className="px-4 py-4">

@@ -45,6 +45,7 @@ const ScreenCardDetails = () => {
   const [description, setDescription] = useState("");
   const [localDevices, setLocalDevices] = useState<Device[]>([]);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
+  const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
@@ -146,6 +147,11 @@ const ScreenCardDetails = () => {
     }
   };
 
+  const handleAppendExisting = (newFiles: any[]) => {
+    // Logic to append files to localTimeline
+    setIsAddExistingOpen(false);
+  };
+
   return (
     <div className="min-h-screen">
       <div className="mb-6">
@@ -207,11 +213,12 @@ const ScreenCardDetails = () => {
         {/* Main layout */}
         <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
           {/* Left side - Sticky */}
-          <div className="flex-1 w-full md:sticky md:top-6 md:max-h-[calc(100vh-48px)] md:overflow-y-auto no-scrollbar">
+          <div className="flex-1 w-full md:sticky md:top-6 md:max-h-[calc(100vh-80px)] md:overflow-y-auto scrollbar-hide">
             {activeTab === "timeline" && (
               <ContentTimeline
                 timeline={localTimeline}
                 programId={String(id)}
+                programName={program.name}
                 selectedId={localTimeline?.[playingIndex]?.id}
                 onSelect={(_, index) => {
                   setPlayingIndex(index);
@@ -277,7 +284,7 @@ const ScreenCardDetails = () => {
               )}
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 sm:mt-6 gap-3 sm:gap-0">
-                <h3 className="text-xl md:text-2xl font-semibold text-headings">
+                <h3 className="text-xl md:text-2xl font-semibold text-headings line-clamp-1 truncate">
                   {currentFileName}
                 </h3>
                 <button
@@ -376,6 +383,7 @@ const ScreenCardDetails = () => {
       <AddDeviceModal
         isOpen={isAddDeviceModalOpen}
         onClose={() => setIsAddDeviceModalOpen(false)}
+        programId={String(id)}
       />
     </div>
   );

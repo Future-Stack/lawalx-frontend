@@ -25,8 +25,9 @@ import { toast } from "sonner";
 interface AddDeviceModalProps {
   isOpen: boolean;
   onClose: () => void;
+  programId?: string;
 }
-function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
+function AddDeviceModal({ isOpen, onClose, programId }: AddDeviceModalProps) {
   const [pin, setPin] = useState("");
   const [deviceName, setDeviceName] = useState("");
 
@@ -205,12 +206,12 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
               value={deviceName}
               onChange={e => setDeviceName(e.target.value)}
               placeholder="Enter device name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+              className="w-full h-12 px-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Select Screen Dropdown */}
-          {userInfo?.firstTimeLogin !== false && (
+          {!programId && userInfo?.firstTimeLogin !== false && (
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -228,7 +229,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
                 onValueChange={setSelectedScreen}
                 disabled={isLoadingPrograms}
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full h-12 bg-white dark:bg-gray-800 border-borderGray dark:border-gray-600 rounded-lg">
                   <SelectValue placeholder={isLoadingPrograms ? "Loading programs..." : "Select a Program"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -258,7 +259,7 @@ function AddDeviceModal({ isOpen, onClose }: AddDeviceModalProps) {
             Cancel
           </button>
           <button
-            onClick={() => handleAddDevice({ pin, name: deviceName, programId: selectedScreen })}
+            onClick={() => handleAddDevice({ pin, name: deviceName, programId: programId || selectedScreen })}
             className="px-5 cursor-pointer sm:px-6 py-2 sm:py-2.5 bg-bgBlue text-white rounded-lg font-medium text-sm sm:text-base hover:bg-blue-600 transition-colors shadow-customShadow"
           >
             Add Device

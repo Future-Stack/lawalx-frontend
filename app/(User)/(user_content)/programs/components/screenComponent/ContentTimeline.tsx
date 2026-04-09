@@ -8,13 +8,6 @@ import UploadFileModal from "@/components/content/UploadFileModal";
 import { Timeline } from "@/redux/api/users/programs/programs.type";
 import { useDeleteFileMutation } from "@/redux/api/users/content/content.api";
 import { toast } from "sonner";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 
 type FileData = {
   id: string;
@@ -28,6 +21,7 @@ type FileData = {
 interface ContentTimelineProps {
   timeline: Timeline[];
   programId: string;
+  programName: string;
   onSelect?: (item: Timeline, index: number) => void;
   selectedId?: string;
   onChange?: (items: Timeline[]) => void;
@@ -36,6 +30,7 @@ interface ContentTimelineProps {
 const ContentTimeline: React.FC<ContentTimelineProps> = ({
   timeline,
   programId,
+  programName,
   onSelect,
   selectedId,
   onChange,
@@ -44,7 +39,8 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   const [items, setItems] = useState<Timeline[]>([]);
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
   useEffect(() => {
     if (timeline) {
       setItems(timeline);
@@ -63,7 +59,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
       // Calling the deleteFile API with the file's ID from content.api
       const res = await deleteFile({ id: item.fileId }).unwrap();
       toast.success(res?.message || "File deleted successfully");
-      
+
       const updatedItems = items.filter((i) => i.id !== item.id);
       setItems(updatedItems);
       onChange?.(updatedItems);
@@ -162,38 +158,56 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
           <p className="text-sm text-muted">Total: {calculateTotal()}</p>
         </div>
 
-        {/* Add Content Button with Dropdown (Portaled) */}
-        <div className="w-full sm:w-auto mb-4 sm:mb-6">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                className="rounded-lg transition-all flex items-center justify-center gap-2 text-white py-2.5 px-4 cursor-pointer bg-bgBlue hover:bg-blue-500 w-full sm:w-auto font-semibold shadow-customShadow active:scale-95 outline-none"
-              >
-                <Plus className="w-5 h-5" />
-                Add Content
-                <ChevronDown className="w-4 h-4 opacity-50" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-full sm:w-48 bg-navbarBg border-border shadow-2xl z-[2147483647]">
-              <DropdownMenuItem
-                onClick={() => setIsAddExistingOpen(true)}
-                className="px-4 py-2.5 text-sm font-medium text-body cursor-pointer flex items-center gap-2"
-              >
-                <FilePlay className="w-4 h-4 md:w-5 md:h-5 text-bgBlue" /> Add Existing
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-border" />
-              <DropdownMenuItem
-                onClick={() => setIsUploadModalOpen(true)}
-                className="px-4 py-2.5 text-sm font-medium text-body cursor-pointer flex items-center gap-2"
-              >
-                <CloudUpload className="w-4 h-4 md:w-5 md:h-5 text-bgBlue" /> Upload New
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Add Content Button with Manual Dropdown */}
+        <div className="relative w-full sm:w-auto mb-4 sm:mb-6">
+          <button
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className="rounded-lg transition-all flex items-center justify-center gap-2 text-white py-2.5 px-4 cursor-pointer bg-bgBlue hover:bg-blue-600 w-full sm:w-auto font-semibold shadow-customShadow active:scale-95 outline-none"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Add Content</span>
+            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {isDropdownOpen && (
+            <>
+              {/* Overlay to close dropdown */}
+              <div
+                className="fixed inset-0 z-[60]"
+                onClick={() => setIsDropdownOpen(false)}
+              />
+
+              <div className="absolute left-0 mt-2 w-full sm:w-56 bg-navbarBg border border-border rounded-xl shadow-2xl z-[70] py-1 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <button
+                  onClick={() => {
+                    setIsAddExistingOpen(true);
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-3 text-sm font-medium text-headings hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left flex items-center gap-3 transition-colors cursor-pointer"
+                >
+                  <FilePlay className="w-5 h-5 text-bgBlue" />
+                  Add Existing
+                </button>
+
+                <div className="h-[1px] bg-border mx-2" />
+
+                <button
+                  onClick={() => {
+                    setIsUploadModalOpen(true);
+                    setIsDropdownOpen(false);
+                  }}
+                  className="w-full px-4 py-3 text-sm font-medium text-headings hover:bg-blue-50 dark:hover:bg-blue-900/20 text-left flex items-center gap-3 transition-colors cursor-pointer"
+                >
+                  <CloudUpload className="w-5 h-5 text-bgBlue" />
+                  Upload New
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Content List */}
-        <div className="flex flex-col gap-3 max-h-[500px] overflow-y-auto p-1 custom-scrollbar">
+        <div className="flex flex-col gap-3 max-h-[600px] overflow-y-auto p-1 scrollbar-hide">
           {items.length === 0 ? (
             <div className="py-10 text-center border-2 border-dashed border-border rounded-lg text-muted">
               No content added to timeline yet.
@@ -207,15 +221,14 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, index)}
                 onClick={() => onSelect?.(item, index)}
-                className={`relative bg-navbarBg rounded-lg border p-3 sm:p-4 flex flex-row items-center gap-3 transition-all cursor-pointer ${
-                  selectedId === item.id ? "border-bgBlue ring-1 ring-bgBlue bg-blue-50/5" : "border-border hover:border-blue-200"
-                }`}
+                className={`relative bg-navbarBg rounded-lg border p-3 sm:p-4 flex flex-row items-center gap-3 transition-all cursor-pointer ${selectedId === item.id ? "border-bgBlue ring-1 ring-bgBlue bg-blue-50/5" : "border-border hover:border-blue-200"
+                  }`}
               >
                 <GripVertical className="w-5 h-5 text-muted cursor-grab active:cursor-grabbing shrink-0" />
 
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                    <h3 className="font-semibold text-sm md:text-base text-headings truncate">
+                    <h3 className="font-semibold text-sm md:text-base text-headings line-clamp-1 truncate">
                       {item.file?.originalName || "Untitled Content"}
                     </h3>
                     {item.file?.fileType && (
@@ -243,7 +256,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
                     onClick={(e) => e.stopPropagation()}
                     className="w-14 text-sm font-semibold text-bgBlue bg-cardBackground px-2 py-1 rounded border border-border focus:ring-1 focus:ring-bgBlue outline-none text-center"
                   />
-                  
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -264,14 +277,17 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
           open={isAddExistingOpen}
           setOpen={setIsAddExistingOpen}
           programId={programId}
+          programName={programName}
+          existingFileIds={items.map((t) => t.fileId)}
           onAdd={handleAppendExisting}
         />
 
         <UploadFileModal
           isOpen={isUploadModalOpen}
           onClose={() => setIsUploadModalOpen(false)}
-          setIsPageLoading={() => {}}
+          setIsPageLoading={() => { }}
           onSuccess={handleUploadSuccess}
+          programId={programId}
         />
       </div>
     </div>

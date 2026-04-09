@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Monitor, Loader2, CheckCircle2 } from "lucide-react";
+import { Search, Monitor, Loader2, CheckCircle2, WifiOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
@@ -25,9 +25,9 @@ const Step3ScreenSelection: React.FC<Step3Props> = ({ data, onChange }) => {
     const filteredDevices = devices.filter((device: Device) =>
         device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         device.deviceSerial.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (device.location && 
-            (device.location.lat.toString().includes(searchQuery) || 
-             device.location.lng.toString().includes(searchQuery)))
+        (device.location &&
+            (device.location.lat.toString().includes(searchQuery) ||
+                device.location.lng.toString().includes(searchQuery)))
     );
 
     const toggleDevice = (deviceId: string) => {
@@ -84,12 +84,39 @@ const Step3ScreenSelection: React.FC<Step3Props> = ({ data, onChange }) => {
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <Label htmlFor={device.id} className="font-medium text-headings cursor-pointer truncate block">
-                                    {device.name}
-                                </Label>
+                                <div className="flex items-center gap-2 mb-0.5">
+                                    <Label htmlFor={device.id} className="font-medium text-headings cursor-pointer truncate block">
+                                        {device.name}
+                                    </Label>
+                                    {device.status === "ONLINE" ? (
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-xs font-semibold">
+                                            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                                            Online
+                                        </div>
+                                    ) : device.status === "OFFLINE" ? (
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-xs font-semibold">
+                                            <WifiOff className="w-3.5 h-3.5" />
+                                            Offline
+                                        </div>
+                                    ) : device.status === "PAIRED" ? (
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                                            <span className="w-2 h-2 rounded-full bg-blue-500" />
+                                            Paired
+                                        </div>
+                                    ) : device.status === "WAITING" ? (
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold">
+                                            <span className="w-2 h-2 rounded-full bg-orange-500" />
+                                            Waiting
+                                        </div>
+                                    ) : (
+                                        <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] text-[#737373] text-xs font-semibold">
+                                            {device.status}
+                                        </div>
+                                    )}
+                                </div>
                                 <p className="text-sm text-muted truncate">
                                     {device.location && (
-                                        typeof device.location === "object" 
+                                        typeof device.location === "object"
                                             ? <DeviceLocation lat={device.location.lat} lng={device.location.lng} />
                                             : device.location
                                     )}

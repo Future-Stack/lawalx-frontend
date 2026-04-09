@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { X, Trash2, CheckCircle, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { useUploadFileMutation } from "@/redux/api/users/content/content.api";
 import { baseApi } from "@/redux/api/baseApi";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { cn } from "@/lib/utils";
 
 type UploadStatus = "pending" | "simulating" | "ready" | "uploading" | "done" | "error";
 
@@ -24,6 +24,7 @@ interface UploadFileModalProps {
     onClose: () => void;
     setIsPageLoading: (loading: boolean) => void;
     onSuccess?: (files: any[]) => void;
+    programId?: string; // ⬅ Optional programId
 }
 
 const ALLOWED_TYPES = [
@@ -66,7 +67,10 @@ export default function UploadFileModal({
     onClose,
     setIsPageLoading,
     onSuccess,
+    programId: propProgramId,
 }: UploadFileModalProps) {
+    const params = useParams();
+    const programId = propProgramId || (params?.id as string);
     const dispatch = useDispatch();
     const [uploadFile] = useUploadFileMutation();
     const [files, setFiles] = useState<FileEntry[]>([]);
@@ -258,6 +262,8 @@ export default function UploadFileModal({
             }
 
             let hasErrorOccurred = false;
+            let successCount = 0;
+            let failureCount = 0;
             const BATCH_SIZE = 4;
 
             for (let i = 0; i < filesToUpload.length; i += BATCH_SIZE) {
@@ -273,7 +279,10 @@ export default function UploadFileModal({
 
                     const formData = new FormData();
                     formData.append("file", entry.file);
-
+                    if (programId) {
+                        formData.append("programId", programId);
+                    }
+                    
                     try {
                         setFiles((prev) =>
                             prev.map((f) =>
@@ -281,7 +290,12 @@ export default function UploadFileModal({
                             )
                         );
 
-                        const res = await uploadFile(formData).unwrap();
+                        const payload = programId 
+                            ? { formData, programId }
+                            : formData;
+
+                        const res = await uploadFile(payload as any).unwrap();
+                        successCount++;
 
                         setFiles((prev) =>
                             prev.map((f) =>
@@ -290,17 +304,13 @@ export default function UploadFileModal({
                                     : f
                             )
                         );
-
-                        toast.success(res?.message || `"${entry.file.name}" uploaded successfully!`);
                     } catch (fileError: any) {
                         hasErrorOccurred = true;
+                        failureCount++;
                         setFiles((prev) =>
                             prev.map((f) =>
                                 f.id === entry.id ? { ...f, status: "error", progress: 0 } : f
                             )
-                        );
-                        toast.error(
-                            fileError?.data?.message || `Failed to upload "${entry.file.name}"`
                         );
                     }
                 }));
@@ -309,11 +319,14 @@ export default function UploadFileModal({
             dispatch(baseApi.util.invalidateTags(["Content"] as any));
 
             if (!hasErrorOccurred) {
+                toast.success(filesToUpload.length > 1 ? `All ${filesToUpload.length} files uploaded successfully!` : "File uploaded successfully!");
                 const uploadedData = files.filter(f => f.status === "done").map(f => (f as any).responseData).filter(Boolean);
                 if (uploadedData.length > 0 && onSuccess) {
                     onSuccess(uploadedData);
                 }
                 onClose();
+            } else {
+                toast.error(`Upload completed with errors. ${successCount} succeeded, ${failureCount} failed.`);
             }
         } catch (error: any) {
             toast.error(

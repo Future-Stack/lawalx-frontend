@@ -10,6 +10,7 @@ import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmatio
 import { Program, Device } from "@/redux/api/users/programs/programs.type";
 import { useDeleteProgramMutation } from "@/redux/api/users/programs/programs.api";
 import ResolvedLocation from "@/common/ResolvedLocation";
+import { cn } from "@/lib/utils";
 
 interface ScreenSettingsProps {
     program: Program;
@@ -55,13 +56,13 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
     };
 
     return (
-        <div className="mx-auto min-h-screen">
+        <div className="mx-auto w-full">
             <div className="bg-navbarBg rounded-xl border border-border p-4 sm:p-6 shadow-sm">
                 {/* Header */}
                 <div className="mb-6">
-                    <h2 className="text-xl sm:text-2xl font-bold text-headings dark:text-white mb-1">Program Settings</h2>
-                    <p className="text-sm sm:text-base text-muted">
-                        Manage device configuration and connected programs
+                    <h2 className="text-lg sm:text-xl font-bold text-headings dark:text-white mb-1">Program Settings</h2>
+                    <p className="text-sm text-gray-500">
+                        Manage device configuration and connected screens
                     </p>
                 </div>
 
@@ -72,7 +73,7 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Main Lobby Display"
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm sm:text-base text-gray-900 bg-[#F9FAFB] placeholder:text-muted"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm text-gray-900 bg-white placeholder:text-muted"
                     />
                 </div>
 
@@ -84,7 +85,7 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                         onChange={(e) => setDesc(e.target.value)}
                         placeholder="Display for meeting room presentations and schedules"
                         rows={4}
-                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm sm:text-base text-gray-900 resize-none placeholder:text-muted bg-[#F9FAFB]"
+                        className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-100 text-sm text-gray-900 resize-none placeholder:text-muted bg-white"
                     />
                 </div>
 
@@ -96,16 +97,18 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                         {localDevices.map((device) => (
                             <div
                                 key={device.id}
-                                className="flex items-center justify-between p-4 bg-white dark:bg-gray-900 border border-border rounded-xl shadow-sm"
+                                className="flex items-center justify-between p-3 bg-white dark:bg-gray-900 border border-border rounded-lg"
                             >
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2 mb-1">
-                                        <span className="font-bold text-sm sm:text-base text-headings dark:text-white">{device.name}</span>
-                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${device.status === "PAIRED"
-                                            ? "bg-green-50 text-green-600 border border-green-200"
-                                            : "bg-red-50 text-red-600 border border-red-200"
-                                            }`}>
-                                            <span className={`w-2 h-2 rounded-full ${device.status === "PAIRED" ? "bg-green-500" : "bg-red-500"}`}></span>
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                        <span className="font-bold text-sm text-headings dark:text-white truncate">{device.name}</span>
+                                        <span className={cn(
+                                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border",
+                                            device.status === "PAIRED"
+                                                ? "bg-green-50 text-green-600 border-green-200"
+                                                : "bg-red-50 text-red-600 border-red-200"
+                                        )}>
+                                            <span className={cn("w-1.5 h-1.5 rounded-full", device.status === "PAIRED" ? "bg-green-500" : "bg-red-500")}></span>
                                             {device.status === "PAIRED" ? "Online" : "Offline"}
                                         </span>
                                     </div>
@@ -117,9 +120,9 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                                 </div>
                                 <button
                                     onClick={() => handleRemoveDevice(device.id)}
-                                    className="p-2 border border-border rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
+                                    className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-500 transition-colors shadow-customShadow cursor-pointer group"
                                 >
-                                    <Trash2 className="w-5 h-5 text-gray-600" />
+                                    <Trash2 className="w-5 h-5 text-red-500 group-hover:text-red-500 transition-colors" />
                                 </button>
                             </div>
                         ))}
@@ -128,10 +131,10 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                     <div className="flex flex-col sm:flex-row gap-4">
                         <button
                             onClick={openAddDevice}
-                            className="flex-1 py-3.5 border border-bgBlue text-bgBlue hover:bg-blue-50 transition-all rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 cursor-pointer shadow-customShadow"
+                            className="flex-1 py-2.5 border border-[#89CFF0] text-bgBlue hover:bg-blue-50 transition-all rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-customShadow"
                         >
-                            <Plus className="w-5 h-5" />
-                            Add Device
+                            <Plus className="w-4 h-4" />
+                            Add Devices
                         </button>
                         {/* <button
                             onClick={openAddDevice} // Trigger same modal for now
@@ -144,21 +147,21 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                 </div>
 
                 {/* Danger Zone */}
-                <div className="mt-10 p-4 sm:p-6 rounded-2xl bg-red-50 border border-red-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <p className="text-sm sm:text-base text-[#B91C1C] font-medium max-w-md">
+                <div className="mt-8 p-4 sm:p-5 rounded-xl bg-red-50 border border-red-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <p className="text-sm text-[#B91C1C] font-medium max-w-xs leading-snug">
                         These actions cannot be undone. Please proceed with caution.
                     </p>
                     <button
                         onClick={() => setOpenDeleteDialog(true)}
                         disabled={isDeleting}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#EF4444] hover:bg-[#DC2626] text-white rounded-xl text-sm sm:text-base font-bold transition-all cursor-pointer shadow-sm disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap"
+                        className="flex items-center justify-center gap-2 px-6 py-2.5 bg-[#EF4444] hover:bg-[#DC2626] text-white rounded-lg text-sm font-bold transition-all cursor-pointer shadow-customShadow disabled:opacity-70 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                         {isDeleting ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 className="w-4 h-4" />
                         )}
-                        Delete Program
+                        Delete Screen
                     </button>
                 </div>
             </div>
