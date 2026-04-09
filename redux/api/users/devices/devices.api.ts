@@ -26,7 +26,7 @@ const devicesAPI = baseApi.injectEndpoints({
         url: "/device/my-devices",
         method: "GET",
       }),
-      providesTags: ["Devices", "Programs"],
+      providesTags: ["Devices"],
     }),
     // get device pin wise data 
     getDevicePinWiseData: build.query<DeviceResponse, { devicePin: string }>({
