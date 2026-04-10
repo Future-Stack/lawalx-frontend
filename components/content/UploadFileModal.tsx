@@ -282,7 +282,7 @@ export default function UploadFileModal({
                     if (programId) {
                         formData.append("programId", programId);
                     }
-                    
+
                     try {
                         setFiles((prev) =>
                             prev.map((f) =>
@@ -290,7 +290,7 @@ export default function UploadFileModal({
                             )
                         );
 
-                        const payload = programId 
+                        const payload = programId
                             ? { formData, programId }
                             : formData;
 

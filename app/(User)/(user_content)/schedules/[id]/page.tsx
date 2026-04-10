@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useGetSingleScheduleDataQuery } from "@/redux/api/users/schedules/schedules.api";
+import { useGetSingleScheduleDataQuery, useUpdateScheduleMutation, useDeleteScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
 import { ScheduleTarget } from "@/redux/api/users/schedules/schedules.type";
 import { useGetAllProgramsDataQuery } from "@/redux/api/users/programs/programs.api";
 import { ContentItem } from "@/types/content";
 import { getUrl } from "@/lib/content-utils";
+import { toast } from "sonner";
 
 // Components
 import DetailHeader from "./_components/DetailHeader";
@@ -17,6 +18,7 @@ import AssignedScreensSection from "./_components/AssignedScreensSection";
 import ContentPreview from "./_components/ContentPreview";
 import AddScreenDialog from "./_components/AddScreenDialog";
 import AddContentDialog from "./_components/AddContentDialog";
+import { DeleteConfirmationModal } from "@/components/schedules/DeleteModal";
 
 // Helper: map API contentType to display label
 function mapContentType(ct: string): string {
@@ -34,9 +36,9 @@ function mapContentType(ct: string): string {
   }
 }
 
-// Helper: map API recurrenceType to display label
-function mapRepeat(rt: string): string {
-  switch (rt) {
+// Helper: map API recurrenceType to display label (for UI components)
+function getRepeatLabel(rt: string): string {
+  switch (rt?.toLowerCase()) {
     case "once":
       return "Run Once";
     case "daily":
@@ -82,10 +84,13 @@ export default function ScheduleDetailPage() {
   const { id } = useParams();
   const router = useRouter();
 
-  const { data, isLoading, isError } = useGetSingleScheduleDataQuery(
+  const { data, isLoading, isError, refetch } = useGetSingleScheduleDataQuery(
     { id: id as string },
     { skip: !id || id === "new" }
   );
+
+  const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
+  const [deleteSchedule, { isLoading: isDeleting }] = useDeleteScheduleMutation();
 
   const { data: allProgramsData } = useGetAllProgramsDataQuery(undefined);
   const allPrograms = allProgramsData?.data || [];
@@ -95,6 +100,8 @@ export default function ScheduleDetailPage() {
 
   const [isAddScreenOpen, setIsAddScreenOpen] = useState(false);
   const [isAddContentOpen, setIsAddContentOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isExistingContentRemoved, setIsExistingContentRemoved] = useState(false);
 
   // Local editable state initialized from API data
   const [localName, setLocalName] = useState<string | null>(null);
@@ -110,8 +117,6 @@ export default function ScheduleDetailPage() {
   const [localEndDate, setLocalEndDate] = useState<string | null>(null);
 
   // Program & Screen selection
-  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
-  const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
   const [localTargets, setLocalTargets] = useState<ScheduleTarget[] | null>(null);
   const [localPrograms, setLocalPrograms] = useState<any[] | null>(null);
 
@@ -119,7 +124,7 @@ export default function ScheduleDetailPage() {
   const name = localName ?? schedule?.name ?? "";
   const description = localDescription ?? schedule?.description ?? "";
   const contentType = localContentType ?? (schedule ? mapContentType(schedule.contentType) : "all");
-  const repeat = localRepeat ?? (schedule ? mapRepeat(schedule.recurrenceType) : "once");
+  const repeat = localRepeat ?? schedule?.recurrenceType ?? "once";
 
   const startTime = localStartTime ?? (schedule?.startTime ? schedule.startTime.split("T")[1]?.substring(0, 5) : "09:00");
   const endTime = localEndTime ?? (schedule?.endTime ? schedule.endTime.split("T")[1]?.substring(0, 5) : "10:00");
@@ -129,14 +134,15 @@ export default function ScheduleDetailPage() {
   // Map API file data to ContentItem[] for ContentSection
   const content: ContentItem[] = localFile
     ? [localFile as ContentItem]
-    : (schedule?.files && schedule.files.length > 0
+    : (!isExistingContentRemoved && schedule?.files && schedule.files.length > 0
       ? [
         {
           id: schedule.files[0].id,
           title: schedule.files[0].originalName,
-          type: schedule.files[0].type === "VIDEO" ? "video" : "image",
+          type: schedule.files[0].type === "VIDEO" ? "video" : schedule.files[0].type === "AUDIO" ? "audio" : "image",
           thumbnail: schedule.files[0].type === "IMAGE" ? getUrl(schedule.files[0].url) : (schedule.files[0].url ? getUrl(schedule.files[0].url) : ""),
           video: schedule.files[0].type === "VIDEO" ? getUrl(schedule.files[0].url) : undefined,
+          audio: schedule.files[0].type === "AUDIO" ? getUrl(schedule.files[0].url) : undefined,
           size: `${(schedule.files[0].size / (1024 * 1024)).toFixed(0)} MB`,
         },
       ]
@@ -215,9 +221,16 @@ export default function ScheduleDetailPage() {
   };
 
   const handleDeleteSchedule = () => {
-    if (confirm("Are you sure you want to delete this schedule?")) {
-      console.log("Delete schedule", id);
-      // TODO: Implement API call to delete schedule
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteSchedule(id as string).unwrap();
+      toast.success("Schedule deleted successfully");
+      router.push("/schedules");
+    } catch (err: any) {
+      toast.error(err?.data?.message || err?.error || "Failed to delete schedule");
     }
   };
 
@@ -225,8 +238,39 @@ export default function ScheduleDetailPage() {
   const videoUrl = content[0]?.type === "video" ? content[0].video || content[0].thumbnail : "";
   const thumbnailUrl = content[0]?.thumbnail ?? "";
 
-  const handleSave = () => {
-    router.push("/schedules");
+  const handleSave = async () => {
+    if (isNew) {
+      // Future implemented Create logic
+      toast.info("Create logic not yet hooked to this page");
+      return;
+    }
+
+    try {
+      const apiContentType = contentType === "image-video" ? "IMAGE_VIDEO" : contentType === "audio" ? "AUDIO" : contentType === "lower-third" ? "LOWERTHIRD" : "ALL_CONTENT";
+      
+      const payload = {
+        name,
+        description,
+        contentType: apiContentType,
+        recurrenceType: repeat.toLowerCase(),
+        startDate: startDate.includes("T") ? startDate : `${startDate}T00:00:00Z`,
+        endDate: repeat.toLowerCase() === "once" ? (startDate.includes("T") ? startDate : `${startDate}T23:59:59Z`) : (endDate.includes("T") ? endDate : `${endDate || startDate}T23:59:59Z`),
+        startTime: startTime.includes("T") ? startTime : `1970-01-01T${startTime}:00Z`,
+        endTime: endTime.includes("T") ? endTime : `1970-01-01T${endTime}:00Z`,
+        daysOfWeek: schedule?.daysOfWeek || [],
+        dayOfMonth: schedule?.dayOfMonth || [],
+        programIds: programs.map((p) => p.id),
+        deviceIds: targets.filter((t: any) => t.isEnabled).map((t: any) => t.deviceId),
+        fileIds: content.map((c) => c.id),
+        status: schedule?.status || "playing",
+      };
+
+      await updateSchedule({ id: id as string, data: payload }).unwrap();
+      toast.success("Schedule updated successfully");
+      router.push("/schedules");
+    } catch (err: any) {
+      toast.error(err?.data?.message || err?.error || "Failed to update schedule");
+    }
   };
 
   if (isLoading && !isNew) {
@@ -292,6 +336,14 @@ export default function ScheduleDetailPage() {
             setContentType={(val) => setLocalContentType(val)}
             content={content}
             onAddContent={() => setIsAddContentOpen(true)}
+            onRemoveContent={(id) => {
+              if (localFile?.id === id) {
+                  setLocalFile(null);
+              } else if (schedule?.files?.some(f => f.id === id)) {
+                  setIsExistingContentRemoved(true);
+              }
+              refetch();
+            }}
           />
 
           <ScheduleTimeSection
@@ -317,6 +369,7 @@ export default function ScheduleDetailPage() {
             onRemoveProgram={handleRemoveProgram}
             onToggleDevice={handleToggleDevice}
             onDeleteSchedule={handleDeleteSchedule}
+            isNew={isNew}
           />
         </div>
 
@@ -338,8 +391,18 @@ export default function ScheduleDetailPage() {
       <AddContentDialog
         isOpen={isAddContentOpen}
         onClose={() => setIsAddContentOpen(false)}
-        onSelect={(file) => setLocalFile(file)}
+        onSelect={(file) => {
+            setLocalFile(file);
+            setIsExistingContentRemoved(false);
+        }}
         initialContentType={contentType === "all" ? "all" : contentType}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        scheduleName={name}
       />
     </div>
   );

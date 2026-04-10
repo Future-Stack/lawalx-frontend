@@ -66,7 +66,7 @@ export interface FileData {
   fileType: string;
   originalName: string;
   size: number;
-  type: "IMAGE" | "VIDEO";
+  type: "IMAGE" | "VIDEO" | "AUDIO";
   duration: number;
   userId: string;
   folderId: string | null;

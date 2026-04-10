@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
-import { Video, Clock } from "lucide-react";
+import { Video, Clock, FileText } from "lucide-react";
 import { ContentItem } from "@/types/content";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
+import Image from "next/image";
 
 interface ContentPreviewProps {
   content?: ContentItem;
@@ -28,14 +29,35 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
       </h2>
 
       <div className="bg-navbarBg border border-border rounded-xl overflow-hidden shadow-sm">
-        <div className="p-4">
-          {video ? (
+        <div className="p-4 relative">
+          {content?.type === "video" && video ? (
             <BaseVideoPlayer
               src={video}
               poster={thumbnail || content?.thumbnail}
               autoPlay={false}
               rounded="rounded-lg"
             />
+          ) : content?.type === "audio" && content.audio ? (
+            <div className="relative aspect-video bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center p-8 gap-4 rounded-lg">
+                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                    <FileText className="w-8 h-8 text-blue-500" />
+                </div>
+                <audio 
+                    controls 
+                    src={content.audio} 
+                    className="w-full max-w-md"
+                />
+            </div>
+          ) : content?.type === "image" && thumbnail ? (
+             <div className="relative aspect-video rounded-lg overflow-hidden">
+                <Image
+                    src={thumbnail || "/placeholder.png"}
+                    alt={content.title || "Preview"}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                />
+             </div>
           ) : (
             <div className="aspect-video bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center text-muted rounded-lg">
               <Video className="w-12 h-12 opacity-20 mb-2" />

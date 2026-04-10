@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Clock,
   FileText,
@@ -63,6 +63,18 @@ const ScreenCardDetails = () => {
       setDescription(program.description || "");
     }
   }, [program]);
+
+  // Stable callback — must be declared before any early returns (Rules of Hooks)
+  // Won't change on unrelated re-renders, preventing Plyr from re-initializing
+  const handleVideoEnded = useCallback(() => {
+    setPlayingIndex((prev) => {
+      if (prev < localTimeline.length - 1) {
+        setIsAutoPlay(true);
+        return prev + 1;
+      }
+      return prev;
+    });
+  }, [localTimeline.length]);
 
   if (!hasMounted) {
     return (
@@ -260,12 +272,7 @@ const ScreenCardDetails = () => {
                   poster={undefined}
                   autoPlay={isAutoPlay}
                   rounded="rounded-lg"
-                  onEnded={() => {
-                    if (localTimeline && playingIndex < localTimeline.length - 1) {
-                      setPlayingIndex(playingIndex + 1);
-                      setIsAutoPlay(true);
-                    }
-                  }}
+                  onEnded={handleVideoEnded}
                 />
               ) : (
                 <div className="relative w-full pt-[56.25%] rounded-lg bg-black overflow-hidden flex items-center justify-center">

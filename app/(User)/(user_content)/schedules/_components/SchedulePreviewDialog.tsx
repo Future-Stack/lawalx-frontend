@@ -131,6 +131,17 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                                 autoPlay={false}
                                 rounded="rounded-none"
                             />
+                        ) : schedule.files[0].type === "AUDIO" ? (
+                            <div className="relative aspect-video bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center p-8 gap-4">
+                                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                                    <FileText className="w-8 h-8 text-blue-500" />
+                                </div>
+                                <audio 
+                                    controls 
+                                    src={getUrl(schedule.files[0].url) || ""} 
+                                    className="w-full max-w-md"
+                                />
+                            </div>
                         ) : (
                             <div className="relative aspect-video">
                                 <Image

@@ -105,14 +105,14 @@ const contentAPI = baseApi.injectEndpoints({
         url: `/content/delete-file/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Content"],
+      invalidatesTags: ["Content", "Schedules", "Programs"],
     }),
     deleteFolder: build.mutation<any, SuccessResponse>({
       query: (id) => ({
         url: `/content/delete-folder/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Content"],
+      invalidatesTags: ["Content", "Schedules", "Programs"],
     }),
   }),
 });

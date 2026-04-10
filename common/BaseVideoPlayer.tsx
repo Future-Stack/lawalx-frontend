@@ -1,7 +1,7 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import "plyr-react/plyr.css";
 import type { APITypes } from "plyr-react";
@@ -17,6 +17,19 @@ interface VideoPlayerProps {
   onEnded?: () => void;
 }
 
+const PLYR_OPTIONS = {
+  controls: [
+    "play",
+    "progress",
+    "current-time",
+    "duration",
+    "mute",
+    "volume",
+    "settings",
+    "fullscreen",
+  ],
+};
+
 const BaseVideoPlayer = ({
   src,
   poster,
@@ -26,24 +39,50 @@ const BaseVideoPlayer = ({
 }: VideoPlayerProps) => {
   const playerRef = useRef<APITypes>(null);
   const [isMounted, setIsMounted] = useState(false);
+  // Keep onEnded in a ref so it never triggers effect re-runs
+  const onEndedRef = useRef(onEnded);
+  onEndedRef.current = onEnded;
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Memoize source so Plyr doesn't re-initialize on unrelated parent re-renders
+  const source = useMemo(() => {
+    const isYouTube = src.includes("youtube.com") || src.includes("youtu.be");
+
+    if (isYouTube) {
+      return {
+        type: "video" as const,
+        poster: poster || "",
+        sources: [{ src, provider: "youtube" as const }],
+      } as any;
+    }
+
+    const isAbsolute = src.startsWith("http://") || src.startsWith("https://");
+    const safeSrc = isAbsolute ? src : src.startsWith("/") ? src : "/" + src;
+
+    return {
+      type: "video" as const,
+      poster: poster || "",
+      sources: [{ src: safeSrc, type: "video/mp4" }],
+    } as any;
+  }, [src, poster]);
 
   useEffect(() => {
     if (!isMounted) return;
 
     let timer: NodeJS.Timeout;
     let checkCount = 0;
-    const maxChecks = 20; // 2 seconds max
+    const maxChecks = 20;
 
     const initPlayer = () => {
       const instance = playerRef.current?.plyr;
 
       if (instance && typeof instance.on === "function") {
         const handleEnded = () => {
-          if (onEnded) onEnded();
+          // Use ref so this closure never goes stale
+          onEndedRef.current?.();
         };
 
         instance.on("ended", handleEnded);
@@ -67,7 +106,7 @@ const BaseVideoPlayer = ({
             if (instance && typeof instance.pause === "function") {
               instance.pause();
             }
-          } catch (error) {
+          } catch {
             // Plyr might already be destroyed, ignore these errors
           }
         };
@@ -83,61 +122,21 @@ const BaseVideoPlayer = ({
       if (timer) clearTimeout(timer);
       if (cleanup) cleanup();
     };
-  }, [src, autoPlay, onEnded, isMounted]);
-
-  // Source configuration
-  const getSource = () => {
-    const isYouTube = src.includes("youtube.com") || src.includes("youtu.be");
-
-    if (isYouTube) {
-      return {
-        type: "video",
-        poster: poster || "",
-        sources: [
-          {
-            src,
-            provider: "youtube",
-          },
-        ],
-      } as any; // TypeScript-safe
-    }
-
-    // Local MP4 or public folder
-    // Check if it's an absolute URL
-    const isAbsolute = src.startsWith("http://") || src.startsWith("https://");
-    const safeSrc = isAbsolute ? src : (src.startsWith("/") ? src : "/" + src);
-
-    return {
-      type: "video",
-      poster: poster || "",
-      sources: [
-        {
-          src: safeSrc,
-          type: "video/mp4",
-        },
-      ],
-    } as any; // TypeScript-safe
-  };
+    // onEnded intentionally excluded — we use onEndedRef to avoid stale closures
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src, autoPlay, isMounted]);
 
   return (
-    <div className={`relative w-full pt-[56.25%] ${rounded} bg-black overflow-hidden`}>
+    <div
+      className={`relative w-full pt-[56.25%] ${rounded} bg-black overflow-hidden`}
+      style={{ transform: "translateZ(0)" }}
+    >
       <div className="absolute inset-0">
         {isMounted ? (
           <Plyr
             ref={playerRef}
-            source={getSource()}
-            options={{
-              controls: [
-                "play",
-                "progress",
-                "current-time",
-                "duration",
-                "mute",
-                "volume",
-                "settings",
-                "fullscreen",
-              ],
-            }}
+            source={source}
+            options={PLYR_OPTIONS}
           />
         ) : (
           <div className="w-full h-full bg-black" />
@@ -148,81 +147,3 @@ const BaseVideoPlayer = ({
 };
 
 export default BaseVideoPlayer;
-
-
-
-
-
-
-
-
-
-
-
-
-// "use client";
-
-// import React, { useRef, useEffect } from "react";
-// import dynamic from "next/dynamic";
-// import "plyr-react/plyr.css";
-// import type { APITypes } from "plyr-react";
-
-// // Load Plyr client-only
-// const Plyr = dynamic(() => import("plyr-react"), { ssr: false });
-
-// interface VideoPlayerProps {
-//   src: string;
-//   poster?: string;
-//   autoPlay?: boolean;
-//   rounded?: string;
-// }
-
-// const BaseVideoPlayer = ({
-//   src,
-//   poster,
-//   autoPlay = false,
-//   rounded = "rounded-xl",
-// }: VideoPlayerProps) => {
-//   const playerRef = useRef<APITypes>(null);
-
-//   useEffect(() => {
-//     const instance = playerRef.current?.plyr;
-//     if (!instance) return;
-
-//     let timer: NodeJS.Timeout;
-
-//     if (autoPlay) {
-//       timer = setTimeout(() => {
-//         const playResult = instance.play?.();
-//         if (playResult instanceof Promise) {
-//           playResult.catch(() => console.warn("Autoplay blocked by browser"));
-//         }
-//       }, 300);
-//     }
-
-//     return () => {
-//       if (timer) clearTimeout(timer);
-//       instance.pause?.();
-//     };
-//   }, [src, autoPlay]);
-
-//   return (
-//     <div className={`bg-black overflow-hidden ${rounded}`}>
-//       <Plyr
-//         ref={playerRef}
-//         source={{
-//           type: "video",
-//           poster: poster,
-//           sources: [
-//             {
-//               src: src,
-//               type: "video/mp4",
-//             },
-//           ],
-//         }}
-//       />
-//     </div>
-//   );
-// };
-
-// export default BaseVideoPlayer;

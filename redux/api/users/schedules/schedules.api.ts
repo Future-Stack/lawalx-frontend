@@ -24,7 +24,7 @@ const schedulesAPI = baseApi.injectEndpoints({
         url: `/schedule/${id}`,
         method: "GET",
       }),
-      providesTags: ["Schedules"],
+      providesTags: ["Schedules", "Content"],
     }),
     updateSchedule: build.mutation<SuccessResponse, { id: string; data: Partial<any> }>({
       query: ({ id, data }) => ({

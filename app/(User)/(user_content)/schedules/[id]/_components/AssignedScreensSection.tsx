@@ -8,6 +8,7 @@ interface AssignedScreensSectionProps {
     onRemoveProgram: (programId: string) => void;
     onToggleDevice: (deviceId: string, isEnabled: boolean, programId: string) => void;
     onDeleteSchedule: () => void;
+    isNew?: boolean;
 }
 
 const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
@@ -15,7 +16,8 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
     onAddScreen,
     onRemoveProgram,
     onToggleDevice,
-    onDeleteSchedule
+    onDeleteSchedule,
+    isNew
 }) => {
     const [expandedProgramId, setExpandedProgramId] = React.useState<string | null>(assignedScreens[0]?.groupId || null);
 
@@ -25,9 +27,9 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
                 <h2 className="text-xl font-bold text-headings dark:text-white">Assigned Program</h2>
                 <button
                     onClick={onAddScreen}
-                    className="flex items-center gap-2 px-4 py-2 bg-bgBlue text-white text-sm font-semibold rounded-lg hover:bg-blue-500 transition cursor-pointer shadow-customShadow"
+                    className="flex items-center gap-2 px-4 py-2 md:py-2.5 bg-bgBlue text-white text-base font-semibold rounded-lg hover:bg-blue-500 transition cursor-pointer shadow-customShadow"
                 >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-4 h-4 text-white" />
                     Add Program
                 </button>
             </div>
@@ -92,20 +94,22 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
             </div>
 
             {/* Warning Section */}
-            <div className="mt-8 p-6 bg-red-50/50 dark:bg-red-900/5 border-none rounded-2xl space-y-4">
-                <p className="text-red-700 dark:text-red-400 font-medium text-lg">
-                    These actions cannot be undone. Please proceed with caution.
-                </p>
-                <div className="flex justify-end pt-2">
-                    <button
-                        onClick={onDeleteSchedule}
-                        className="flex items-center justify-center gap-2 px-6 py-3 bg-[#F43F5E] hover:bg-red-600 text-white rounded-xl font-bold transition-all shadow-sm cursor-pointer"
-                    >
-                        <Trash2 className="w-5 h-5" />
-                        Delete Schedule
-                    </button>
+            {!isNew && (
+                <div className="mt-8 p-6 bg-red-50/50 dark:bg-red-900/5 border-none rounded-2xl space-y-4">
+                    <p className="text-red-700 dark:text-red-400 font-medium text-lg">
+                        These actions cannot be undone. Please proceed with caution.
+                    </p>
+                    <div className="flex justify-end pt-2">
+                        <button
+                            onClick={onDeleteSchedule}
+                            className="flex items-center justify-center gap-2 px-6 py-3 bg-[#F43F5E] hover:bg-red-600 text-white rounded-lg font-bold transition-all shadow-customShadow cursor-pointer"
+                        >
+                            <Trash2 className="w-5 h-5" />
+                            Delete Schedule
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
         </section>
     );
 };
