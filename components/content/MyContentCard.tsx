@@ -64,6 +64,7 @@ const MyContentCard = ({
       case "playlist": return "Playlist";
       case "video": return "Video";
       case "image": return "PNG";
+      case "audio": return "Audio";
       default: return "File";
     }
   };
@@ -122,6 +123,7 @@ const MyContentCard = ({
           </div>
         );
       case "playlist":
+      case "audio":
         return (
           <div className="relative flex flex-col items-center gap-3 w-14 h-14 shrink-0">
             <AudioLines className="w-14 h-14 text-bgBlue stroke-[1.5]" />
@@ -200,7 +202,7 @@ const MyContentCard = ({
     }
 
     // Audio/Playlist: Rename, Move to Folder, Delete, View Details
-    if (item.type === "playlist") {
+    if (item.type === "playlist" || item.type === "audio") {
       return [
         { label: "Rename", value: "rename", icon: <Pencil className="w-5 h-5 text-headings" />, onClick: () => setOpenRename(true) },
         { label: "Move to Folder", value: "move", icon: <Folder className="w-5 h-5 text-headings" />, onClick: () => onMenuClick?.(item.id, "move") },
@@ -330,7 +332,7 @@ const MyContentCard = ({
                       <Play className="w-4 h-4" /> Play
                     </button>
                   )}
-                  {item.type === "playlist" && (
+                  {(item.type === "playlist" || item.type === "audio") && (
                     <button
                       onClick={() => setOpenAudio(true)}
                       className="px-6 py-2 bg-bgBlue hover:bg-blue-500 text-white text-sm font-semibold rounded-lg flex items-center gap-2 shadow-customShadow transition-all cursor-pointer"
@@ -420,12 +422,23 @@ const MyContentCard = ({
               </div>
             ) : item.type === "folder" ? (
               <Image className="cursor-pointer" onClick={() => router.push(`/content/${item.id}`)} src={folder} alt="folder" />
-            ) : (
+            ) : (item.type === "audio" || item.type === "playlist") ? (
               <div className="relative flex flex-col items-center gap-3">
                 <AudioLines className="w-20 h-20 text-bgBlue stroke-[1.5]" />
                 <button className="absolute bg-white/90 dark:bg-gray-900/90 rounded-full p-2.5 mt-4 hover:bg-white dark:hover:bg-gray-900 transition-colors cursor-pointer" onClick={(e) => { e.stopPropagation(); setOpenAudio(true); }}>
                   <Play className="w-8 h-8 text-gray-400 dark:text-gray-300 fill-[rgba(255,255,255,0.7)]" />
                 </button>
+              </div>
+            ) : (
+              <div className="relative flex flex-col items-center gap-3">
+                {/* Fallback for other file types */}
+                <div className="w-20 h-20 flex items-center justify-center">
+                  <div className="flex flex-col gap-1.5">
+                    <div className="w-1.5 h-6 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                    <div className="w-1.5 h-6 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                    <div className="w-1.5 h-6 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                  </div>
+                </div>
               </div>
             )}
 

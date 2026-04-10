@@ -26,6 +26,7 @@ import BaseSelect from "@/common/BaseSelect";
 import ContentGrid from "./ContentGrid";
 import RenameDialog from "./RenameDialog";
 import AssignToDialog from "./AssignToDialog";
+import AddExistingContentDialog from "./AddExistingContentDialog";
 import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
 import {
   DropdownMenu,
@@ -56,6 +57,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [openRename, setOpenRename] = useState(false);
   const [openAssign, setOpenAssign] = useState(false);
+  const [openAddExisting, setOpenAddExisting] = useState(false);
   const [assignContentId, setAssignContentId] = useState<string>("");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -209,6 +211,14 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
         />
       )}
 
+      {openAddExisting && (
+        <AddExistingContentDialog
+          open={openAddExisting}
+          setOpen={setOpenAddExisting}
+          targetFolderId={content.id}
+        />
+      )}
+
       <DeleteConfirmationModal
         isOpen={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
@@ -251,32 +261,38 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="group flex items-center gap-2 px-6 py-2.5 border border-border text-headings rounded-lg text-base font-semibold transition-all hover:bg-bgBlue hover:text-white shadow-customShadow bg-White cursor-pointer outline-none">
-                  <Plus className="w-5 h-5 text-headings transition-colors group-hover:text-white" /> Add <ChevronDown className="w-4 h-4 ml-1 transition-colors group-hover:text-white" />
+                <button className="group flex items-center gap-2 px-6 py-2.5 border border-border text-headings rounded-lg text-base font-semibold transition-all hover:bg-bgBlue hover:text-white shadow-customShadow bg-White cursor-pointer outline-none active:scale-95">
+                  <Plus className="w-5 h-5 text-bgBlue group-hover:text-white transition-colors" /> Add <ChevronDown className="w-4 h-4 ml-1 transition-all group-hover:text-white text-muted" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-White shadow-lg p-1 z-50">
+              <DropdownMenuContent
+                align="end"
+                className="w-60 bg-White shadow-2xl p-1 z-50 border border-border rounded-xl animate-in fade-in zoom-in-95 duration-200"
+              >
                 <DropdownMenuItem
-                  onClick={() => console.log("Add Existing")}
-                  className="group flex items-center gap-3 px-4 py-3 text-sm hover:bg-bgBlue hover:text-white transition-colors cursor-pointer rounded-lg focus:bg-bgBlue focus:text-black outline-none"
+                  onClick={() => setOpenAddExisting(true)}
+                  className="group flex items-center gap-3 p-2 text-sm font-semibold text-headings hover:bg-bgBlue hover:text-white transition-all cursor-pointer rounded-lg focus:bg-bgBlue focus:text-white outline-none active:scale-95 mb-1"
                 >
-                  <Plus className="w-5 h-5 text-bgBlue group-hover:text-white group-focus:text-white transition-colors" /> Add Existing
+                  <div className="w-8 h-8 rounded-full bg-blue-50 group-hover:bg-white/20 flex items-center justify-center transition-colors">
+                    <Plus className="w-5 h-5 text-bgBlue group-hover:text-white transition-colors" />
+                  </div>
+                  <span>Add Existing Content</span>
                 </DropdownMenuItem>
+
                 <DropdownMenuItem
                   onClick={handleUploadClick}
                   disabled={isUploading}
-                  className={`group flex items-center gap-3 px-4 py-3 text-sm text-headings border-t border-border transition-colors cursor-pointer rounded-lg focus:bg-bgBlue focus:text-white outline-none ${isUploading ? "opacity-60 pointer-events-none" : "hover:bg-bgBlue hover:text-white"}`}
+                  className={`group flex items-center gap-3 p-2 text-sm font-semibold text-headings transition-all cursor-pointer rounded-lg focus:bg-bgBlue focus:text-white outline-none active:scale-95 ${isUploading ? "opacity-60 pointer-events-none" : "hover:bg-bgBlue hover:text-white"
+                    }`}
                 >
-                  {isUploading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-bgBlue" />
-                      <span>Uploading</span>
-                    </div>
-                  ) : (
-                    <>
-                      <CloudUpload className="w-5 h-5 text-bgBlue group-hover:text-white group-focus:text-white transition-colors " /> Upload
-                    </>
-                  )}
+                  <div className="w-8 h-8 rounded-full bg-blue-50 group-hover:bg-white/20 flex items-center justify-center transition-colors">
+                    {isUploading ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-bgBlue group-hover:text-white" />
+                    ) : (
+                      <CloudUpload className="w-5 h-5 text-bgBlue group-hover:text-white transition-colors" />
+                    )}
+                  </div>
+                  <span>{isUploading ? "Uploading..." : "Upload New Content"}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
