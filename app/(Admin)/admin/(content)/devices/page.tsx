@@ -3,13 +3,13 @@
 import React, { useState, useMemo } from 'react';
 import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon, ArrowUpRight } from 'lucide-react';
 import GoogleMapModal from '@/components/shared/modals/GoogleMapModal';
-import ReverseGeocode from '@/components/shared/ReverseGeocode';
 import { useDeleteDeviceMutation, useGetGlobalDeviceDetailsQuery, useGetGlobalDevicesQuery, useLazyExportGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import DeviceLocation from "@/components/common/DeviceLocation";
 
 // Reusable Dropdown Component
 type DropdownProps = {
@@ -643,7 +643,7 @@ export default function GlobalDevices() {
                               }}
                               className="text-bgBlue hover:underline cursor-pointer transition-all"
                             >
-                              <ReverseGeocode lat={device.lat} lng={device.lng} fallback={device.location} />
+                              <DeviceLocation lat={device.lat} lng={device.lng}/>
                             </button>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.type}</td>
@@ -727,7 +727,7 @@ export default function GlobalDevices() {
                             }}
                             className="ml-2 text-bgBlue hover:underline cursor-pointer transition-all"
                           >
-                            <ReverseGeocode lat={device.lat} lng={device.lng} fallback={device.location} />
+                            <DeviceLocation lat={device.lat} lng={device.lng} />
                           </button>
                         </div>
                       )}

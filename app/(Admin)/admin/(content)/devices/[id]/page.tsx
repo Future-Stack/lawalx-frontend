@@ -212,7 +212,7 @@ export default function DeviceDetailsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white hover:bg-gray-50 transition-all shadow-sm active:scale-95">
+          <button className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white hover:bg-gray-50 transition-all shadow-sm active:scale-95">
             <RefreshCw className="w-3.5 h-3.5" />
             Force Sync
           </button>
@@ -394,11 +394,11 @@ export default function DeviceDetailsPage() {
                </div>
 
                <div className="grid grid-cols-1 gap-3 pt-2">
-                  <button className="w-full flex items-center justify-center gap-2 py-3 bg-red-500 text-white rounded-xl text-xs font-bold hover:bg-red-600 transition-all shadow-md shadow-red-200 dark:shadow-none active:scale-[0.98]">
+                  <button className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 bg-red-500 text-white rounded-xl text-xs font-bold hover:bg-red-600 transition-all shadow-md shadow-red-200 dark:shadow-none active:scale-[0.98]">
                      <Trash2 className="w-3.5 h-3.5" />
                      Clear Data
                   </button>
-                  <button className="w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all active:scale-[0.98]">
+                  <button className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all active:scale-[0.98]">
                      <RefreshCw className="w-3.5 h-3.5" />
                      Clear Cache
                   </button>
