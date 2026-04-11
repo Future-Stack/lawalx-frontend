@@ -1,12 +1,20 @@
 import { baseApi } from "../../baseApi";
 import { SuccessResponse } from "../content/content.type";
-import { GetSchedulesResponse, GetSingleScheduleResponse } from "./schedules.type";
+import { GetSchedulesResponse, GetSingleScheduleResponse, LowerThirdPayload } from "./schedules.type";
 
 const schedulesAPI = baseApi.injectEndpoints({
   endpoints: (build) => ({
     createSchedule: build.mutation<SuccessResponse, any>({
       query: (data) => ({
         url: "/schedule",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Schedules"],
+    }),
+    createLowerThird: build.mutation<SuccessResponse, LowerThirdPayload>({
+      query: (data) => ({
+        url: "/lower-third",
         method: "POST",
         body: data,
       }),
@@ -24,7 +32,7 @@ const schedulesAPI = baseApi.injectEndpoints({
         url: `/schedule/${id}`,
         method: "GET",
       }),
-      providesTags: ["Schedules"],
+      providesTags: ["Schedules", "Content"],
     }),
     updateSchedule: build.mutation<SuccessResponse, { id: string; data: Partial<any> }>({
       query: ({ id, data }) => ({
@@ -46,6 +54,7 @@ const schedulesAPI = baseApi.injectEndpoints({
 
 export const {
   useCreateScheduleMutation,
+  useCreateLowerThirdMutation,
   useGetAllSchedulesDataQuery,
   useGetSingleScheduleDataQuery,
   useUpdateScheduleMutation,

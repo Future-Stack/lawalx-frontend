@@ -2,6 +2,69 @@
 @import "tw-animate-css";
 /* @import "plyr/dist/plyr.css"; */
 
+/* ------------------------------------------------ */
+/* Professional Audio Player Stabilization */
+.audio-player-container .rhap_container {
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 10px 15px !important;
+}
+
+/* Fix progress bar vibration: Disable transitions on the progress marker */
+.rhap_progress-indicator,
+.rhap_progress-filled,
+.rhap_download-progress {
+  transition: none !important;
+}
+
+.rhap_progress-indicator {
+  width: 14px !important;
+  height: 14px !important;
+  top: -5px !important;
+  background-color: var(--primary-action) !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.rhap_progress-filled {
+  background-color: var(--primary-action) !important;
+}
+
+.rhap_progress-bar {
+  height: 4px !important;
+  border-radius: 2px !important;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .rhap_progress-bar {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Dark mode support for audio player text/icons */
+.dark .rhap_time, 
+.dark .rhap_current-time,
+.dark .rhap_total-time {
+  color: #a3a3a3 !important;
+}
+
+.dark .rhap_main-controls-button,
+.dark .rhap_volume-button,
+.dark .rhap_repeat-button {
+  color: #ffffff !important;
+}
+
+.dark .rhap_main-controls-button:hover,
+.dark .rhap_volume-button:hover {
+  color: var(--primary-action) !important;
+}
+
+/* Custom progress bar handle on hover */
+.rhap_progress-container:hover .rhap_progress-indicator {
+  transform: scale(1.2);
+  transition: transform 0.2s ease !important;
+}
+/* ------------------------------------------------ */
+
+
 
 @custom-variant dark (&:is(.dark *));
 
@@ -769,4 +832,39 @@ input[type="time"]::-webkit-inner-spin-button,
 input[type="time"]::-webkit-calendar-picker-indicator {
   display: none !important;
   -webkit-appearance: none !important;
+}
+
+/* Professional Media Preview Animations */
+@keyframes preview-exit {
+  0% { 
+    opacity: 1; 
+    transform: scale(1); 
+    filter: blur(0px); 
+  }
+  100% { 
+    opacity: 0; 
+    transform: scale(0.98); 
+    filter: blur(4px); 
+  }
+}
+
+@keyframes preview-enter {
+  0% { 
+    opacity: 0; 
+    transform: scale(0.98); 
+    filter: blur(4px); 
+  }
+  100% { 
+    opacity: 1; 
+    transform: scale(1); 
+    filter: blur(0px); 
+  }
+}
+
+.animate-preview-exit {
+  animation: preview-exit 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-preview-enter {
+  animation: preview-enter 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }

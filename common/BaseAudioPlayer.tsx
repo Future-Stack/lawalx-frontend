@@ -1,41 +1,32 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 "use client";
 
 import { useRef, useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import "plyr-react/plyr.css";
 import type { APITypes } from "plyr-react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Music } from "lucide-react";
 
 // Client-only load
 const Plyr = dynamic(() => import("plyr-react"), { ssr: false });
 
-interface VideoPlayerProps {
+interface AudioPlayerProps {
   src: string;
-  poster?: string;
   autoPlay?: boolean;
-  muted?: boolean;
-  rounded?: string;
   onEnded?: () => void;
 }
 
-const BaseVideoPlayer = ({
+const BaseAudioPlayer = ({
   src,
-  poster,
   autoPlay = false,
-  muted = true,
-  rounded = "rounded-xl",
   onEnded,
-}: VideoPlayerProps) => {
+}: AudioPlayerProps) => {
   const playerRef = useRef<APITypes>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [ready, setReady] = useState(false);
 
-  // Memoize options to include current autoPlay/muted state
+  // Memoize options for a premium audio experience
   const plyrOptions = useMemo(() => ({
     autoplay: autoPlay,
-    muted: muted || autoPlay,
-    volume: (muted || autoPlay) ? 0 : 1,
     controls: [
       "play",
       "progress",
@@ -44,11 +35,11 @@ const BaseVideoPlayer = ({
       "mute",
       "volume",
       "settings",
-      "fullscreen",
     ],
-  }), [autoPlay, muted]);
+    settings: ["speed"],
+  }), [autoPlay]);
 
-  // Keep onEnded in a ref so it never triggers effect re-runs
+  // Keep onEnded in a ref
   const onEndedRef = useRef(onEnded);
   onEndedRef.current = onEnded;
 
@@ -56,27 +47,13 @@ const BaseVideoPlayer = ({
     setIsMounted(true);
   }, []);
 
-  // Memoize source so Plyr doesn't re-initialize on unrelated parent re-renders
   const source = useMemo(() => {
-    const isYouTube = src.includes("youtube.com") || src.includes("youtu.be");
-
-    if (isYouTube) {
-      return {
-        type: "video" as const,
-        poster: poster || "",
-        sources: [{ src, provider: "youtube" as const }],
-      } as any;
-    }
-
-    const isAbsolute = src.startsWith("http://") || src.startsWith("https://");
-    const safeSrc = isAbsolute ? src : src.startsWith("/") ? src : "/" + src;
-
+    const safeSrc = src.startsWith("http") ? src : src.startsWith("/") ? src : "/" + src;
     return {
-      type: "video" as const,
-      poster: poster || "",
-      sources: [{ src: safeSrc, type: "video/mp4" }],
+      type: "audio" as const,
+      sources: [{ src: safeSrc, type: "audio/mp3" }],
     } as any;
-  }, [src, poster]);
+  }, [src]);
 
   // Reset ready state when source changes
   useEffect(() => {
@@ -112,12 +89,9 @@ const BaseVideoPlayer = ({
         instance.on("canplay", handleReady);
         instance.on("playing", () => setReady(true));
 
-        // If already ready, try playing
         if (instance.ready) {
           setReady(true);
-          if (autoPlay) {
-            instance.play()?.catch(() => {});
-          }
+          if (autoPlay) instance.play()?.catch(() => {});
         }
 
         return () => {
@@ -144,30 +118,38 @@ const BaseVideoPlayer = ({
       if (timer) clearTimeout(timer);
       if (cleanup) cleanup();
     };
-  }, [src, autoPlay, muted, isMounted]);
+  }, [src, autoPlay, isMounted]);
 
   return (
-    <div
-      className={`relative w-full pt-[56.25%] ${rounded} bg-black overflow-hidden group`}
-      style={{ transform: "translateZ(0)" }}
-    >
-      <div className="absolute inset-0 flex items-center justify-center">
-        {(!ready || !isMounted) && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-3 transition-opacity duration-300">
-            <Loader2 className="w-8 h-8 animate-spin text-white/50" />
-            <span className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Initializing</span>
+    <div className="relative w-full bg-black/5 dark:bg-white/5 rounded-2xl p-6 overflow-hidden border border-gray-100 dark:border-gray-800 shadow-inner">
+      <div className="flex flex-col gap-6">
+        {/* Visualizer / Icon Area */}
+        <div className="flex items-center justify-center py-4 relative">
+          <div className={`transition-all duration-700 ${ready ? "scale-100 opacity-100 blur-0" : "scale-90 opacity-0 blur-md"}`}>
+             <div className="w-16 h-16 rounded-full bg-primary-action/10 flex items-center justify-center animate-pulse">
+                <Music className="w-8 h-8 text-primary-action" />
+             </div>
           </div>
-        )}
-        
-        <div className={`absolute inset-0 transition-all duration-700 ease-out ${ready ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-105 blur-lg"}`}>
+          
+          {(!ready || !isMounted) && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-action/40" />
+            </div>
+          )}
+        </div>
+
+        {/* Plyr Instance */}
+        <div className={`transition-all duration-1000 ease-out ${ready ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
           {isMounted ? (
-            <Plyr
-              ref={playerRef}
-              source={source}
-              options={plyrOptions}
-            />
+            <div className="modern-audio-player">
+               <Plyr
+                ref={playerRef}
+                source={source}
+                options={plyrOptions}
+              />
+            </div>
           ) : (
-            <div className="w-full h-full bg-black" />
+            <div className="h-12 bg-gray-100 dark:bg-gray-800 animate-pulse rounded-lg" />
           )}
         </div>
       </div>
@@ -175,4 +157,4 @@ const BaseVideoPlayer = ({
   );
 };
 
-export default BaseVideoPlayer;
+export default BaseAudioPlayer;

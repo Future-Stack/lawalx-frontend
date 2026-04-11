@@ -18,6 +18,7 @@ import ReportDeviceModal from "@/components/devices/modals/ReportDeviceModal";
 import { useGetMyDevicesDataQuery, useDeleteDeviceMutation, useRenameDeviceMutation } from "@/redux/api/users/devices/devices.api";
 import { Device as ApiDevice } from "@/redux/api/users/devices/devices.type";
 import { toast } from "sonner";
+import { formatBytes } from "@/lib/content-utils";
 
 // Local types to match admin page logic, adapting to API data
 type DeviceView = {
@@ -153,10 +154,9 @@ export default function DevicesPage() {
     return devicesData.data.map((device) => {
       let status = device.status || "OFFLINE";
 
-      // Format storage from bytes to GB
+      // Format storage from bytes
       const totalBytes = parseInt(device.storage) || 0;
-      const totalGB = (totalBytes / (1024 * 1024 * 1024)).toFixed(1);
-      const storageDisplay = `0 / ${totalGB} GB`; // Assuming 0 used as API doesn't provide used storage yet
+      const storageDisplay = `0 / ${formatBytes(totalBytes)}`; // Assuming 0 used as API doesn't provide used storage yet
 
       return {
         id: device.id,

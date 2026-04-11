@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { Search, Monitor, X } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Search, Monitor, X, CircleCheckBigIcon, Loader2 } from "lucide-react";
 import BaseDialog from "@/common/BaseDialog";
 import { useGetAllProgramsDataQuery } from "@/redux/api/users/programs/programs.api";
 import { Program } from "@/redux/api/users/programs/programs.type";
-import { Checkbox } from "@/components/ui/checkbox";
+import Dropdown from "@/common/Dropdown";
+import { getUrl } from "@/lib/content-utils";
 
 interface AddScreenDialogProps {
     isOpen: boolean;
@@ -13,14 +14,19 @@ interface AddScreenDialogProps {
 
 const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAdd }) => {
     const [search, setSearch] = useState("");
+    const [selectedStatus, setSelectedStatus] = useState("all");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
     const { data: allProgramsData, isLoading } = useGetAllProgramsDataQuery(undefined);
     const allPrograms = allProgramsData?.data || [];
 
-    const filteredPrograms = allPrograms.filter(p =>
-        p.name.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredPrograms = useMemo(() => {
+        return allPrograms.filter(p => {
+            const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+            const matchesStatus = selectedStatus === "all" || p.status.toLowerCase() === selectedStatus.toLowerCase();
+            return matchesSearch && matchesStatus;
+        });
+    }, [allPrograms, search, selectedStatus]);
 
     const toggleSelection = (id: string) => {
         setSelectedIds(prev =>
@@ -35,69 +41,143 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
         onClose();
     };
 
+    const handleClose = () => {
+        setSelectedIds([]);
+        setSearch("");
+        setSelectedStatus("all");
+        onClose();
+    };
+
     return (
         <BaseDialog
             open={isOpen}
-            setOpen={onClose}
+            setOpen={handleClose}
             title="Add Program"
             description="Select programs to assign to this schedule"
-            className="max-w-2xl"
+            className="max-w-3xl"
         >
-            <div className="space-y-6">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <input
-                        type="text"
-                        placeholder="Search program..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg"
-                    />
+            <div className="space-y-6 p-1">
+                {/* Search and Filter */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+                    <div className="relative w-full sm:w-3/4">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                            type="text"
+                            placeholder="Search program..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="w-full pl-10 pr-4 py-3 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue text-headings dark:text-white"
+                        />
+                    </div>
+                    <div className="w-full sm:w-1/4">
+                        <Dropdown
+                            value={selectedStatus}
+                            options={[
+                                { value: "all", label: "All Status" },
+                                { value: "publish", label: "Published" },
+                                { value: "draft", label: "Draft" },
+                            ]}
+                            onChange={(val) => setSelectedStatus(String(val))}
+                            className="w-full cursor-pointer"
+                        />
+                    </div>
                 </div>
 
-                <div className="space-y-3 max-h-[400px] overflow-y-auto scrollbar-hide">
+                {/* Programs List */}
+                <div className="space-y-2 max-h-[400px] overflow-y-auto scrollbar-hide pr-1">
                     {isLoading ? (
-                        <div className="py-20 text-center text-muted">Loading programs...</div>
+                        <div className="py-20 flex flex-col items-center justify-center text-muted">
+                            <Loader2 className="w-8 h-8 animate-spin mb-2" />
+                            <span>Loading programs...</span>
+                        </div>
                     ) : (
-                        filteredPrograms.map((program) => (
-                            <div
-                                key={program.id}
-                                onClick={() => toggleSelection(program.id)}
-                                className={`flex items-center justify-between p-4 border rounded-xl transition-all cursor-pointer ${selectedIds.includes(program.id)
-                                    ? "border-bgBlue bg-bgBlue/5 shadow-sm"
-                                    : "border-border hover:bg-bgGray/30"
-                                    }`}
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${selectedIds.includes(program.id) ? "bg-bgBlue text-white" : "bg-blue-50 dark:bg-blue-900/20 text-bgBlue"
-                                        }`}>
-                                        <Monitor className="w-5 h-5" />
+                        filteredPrograms.map((program) => {
+                            const isSelected = selectedIds.includes(program.id);
+                            return (
+                                <div
+                                    key={program.id}
+                                    onClick={() => toggleSelection(program.id)}
+                                    className={`flex items-center gap-4 p-2 md:p-4 rounded-lg border transition-all cursor-pointer group ${isSelected
+                                        ? "border-bgBlue bg-blue-50/50 dark:bg-blue-950/20"
+                                        : "border-border hover:border-bgBlue hover:bg-bgGray/30"
+                                        }`}
+                                >
+                                    {/* Selection Checkbox */}
+                                    <div className="flex-shrink-0">
+                                        <div
+                                            className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isSelected
+                                                ? "bg-bgBlue border-bgBlue text-white"
+                                                : "border-gray-300 dark:border-gray-600 group-hover:border-bgBlue"
+                                                }`}
+                                        >
+                                            {isSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div className="font-bold text-headings dark:text-white">{program.name}</div>
-                                        <div className="text-xs text-muted">{program.devices?.length || 0} screens assigned</div>
+
+                                    {/* Program Preview */}
+                                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 dark:bg-gray-800 border border-border flex items-center justify-center">
+                                        {program.videoUrl?.match(/\.(jpg|jpeg|png|webp|gif|svg)$/i) ? (
+                                            <img
+                                                src={getUrl(program.videoUrl)}
+                                                alt={program.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <video
+                                                src={getUrl(program.videoUrl)}
+                                                className="w-full h-full object-cover"
+                                                muted
+                                                onMouseEnter={(e) => e.currentTarget.play()}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.pause();
+                                                    e.currentTarget.currentTime = 0;
+                                                }}
+                                            />
+                                        )}
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-semibold text-headings truncate text-base">
+                                            {program.name}
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-xs text-muted uppercase font-medium tracking-wider">
+                                                {program.devices?.length || 0} screens assigned
+                                            </span>
+                                            <span className="w-1 h-1 rounded-full bg-gray-300" />
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${program.status.toLowerCase() === 'publish'
+                                                ? 'bg-green-100 text-green-700'
+                                                : 'bg-gray-100 text-gray-500'
+                                                }`}>
+                                                {program.status}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                                <Checkbox
-                                    checked={selectedIds.includes(program.id)}
-                                    className="w-5 h-5 border-borderGray data-[state=checked]:bg-bgBlue data-[state=checked]:border-bgBlue pointer-events-none"
-                                />
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                     {!isLoading && filteredPrograms.length === 0 && (
-                        <div className="py-20 text-center text-muted">No programs found</div>
+                        <div className="py-20 text-center text-muted flex flex-col items-center">
+                            <Monitor className="w-12 h-12 text-gray-200 mb-3" />
+                            <p>No programs found matching your filters</p>
+                        </div>
                     )}
                 </div>
 
+                {/* Footer Actions */}
                 <div className="flex gap-3 justify-end pt-4 border-t border-border">
-                    <button onClick={onClose} className="px-6 py-2.5 text-muted hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition cursor-pointer shadow-customShadow">
+                    <button
+                        onClick={handleClose}
+                        className="px-6 py-2.5 text-muted hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition cursor-pointer shadow-customShadow"
+                    >
                         Cancel
                     </button>
                     <button
                         onClick={handleConfirm}
                         disabled={selectedIds.length === 0}
-                        className="px-6 py-2.5 bg-bgBlue text-white rounded-lg font-semibold hover:bg-blue-500 transition shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow"
+                        className="px-8 py-2.5 bg-bgBlue text-white rounded-lg font-semibold hover:bg-blue-500 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow"
                     >
                         Add {selectedIds.length > 0 ? `${selectedIds.length} ` : ""}Program{selectedIds.length !== 1 ? "s" : ""}
                     </button>

@@ -7,7 +7,7 @@ import BlueSelect from "@/common/BlueSelect";
 import Image from "next/image";
 import { useGetAllFilesQuery, useAssignProgramMutation } from "@/redux/api/users/content/content.api";
 import { FileItem } from "@/redux/api/users/content/content.type";
-import { getUrl } from "@/lib/content-utils";
+import { getUrl, formatBytes } from "@/lib/content-utils";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -84,13 +84,6 @@ const AddContentDialog = ({ open, setOpen, programId, programName, existingFileI
     });
   }, [data, searchQuery, selectedFilter, existingFileIds]);
 
-  const formatSize = (bytes: number) => {
-    if (!bytes) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
@@ -219,7 +212,7 @@ const AddContentDialog = ({ open, setOpen, programId, programName, existingFileI
                           </h4>
                           <div className="flex items-center gap-2">
                             <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">
-                              {formatSize(item.size)}
+                              {formatBytes(item.size)}
                               {item.duration > 0 && ` • ${item.duration}s`}
                             </p>
                             <span className="text-[9px] px-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-400 uppercase font-bold tracking-tighter">

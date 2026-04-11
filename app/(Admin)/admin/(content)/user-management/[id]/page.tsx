@@ -29,6 +29,7 @@ import ContentTab from "@/components/Admin/usermanagement/tabs/ContentTab";
 import DevicesTab from "@/components/Admin/usermanagement/tabs/DevicesTab";
 import ActivityLogsTab from "@/components/Admin/usermanagement/tabs/ActivityLogsTab";
 import Link from "next/link";
+import { formatBytes } from "@/lib/content-utils";
 
 type TabType =
   | "Details"
@@ -152,10 +153,7 @@ export default function UserProfilePage() {
           percentage: userData.deviceUsage,
         },
         storage: {
-          used: `${(
-            (userData.storageUsage * parseInt(userData.storage)) /
-            100
-          ).toFixed(1)}GB`,
+          used: formatBytes((userData.storageUsage * (parseInt(userData.storage) || 0) * 1024 * 1024 * 1024) / 100),
           total: userData.storage,
           percentage: userData.storageUsage,
         },

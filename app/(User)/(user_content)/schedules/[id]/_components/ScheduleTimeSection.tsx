@@ -37,10 +37,10 @@ const ScheduleTimeSection: React.FC<ScheduleTimeSectionProps> = ({ data, onChang
                         value={data.repeat}
                         onChange={(val) => onChange({ ...data, repeat: val })}
                         options={[
-                            { label: "Run Once", value: "Run Once" },
-                            { label: "Daily", value: "Daily" },
-                            { label: "Weekly", value: "Weekly" },
-                            { label: "Monthly", value: "Monthly" },
+                            { label: "Run Once", value: "once" },
+                            { label: "Daily", value: "daily" },
+                            { label: "Weekly", value: "weekly" },
+                            { label: "Monthly", value: "monthly" },
                         ]}
                     />
                 </div>

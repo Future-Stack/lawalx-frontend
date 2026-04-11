@@ -162,7 +162,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
         <div className="relative w-full sm:w-auto mb-4 sm:mb-6">
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="rounded-lg transition-all flex items-center justify-center gap-2 text-white py-2.5 px-4 cursor-pointer bg-bgBlue hover:bg-blue-600 w-full sm:w-auto font-semibold shadow-customShadow active:scale-95 outline-none"
+            className="rounded-lg transition-all flex items-center justify-center gap-2 text-white py-2.5 px-4 cursor-pointer bg-bgBlue hover:bg-blue-600 w-full sm:w-auto font-semibold shadow-customShadow outline-none"
           >
             <Plus className="w-5 h-5" />
             <span>Add Content</span>
@@ -262,7 +262,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
                       e.stopPropagation();
                       handleRemove(item);
                     }}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer outline-none active:scale-90"
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer outline-none"
                     title="Remove item"
                   >
                     <Trash2 className="w-5 h-5" />
