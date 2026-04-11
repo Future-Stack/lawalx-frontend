@@ -66,7 +66,7 @@ export interface FileData {
   fileType: string;
   originalName: string;
   size: number;
-  type: "IMAGE" | "VIDEO";
+  type: "IMAGE" | "VIDEO" | "AUDIO";
   duration: number;
   userId: string;
   folderId: string | null;
@@ -107,6 +107,7 @@ export interface Schedule {
   userId: string;
   fileId: string;
   lowerThirdId: string | null;
+  lowerThird?: LowerThirdPayload & { id: string };
 
   createdAt: string;
   updatedAt: string;
@@ -121,3 +122,23 @@ export type GetSchedulesResponse = ApiResponse<Schedule[]>;
 
 /** Single schedule response type */
 export type GetSingleScheduleResponse = ApiResponse<Schedule>;
+
+
+// Lower third post api response 
+type FontSize = "Small" | "Medium" | "Large";
+type AnimationType = "Left_to_Light" | "Right_to_Left" | "Fade" | "None";
+type PositionType = "Top" | "Middle" | "Bottom";
+
+export interface LowerThirdPayload {
+  text: string;
+  textColor: string; // hex color
+  font: string;
+  fontSize: FontSize;
+  duration: number; // seconds
+  backgroundColor: string; // hex color
+  backgroundOpacity: string; // percentage হিসেবে string (e.g. "80")
+  animation: AnimationType;
+  loop: boolean;
+  speed: number;
+  position: PositionType;
+}

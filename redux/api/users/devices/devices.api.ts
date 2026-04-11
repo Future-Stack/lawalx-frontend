@@ -43,6 +43,13 @@ const devicesAPI = baseApi.injectEndpoints({
       }),
       providesTags: ["Devices"],
     }),
+    assignDeviceToProgram: build.mutation<any, { deviceId: string, programId: string }>({
+      query: ({ deviceId, programId }) => ({
+        url: `/device/${deviceId}/assign-program/${programId}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Devices", "Programs", "Schedules"],
+    }),
     deleteDevice: build.mutation<any, { id: string }>({
       query: ({ id }) => ({
         url: `/device/delete/${id}`,
@@ -61,4 +68,4 @@ const devicesAPI = baseApi.injectEndpoints({
   }),
 });
 
-export const { useAddDeviceMutation, useGetMyDevicesDataQuery, useGetSingleDeviceDataQuery, useDeleteDeviceMutation, useRenameDeviceMutation, useGetDevicePinWiseDataQuery } = devicesAPI;
+export const { useAddDeviceMutation, useGetMyDevicesDataQuery, useGetSingleDeviceDataQuery, useDeleteDeviceMutation, useAssignDeviceToProgramMutation, useRenameDeviceMutation, useGetDevicePinWiseDataQuery } = devicesAPI;

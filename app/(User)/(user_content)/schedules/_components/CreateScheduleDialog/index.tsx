@@ -27,10 +27,18 @@ const STEPS = [
     { number: 4, icon: <Settings />, label: "Schedule Settings", sublabel: "" }
 ];
 
+// Helper: Validate UUID format
+const isUUID = (id: any): id is string => {
+    if (typeof id !== "string") return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+};
+
 const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOpen }) => {
     const [createSchedule] = useCreateScheduleMutation();
     const [currentStep, setCurrentStep] = useState(1);
     const [showLowerThird, setShowLowerThird] = useState(false);
+
+    const [createdLowerThirdId, setCreatedLowerThirdId] = useState<string | null>(null);
 
     // Form Data State
     const [step1Data, setStep1Data] = useState({ name: "", description: "" });
@@ -53,7 +61,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             fontSize: "24",
             fontFamily: "Inter",
             loop: true,
-            message: "This is a demo text"
+            message: "This is a demo text",
+            duration: 10
         }
     });
 
@@ -124,17 +133,14 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     };
 
     const handleSubmit = async () => {
-        // Determine active content (file selected in Step 2)
+        // Determine active content (files/programs selected)
         const activeContent = showLowerThird
             ? (lowerThirdData.selectedContent ? [lowerThirdData.selectedContent] : [])
             : step2Data.selectedContent;
 
-        const firstSelected = activeContent[0];
-
-        // Map contentType from selected content to API enum
-        // API accepts: IMAGE_VIDEO, AUDIO, LOWERTHIRD
+        // Map contentType to API enum
         let contentType: ContentType = "IMAGE_VIDEO";
-        if (firstSelected?.type === "audio") {
+        if (activeContent[0]?.type === "audio") {
             contentType = "AUDIO";
         } else if (showLowerThird) {
             contentType = "LOWERTHIRD";
@@ -144,9 +150,11 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
         const startTime = `1970-01-01T${step4Data.playTime}:00Z`;
         const endTime = `1970-01-01T${step4Data.endTime || step4Data.playTime}:00Z`;
 
-        const selectedPrograms = activeContent.filter(c => (c as any).isProgram).map(c => c.id);
+        // Segregate programs and files while validating UUIDs
+        const selectedPrograms = activeContent.filter(c => (c as any).isProgram).map(c => c.id).filter(isUUID);
+        const selectedFiles = activeContent.filter(c => !(c as any).isProgram).map(c => c.id).filter(isUUID);
         
-        // Construct the API payload matching user provided specification
+        // Construct the API payload
         const payload: StoreMorningPromo = {
             name: step1Data.name,
             description: step1Data.description,
@@ -159,10 +167,10 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             daysOfWeek: step4Data.selectedDays as DayOfWeek[],
             dayOfMonth: step4Data.selectedDates,
             programIds: selectedPrograms.length > 0 ? selectedPrograms : undefined,
-            deviceIds: step3Data.selectedScreens,
-            fileIds: firstSelected?.id ? [firstSelected.id] : undefined,
+            deviceIds: step3Data.selectedScreens.filter(isUUID),
+            fileIds: selectedFiles.length > 0 ? selectedFiles : undefined,
             status: "playing",
-            lowerThirdId: showLowerThird ? lowerThirdData.selectedContent?.id : undefined,
+            lowerThirdId: (createdLowerThirdId || lowerThirdData.selectedContent?.id) && isUUID(createdLowerThirdId || lowerThirdData.selectedContent?.id) ? (createdLowerThirdId || lowerThirdData.selectedContent!.id) : undefined,
         };
 
         console.log("=== SUBMITTING SCHEDULE PAYLOAD ===");
@@ -262,6 +270,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                                 <Step2LowerThird
                                     data={lowerThirdData as any}
                                     onChange={setLowerThirdData}
+                                    onLowerThirdCreated={setCreatedLowerThirdId}
                                     onContentTypeChange={(type) => {
                                         setStep2Data(prev => ({ ...prev, contentType: type }));
                                         if (type !== "lower-third") {

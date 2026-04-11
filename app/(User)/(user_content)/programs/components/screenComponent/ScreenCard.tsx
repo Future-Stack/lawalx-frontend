@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { Program } from "@/redux/api/users/programs/programs.type";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { useEffect } from "react";
 dayjs.extend(relativeTime);
 
 import ScreenSettings from "./ScreenSettings";
@@ -26,6 +27,8 @@ interface ScreenCardProps {
 const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   const [loading, setLoading] = useState(false);
   const [isTurnOffDialogOpen, setIsTurnOffDialogOpen] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isFading, setIsFading] = useState(false);
   const navigate = useRouter();
 
   // More robust status check
@@ -42,7 +45,29 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
     return `${baseUrl}/${url.startsWith("/") ? url.slice(1) : url}`;
   };
 
-  const previewVideo = getFileUrl(program.timeline?.[0]?.file?.url || "");
+  const advance = () => {
+    if (!program.timeline || program.timeline.length <= 1) return;
+    setIsFading(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % program.timeline!.length);
+      setIsFading(false);
+    }, 500);
+  };
+
+  useEffect(() => {
+    const timeline = program.timeline;
+    if (!timeline || timeline.length <= 1) return;
+
+    const currentItem = timeline[currentIndex];
+    if (currentItem?.file?.type === "VIDEO") return;
+
+    const duration = currentItem?.file?.duration ? currentItem.file.duration * 1000 : 7000;
+    const timer = setTimeout(advance, Math.max(0, duration - 500));
+    return () => clearTimeout(timer);
+  }, [currentIndex, program.timeline]);
+
+  const currentItem = program.timeline?.[currentIndex];
+  const previewData = getFileUrl(currentItem?.file?.url || "");
 
   const handleOnClick = () => {
     setLoading(true);
@@ -70,26 +95,29 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   };
 
   return (
-    <div className="group bg-navbarBg border border-border rounded-xl overflow-hidden hover:shadow-md dark:hover:shadow-xl transition-all h-full flex flex-col">
+    <div className="group bg-navbarBg border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
       {/* Video Section (ONLY this has p-3) */}
       <div className="p-3">
-        <div className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-          {(program.timeline?.[0]?.file?.type === "IMAGE" || program.timeline?.[0]?.file?.type === "CONTENT") ? (
-            <img
-              src={previewVideo}
-              alt={program.name}
-              className="w-full h-[120px] sm:h-[180px] object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <video
-              src={previewVideo}
-              className="w-full h-[120px] sm:h-[180px] object-cover transition-transform duration-300 group-hover:scale-105"
-              autoPlay
-              muted
-              loop
-              playsInline
-            />
-          )}
+        <div className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 aspect-video">
+          <div className={`w-full h-full ${isFading ? "animate-preview-exit" : "animate-preview-enter"}`}>
+            {(currentItem?.file?.type === "IMAGE" || currentItem?.file?.type === "CONTENT" || !currentItem) ? (
+              <img
+                src={previewData || "/placeholder.png"}
+                alt={program.name}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : (
+              <video
+                key={currentItem.file?.id}
+                src={previewData}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                autoPlay
+                muted
+                playsInline
+                onEnded={advance}
+              />
+            )}
+          </div>
         </div>
       </div>
 

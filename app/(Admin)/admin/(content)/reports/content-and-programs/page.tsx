@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   Download,
   ChevronDown,
@@ -8,13 +8,9 @@ import {
   FileText,
   HardDrive,
   Flag,
-  Video,
   Image as ImageIcon,
-  Music,
-  Type,
   Home,
-  ChevronRight,
-  FileSpreadsheet
+  ChevronRight
 } from "lucide-react";
 import {
   PieChart,
@@ -34,6 +30,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
+import { formatBytes } from "@/lib/content-utils";
 
 // Define the time range options
 const TIME_RANGES = [
@@ -80,7 +77,7 @@ const ContentAndProgramsReport = () => {
           index + 1,
           file.originalName || 'N/A',
           file.type || 'N/A',
-          file.size ? `${(file.size / 1024).toFixed(2)} KB` : 'N/A',
+          file.size ? formatBytes(file.size) : 'N/A',
           file.user?.username || 'N/A',
           file.createdAt ? new Date(file.createdAt).toLocaleDateString() : 'N/A'
         ];
@@ -122,7 +119,7 @@ const ContentAndProgramsReport = () => {
           index + 1,
           file.originalName || 'N/A',
           file.type || 'N/A',
-          file.size ? `${(file.size / 1024).toFixed(2)} KB` : 'N/A',
+          file.size ? formatBytes(file.size) : 'N/A',
           file.user?.username || 'N/A',
           file.createdAt ? new Date(file.createdAt).toLocaleDateString() : 'N/A'
         ])

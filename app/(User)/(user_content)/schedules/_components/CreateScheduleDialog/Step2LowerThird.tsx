@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import Marquee from "react-fast-marquee";
 import { Switch } from "@/components/ui/switch";
+import { useCreateLowerThirdMutation } from "@/redux/api/users/schedules/schedules.api";
+import { toast } from "sonner";
 
 /* =====================
    Shared field sizing
@@ -35,17 +37,22 @@ interface Step2LowerThirdProps {
             loop: boolean;
             message: string;
             video: string;
+            duration: number;
         };
     };
     onChange: (data: any) => void;
+    onLowerThirdCreated?: (id: string) => void;
     onContentTypeChange?: (type: string) => void;
 }
 
 const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
     data,
     onChange,
+    onLowerThirdCreated,
     onContentTypeChange,
 }) => {
+    const [createLowerThird, { isLoading }] = useCreateLowerThirdMutation();
+
     const updateConfig = (key: string, value: any) => {
         onChange({
             ...data,
@@ -54,6 +61,60 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                 [key]: value,
             },
         });
+    };
+
+    const handleCreateLowerThird = async () => {
+        const { lowerThirdConfig } = data;
+
+        // Map UI values to backend types
+        const mapFontSize = (size: string): "Small" | "Medium" | "Large" => {
+            if (size === "14") return "Small";
+            if (size === "16" || size === "20") return "Medium";
+            return "Large";
+        };
+
+        const mapAnimation = (dir: string, enabled: boolean): "Left_to_Light" | "Right_to_Left" | "Fade" | "None" => {
+            if (!enabled) return "None";
+            if (dir === "left-to-right") return "Left_to_Light";
+            return "Right_to_Left";
+        };
+
+        const mapPosition = (pos: string): "Top" | "Middle" | "Bottom" => {
+            if (pos === "top") return "Top";
+            return "Bottom";
+        };
+
+        const mapSpeed = (speed: string): number => {
+            if (speed === "slow") return 20;
+            if (speed === "medium") return 40;
+            return 60;
+        };
+
+        const payload = {
+            text: lowerThirdConfig.message,
+            textColor: lowerThirdConfig.textColor,
+            font: lowerThirdConfig.fontFamily,
+            fontSize: mapFontSize(lowerThirdConfig.fontSize),
+            duration: lowerThirdConfig.duration || 10,
+            backgroundColor: lowerThirdConfig.backgroundColor,
+            backgroundOpacity: String(lowerThirdConfig.backgroundOpacity),
+            animation: mapAnimation(lowerThirdConfig.animationDirection, lowerThirdConfig.enableAnimation),
+            loop: lowerThirdConfig.loop,
+            speed: mapSpeed(lowerThirdConfig.speed),
+            position: mapPosition(lowerThirdConfig.position),
+        };
+
+        try {
+            const response = await createLowerThird(payload).unwrap();
+            if (response.success) {
+                toast.success("Lower Third created successfully!");
+                if (onLowerThirdCreated && (response as any).data?.id) {
+                    onLowerThirdCreated((response as any).data.id);
+                }
+            }
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Failed to create Lower Third");
+        }
     };
 
     const animationOptions = [
@@ -214,19 +275,35 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                             )}
                     </div>
 
-                    {/* MESSAGE */}
-                    <div className="space-y-2">
-                        <Label className="text-sm font-medium text-headings">
-                            Message
-                        </Label>
-                        <Input
-                            placeholder="This is a demo text"
-                            value={data.lowerThirdConfig.message}
-                            onChange={(e) =>
-                                updateConfig("message", e.target.value)
-                            }
-                            className={`bg-input border-borderGray text-headings ${FIELD_SIZE}`}
-                        />
+                    {/* MESSAGE & DURATION */}
+                    <div className="flex gap-4">
+                        <div className="space-y-2 flex-1">
+                            <Label className="text-sm font-medium text-headings">
+                                Message
+                            </Label>
+                            <Input
+                                placeholder="This is a demo text"
+                                value={data.lowerThirdConfig.message}
+                                onChange={(e) =>
+                                    updateConfig("message", e.target.value)
+                                }
+                                className={`bg-input border-borderGray text-headings ${FIELD_SIZE}`}
+                            />
+                        </div>
+                        <div className="space-y-2 w-32">
+                            <Label className="text-sm font-medium text-headings">
+                                Duration (s)
+                            </Label>
+                            <Input
+                                type="number"
+                                placeholder="10"
+                                value={data.lowerThirdConfig.duration}
+                                onChange={(e) =>
+                                    updateConfig("duration", Number(e.target.value))
+                                }
+                                className={`bg-input border-borderGray text-headings ${FIELD_SIZE}`}
+                            />
+                        </div>
                     </div>
 
                     {/* TEXT STYLE */}
@@ -381,6 +458,19 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                         value={data.lowerThirdConfig.position}
                         onChange={(v) => updateConfig("position", v)}
                     />
+
+                    <button
+                        onClick={handleCreateLowerThird}
+                        disabled={isLoading || !data.lowerThirdConfig.message}
+                        className="w-full h-11 bg-bgBlue text-white font-semibold rounded-xl hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-4 shadow-customShadow cursor-pointer"
+                    >
+                        {isLoading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                            <GalleryThumbnails className="w-5 h-5" />
+                        )}
+                        {isLoading ? "Creating..." : "Add Lower Third"}
+                    </button>
                 </div>
             </div>
 

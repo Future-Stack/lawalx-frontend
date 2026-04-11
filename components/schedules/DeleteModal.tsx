@@ -28,7 +28,7 @@ export const DeleteConfirmationModal = ({
         <div className="flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl font-medium transition"
+            className="px-5 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl font-medium transition shadow-customShadow cursor-pointer"
           >
             Cancel
           </button>
@@ -37,7 +37,7 @@ export const DeleteConfirmationModal = ({
               onConfirm();
               onClose();
             }}
-            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition shadow-customShadow"
+            className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-medium transition shadow-customShadow cursor-pointer"
           >
             Delete
           </button>

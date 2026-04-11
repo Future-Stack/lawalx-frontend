@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Clock,
   FileText,
@@ -36,7 +36,8 @@ const ScreenCardDetails = () => {
     "timeline"
   );
   const [playingIndex, setPlayingIndex] = useState<number>(0);
-  const [isAutoPlay, setIsAutoPlay] = useState(false);
+  const [isAutoPlay, setIsAutoPlay] = useState(true);
+  const [isFading, setIsFading] = useState(false);
   const [localTimeline, setLocalTimeline] = useState<Timeline[]>([]);
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -63,6 +64,37 @@ const ScreenCardDetails = () => {
       setDescription(program.description || "");
     }
   }, [program]);
+
+  // Stable callback — must be declared before any early returns (Rules of Hooks)
+  // Won't change on unrelated re-renders, preventing Plyr from re-initializing
+  const advance = useCallback(() => {
+    if (localTimeline.length <= 1) return;
+    setIsFading(true);
+    setTimeout(() => {
+      setPlayingIndex((prev) => (prev + 1) % localTimeline.length);
+      setIsAutoPlay(true);
+      setIsFading(false);
+    }, 500);
+  }, [localTimeline.length]);
+
+  // Handle video completion
+  const handleVideoEnded = useCallback(() => {
+    advance();
+  }, [advance]);
+
+  // Handle timing for non-video items
+  useEffect(() => {
+    if (!localTimeline || localTimeline.length <= 1) return;
+
+    const currentItem = localTimeline[playingIndex];
+    if (currentItem?.file?.type === "VIDEO") return;
+
+    // Default to 7s if duration is missing
+    const duration = currentItem?.file?.duration ? currentItem.file.duration * 1000 : 7000;
+    const timer = setTimeout(advance, Math.max(0, duration - 500));
+
+    return () => clearTimeout(timer);
+  }, [playingIndex, localTimeline, advance]);
 
   if (!hasMounted) {
     return (
@@ -253,35 +285,37 @@ const ScreenCardDetails = () => {
           {/* Right side */}
           <div className="w-full md:w-[55%] space-y-6">
             {/* Preview Section */}
-            <div className=" border border-border p-4 sm:p-6 rounded-xl overflow-hidden bg-navbarBg">
-              {selectedContent?.file?.type === "VIDEO" ? (
-                <BaseVideoPlayer
-                  src={previewUrl || ""}
-                  poster={undefined}
-                  autoPlay={isAutoPlay}
-                  rounded="rounded-lg"
-                  onEnded={() => {
-                    if (localTimeline && playingIndex < localTimeline.length - 1) {
-                      setPlayingIndex(playingIndex + 1);
-                      setIsAutoPlay(true);
-                    }
-                  }}
-                />
-              ) : (
-                <div className="relative w-full pt-[56.25%] rounded-lg bg-black overflow-hidden flex items-center justify-center">
-                  {previewUrl ? (
-                    <img
-                      src={previewUrl}
-                      alt={currentFileName}
-                      className="absolute inset-0 w-full h-full object-contain"
-                    />
+            <div className="border border-border p-4 sm:p-6 rounded-xl bg-navbarBg space-y-4 sm:space-y-6 shadow-lg transition-shadow hover:shadow-xl overflow-hidden mb-6">
+              <div className="aspect-video relative overflow-hidden rounded-lg bg-black">
+                <div className={`w-full h-full ${isFading ? "animate-preview-exit" : "animate-preview-enter"}`}>
+                  {selectedContent?.file?.type === "VIDEO" ? (
+                    <div className="w-full h-full">
+                      <BaseVideoPlayer
+                        key={previewUrl}
+                        src={previewUrl || ""}
+                        poster={undefined}
+                        autoPlay={true}
+                        rounded="rounded-lg"
+                        onEnded={handleVideoEnded}
+                      />
+                    </div>
                   ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-muted">
-                      No preview available
+                    <div className="relative w-full h-full rounded-lg bg-black overflow-hidden flex items-center justify-center">
+                      {previewUrl ? (
+                        <img
+                          src={previewUrl}
+                          alt={currentFileName}
+                          className="absolute inset-0 w-full h-full object-contain"
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center text-muted">
+                          No preview available
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              </div>
 
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 sm:mt-6 gap-3 sm:gap-0">
                 <h3 className="text-xl md:text-2xl font-semibold text-headings line-clamp-1 truncate">

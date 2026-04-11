@@ -248,7 +248,7 @@ const MyContent = () => {
           onUploadClick={() => setIsUploadModalOpen(true)}
         />
       ) : (
-        <div className={`flex flex-col ${viewMode === "list" ? "bg-navbarBg rounded-xl border border-border overflow-hidden" : ""} min-h-[600px] md:min-h-[750px]`}>
+        <div className={`flex flex-col ${viewMode === "list" ? "bg-navbarBg rounded-xl border border-border overflow-hidden" : ""} h-fit`}>
           <div className="flex-1 overflow-x-auto">
             <div className="min-w-full lg:min-w-0">
               {viewMode === "list" && (
