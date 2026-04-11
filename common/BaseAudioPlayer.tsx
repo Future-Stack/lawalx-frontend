@@ -60,65 +60,63 @@ const BaseAudioPlayer = ({
     setReady(false);
   }, [src]);
 
+  // Handle all event listeners once instance is available
   useEffect(() => {
     if (!isMounted) return;
 
     let timer: NodeJS.Timeout;
-    let checkCount = 0;
-    const maxChecks = 20;
-
-    const initPlayer = () => {
+    const initListeners = () => {
       const instance = playerRef.current?.plyr as any;
 
       if (instance && typeof instance.on === "function") {
-        const handleEnded = () => {
-          onEndedRef.current?.();
-        };
-
-        const handleReady = () => {
-          setReady(true);
-          if (autoPlay) {
-            instance.play()?.catch(() => {
-              console.warn("Autoplay blocked on ready");
-            });
-          }
-        };
+        const handleEnded = () => onEndedRef.current?.();
+        const handleReady = () => setReady(true);
+        const handlePlaying = () => setReady(true);
 
         instance.on("ended", handleEnded);
         instance.on("ready", handleReady);
         instance.on("canplay", handleReady);
-        instance.on("playing", () => setReady(true));
+        instance.on("playing", handlePlaying);
 
-        if (instance.ready) {
-          setReady(true);
-          if (autoPlay) instance.play()?.catch(() => {});
-        }
+        if (instance.ready) setReady(true);
 
         return () => {
           try {
-            if (instance && typeof instance.off === "function") {
-              instance.off("ended", handleEnded);
-              instance.off("ready", handleReady);
-              instance.off("canplay", handleReady);
-              instance.off("playing", () => setReady(true));
-            }
-          } catch {
-            // Ignore errors
-          }
+            instance.off("ended", handleEnded);
+            instance.off("ready", handleReady);
+            instance.off("canplay", handleReady);
+            instance.off("playing", handlePlaying);
+          } catch (e) { /* ignore cleanup errors */ }
         };
-      } else if (checkCount < maxChecks) {
-        checkCount++;
-        timer = setTimeout(initPlayer, 100);
+      } else {
+        timer = setTimeout(initListeners, 100);
       }
     };
 
-    const cleanup = initPlayer();
-
+    const cleanup = initListeners();
     return () => {
       if (timer) clearTimeout(timer);
       if (cleanup) cleanup();
     };
-  }, [src, autoPlay, isMounted]);
+  }, [isMounted]); // Only run once on mount
+
+  // Sync playback with autoPlay prop
+  useEffect(() => {
+    const instance = playerRef.current?.plyr as any;
+    if (instance && ready) {
+      if (autoPlay) {
+        // Small delay to ensure state is registered
+        const playTimer = setTimeout(() => {
+          instance.play()?.catch(() => {
+            console.warn("Autoplay attempt failed or blocked");
+          });
+        }, 50);
+        return () => clearTimeout(playTimer);
+      } else {
+        instance.pause();
+      }
+    }
+  }, [autoPlay, ready, src]);
 
   return (
     <div className="relative w-full bg-black/5 dark:bg-white/5 rounded-2xl p-6 overflow-hidden border border-gray-100 dark:border-gray-800 shadow-inner">
@@ -126,11 +124,11 @@ const BaseAudioPlayer = ({
         {/* Visualizer / Icon Area */}
         <div className="flex items-center justify-center py-4 relative">
           <div className={`transition-all duration-700 ${ready ? "scale-100 opacity-100 blur-0" : "scale-90 opacity-0 blur-md"}`}>
-             <div className="w-16 h-16 rounded-full bg-primary-action/10 flex items-center justify-center animate-pulse">
-                <Music className="w-8 h-8 text-primary-action" />
-             </div>
+            <div className="w-16 h-16 rounded-full bg-primary-action/10 flex items-center justify-center animate-pulse">
+              <Music className="w-8 h-8 text-primary-action" />
+            </div>
           </div>
-          
+
           {(!ready || !isMounted) && (
             <div className="absolute inset-0 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary-action/40" />
@@ -142,7 +140,7 @@ const BaseAudioPlayer = ({
         <div className={`transition-all duration-1000 ease-out ${ready ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
           {isMounted ? (
             <div className="modern-audio-player">
-               <Plyr
+              <Plyr
                 ref={playerRef}
                 source={source}
                 options={plyrOptions}

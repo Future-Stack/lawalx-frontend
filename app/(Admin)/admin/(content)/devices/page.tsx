@@ -313,7 +313,7 @@ export default function GlobalDevices() {
         location: locationLabel,
         type: device.deviceType ?? 'N/A',
         status: device.status ?? 'Offline',
-        storage: device.storage ? String(device.storage) : 'N/A',
+        storage: device.user?.totalStorage ? `${(device.user.usedStorage || 0).toFixed(2)} GB / ${device.user.totalStorage.toFixed(0)} GB` : 'N/A',
         uptime,
         daysAgo,
         lastSync: device.last_Sync ? new Date(device.last_Sync).toLocaleString() : 'N/A',

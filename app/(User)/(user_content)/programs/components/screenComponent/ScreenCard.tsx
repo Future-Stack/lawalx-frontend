@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Program } from "@/redux/api/users/programs/programs.type";
+import { Program, WorkoutStatus } from "@/redux/api/users/programs/programs.type";
+import { useUpdateSingleProgramMutation } from "@/redux/api/users/programs/programs.api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect } from "react";
@@ -26,9 +27,10 @@ interface ScreenCardProps {
 
 const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   const [loading, setLoading] = useState(false);
-  const [isTurnOffDialogOpen, setIsTurnOffDialogOpen] = useState(false);
+  const [updateProgram, { isLoading: isUpdating }] = useUpdateSingleProgramMutation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFading, setIsFading] = useState(false);
+  const videoRef = React.useRef<HTMLVideoElement>(null);
   const navigate = useRouter();
 
   // More robust status check
@@ -66,6 +68,17 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
     return () => clearTimeout(timer);
   }, [currentIndex, program.timeline]);
 
+  // Handle autoPlay based on isActive
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isActive) {
+        videoRef.current.play().catch(err => console.error("Playback failed", err));
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isActive, currentIndex]);
+
   const currentItem = program.timeline?.[currentIndex];
   const previewData = getFileUrl(currentItem?.file?.url || "");
 
@@ -80,18 +93,30 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
     console.log("Power button clicked. Program status:", program.status, "Evaluated isActive:", isActive);
 
     if (isActive) {
-      console.log("Opening Turn Off Dialog...");
-      setIsTurnOffDialogOpen(true);
+      // Handle Turn Off immediately
+      updateProgram({
+        id: program.id,
+        data: { status: WorkoutStatus.DRAFT }
+      }).unwrap()
+        .then(() => {
+          console.log("Program turned off successfully");
+        })
+        .catch((err) => {
+          console.error("Failed to turn off program", err);
+        });
     } else {
-      console.log("Program is already off or has inactive status. Skipping dialog.");
-      // Logic for Turn On can be added here
+      // Handle Turn On
+      updateProgram({
+        id: program.id,
+        data: { status: WorkoutStatus.PUBLISH }
+      }).unwrap()
+        .then(() => {
+          console.log("Program turned on successfully");
+        })
+        .catch((err) => {
+          console.error("Failed to turn on program", err);
+        });
     }
-  };
-
-  const handleConfirmTurnOff = () => {
-    console.log("Turn off confirmed for program:", program.id);
-    // API call would go here
-    setIsTurnOffDialogOpen(false);
   };
 
   return (
@@ -109,9 +134,9 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
             ) : (
               <video
                 key={currentItem.file?.id}
+                ref={videoRef}
                 src={previewData}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                autoPlay
                 muted
                 playsInline
                 onEnded={advance}
@@ -199,12 +224,6 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
         </div>
       </div>
 
-      <TurnOffProgramDialog
-        open={isTurnOffDialogOpen}
-        onOpenChange={setIsTurnOffDialogOpen}
-        onConfirm={handleConfirmTurnOff}
-        deviceCount={program.devices?.length || 0}
-      />
     </div>
   );
 };

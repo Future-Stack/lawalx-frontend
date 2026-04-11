@@ -141,7 +141,7 @@ export default function ScheduleDetailPage() {
   const endDate = localEndDate ?? (schedule?.endDate ? schedule.endDate.split("T")[0] : "");
 
   // Map API file data to ContentItem[] for ContentSection (handle all items)
-  const content: ContentItem[] = localFile
+  const allContent: ContentItem[] = localFile
     ? [localFile as ContentItem]
     : (!isExistingContentRemoved && schedule?.files && schedule.files.length > 0
       ? schedule.files.map((file) => ({
@@ -165,6 +165,14 @@ export default function ScheduleDetailPage() {
           duration: "10", // Default for programs
         }))
         : []));
+
+  // Filter content based on selected type
+  const content = allContent.filter(item => {
+    if (contentType === "all") return true;
+    if (contentType === "image-video") return item.type === "image" || item.type === "video";
+    if (contentType === "audio") return item.type === "audio";
+    return true;
+  });
 
   // Build schedule time display
   const scheduleTimeDisplay = schedule

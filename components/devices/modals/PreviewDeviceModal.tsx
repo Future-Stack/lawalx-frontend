@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Power, Camera, Maximize, Volume2, Sun, Play, Pause, Trash2, RefreshCw } from "lucide-react";
+import { X, Camera, Maximize, Volume2, Sun, Play, Pause, Trash2, RefreshCw, Power, PowerOff } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.api";
 import DeviceLocation from "@/components/common/DeviceLocation";
@@ -43,7 +43,8 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
   };
 
   const currentDevice = useMemo(() => {
-    return deviceDetail || device;
+    if (!deviceDetail) return device;
+    return { ...device, ...deviceDetail };
   }, [deviceDetail, device]);
 
 
@@ -112,6 +113,17 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     };
   }, [isLooping, isOpen]);
 
+  // Handle Playback based on isPlaying state
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.play().catch(err => console.error("Playback failed", err));
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isPlaying, videoSrc]);
+
   const togglePlayPause = () => {
     if (videoRef.current) {
       if (isPlaying) {
@@ -151,8 +163,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     }
   };
 
-  if (!isOpen || !device || !currentDevice) return null;
-
   const parseStorage = (storage: any) => {
     if (!storage) return { used: 0, total: 100, formatted: "N/A" };
 
@@ -182,7 +192,21 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     return { used: 0, total: 100, formatted: "N/A" };
   };
 
-  const { used, total, formatted } = parseStorage(currentDevice.storage);
+  const { used, total, formatted } = useMemo(() => {
+    if (currentDevice?.user?.totalStorage !== undefined) {
+      const usedVal = currentDevice.user.usedStorage || 0;
+      const totalVal = currentDevice.user.totalStorage || 0;
+      return {
+        used: usedVal,
+        total: totalVal,
+        formatted: `${usedVal.toFixed(2)} GB / ${totalVal.toFixed(0)} GB`
+      };
+    }
+    return parseStorage(currentDevice?.storage);
+  }, [currentDevice]);
+
+  if (!isOpen || !device || !currentDevice) return null;
+
   const storagePercent = total > 0 ? (used / total) * 100 : 0;
 
   const calculateLastSync = (lastSeen: string | null) => {
@@ -469,16 +493,29 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
 
                 <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
 
-                {/* App Version Section */}
+                {/* Power Button Section */}
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">App Version</span>
-                    <span className="text-[#171717] dark:text-white text-sm font-bold">v2.4.1</span>
+                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Power Status</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsPlaying(!isPlaying)}
+                      aria-label={isPlaying ? "Turn Off Program" : "Turn On Program"}
+                      className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
+                          py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
+                          ${isPlaying
+                          ? "bg-bgBlue hover:bg-blue-500"
+                          : "bg-bgRed hover:bg-red-600"
+                        }`}
+                      title={isPlaying ? "Turn Off" : "Turn On"}
+                    >
+                      {isPlaying ? (
+                        <Power className="w-4 h-4 sm:w-5 sm:h-5" />
+                      ) : (
+                        <PowerOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                      )}
+                    </button>
                   </div>
-                  <button className="flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-bold text-[#171717] dark:text-white shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer w-full justify-center">
-                    <RefreshCw className="h-4 w-4" />
-                    Update App
-                  </button>
                 </div>
               </div>
             </div>

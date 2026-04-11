@@ -36,7 +36,6 @@ const SignInForm = () => {
                 // Decode role to verify if this is actually a USER
                 const decoded: any = jwtDecode(accessToken);
                 const role = (decoded.role || "USER").toUpperCase();
-                toast.success(res.message);
 
                 if (role !== "USER") {
                     toast.error("not valid email or pass");
@@ -54,7 +53,11 @@ const SignInForm = () => {
                 } else {
                     localStorage.removeItem("is_new_user");
                 }
-                router.push("/dashboard");
+
+                setTimeout(() => {
+                    toast.success(res.message);
+                    router.push("/dashboard");
+                }, 1000);
             }
         } catch (error) {
             console.error("User login API call failed:", error);

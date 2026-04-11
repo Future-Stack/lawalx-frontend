@@ -9,6 +9,7 @@ import SetPasswordForm from "@/components/auth/SetPasswordForm";
 import PlanSelection from "@/components/auth/PlanSelection";
 import CustomEnterpriseForm from "@/components/auth/CustomEnterpriseForm";
 import { CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 
 type SignupStep = "details" | "verification" | "password" | "plans" | "enterprise" | "success";
 
@@ -99,7 +100,10 @@ const SignUpPage = () => {
                                 className="w-full h-[52px] bg-bgBlue text-white rounded-2xl font-bold text-lg hover:opacity-90 transition-all shadow-xl shadow-bgBlue/20 active:scale-95"
                                 onClick={() => {
                                     localStorage.setItem("is_new_user", "true");
-                                    window.location.href = "/dashboard";
+                                    setTimeout(() => {
+                                        toast.success("Account created successfully. Welcome!");
+                                        window.location.href = "/dashboard";
+                                    }, 1000);
                                 }}
                             >
                                 Go to Dashboard

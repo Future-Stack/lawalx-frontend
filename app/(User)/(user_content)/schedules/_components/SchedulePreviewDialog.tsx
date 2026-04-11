@@ -215,6 +215,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
             title={schedule.name}
             description={schedule.description || "View and manage this schedule's live playback settings."}
             maxWidth="xl"
+            maxHeight="xl"
 
             className="bg-navbarBg"
         >

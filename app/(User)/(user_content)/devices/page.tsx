@@ -154,9 +154,9 @@ export default function DevicesPage() {
     return devicesData.data.map((device) => {
       let status = device.status || "OFFLINE";
 
-      // Format storage from bytes
-      const totalBytes = parseInt(device.storage) || 0;
-      const storageDisplay = `0 / ${formatBytes(totalBytes)}`; // Assuming 0 used as API doesn't provide used storage yet
+      const usedStorage = device.user?.usedStorage || 0;
+      const totalStorage = device.user?.totalStorage || 0;
+      const storageDisplay = `${usedStorage.toFixed(2)} GB / ${totalStorage.toFixed(0)} GB`;
 
       return {
         id: device.id,

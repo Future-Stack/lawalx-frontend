@@ -69,6 +69,10 @@ export type Device = {
   location: Location | null;
   metadata: any | null;
   storage: string; // The JSON says this is a string "64000000000"
+  user: {
+    totalStorage: number;
+    usedStorage: number;
+  } | null;
   isActive: boolean;
   userId: string;
   programId: string | null;

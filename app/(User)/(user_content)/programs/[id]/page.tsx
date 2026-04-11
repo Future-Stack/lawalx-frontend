@@ -5,10 +5,12 @@ import {
   Clock,
   FileText,
   ListTree,
-  Power,
-  PowerOff,
   Tv,
   Settings,
+  ChevronDown,
+  ChevronUp,
+  Monitor,
+  WifiOff,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import ContentTimeline from "../components/screenComponent/ContentTimeline";
@@ -17,6 +19,7 @@ import MapLocation from "../components/screenComponent/MapLocation";
 import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import Breadcrumb from "@/common/BreadCrumb";
+import ResolvedLocation from "@/common/ResolvedLocation";
 import { useGetSingleProgramDataQuery, useUpdateSingleProgramMutation } from "@/redux/api/users/programs/programs.api";
 import { toast } from "sonner";
 import { Device, Timeline } from "@/redux/api/users/programs/programs.type";
@@ -47,6 +50,7 @@ const ScreenCardDetails = () => {
   const [localDevices, setLocalDevices] = useState<Device[]>([]);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
+  const [isDevicesExpanded, setIsDevicesExpanded] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
@@ -138,24 +142,6 @@ const ScreenCardDetails = () => {
   const lastUpdated = dayjs(program.updated_at).fromNow();
   const isActive = program.status === "PUBLISH";
   const assignedContent = `${videos} videos, ${images} content`;
-
-  const handleToggleStatus = async () => {
-    try {
-      const newStatus = program.status === "PUBLISH" ? "DRAFT" : "PUBLISH";
-      const res = await updateProgram({
-        id: String(id),
-        data: {
-          ...program,
-          status: newStatus as any,
-          content_ids: localTimeline.map((item) => item.fileId),
-          device_ids: localDevices.map((d) => d.id),
-        },
-      }).unwrap();
-      toast.success(res.message || `Program ${newStatus === "PUBLISH" ? "published" : "set to draft"}`);
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update status");
-    }
-  };
 
   const handleSave = async () => {
     try {
@@ -321,24 +307,6 @@ const ScreenCardDetails = () => {
                 <h3 className="text-xl md:text-2xl font-semibold text-headings line-clamp-1 truncate">
                   {currentFileName}
                 </h3>
-                <button
-                  onClick={handleToggleStatus}
-                  disabled={isUpdating}
-                  className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
-                            ${isActive
-                      ? "bg-bgBlue hover:bg-blue-500"
-                      : "bg-bgRed hover:bg-red-600"
-                    }`}
-                  title={isActive ? "Turn Off" : "Turn On"}
-                >
-                  {isUpdating ? (
-                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-                  ) : isActive ? (
-                    <Power className="w-4 h-4 sm:w-5 sm:h-5" />
-                  ) : (
-                    <PowerOff className="w-4 h-4 sm:w-5 sm:h-5" />
-                  )}
-                </button>
               </div>
 
               <p className="text-sm sm:text-base text-muted mt-2">
@@ -367,16 +335,85 @@ const ScreenCardDetails = () => {
                 </div>
 
                 {/* Total Devices */}
-                <div className="flex justify-between items-center py-2 border-b border-borderGray">
-                  <div className="flex items-center gap-2 sm:gap-3 w-[60%]">
-                    <Tv className="w-5 h-5 text-body" />
-                    <span className="text-sm sm:text-base text-body truncate">
-                      Total Devices
-                    </span>
+                <div className="py-2 border-b border-borderGray">
+                  <div
+                    className="flex justify-between items-center cursor-pointer group"
+                    onClick={() => setIsDevicesExpanded(!isDevicesExpanded)}
+                  >
+                    <div className="flex items-center gap-2 sm:gap-3 w-[60%]">
+                      <Tv className="w-5 h-5 text-body group-hover:text-bgBlue transition-colors" />
+                      <span className="text-sm sm:text-base text-body truncate font-medium">
+                        Total Devices
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-right">
+                      <span className="text-sm sm:text-base font-semibold text-headings">
+                        {program.devices?.length || 0}
+                      </span>
+                      {isDevicesExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-muted" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-muted" />
+                      )}
+                    </div>
                   </div>
-                  <div className="text-sm sm:text-base font-medium text-body text-right w-[40%] truncate">
-                    {program.devices?.length || 0}
-                  </div>
+
+                  {/* Expanded Devices List */}
+                  {isDevicesExpanded && program.devices && program.devices.length > 0 && (
+                    <div className="mt-4 space-y-2 pl-8 sm:pl-9 animate-in slide-in-from-top-2 duration-300">
+                      {program.devices.map((device, idx) => (
+                        <div
+                          key={device.id}
+                          className="flex items-center justify-between text-sm text-muted py-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-md px-3"
+                        >
+                          <div className="flex flex-col gap-0.5 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Monitor className="w-5 h-5 text-bgBlue shrink-0" />
+                              <span className="truncate font-medium text-headings text-base tracking-tight">{device.name || "Unnamed Device"}</span>
+                            </div>
+                            {device.location && (
+                              <div className="flex items-center gap-1.5 pl-7 text-[12px] text-muted font-medium">
+                                <ResolvedLocation 
+                                  lat={device.location.lat} 
+                                  lng={device.location.lng} 
+                                  className="truncate"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Actionable Status Badge */}
+                          <div className="shrink-0">
+                            {device.status === "ONLINE" ? (
+                              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-[10px] font-bold">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
+                                Online
+                              </div>
+                            ) : device.status === "OFFLINE" ? (
+                              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-[10px] font-bold">
+                                <WifiOff className="w-3 h-3" />
+                                Offline
+                              </div>
+                            ) : device.status === "PAIRED" ? (
+                              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold">
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                Paired
+                              </div>
+                            ) : device.status === "WAITING" ? (
+                              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-[10px] font-bold">
+                                <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                                Waiting
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] text-[#737373] text-[10px] font-bold">
+                                {device.status}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Resolution */}
