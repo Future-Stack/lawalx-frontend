@@ -745,7 +745,7 @@ const Dashboard: React.FC = () => {
         <DateSelector dateRange={dateRange} onDateRangeChange={setDateRange} />
 
         {/* Metrics Grid - Row 1 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-5 gap-4 mb-4">
           <MetricCard
             icon={<Users className="w-4 h-4" />}
             title="Total Users"
@@ -772,39 +772,11 @@ const Dashboard: React.FC = () => {
             isLoading={isOverviewLoading}
           />
           <MetricCard
-            icon={<Shield className="w-4 h-4" />}
-            title="System Uptime"
-            value={`${stats?.systemUptime || 0}%`}
-            change={`${stats?.uptimeGrowth || 0}%`}
-            isPositive={(stats?.uptimeGrowth || 0) >= 0}
-            isLoading={isOverviewLoading}
-          />
-        </div>
-
-        {/* Metrics Grid - Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
-          <MetricCard
-            icon={<Webhook className="w-4 h-4" />}
-            title="Avg API Response Time"
-            value={`${stats?.avgApiResponseTime || 0}ms`}
-            change={`${stats?.apiResponseGrowth || 0}%`}
-            isPositive={(stats?.apiResponseGrowth || 0) >= 0}
-            isLoading={isOverviewLoading}
-          />
-          <MetricCard
             icon={<TvMinimal className="w-4 h-4" />}
             title="Active Devices"
             value={stats?.activeDevices?.toLocaleString() || '0'}
             change={`${stats?.deviceGrowth || 0}%`}
             isPositive={(stats?.deviceGrowth || 0) >= 0}
-            isLoading={isOverviewLoading}
-          />
-          <MetricCard
-            icon={<FileVideo className="w-4 h-4" />}
-            title="Total Content Items"
-            value={stats?.totalContentItems?.toLocaleString() || '0'}
-            change={`${stats?.contentGrowth || 0}%`}
-            isPositive={(stats?.contentGrowth || 0) >= 0}
             isLoading={isOverviewLoading}
           />
           <MetricCard
@@ -815,6 +787,50 @@ const Dashboard: React.FC = () => {
             isPositive={(stats?.ticketGrowth || 0) >= 0}
             isLoading={isOverviewLoading}
           />
+          {/* <MetricCard
+            icon={<Shield className="w-4 h-4" />}
+            title="System Uptime"
+            value={`${stats?.systemUptime || 0}%`}
+            change={`${stats?.uptimeGrowth || 0}%`}
+            isPositive={(stats?.uptimeGrowth || 0) >= 0}
+            isLoading={isOverviewLoading}
+          /> */}
+        </div>
+
+        {/* Metrics Grid - Row 2 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
+          {/* <MetricCard
+            icon={<Webhook className="w-4 h-4" />}
+            title="Avg API Response Time"
+            value={`${stats?.avgApiResponseTime || 0}ms`}
+            change={`${stats?.apiResponseGrowth || 0}%`}
+            isPositive={(stats?.apiResponseGrowth || 0) >= 0}
+            isLoading={isOverviewLoading}
+          /> */}
+          {/* <MetricCard
+            icon={<TvMinimal className="w-4 h-4" />}
+            title="Active Devices"
+            value={stats?.activeDevices?.toLocaleString() || '0'}
+            change={`${stats?.deviceGrowth || 0}%`}
+            isPositive={(stats?.deviceGrowth || 0) >= 0}
+            isLoading={isOverviewLoading}
+          /> */}
+          {/* <MetricCard
+            icon={<FileVideo className="w-4 h-4" />}
+            title="Total Content Items"
+            value={stats?.totalContentItems?.toLocaleString() || '0'}
+            change={`${stats?.contentGrowth || 0}%`}
+            isPositive={(stats?.contentGrowth || 0) >= 0}
+            isLoading={isOverviewLoading}
+          /> */}
+          {/* <MetricCard
+            icon={<Headphones className="w-4 h-4" />}
+            title="Open Support Tickets"
+            value={stats?.openSupportTickets || 0}
+            change={`${stats?.ticketGrowth || 0}%`}
+            isPositive={(stats?.ticketGrowth || 0) >= 0}
+            isLoading={isOverviewLoading}
+          /> */}
         </div>
 
         {/* Charts Row */}
@@ -834,8 +850,8 @@ const Dashboard: React.FC = () => {
             dateRange={dateRange}
           />
           <ContentUsageBreakdown
-            title="Content Usage Breakdown"
-            subtitle="Volume of recurring bans or failed payments (On a weekly scale)"
+            title="Payment Status Breakdown"
+            subtitle="Volume of recurring bans or failed payments"
             type="payments"
             dateRange={dateRange}
           />
