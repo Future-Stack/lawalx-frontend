@@ -1,5 +1,6 @@
 import React from "react";
 import { Plus, Trash2, ChevronDown, ChevronRight, X } from "lucide-react";
+import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AssignedScreensSectionProps {
@@ -24,13 +25,13 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
     return (
         <section className="bg-navbarBg border border-border rounded-xl p-6 space-y-6 shadow-sm">
             <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-headings dark:text-white">Assigned Program</h2>
+                <h2 className="text-xl font-bold text-headings dark:text-white">Assigned Devices</h2>
                 <button
                     onClick={onAddScreen}
                     className="flex items-center gap-2 px-4 py-2 md:py-2.5 bg-bgBlue text-white text-base font-semibold rounded-lg hover:bg-blue-500 transition cursor-pointer shadow-customShadow"
                 >
                     <Plus className="w-4 h-4 text-white" />
-                    Add Program
+                    Add Device
                 </button>
             </div>
 
@@ -73,10 +74,15 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
                                         </div>
                                         <label
                                             htmlFor={device.id}
-                                            className="text-base text-gray-500 cursor-pointer select-none"
+                                            className="text-base text-gray-500 cursor-pointer select-none flex-1 truncate"
                                         >
                                             {device.name}
                                         </label>
+
+                                        {/* Status Badge */}
+                                        <div className="flex-shrink-0">
+                                            <DeviceStatusBadge status={device.status} />
+                                        </div>
                                     </div>
                                 ))}
                                 {(!program.screens || program.screens.length === 0) && (
@@ -88,7 +94,7 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
                 ))}
                 {assignedScreens.length === 0 && (
                     <div className="py-8 text-center border-t border-border">
-                        <p className="text-muted italic">No programs assigned yet. Click "Add Program" to get started.</p>
+                        <p className="text-muted italic">No devices assigned yet. Click "Add Devices" to get started.</p>
                     </div>
                 )}
             </div>

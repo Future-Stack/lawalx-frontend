@@ -10,13 +10,13 @@ const GoLiveBanner = () => {
                     className="text-[24px] md:text-[32px] font-semibold text-white leading-[160%] tracking-[-0.64px]"
                     style={{ fontFamily: "Inter, sans-serif" }}
                 >
-                    Go Live on Any Screen Instantly
+                    Go Live on Any Program Instantly
                 </h1>
                 <p
                     className="text-[14px] md:text-[16px] text-white/85 font-normal leading-[160%] tracking-[-0.32px]"
                     style={{ fontFamily: "Inter, sans-serif" }}
                 >
-                    Create your first screen and start displaying your content in minutes.
+                    Create your first program and start displaying your content in minutes.
                 </p>
                 <Link href="/choose-plan" className="inline-block">
                     <button

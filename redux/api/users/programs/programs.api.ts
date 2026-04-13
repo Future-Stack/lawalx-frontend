@@ -17,14 +17,14 @@ const programsAPI = baseApi.injectEndpoints({
         url: "/program/my-programs",
         method: "GET",
       }),
-      providesTags: ["Programs"],
+      providesTags: ["Programs", "Content"],
     }),
     getSingleProgramData: build.query<GetProgramByIdResponse, { id: string }>({
       query: ({ id }) => ({
         url: `/program/get-single/${id}`,
         method: "GET",
       }),
-      providesTags: ["Programs", "Devices"],
+      providesTags: ["Programs", "Devices", "Content"],
     }),
 
     updateSingleProgram: build.mutation<SuccessResponse, { id: string, data: Partial<CreateProgramPayload> }>({
@@ -33,7 +33,7 @@ const programsAPI = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["Programs"],
+      invalidatesTags: ["Programs", "Devices", "Content"],
     }),
 
     deleteProgram: build.mutation<SuccessResponse, { id: string }>({

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useGetSingleScheduleDataQuery, useUpdateScheduleMutation, useDeleteScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
 import { ScheduleTarget } from "@/redux/api/users/schedules/schedules.type";
-import { useGetAllProgramsDataQuery } from "@/redux/api/users/programs/programs.api";
+import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { Device } from "@/redux/api/users/devices/devices.type";
 import { ContentItem } from "@/types/content";
 import { getUrl, formatBytes } from "@/lib/content-utils";
 import { toast } from "sonner";
@@ -98,8 +99,8 @@ export default function ScheduleDetailPage() {
   const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
   const [deleteSchedule, { isLoading: isDeleting }] = useDeleteScheduleMutation();
 
-  const { data: allProgramsData } = useGetAllProgramsDataQuery(undefined);
-  const allPrograms = allProgramsData?.data || [];
+  const { data: allDevicesData } = useGetMyDevicesDataQuery(undefined);
+  const allDevices = allDevicesData?.data || [];
 
   const isNew = id === "new";
   const schedule = data?.data;
@@ -185,13 +186,13 @@ export default function ScheduleDetailPage() {
   // Map API targets + programs to assignedScreens groups for accordion
   const assignedScreens = programs
     ? programs.map((program) => {
-      // Get all devices for this program from allPrograms (full data)
-      const fullProgram = allPrograms.find(p => p.id === program.id);
+      // Get all devices for this program from allDevices (full data)
+      const groupDevices = allDevices.filter(d => d.programId === program.id);
 
       return {
         groupId: program.id,
         groupName: program.name,
-        screens: (fullProgram?.devices || []).map((device: any) => {
+        screens: groupDevices.map((device: any) => {
           // Check if this device is currently targeted in the schedule
           const target = targets.find(
             (t) => t.programId === program.id && t.deviceId === device.id
@@ -199,6 +200,7 @@ export default function ScheduleDetailPage() {
           return {
             id: device.id,
             name: device.name,
+            status: device.status,
             isEnabled: !!target && target.isEnabled,
           };
         }),
@@ -368,28 +370,36 @@ export default function ScheduleDetailPage() {
   }
 
 
-  const handleAddPrograms = async (newPrograms: any[]) => {
+  const handleAddDevices = async (newDevices: Device[]) => {
+    const currentTargets = targets;
     const currentPrograms = programs;
-    const filteredNewPrograms = newPrograms.filter(
-      (np) => !currentPrograms.some((cp) => cp.id === np.id)
+
+    // Filter out devices already in targets
+    const filteredNewDevices = newDevices.filter(
+      (nd) => !currentTargets.some((ct) => ct.deviceId === nd.id)
     );
 
-    if (filteredNewPrograms.length === 0) return;
+    if (filteredNewDevices.length === 0) return;
 
-    const nextPrograms = [...currentPrograms, ...filteredNewPrograms];
-    const newTargets: ScheduleTarget[] = [];
-    filteredNewPrograms.forEach((p) => {
-      (p.devices || []).forEach((d: any) => {
-        newTargets.push({
-          id: `temp-${Date.now()}-${d.id}`,
-          scheduleId: (id as string) || "",
-          programId: p.id,
-          deviceId: d.id,
-          isEnabled: true,
-        } as ScheduleTarget);
-      });
-    });
+    // Create new targets for the selected devices
+    const newTargets: ScheduleTarget[] = filteredNewDevices.map((d) => ({
+      id: `temp-${Date.now()}-${d.id}`,
+      scheduleId: (id as string) || "",
+      programId: d.programId,
+      deviceId: d.id,
+      isEnabled: true,
+    } as ScheduleTarget));
+
+    // Also collect any new programs associated with these devices
+    const newProgramsToAdd = filteredNewDevices
+      .map(d => d.program)
+      .filter((p): p is any => !!p && !currentPrograms.some(cp => cp.id === p.id));
+    
+    // De-duplicate programs
+    const uniqueNewPrograms = Array.from(new Map(newProgramsToAdd.map(p => [p.id, p])).values());
+
     const nextTargets = [...targets, ...newTargets];
+    const nextPrograms = [...programs, ...uniqueNewPrograms];
 
     setLocalPrograms(nextPrograms);
     setLocalTargets(nextTargets);
@@ -400,9 +410,9 @@ export default function ScheduleDetailPage() {
           id: id as string,
           data: getPayload({ programs: nextPrograms, targets: nextTargets })
         }).unwrap();
-        toast.success("Programs added successfully");
+        toast.success("Devices added successfully");
       } catch (err: any) {
-        toast.error("Failed to add programs to schedule");
+        toast.error("Failed to add devices to schedule");
       }
     }
   };
@@ -484,7 +494,7 @@ export default function ScheduleDetailPage() {
       <AddScreenDialog
         isOpen={isAddScreenOpen}
         onClose={() => setIsAddScreenOpen(false)}
-        onAdd={handleAddPrograms}
+        onAdd={handleAddDevices}
       />
 
       <AddContentDialog

@@ -75,8 +75,8 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
 
         const mapAnimation = (dir: string, enabled: boolean): "Left_to_Light" | "Right_to_Left" | "Fade" | "None" => {
             if (!enabled) return "None";
-            if (dir === "left-to-right") return "Left_to_Light";
-            return "Right_to_Left";
+            if (dir === "left-to-right") return "Right_to_Left";
+            return "Left_to_Light";
         };
 
         const mapPosition = (pos: string): "Top" | "Middle" | "Bottom" => {
@@ -152,7 +152,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
         { label: "Select Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-muted" /> },
         { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-muted" /> },
         { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-muted" /> },
-        { label: "Lower Third", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-muted" /> }
+        { label: "Text Section", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-muted" /> }
     ];
 
     // const relatedContent = mockContent
@@ -172,9 +172,9 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                 required
             />
 
-            <div className="flex flex-col lg:flex-row gap-6 w-full">
+            <div className="flex flex-col xl:flex-row gap-6 w-full">
                 {/* LEFT */}
-                <div className="space-y-4 lg:w-[70%]">
+                <div className="space-y-4 xl:w-[65%]">
                     <div className="rounded-lg overflow-hidden border border-border bg-navbarBg shadow-sm">
                         {/* TOP TICKER */}
                         {data.lowerThirdConfig.position === "top" &&
@@ -200,8 +200,8 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                         direction={
                                             data.lowerThirdConfig.animationDirection ===
                                                 "left-to-right"
-                                                ? "left"
-                                                : "right"
+                                                ? "right"
+                                                : "left"
                                         }
                                         gradient={false}
                                         loop={data.lowerThirdConfig.loop ? 0 : 1}
@@ -222,12 +222,21 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
 
                         {/* MEDIA */}
                         <div className="relative w-full aspect-video bg-gray-900 overflow-hidden">
-                            <BaseVideoPlayer
-                                src="/detailsVideo.mp4"
-                                poster=""
-                                autoPlay={true}
-                                rounded="rounded-none"
-                            />
+                            {data.selectedContent && data.selectedContent.type === "image" ? (
+                                <NextImage
+                                    src={data.selectedContent.thumbnail || ""}
+                                    alt={data.selectedContent.title}
+                                    fill
+                                    className="object-cover"
+                                />
+                            ) : (
+                                <BaseVideoPlayer
+                                    src={(data.selectedContent?.video || data.selectedContent?.thumbnail) || "/detailsVideo.mp4"}
+                                    poster={data.selectedContent?.thumbnail || ""}
+                                    autoPlay={true}
+                                    rounded="rounded-none"
+                                />
+                            )}
                         </div>
 
                         {/* BOTTOM TICKER */}
@@ -254,8 +263,8 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                         direction={
                                             data.lowerThirdConfig.animationDirection ===
                                                 "left-to-right"
-                                                ? "left"
-                                                : "right"
+                                                ? "right"
+                                                : "left"
                                         }
                                         gradient={false}
                                         loop={data.lowerThirdConfig.loop ? 0 : 1}
@@ -307,8 +316,8 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                     </div>
 
                     {/* TEXT STYLE */}
-                    <div className="flex flex-col md:flex-row gap-3">
-                        <div className="space-y-2 w-1/3">
+                    <div className="flex flex-col md:flex-row gap-4">
+                        <div className="space-y-2 flex-1 min-w-[140px]">
                             <Label className="text-sm text-headings">
                                 Text Color
                             </Label>
@@ -331,7 +340,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                             </div>
                         </div>
 
-                        <div className="w-1/3">
+                        <div className="flex-1 min-w-[140px]">
                             <BaseSelect
                                 label="Font"
                                 options={fontOptions}
@@ -340,7 +349,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                             />
                         </div>
 
-                        <div className="w-1/3">
+                        <div className="flex-1 min-w-[140px]">
                             <BaseSelect
                                 label="Font Size"
                                 options={fontSizeOptions}
@@ -352,7 +361,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                 </div>
 
                 {/* RIGHT */}
-                <div className="space-y-4 lg:w-[30%]">
+                <div className="space-y-4 xl:w-[35%]">
                     {/* BACKGROUND */}
                     <div className="rounded-lg border border-border bg-navbarBg shadow-sm">
                         <div className="flex items-center justify-between border-b border-border p-4">
@@ -459,18 +468,20 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                         onChange={(v) => updateConfig("position", v)}
                     />
 
-                    <button
-                        onClick={handleCreateLowerThird}
-                        disabled={isLoading || !data.lowerThirdConfig.message}
-                        className="w-full h-11 bg-bgBlue text-white font-semibold rounded-xl hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 mt-4 shadow-customShadow cursor-pointer"
-                    >
-                        {isLoading ? (
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        ) : (
-                            <GalleryThumbnails className="w-5 h-5" />
-                        )}
-                        {isLoading ? "Creating..." : "Add Lower Third"}
-                    </button>
+                    <div className="mt-4">
+                        <button
+                            onClick={handleCreateLowerThird}
+                            disabled={isLoading || !data.lowerThirdConfig.message}
+                            className={`w-full h-11 bg-bgBlue text-white font-semibold rounded-xl hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-customShadow cursor-pointer`}
+                        >
+                            {isLoading ? (
+                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <GalleryThumbnails className="w-5 h-5" />
+                            )}
+                            {isLoading ? "Creating..." : "Add Text Section"}
+                        </button>
+                    </div>
                 </div>
             </div>
 

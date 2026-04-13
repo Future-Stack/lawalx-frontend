@@ -1,7 +1,7 @@
 "use client";
 // Version: 1.0.2 - Shadcn/ui Dropdowns for better layering
 
-import { Plus, GripVertical, Trash2, ChevronDown, FilePlay, CloudUpload } from "lucide-react";
+import { Plus, GripVertical, Trash2, ChevronDown, FilePlay, CloudUpload, Minus } from "lucide-react";
 import { useState, useEffect } from "react";
 import AddContentDialog from "./AddContentDialog";
 import UploadFileModal from "@/components/content/UploadFileModal";
@@ -40,6 +40,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [errorId, setErrorId] = useState<string | null>(null);
 
   useEffect(() => {
     if (timeline) {
@@ -88,11 +89,38 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   };
 
   const handleDurationChange = (index: number, value: string) => {
-    const newDuration = value === "" ? 0 : Math.max(0, parseInt(value) || 0);
-    const updatedItems = [...items];
-    updatedItems[index] = { ...updatedItems[index], duration: newDuration };
+    let newDuration = value === "" ? 0 : Math.max(1, parseInt(value) || 1);
+    const item = items[index];
+    if (!item) return;
+
+    const file = item.file;
+
+    // Check if file is video or audio and cap duration at its original length
+    if (file && (file.type === "VIDEO" || file.type === "AUDIO")) {
+      const maxDuration = Math.ceil(file.duration || 0);
+      if (newDuration > maxDuration) {
+        newDuration = maxDuration;
+        // Set local error state instead of toast
+        setErrorId(item.id);
+        const timer = setTimeout(() => setErrorId(null), 3000);
+        return () => clearTimeout(timer);
+      }
+    }
+
+    // Use map to ensure we create a new array and new object for the target item only
+    const updatedItems = items.map((it, i) =>
+      i === index ? { ...it, duration: newDuration } : it
+    );
+
     setItems(updatedItems);
     onChange?.(updatedItems);
+  };
+
+  const handleIncrement = (index: number, delta: number) => {
+    const item = items[index];
+    if (!item) return;
+    const currentDuration = item.duration || 1;
+    handleDurationChange(index, (currentDuration + delta).toString());
   };
 
   // Drag and Drop Logic
@@ -247,26 +275,63 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
                   </div>
                 </div>
 
-                <div className="shrink-0 flex items-center gap-2">
-                  <input
-                    type="number"
-                    min="1"
-                    value={item.duration || ""}
-                    onChange={(e) => handleDurationChange(index, e.target.value)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-14 text-sm font-semibold text-bgBlue bg-cardBackground px-2 py-1 rounded border border-border focus:ring-1 focus:ring-bgBlue outline-none text-center"
-                  />
+                <div className="shrink-0 flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center bg-cardBackground border border-border rounded-lg px-1 shadow-sm">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleIncrement(index, -1);
+                        }}
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-muted transition-colors cursor-pointer outline-none"
+                        title="Decrease duration"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemove(item);
-                    }}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer outline-none"
-                    title="Remove item"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                      <input
+                        type="number"
+                        min="1"
+                        max={
+                          (item.file?.type === "VIDEO" || item.file?.type === "AUDIO")
+                            ? Math.ceil(item.file.duration || 0)
+                            : undefined
+                        }
+                        value={item.duration || ""}
+                        onChange={(e) => handleDurationChange(index, e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-8 text-[11px] font-bold text-bgBlue bg-transparent border-none outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                      />
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleIncrement(index, 1);
+                        }}
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-muted transition-colors cursor-pointer outline-none"
+                        title="Increase duration"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemove(item);
+                      }}
+                      className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer outline-none"
+                      title="Remove item"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  {errorId === item.id && (
+                    <span className="text-[9px] text-red-500 font-semibold animate-transition-in px-1 text-right">
+                      Max duration exceeded!
+                    </span>
+                  )}
                 </div>
               </div>
             ))
