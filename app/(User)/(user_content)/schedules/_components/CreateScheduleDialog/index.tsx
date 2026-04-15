@@ -110,12 +110,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     const handleBack = () => {
         if (showLowerThird) {
             setShowLowerThird(false);
-            setStep2Data({ contentType: "all", selectedContent: [] });
         } else if (currentStep > 1) {
-            // If going back to Step 2, reset contentType to 'all' and clear selectedContent
-            if (currentStep - 1 === 2) {
-                setStep2Data({ contentType: "all", selectedContent: [] });
-            }
             setCurrentStep(currentStep - 1);
         }
     };
@@ -133,16 +128,14 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     };
 
     const handleSubmit = async () => {
-        // Determine active content (files/programs selected)
-        const activeContent = showLowerThird
-            ? (lowerThirdData.selectedContent ? [lowerThirdData.selectedContent] : [])
-            : step2Data.selectedContent;
-
+        // Determine active content (always use Step 2 selection)
+        const activeContent = step2Data.selectedContent;
+        
         // Map contentType to API enum
         let contentType: ContentType = "IMAGE_VIDEO";
         if (activeContent[0]?.type === "audio") {
             contentType = "AUDIO";
-        } else if (showLowerThird) {
+        } else if (createdLowerThirdId) {
             contentType = "LOWERTHIRD";
         }
 
@@ -170,7 +163,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             deviceIds: step3Data.selectedScreens.filter(isUUID),
             fileIds: selectedFiles.length > 0 ? selectedFiles : undefined,
             status: "playing",
-            lowerThirdId: (createdLowerThirdId || lowerThirdData.selectedContent?.id) && isUUID(createdLowerThirdId || lowerThirdData.selectedContent?.id) ? (createdLowerThirdId || lowerThirdData.selectedContent!.id) : undefined,
+            lowerThirdId: createdLowerThirdId && isUUID(createdLowerThirdId) ? createdLowerThirdId : undefined,
         };
 
         console.log("=== SUBMITTING SCHEDULE PAYLOAD ===");
@@ -223,13 +216,13 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             {/* Darker full-screen backdrop - Click to close */}
             <div className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer" onClick={handleCancel} />
 
-            {/* Modal Content container - Adjusted max-height and centering */}
-            <div className="relative w-full max-w-4xl max-h-[85vh] bg-navbarBg border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+            {/* Modal Content container - Fully responsive scaling */}
+            <div className="relative w-full md:max-w-4xl h-full md:h-auto md:max-h-[85vh] bg-navbarBg border-x md:border border-border rounded-none md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
                 {/* Header */}
-                <div className="p-6 border-b border-border flex items-center justify-between bg-navbarBg">
+                <div className="p-4 md:p-6 border-b border-border flex items-center justify-between bg-navbarBg">
                     <div>
-                        <h2 className="text-2xl font-bold text-headings">Create New Schedule</h2>
-                        <p className="text-sm text-muted mt-1">
+                        <h2 className="text-xl md:text-2xl font-bold text-headings">Create New Schedule</h2>
+                        <p className="text-xs md:text-sm text-muted mt-0.5 md:mt-1">
                             Schedule when and where your content should play
                         </p>
                     </div>
@@ -242,7 +235,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                 </div>
 
                 {/* Body - Scrollable */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 overflow-y-auto p-4 md:p-6">
                     <div className="space-y-6">
                         {/* Step Indicator */}
                         <StepIndicator currentStep={showLowerThird ? 2 : currentStep} steps={STEPS} />
@@ -275,6 +268,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                                         setStep2Data(prev => ({ ...prev, contentType: type }));
                                         if (type !== "lower-third") {
                                             setShowLowerThird(false);
+                                            setCreatedLowerThirdId(null); // Clear the created ID if they opt-out
                                         }
                                     }}
                                 />
@@ -291,20 +285,20 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                     </div>
                 </div>
                 {/* Footer - Sticky at bottom */}
-                <div className="p-6 border-t border-border flex items-center justify-between bg-navbarBg/80 backdrop-blur-md">
+                <div className="p-4 md:p-6 border-t border-border flex items-center justify-between bg-navbarBg/80 backdrop-blur-md">
                     <button
                         onClick={handleCancel}
-                        className="px-6 py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow"
+                        className="px-4 md:px-6 py-2 md:py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow text-sm md:text-base"
                     >
                         Cancel
                     </button>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3">
                         {/* Always show Back button except on step 1 and not in lower third */}
                         {(currentStep > 1 || showLowerThird) && (
                             <button
                                 onClick={handleBack}
-                                className="px-6 py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow"
+                                className="px-4 md:px-6 py-2 md:py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow text-sm md:text-base"
                             >
                                 Back
                             </button>
@@ -314,7 +308,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                         <button
                             onClick={handleNext}
                             disabled={isNextDisabled()}
-                            className="px-8 py-2.5 rounded-xl bg-bgBlue text-white font-semibold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow transition-all cursor-pointer"
+                            className="px-6 md:px-8 py-2 md:py-2.5 rounded-xl bg-bgBlue text-white font-semibold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow transition-all cursor-pointer text-sm md:text-base whitespace-nowrap"
                         >
                             {currentStep === 4 ? "Create Schedule" : "Next"}
                         </button>
