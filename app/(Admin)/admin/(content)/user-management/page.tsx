@@ -460,7 +460,7 @@ export default function UserManagementPage() {
                   onClick={() => handleBulkAction("unsuspend")}
                   className="px-4 cursor-pointer py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
-                  Unsuspend
+                  Deactivate
                 </button>
                 <button
                   onClick={() => handleBulkAction("suspend")}
@@ -733,7 +733,7 @@ export default function UserManagementPage() {
                                 className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
                               >
                                 <LogIn className="w-4 h-4" />
-                                Login as user
+                                Impersonate User
                               </button>
 
                               <button

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Users, Shield, User, CreditCard, Sliders, Building2, Upload, Info, Plus } from "lucide-react";
 import Dropdown from "@/components/shared/Dropdown";
+import { countries, getCountryByCode } from "@/constants/countries";
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -17,8 +18,9 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
     organization: "",
     designation: "",
     location: "",
-    phoneNumber: "",
+    phoneNumber: "+1",
     // Subscription
+    deviceSize: "24\"",
     plan: "Basic",
     deviceLimit: "50",
     storageLimit: "100",
@@ -38,17 +40,68 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
     enableCustomBranding: false,
     companyName: "",
     industryType: "Select industry",
-    totalEmployee: "",
     website: "",
     companyLocation: "",
-    countryCode: "USA",
+    countryCode: "US",
     companyLogo: null as File | null,
     companyLogoPreview: "" as string,
   });
 
+  const [industries, setIndustries] = useState(["Technology", "Healthcare", "Finance", "Education", "Manufacturing", "Retail"]);
+  const [industrySearchTerm, setIndustrySearchTerm] = useState("");
+  const [showAddIndustryModal, setShowAddIndustryModal] = useState(false);
+  const [newIndustryName, setNewIndustryName] = useState("");
+
+  const filteredIndustries = industries.filter(industry =>
+    industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
+  );
+
+  const handleIndustrySearchChange = (val: string) => {
+    setIndustrySearchTerm(val);
+    const exactMatch = industries.find(i => i.toLowerCase() === val.toLowerCase());
+    if (exactMatch) {
+      setFormData({ ...formData, industryType: exactMatch });
+    }
+  };
+
+  const handleAddIndustry = () => {
+    if (newIndustryName.trim() && !industries.includes(newIndustryName.trim())) {
+      setIndustries([...industries, newIndustryName.trim()]);
+      setFormData({ ...formData, industryType: newIndustryName.trim() });
+      setNewIndustryName("");
+      setShowAddIndustryModal(false);
+    }
+  };
+
   const handleSubmit = () => {
     onAddUser(formData);
     onClose();
+  };
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const country = getCountryByCode(formData.countryCode);
+    if (!country) return;
+
+    let val = e.target.value;
+    
+    // Ensure it always starts with the dial code
+    if (!val.startsWith(country.dialCode)) {
+      // If user tries to delete the dial code, put it back
+      val = country.dialCode;
+    } else {
+      // Only allow digits after the dial code
+      const subscriberPart = val.slice(country.dialCode.length).replace(/[^\d]/g, '');
+      
+      // Limit the length based on country metadata
+      if (subscriberPart.length <= country.maxLength) {
+        val = country.dialCode + subscriberPart;
+      } else {
+        // If exceeds limit, keep previous value
+        val = formData.phoneNumber;
+      }
+    }
+    
+    setFormData({ ...formData, phoneNumber: val });
   };
 
   if (!isOpen) return null;
@@ -181,23 +234,26 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                   <div className="w-24">
                     <Dropdown
                       value={formData.countryCode}
-                      options={["USA", "UK", "BD", "NG"]}
+                      options={countries.map(c => c.code)}
                       onChange={(val) => {
-                        const prefixes: Record<string, string> = { USA: "+1", UK: "+44", BD: "+880", NG: "+234" };
-                        setFormData({
-                          ...formData,
-                          countryCode: val,
-                          phoneNumber: prefixes[val] || formData.phoneNumber
-                        });
+                        const country = getCountryByCode(val);
+                        if (country) {
+                          setFormData({ 
+                            ...formData, 
+                            countryCode: val,
+                            phoneNumber: country.dialCode
+                          });
+                        }
                       }}
                       className="w-full h-[38px]"
                     />
                   </div>
                   <input
                     type="text"
-                    placeholder="+10101010101"
+                    inputMode="tel"
+                    placeholder="Enter phone number"
                     value={formData.phoneNumber}
-                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                    onChange={handlePhoneNumberChange}
                     className="flex-1 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
                   />
                 </div>
@@ -213,12 +269,24 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
             </h3>
             <div className="space-y-4">
               <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Device Size
+                </label>
+                <Dropdown
+                  value={formData.deviceSize}
+                  options={["24\"", "32\"", "43\"", "55\""]}
+                  onChange={(val) => setFormData({ ...formData, deviceSize: val })}
+                  className="w-full h-10"
+                />
+              </div>
+
+              <div>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
                   Choose Plan * <Info className="w-3 h-3 text-gray-400 cursor-help" />
                 </label>
                 <Dropdown
                   value={formData.plan}
-                  options={["Demo (For developers)", "Basic", "Pro", "Enterprise"]}
+                  options={["Demo (For developers)","Free Trial", "Basic", "Pro", "Enterprise"]}
                   onChange={(val) => setFormData({ ...formData, plan: val })}
                   className="w-full h-10"
                 />
@@ -312,12 +380,9 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                       </div>
                       <div>
                         <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Format</label>
-                        <Dropdown
-                          value={item.format}
-                          options={item.label === "Image" ? ["JPG, PNG, WEBP"] : item.label === "Video" ? ["MP4, MKV"] : ["MP3"]}
-                          onChange={() => { }}
-                          className="w-full h-[38px]"
-                        />
+                        <div className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-500 dark:text-gray-400">
+                          {item.format}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -356,24 +421,36 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                             className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Industry Type</label>
-                          <Dropdown
-                            value={formData.industryType}
-                            options={["Select industry", "Technology", "Healthcare"]}
-                            onChange={(val) => setFormData({ ...formData, industryType: val })}
-                            className="w-full h-10"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Total Employee</label>
-                          <input
-                            type="text"
-                            value={formData.totalEmployee}
-                            placeholder="100"
-                            onChange={(e) => setFormData({ ...formData, totalEmployee: e.target.value })}
-                            className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
-                          />
+                        <div className="col-span-1">
+                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex justify-between items-center">
+                            Industry Type
+                          </label>
+                          <div className="flex gap-2 mb-2">
+                            <div className="flex-1">
+                              <Dropdown
+                                value={formData.industryType}
+                                options={["Select industry", ...filteredIndustries]}
+                                onChange={(val) => setFormData({ ...formData, industryType: val })}
+                                className="w-full h-10"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowAddIndustryModal(true)}
+                              className="w-10 h-10 flex shrink-0 items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-customShadow"
+                            >
+                              <Plus className="w-5 h-5" />
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Search industry..."
+                              value={industrySearchTerm}
+                              onChange={(e) => handleIndustrySearchChange(e.target.value)}
+                              className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Website</label>
@@ -385,7 +462,7 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                             className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div className="col-span-1">
                           <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Company Location</label>
                           <input
                             type="text"
@@ -467,6 +544,39 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
             <Plus className="w-4 h-4" /> Add User
           </button>
         </div>
+
+        {/* Add Industry Modal */}
+        {showAddIndustryModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+            <div className="bg-navbarBg border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Add New Industry</h3>
+              <input
+                type="text"
+                placeholder="Enter industry name..."
+                value={newIndustryName}
+                onChange={(e) => setNewIndustryName(e.target.value)}
+                className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 mb-6"
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowAddIndustryModal(false);
+                    setNewIndustryName("");
+                  }}
+                  className="px-4 py-2 border border-border text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddIndustry}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-bold transition-colors shadow-customShadow"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

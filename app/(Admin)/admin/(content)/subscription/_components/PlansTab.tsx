@@ -11,6 +11,7 @@ const PlansTab = () => {
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
     const [yearlyDiscount, setYearlyDiscount] = useState(false);
     const [discountPercentage, setDiscountPercentage] = useState("30");
+    const [allPlansActive, setAllPlansActive] = useState(true);
 
     const handleEditClick = (plan: any) => {
         setSelectedPlan(plan);
@@ -19,14 +20,21 @@ const PlansTab = () => {
 
     return (
         <div className="bg-navbarBg rounded-xl border border-border">
-            {/* Header / Actions */}
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-center p-4 md:p-6">
-                <h2 className="text-headings text-lg font-semibold">All Plans</h2>
+            {/* Header / Actions - Redesigned to match image */}
+            <div className="flex justify-between items-center p-6 border-b border-border">
+                <div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">All Plans</h2>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        Your plan has been upgraded successfully. New features are now available.
+                    </p>
+                </div>
                 <button
-                    onClick={() => setCreateModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out"
+                    onClick={() => setAllPlansActive(!allPlansActive)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allPlansActive ? "bg-[#3B82F6]" : "bg-gray-200 dark:bg-gray-700"}`}
                 >
-                    Create New Plan
+                    <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allPlansActive ? "translate-x-5" : "translate-x-0"}`}
+                    />
                 </button>
             </div>
 
@@ -108,20 +116,28 @@ const PlansTab = () => {
                     </div>
                     <p className="text-sm text-orange-800/70 dark:text-orange-300/60 mb-6">Offer a discount for yearly billing.</p>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-headings">Discount Percentage %</label>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={discountPercentage}
-                                onChange={(e) => setDiscountPercentage(e.target.value)}
-                                className="w-full bg-white dark:bg-gray-900 border border-borderGray dark:border-gray-700 rounded-lg py-3 px-4 focus:outline-none text-headings"
-                            />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col text-muted pointer-events-none">
-                                <span className="leading-none cursor-pointer">▲</span>
-                                <span className="leading-none cursor-pointer">▼</span>
+                    <div className="flex gap-4 items-end">
+                        <div className="flex-1 space-y-2">
+                            <label className="text-sm font-bold text-headings">Discount Percentage %</label>
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    value={discountPercentage}
+                                    onChange={(e) => setDiscountPercentage(e.target.value)}
+                                    className="w-full bg-white dark:bg-gray-900 border border-borderGray dark:border-gray-700 rounded-lg py-3 px-4 focus:outline-none text-headings"
+                                />
+                                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col text-muted pointer-events-none">
+                                    <span className="leading-none cursor-pointer text-[8px]">▲</span>
+                                    <span className="leading-none cursor-pointer text-[8px]">▼</span>
+                                </div>
                             </div>
                         </div>
+                        <button
+                            onClick={() => setCreateModalOpen(true)}
+                            className="h-[46px] flex items-center gap-2 px-6 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer bg-white dark:bg-gray-800 hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out"
+                        >
+                            Create New Plan
+                        </button>
                     </div>
                 </div>
 

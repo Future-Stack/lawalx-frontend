@@ -850,8 +850,8 @@ const Dashboard: React.FC = () => {
             dateRange={dateRange}
           />
           <ContentUsageBreakdown
-            title="Payment Status Breakdown"
-            subtitle="Volume of recurring bans or failed payments"
+            title="Dunning Effectiveness Report"
+            subtitle="Highlights failed transactions and measures the success rate of automated retries and recovery efforts."
             type="payments"
             dateRange={dateRange}
           />
