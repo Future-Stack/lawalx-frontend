@@ -25,7 +25,7 @@ const CreatePlanDialog = ({
         initialData?.price?.replace("$", "") || "0"
     );
     const [currency, setCurrency] = useState("USD");
-    const [isAdvanced, setIsAdvanced] = useState(false);
+    const [isAdvanced, setIsAdvanced] = useState(editMode || !!initialData);
 
     const [limits, setLimits] = useState({
         deviceLimit: initialData?.devices || 20,
@@ -122,74 +122,76 @@ const CreatePlanDialog = ({
                     </div>
                 </div>
 
-                {/* Limits Grid */}
-                <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                        <Label className="text-headings font-medium">
-                            Device Limit
-                        </Label>
-                        <input
-                            type="number"
-                            placeholder="100"
-                            onChange={(e) =>
-                                handleLimitChange("deviceLimit", e.target.value)
-                            }
-                            className={inputClass}
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-headings font-medium">
-                            Storage Limit
-                        </Label>
-                        <div className="relative">
+                {/* Limits Grid - Conditionally rendered */}
+                {isAdvanced && (
+                    <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label className="text-headings font-medium">
+                                Device Limit
+                            </Label>
                             <input
                                 type="number"
                                 placeholder="100"
                                 onChange={(e) =>
-                                    handleLimitChange("storageLimit", e.target.value)
+                                    handleLimitChange("deviceLimit", e.target.value)
                                 }
-                                className={`${inputClass} pr-12`}
+                                className={inputClass}
                             />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted text-sm">
-                                GB
-                            </span>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-headings font-medium">
+                                Storage Limit
+                            </Label>
+                            <div className="relative">
+                                <input
+                                    type="number"
+                                    placeholder="100"
+                                    onChange={(e) =>
+                                        handleLimitChange("storageLimit", e.target.value)
+                                    }
+                                    className={`${inputClass} pr-12`}
+                                />
+                                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted text-sm">
+                                    GB
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-headings font-medium">
+                                File Limit
+                            </Label>
+                            <input
+                                type="text"
+                                value={limits.fileLimit}
+                                placeholder="100"
+                                onChange={(e) =>
+                                    handleLimitChange("fileLimit", e.target.value)
+                                }
+                                className={inputClass}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label className="text-headings font-medium">
+                                File Size Limit
+                            </Label>
+                            <input
+                                type="text"
+                                value={limits.fileSizeLimit}
+                                placeholder="100 MB"
+                                onChange={(e) =>
+                                    handleLimitChange("fileSizeLimit", e.target.value)
+                                }
+                                className={` ${inputClass}`}
+                            />
                         </div>
                     </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-headings font-medium">
-                            File Limit
-                        </Label>
-                        <input
-                            type="text"
-                            value={limits.fileLimit}
-                            placeholder="100"
-                            onChange={(e) =>
-                                handleLimitChange("fileLimit", e.target.value)
-                            }
-                            className={inputClass}
-                        />
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label className="text-headings font-medium">
-                            File Size Limit
-                        </Label>
-                        <input
-                            type="text"
-                            value={limits.fileSizeLimit}
-                            placeholder="100 MB"
-                            onChange={(e) =>
-                                handleLimitChange("fileSizeLimit", e.target.value)
-                            }
-                            className={` ${inputClass}`}
-                        />
-                    </div>
-                </div>
+                )}
 
                 {/* Actions */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-border">
+                <div className="flex justify-end gap-3 pt-4">
                     <button
                         onClick={() => setOpen(false)}
                         className="px-6 py-2 border border-border rounded-lg font-medium text-headings hover:text-bgBlue transition shadow-customShadow cursor-pointer"

@@ -64,7 +64,7 @@ export default function UsersRolesSection() {
                                     <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider">Employee Name</th>
                                     <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider">Role</th>
                                     <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider">Last Login</th>
-                                    <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider">Security</th>
+                                    {/* <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider">Security</th> */}
                                     <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider text-right">Actions</th>
                                 </tr>
                             </thead>
@@ -94,7 +94,7 @@ export default function UsersRolesSection() {
                                         <td className="py-4 px-4 text-sm text-body">
                                             {emp.lastLogin}
                                         </td>
-                                        <td className="py-4 px-4">
+                                        {/* <td className="py-4 px-4">
                                             <div className="flex flex-wrap gap-2">
                                                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-semibold bg-green-50 text-green-500 border border-green-100">
                                                     <Check className="w-2.5 h-2.5" /> {emp.security}
@@ -105,7 +105,7 @@ export default function UsersRolesSection() {
                                                     </span>
                                                 )}
                                             </div>
-                                        </td>
+                                        </td> */}
                                         <td className="py-4 px-4 text-right">
                                             <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer text-muted">
                                                 <MoreVertical className="w-4 h-4" />
