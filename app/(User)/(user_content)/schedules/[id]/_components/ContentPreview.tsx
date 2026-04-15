@@ -1,6 +1,6 @@
 "use client";
 
-import { Video, Clock, FileText } from "lucide-react";
+import { Video, Clock } from "lucide-react";
 import { ContentItem } from "@/types/content";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import Image from "next/image";
@@ -67,45 +67,14 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
         Preview
       </h2>
 
-      <div className="bg-navbarBg border border-border rounded-xl overflow-hidden shadow-lg transition-shadow hover:shadow-xl flex flex-col">
-        {/* TOP TICKER */}
-        {lowerThird && lowerThird.text && lowerThird.position === "Top" && (
-          <div 
-            className="py-2.5 overflow-hidden"
-            style={{
-              backgroundColor: `${lowerThird.backgroundColor}${Math.round(
-                parseInt(lowerThird.backgroundOpacity || "80") * 2.55
-              ).toString(16).padStart(2, '0')}`
-            }}
-          >
-            <Marquee
-              speed={lowerThird.speed || 40}
-              direction={lowerThird.animation === "Left_to_Light" ? "left" : "right"}
-              gradient={false}
-              loop={lowerThird.loop ? 0 : 1}
-            >
-              <p
-                className="font-semibold px-4"
-                style={{
-                  color: lowerThird.textColor,
-                  fontSize: lowerThird.fontSize === "Small" ? "14px" : 
-                            lowerThird.fontSize === "Medium" ? "16px" : "20px",
-                  fontFamily: lowerThird.font || "inherit",
-                }}
-              >
-                {lowerThird.text}
-              </p>
-            </Marquee>
-          </div>
-        )}
-
+      <div className="bg-navbarBg border border-border rounded-xl shadow-[0_0_24px_rgba(15,23,42,0.14)] hover:shadow-[0_0_30px_rgba(15,23,42,0.18)] transition-shadow flex flex-col">
         {/* MEDIA CONTAINER (Fixed Aspect Ratio) */}
-        <div className="p-4 relative aspect-video overflow-hidden">
+        <div className="p-4 relative h-[360px] md:h-[410px] overflow-hidden">
           <div className="w-full h-full flex flex-col overflow-hidden bg-black rounded-lg">
             {/* TOP TICKER */}
             {lowerThird && lowerThird.text && lowerThird.position === "Top" && (
               <div 
-                className="py-2.5 overflow-hidden shrink-0"
+                className="py-3 overflow-hidden shrink-0"
                 style={{
                   backgroundColor: `${lowerThird.backgroundColor}${Math.round(
                     parseInt(lowerThird.backgroundOpacity || "80") * 2.55
@@ -147,18 +116,14 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                       onEnded={advance}
                     />
                   ) : content.type === "audio" && content.audio ? (
-                    <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center p-8 gap-4">
-                      <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <FileText className="w-8 h-8 text-blue-500" />
-                      </div>
-                      <audio 
-                        autoPlay
-                        controls 
-                        src={content.audio} 
-                        onEnded={advance}
-                        className="w-full max-w-md"
-                      />
-                    </div>
+                    <BaseVideoPlayer
+                      key={content.audio}
+                      src={content.audio}
+                      autoPlay={true}
+                      rounded="rounded-none"
+                      mediaType="audio"
+                      onEnded={advance}
+                    />
                   ) : content.type === "image" && thumbnailSrc ? (
                     <div className="relative w-full h-full overflow-hidden border border-border">
                       <Image

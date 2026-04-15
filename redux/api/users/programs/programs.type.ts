@@ -44,6 +44,7 @@ export interface CreateProgramPayload {
   status?: WorkoutStatus;
   content_ids: string[];
   device_ids: string[];
+  metaData?: Record<string, any>;
 }
 
 // =======================
@@ -64,6 +65,7 @@ export interface Program {
   timeline: Timeline[];
   devices: Device[];
   schedules: Schedule[];
+  metaData?: Record<string, any>;
 }
 
 // =======================

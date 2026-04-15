@@ -11,8 +11,15 @@ import {
   ChevronUp,
   Monitor,
   WifiOff,
+  Music,
+  PlayCircle,
+  Pause,
+  Play,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useParams } from "next/navigation";
+import { useRef } from "react";
 import ContentTimeline from "../components/screenComponent/ContentTimeline";
 import ScreenSettings from "../components/screenComponent/ScreenSettings";
 import MapLocation from "../components/screenComponent/MapLocation";
@@ -52,6 +59,25 @@ const ScreenCardDetails = () => {
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
   const [isDevicesExpanded, setIsDevicesExpanded] = useState(false);
 
+  // Playback Control & Timer State
+  const [isPaused, setIsPaused] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(0);
+  const [lastTimerTick, setLastTimerTick] = useState(0);
+
+  // Audio Controls
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
+  const [audioVolume, setAudioVolume] = useState(1);
+  const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+
+  const formatTime = (time: number) => {
+    if (isNaN(time)) return "00:00";
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  };
+
   useEffect(() => {
     setHasMounted(true);
   }, []);
@@ -59,7 +85,15 @@ const ScreenCardDetails = () => {
   useEffect(() => {
     if (program) {
       if (program.timeline) {
-        setLocalTimeline(program.timeline);
+        // Map durations from metaData if available to ensure persistence on reload
+        const savedDurations = program.metaData?.durations || [];
+        const syncedTimeline = program.timeline.map((item, index) => {
+          const savedDuration = savedDurations[index]?.duration;
+          return savedDuration !== undefined
+            ? { ...item, duration: savedDuration }
+            : item;
+        });
+        setLocalTimeline(syncedTimeline);
       }
       if (program.devices) {
         setLocalDevices(program.devices);
@@ -74,10 +108,13 @@ const ScreenCardDetails = () => {
   const advance = useCallback(() => {
     if (localTimeline.length <= 1) return;
     setIsFading(true);
+    // Reset remaining time for the next item
+    setRemainingTime(0);
     setTimeout(() => {
       setPlayingIndex((prev) => (prev + 1) % localTimeline.length);
       setIsAutoPlay(true);
       setIsFading(false);
+      setIsPaused(false); // Auto-resume on advance
     }, 500);
   }, [localTimeline.length]);
 
@@ -86,19 +123,45 @@ const ScreenCardDetails = () => {
     advance();
   }, [advance]);
 
-  // Handle timing for non-video items
+  // Handle timing for all items (Images, Videos, and Audio)
   useEffect(() => {
     if (!localTimeline || localTimeline.length <= 1) return;
-
     const currentItem = localTimeline[playingIndex];
-    if (currentItem?.file?.type === "VIDEO") return;
+    if (!currentItem) return;
 
-    // Default to 7s if duration is missing
-    const duration = currentItem?.file?.duration ? currentItem.file.duration * 1000 : 7000;
-    const timer = setTimeout(advance, Math.max(0, duration - 500));
+    // Initialize remaining time if it's 0 (start of new item)
+    if (remainingTime <= 0) {
+      const duration = (currentItem.duration || 7) * 1000;
+      setRemainingTime(duration);
+      setLastTimerTick(Date.now());
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, [playingIndex, localTimeline, advance]);
+    // If paused, don't start the timeout
+    if (isPaused) return;
+
+    // Record the current tick time
+    setLastTimerTick(Date.now());
+
+    // Set the timer for the remaining time
+    const timer = setTimeout(() => {
+      advance();
+    }, remainingTime);
+
+    return () => {
+      clearTimeout(timer);
+      // When the component re-renders or pauses, calculate how much time passed
+      const timePassed = Date.now() - lastTimerTick;
+      setRemainingTime(prev => Math.max(0, prev - timePassed));
+    };
+  }, [playingIndex, localTimeline, advance, isPaused, remainingTime === 0]);
+
+  // Sync Audio Volume
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = audioVolume;
+    }
+  }, [audioVolume, playingIndex]);
 
   if (!hasMounted) {
     return (
@@ -147,6 +210,15 @@ const ScreenCardDetails = () => {
     try {
       const content_ids = localTimeline.map((item) => item.fileId);
       const device_ids = localDevices.map((d) => d.id);
+      const schedule_ids = program.schedules?.map((s) => s.id) || [];
+
+      // Construct metaData with duration mapping for the timeline
+      const metaData = {
+        durations: localTimeline.map((item) => ({
+          fileId: item.fileId,
+          duration: item.duration,
+        })),
+      };
 
       const res = await updateProgram({
         id: String(id),
@@ -155,6 +227,7 @@ const ScreenCardDetails = () => {
           description,
           content_ids,
           device_ids,
+          metaData,
           serene_size: program.serene_size || "1920x1080",
           status: (program.status.toUpperCase() as any) || "DRAFT",
         },
@@ -283,7 +356,128 @@ const ScreenCardDetails = () => {
                         autoPlay={true}
                         rounded="rounded-lg"
                         onEnded={handleVideoEnded}
+                        onPlay={() => setIsPaused(false)}
+                        onPause={() => setIsPaused(true)}
                       />
+                    </div>
+                  ) : selectedContent?.file?.type === "AUDIO" ? (
+                    <div className="relative w-full h-full rounded-lg bg-gradient-to-br from-indigo-950 via-slate-900 to-black overflow-hidden flex flex-col items-center justify-center p-8 text-center border border-white/10">
+                      {/* Audio Playback Component */}
+                      <audio
+                        ref={audioRef}
+                        key={previewUrl}
+                        src={previewUrl}
+                        autoPlay={!isPaused}
+                        onPlay={() => setIsPaused(false)}
+                        onPause={() => setIsPaused(true)}
+                        onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
+                        onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
+                        hidden
+                      />
+
+                      {/* Audio Visualizer Decoration */}
+                      <div className="absolute inset-0 opacity-20 pointer-events-none">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-bgBlue rounded-full blur-[100px]" />
+                      </div>
+
+                      <div className="relative z-10 w-24 h-24 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center mb-6 shadow-2xl">
+                        <Music className="w-12 h-12 text-bgBlue animate-pulse" />
+                      </div>
+
+                      <div className="relative z-10 space-y-2 mb-16">
+                        <h4 className="text-white font-bold text-xl md:text-2xl tracking-tight line-clamp-1">{currentFileName}</h4>
+                        <div className="flex items-center justify-center gap-2 text-blue-400/80 font-medium text-sm">
+                          <PlayCircle className="w-4 h-4" />
+                          <span>Now Playing Audio Content</span>
+                        </div>
+                      </div>
+
+                      {/* Unified Audio Controls Bar - Perfectly Aligned Horizontal Layout */}
+                      <div className="absolute bottom-6 left-5 right-5 z-20 flex items-center gap-3.5 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-500">
+                        {/* Play/Pause Button */}
+                        <button
+                          onClick={() => {
+                            if (audioRef.current) {
+                              if (!isPaused) audioRef.current.pause();
+                              else audioRef.current.play();
+                            }
+                          }}
+                          className="flex-shrink-0 p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all outline-none cursor-pointer"
+                          title={!isPaused ? "Pause" : "Play"}
+                        >
+                          {!isPaused ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                        </button>
+
+                        {/* Current Time */}
+                        <span className="text-[10px] text-white/40 font-medium min-w-[32px] tabular-nums text-center">
+                          {formatTime(audioCurrentTime)}
+                        </span>
+
+                        {/* Progress Bar Section */}
+                        <div className="flex-1 flex items-center min-w-0">
+                          <div
+                            className="h-1.5 w-full bg-white/10 rounded-full cursor-pointer group relative"
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const percent = (e.clientX - rect.left) / rect.width;
+                              if (audioRef.current) {
+                                audioRef.current.currentTime = percent * audioDuration;
+                              }
+                            }}
+                          >
+                            <div
+                              className="h-full bg-bgBlue rounded-full relative transition-all duration-100"
+                              style={{ width: `${(audioCurrentTime / (audioDuration || 1)) * 100}%` }}
+                            >
+                              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Total Time */}
+                        <span className="text-[10px] text-white/40 font-medium min-w-[32px] tabular-nums text-center">
+                          {formatTime(audioDuration)}
+                        </span>
+
+                        {/* Volume Control Section */}
+                        <div className="flex-shrink-0 flex items-center gap-2.5 w-28 border-l border-white/10 pl-3.5 ml-1">
+                          <button
+                            onClick={() => setAudioVolume(audioVolume === 0 ? 1 : 0)}
+                            className="text-white/60 hover:text-white transition-colors"
+                          >
+                            {audioVolume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                          </button>
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.01"
+                            value={audioVolume}
+                            onChange={(e) => setAudioVolume(parseFloat(e.target.value))}
+                            className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-bgBlue hover:accent-blue-400 transition-all duration-300"
+                            style={{
+                              background: `linear-gradient(to right, #006AFF ${audioVolume * 100}%, rgba(255, 255, 255, 0.2) ${audioVolume * 100}%)`
+                            }}
+                            title="Volume Control"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Animated Audio Bars */}
+                      <div className="absolute bottom-20 flex items-end gap-1.5 h-12 pointer-events-none">
+                        {[0.6, 0.8, 1, 0.7, 0.9, 0.5, 0.8].map((scale, i) => (
+                          <div
+                            key={i}
+                            className="w-1.5 bg-bgBlue/60 rounded-full animate-audio-bar"
+                            style={{
+                              height: '100%',
+                              animationDelay: `${i * 0.15}s`,
+                              animationDuration: `${0.8 + Math.random()}s`,
+                              transform: `scaleY(${scale})`
+                            }}
+                          />
+                        ))}
+                      </div>
                     </div>
                   ) : (
                     <div className="relative w-full h-full rounded-lg bg-black overflow-hidden flex items-center justify-center">
@@ -373,9 +567,9 @@ const ScreenCardDetails = () => {
                             </div>
                             {device.location && (
                               <div className="flex items-center gap-1.5 pl-7 text-[12px] text-muted font-medium">
-                                <ResolvedLocation 
-                                  lat={device.location.lat} 
-                                  lng={device.location.lng} 
+                                <ResolvedLocation
+                                  lat={device.location.lat}
+                                  lng={device.location.lng}
                                   className="truncate"
                                 />
                               </div>

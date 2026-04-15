@@ -23,23 +23,23 @@ const Step1NameDescription: React.FC<Step1Props> = ({ data, onChange }) => {
                 </Label>
                 <Input
                     type="text"
-                    placeholder="Store A - NYC"
+                    placeholder="Enter a descriptive schedule name"
                     value={data.name}
                     onChange={(e) => onChange({ ...data, name: e.target.value })}
-                    className="w-full bg-input border-borderGray text-headings"
+                    className="w-full h-14 px-6 bg-input border-borderGray text-headings text-lg rounded-xl focus:ring-2 focus:ring-bgBlue transition-all shadow-sm"
                 />
             </div>
 
             {/* Description Field */}
-            <div className="space-y-2">
-                <Label className="text-sm font-medium text-headings">
+            <div className="space-y-4">
+                <Label className="text-base font-semibold text-headings">
                    Schedule description (Optional)
                 </Label>
                 <Textarea
-                    placeholder="Enter schedule description"
+                    placeholder="Provide additional context or notes about this schedule..."
                     value={data.description}
                     onChange={(e) => onChange({ ...data, description: e.target.value })}
-                    className="w-full min-h-[100px] bg-input border-borderGray text-headings resize-none"
+                    className="w-full min-h-[150px] p-6 bg-input border-borderGray text-headings text-base rounded-xl focus:ring-2 focus:ring-bgBlue transition-all shadow-sm resize-none"
                 />
             </div>
         </div>

@@ -41,20 +41,28 @@ const Step3ScreenSelection: React.FC<Step3Props> = ({ data, onChange }) => {
     return (
         <div className="space-y-6">
             {/* Select Device Field Label */}
-            <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <label className="block text-sm font-semibold text-headings">
                     Select Device
                 </label>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
-                    <Input
-                        type="text"
-                        placeholder="Search Device"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 bg-input border-borderGray text-headings"
-                    />
-                </div>
+
+                {/* Selected Count - Top Right */}
+                {data.selectedScreens.length > 0 && (
+                    <div className="flex items-center gap-2 text-xs md:text-sm text-bgBlue font-semibold animate-in fade-in slide-in-from-right-2 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full border border-blue-100 dark:border-blue-800">
+                        <CheckCircle2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                        <span>{data.selectedScreens.length} selected</span>
+                    </div>
+                )}
+            </div>
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+                <Input
+                    type="text"
+                    placeholder="Search Device"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-input border-borderGray text-headings"
+                />
             </div>
 
             {/* Device List */}
@@ -84,32 +92,32 @@ const Step3ScreenSelection: React.FC<Step3Props> = ({ data, onChange }) => {
                             </div>
 
                             <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-0.5">
-                                    <Label htmlFor={device.id} className="font-medium text-headings cursor-pointer truncate block">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
+                                    <Label htmlFor={device.id} className="font-semibold text-headings cursor-pointer truncate max-w-[150px] md:max-w-none">
                                         {device.name}
                                     </Label>
                                     {device.status === "ONLINE" ? (
-                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-xs font-semibold">
-                                            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] md:text-xs font-bold whitespace-nowrap">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                             Online
                                         </div>
                                     ) : device.status === "OFFLINE" ? (
-                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-xs font-semibold">
-                                            <WifiOff className="w-3.5 h-3.5" />
+                                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-[10px] md:text-xs font-bold whitespace-nowrap">
+                                            <WifiOff className="w-3 h-3" />
                                             Offline
                                         </div>
                                     ) : device.status === "PAIRED" ? (
-                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-                                            <span className="w-2 h-2 rounded-full bg-blue-500" />
+                                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[10px] md:text-xs font-bold whitespace-nowrap">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                                             Paired
                                         </div>
                                     ) : device.status === "WAITING" ? (
-                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold">
-                                            <span className="w-2 h-2 rounded-full bg-orange-500" />
+                                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-[10px] md:text-xs font-bold whitespace-nowrap">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                                             Waiting
                                         </div>
                                     ) : (
-                                        <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] text-[#737373] text-xs font-semibold">
+                                        <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-50 border border-gray-100 text-gray-600 text-[10px] md:text-xs font-bold">
                                             {device.status}
                                         </div>
                                     )}
@@ -137,15 +145,7 @@ const Step3ScreenSelection: React.FC<Step3Props> = ({ data, onChange }) => {
                     ))
                 )}
             </div>
-
-            {/* Selected Count */}
-            {data.selectedScreens.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-bgBlue font-medium animate-in fade-in slide-in-from-left-2">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{data.selectedScreens.length} device{data.selectedScreens.length > 1 ? "s" : ""} selected</span>
-                </div>
-            )}
-        </div>
+        </div >
     );
 };
 

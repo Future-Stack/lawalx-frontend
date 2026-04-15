@@ -1,9 +1,10 @@
 "use client"
 
-import { X, Camera, Maximize, Volume2, Sun, Play, Pause, Trash2, RefreshCw, Power, PowerOff } from "lucide-react";
+import { X, Camera, Maximize, Volume2, Sun, Play, Pause, Trash2, RefreshCw, Power, PowerOff, ListTree, FileText, Layout, Clock, Monitor, Wifi, Database } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.api";
 import DeviceLocation from "@/components/common/DeviceLocation";
+import ResolvedLocation from "@/common/ResolvedLocation";
 
 interface Props {
   isOpen: boolean;
@@ -145,13 +146,13 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     }
   };
 
-  const toggleLoop = () => {
-    if (videoRef.current) {
-      const newLoopState = !isLooping;
-      setIsLooping(newLoopState);
-      videoRef.current.loop = newLoopState;
-    }
-  };
+  // const toggleLoop = () => {
+  //   if (videoRef.current) {
+  //     const newLoopState = !isLooping;
+  //     setIsLooping(newLoopState);
+  //     videoRef.current.loop = newLoopState;
+  //   }
+  // };
 
   const toggleFullscreen = () => {
     if (videoRef.current) {
@@ -163,19 +164,19 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     }
   };
 
-  const parseStorage = (storage: any) => {
-    if (!storage) return { used: 0, total: 100, formatted: "N/A" };
-
-    // If it's pure bytes as a string (e.g. from API)
-    if (!isNaN(Number(storage))) {
-      const bytes = Number(storage);
-      const totalGB = bytes / (1024 * 1024 * 1024);
+  const parseStorage = (storage: any, usedStorage?: number) => {
+    if (usedStorage !== undefined) {
+      const totalGB = typeof storage === 'number' ? storage : 10; // Fallback to 10GB
+      const usedGB = Math.abs(usedStorage); // Math.abs to handle the negative values in sample JSON
       return {
-        used: 0, // No used field in API yet
+        used: usedGB,
         total: totalGB,
-        formatted: `0 / ${totalGB.toFixed(1)} GB`
+        formatted: `${usedGB.toFixed(2)} GB / ${totalGB.toFixed(0)} GB`,
+        percent: totalGB > 0 ? (usedGB / totalGB) * 100 : 0
       };
     }
+
+    if (!storage) return { used: 0, total: 10, formatted: "N/A", percent: 0 };
 
     // If it's already a formatted string (e.g. from table data)
     const match = String(storage).match(/([\d.]+)?\s*(?:GB)?\s*\/\s*([\d.]+)\s*GB/);
@@ -186,28 +187,23 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
         used,
         total,
         formatted: `${used.toFixed(1)} GB / ${total.toFixed(1)} GB`,
+        percent: total > 0 ? (used / total) * 100 : 0
       };
     }
 
-    return { used: 0, total: 100, formatted: "N/A" };
+    return { used: 0, total: 10, formatted: "N/A", percent: 0 };
   };
 
-  const { used, total, formatted } = useMemo(() => {
-    if (currentDevice?.user?.totalStorage !== undefined) {
-      const usedVal = currentDevice.user.usedStorage || 0;
-      const totalVal = currentDevice.user.totalStorage || 0;
-      return {
-        used: usedVal,
-        total: totalVal,
-        formatted: `${usedVal.toFixed(2)} GB / ${totalVal.toFixed(0)} GB`
-      };
-    }
-    return parseStorage(currentDevice?.storage);
+  const storageInfo = useMemo(() => {
+    return parseStorage(
+      currentDevice?.user?.totalStorage || currentDevice?.totalStorage,
+      currentDevice?.totalUsedStorage || currentDevice?.user?.usedStorage
+    );
   }, [currentDevice]);
 
   if (!isOpen || !device || !currentDevice) return null;
 
-  const storagePercent = total > 0 ? (used / total) * 100 : 0;
+  const storagePercent = storageInfo.percent;
 
   const calculateLastSync = (lastSeen: string | null) => {
     if (!hasMounted) return "...";
@@ -221,14 +217,14 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     return `${Math.floor(diff / 86400)} days ago`;
   };
 
-  const formatTime = (seconds: number) => {
-    if (isNaN(seconds) || seconds === Infinity) return "0:00";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  const getFileUrl = (url: string) => {
+    if (!url) return undefined;
+    if (url.startsWith("http")) return url;
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
   };
 
-
+  const timeline = currentDevice.program?.timeline || [];
 
   return (
     <div
@@ -370,151 +366,186 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                     </div>
                   </div>
                 </div>
-
-                {/* Device Actions Card */}
-                {/* <div className="bg-white dark:bg-navbarBg rounded-[20px] p-6 shadow-sm border border-border flex items-center gap-4 justify-center sm:px-8">
-                  <button className="w-12 h-12 flex items-center justify-center rounded-full border border-gray-200 dark:border-gray-800 text-[#171717] dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer shadow-sm">
-                    <RefreshCw className="h-5 w-5" />
-                  </button>
-                  <button className="w-12 h-12 flex items-center justify-center rounded-full bg-[#EF4444] text-white hover:bg-red-600 transition-colors cursor-pointer shadow-md">
-                    <Power className="h-5 w-5" />
-                  </button>
-                </div> */}
               </div>
             </div>
 
             {/* Right Column - Device Details */}
-            <div className="w-full lg:w-[350px] bg-navbarBg rounded-[24px] p-6 shadow-sm border border-border flex flex-col gap-6">
-              <h3 className="text-xl font-bold text-headings">Device Details</h3>
+            <div className="w-full lg:w-[400px] flex flex-col gap-6">
+              <div className="bg-navbarBg rounded-[24px] p-6 shadow-sm border border-border flex flex-col gap-6 flex-1">
+                <h3 className="text-xl font-bold text-headings">Device Details</h3>
 
-              <div className="flex flex-col gap-5">
-                {/* Status Row */}
-                <div className="flex items-center justify-between">
-                  <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Status</span>
-                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${currentDevice.status === "ONLINE"
-                    ? "bg-[#ECFDF5] border-[#D1FAE5] text-[#059669]"
-                    : currentDevice.status === "OFFLINE"
-                      ? "bg-[#FEF2F2] border-[#FEE2E2] text-[#DC2626]"
-                      : currentDevice.status === "PAIRED"
-                        ? "bg-blue-50 border-blue-200 text-blue-700"
-                        : currentDevice.status === "WAITING"
-                          ? "bg-orange-50 border-orange-200 text-orange-700"
-                          : "bg-gray-100 border-gray-200 text-gray-700"
-                    }`}>
-                    <span className={`w-2 h-2 rounded-full ${currentDevice.status === "ONLINE"
-                      ? "bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                <div className="flex flex-col gap-5">
+                  {/* Status Row */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Status</span>
+                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${currentDevice.status === "ONLINE"
+                      ? "bg-[#ECFDF5] border-[#D1FAE5] text-[#059669]"
                       : currentDevice.status === "OFFLINE"
-                        ? "bg-[#EF4444] shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+                        ? "bg-[#FEF2F2] border-[#FEE2E2] text-[#DC2626]"
                         : currentDevice.status === "PAIRED"
-                          ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                          ? "bg-blue-50 border-blue-200 text-blue-700"
                           : currentDevice.status === "WAITING"
-                            ? "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
-                            : "bg-gray-500"
-                      }`} />
-                    <span className="text-xs font-bold uppercase tracking-wider">
-                      {currentDevice.status}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Last Sync Row */}
-                <div className="flex items-center justify-between py-1">
-                  <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Last Sync</span>
-                  <span className="text-[#171717] dark:text-white text-sm font-bold">
-                    {calculateLastSync(currentDevice.lastSeen || currentDevice.last_Sync)}
-                  </span>
-                </div>
-
-                {/* Location Row */}
-                <div className="flex items-center justify-between py-1">
-                  <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Location</span>
-                  <span className="text-[#171717] dark:text-white text-sm font-bold text-right truncate ml-4 max-w-[180px]">
-                    {currentDevice?.location && typeof currentDevice.location === 'object' && currentDevice.location.lat && currentDevice.location.lng ? (
-                      <DeviceLocation lat={currentDevice.location.lat} lng={currentDevice.location.lng} />
-                    ) : (
-                      currentDevice?.location || "Unknown Location"
-                    )}
-                  </span>
-                </div>
-
-                {/* Storage Row */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Storage</span>
-                    <span className="text-[#171717] dark:text-white text-sm font-bold">{formatted}</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-[#F5F5F5] dark:bg-gray-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#171717] dark:bg-gray-400 rounded-full transition-all duration-700 ease-out"
-                      style={{ width: `${storagePercent}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-[#737373] dark:text-gray-500">
-                      {total > 0 ? (100 - storagePercent).toFixed(0) : 0}% Free
-                    </span>
-                  </div>
-                </div>
-
-                <div className="h-px bg-gray-100 dark:bg-gray-800" />
-
-                {/* Details List */}
-                <div className="flex flex-col gap-4">
-                  <div className="flex justify-between">
-                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium text-nowrap">Device ID: </span>
-                    <span className="text-[#171717] dark:text-white text-[13px] font-bold font-mono truncate ml-2">
-                      {currentDevice.id || "N/A"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Platform</span>
-                    <div className="text-right">
-                      <p className="text-[#171717] dark:text-white text-sm font-bold leading-tight">
-                        {currentDevice.deviceType || currentDevice.platform || "Android TV"}
-                      </p>
+                            ? "bg-orange-50 border-orange-200 text-orange-700"
+                            : "bg-gray-100 border-gray-200 text-gray-700"
+                      }`}>
+                      <span className={`w-2 h-2 rounded-full ${currentDevice.status === "ONLINE"
+                        ? "bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.5)]"
+                        : currentDevice.status === "OFFLINE"
+                          ? "bg-[#EF4444] shadow-[0_0_8px_rgba(239,68,68,0.5)]"
+                          : currentDevice.status === "PAIRED"
+                            ? "bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"
+                            : currentDevice.status === "WAITING"
+                              ? "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.5)]"
+                              : "bg-gray-500"
+                        }`} />
+                      <span className="text-xs font-bold uppercase tracking-wider">
+                        {currentDevice.status}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">IP Address</span>
-                    <span className="text-[#171717] dark:text-white text-sm font-bold font-mono">
-                      {currentDevice.ip || "---"}
+                  {/* Last Sync Row */}
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Last Sync</span>
+                    <span className="text-[#171717] dark:text-white text-sm font-bold">
+                      {calculateLastSync(currentDevice.lastSeen || currentDevice.last_Sync)}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Screen Playing</span>
-                    <span className="text-[#171717] dark:text-white text-sm font-bold truncate ml-4 max-w-[150px]">
-                      {currentDevice.program?.name || "No program assigned"}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
-
-                {/* Power Button Section */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Power Status</span>
-                    <button
-                      type="button"
-                      onClick={() => setIsPlaying(!isPlaying)}
-                      aria-label={isPlaying ? "Turn Off Program" : "Turn On Program"}
-                      className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
-                          py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
-                          ${isPlaying
-                          ? "bg-bgBlue hover:bg-blue-500"
-                          : "bg-bgRed hover:bg-red-600"
-                        }`}
-                      title={isPlaying ? "Turn Off" : "Turn On"}
-                    >
-                      {isPlaying ? (
-                        <Power className="w-4 h-4 sm:w-5 sm:h-5" />
+                  {/* Location Row */}
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Location</span>
+                    <span className="text-[#171717] dark:text-white text-sm font-bold text-right truncate ml-4 max-w-[180px]">
+                      {currentDevice?.location && typeof currentDevice.location === 'object' && currentDevice.location.lat && currentDevice.location.lng ? (
+                        <DeviceLocation lat={currentDevice.location.lat} lng={currentDevice.location.lng} />
                       ) : (
-                        <PowerOff className="w-4 h-4 sm:w-5 sm:h-5" />
+                        currentDevice?.location || "Unknown Location"
                       )}
-                    </button>
+                    </span>
+                  </div>
+
+                  {/* Storage Row */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Database className="w-4 h-4 text-[#737373]" />
+                        <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Storage</span>
+                      </div>
+                      <span className="text-[#171717] dark:text-white text-sm font-bold">{storageInfo.formatted}</span>
+                    </div>
+                    <div className="w-full h-2.5 bg-[#F5F5F5] dark:bg-gray-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-bgBlue rounded-full transition-all duration-700 ease-out"
+                        style={{ width: `${storagePercent}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-[#737373] dark:text-gray-500">
+                        {storagePercent > 100 ? "Limit Exceeded" : `${(100 - storagePercent).toFixed(1)}% Free`}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-gray-100 dark:bg-gray-800" />
+
+                  {/* Program Summary */}
+                  <div className="bg-blue-50/50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-100/50 dark:border-blue-800/20">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Layout className="w-4 h-4 text-bgBlue" />
+                      <span className="text-sm font-bold text-headings">Active Program</span>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-[#737373] dark:text-gray-400 font-medium">Name</span>
+                        <span className="text-sm font-semibold text-headings">{currentDevice.program?.name || "N/A"}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs text-[#737373] dark:text-gray-400 font-medium">Resolution</span>
+                        <span className="text-sm font-semibold text-headings">{currentDevice.program?.serene_size || "1920x1080"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Program Timeline (Compact) */}
+                  {/* {timeline.length > 0 && (
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center gap-2">
+                        <ListTree className="w-4 h-4 text-bgBlue" />
+                        <span className="text-sm font-bold text-headings">Timeline Sequence</span>
+                      </div>
+                      <div className="max-h-[220px] overflow-y-auto pr-2 space-y-2 scrollbar-hide">
+                        {timeline.map((item: any, idx: number) => (
+                          <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
+                            <span className="text-[10px] font-bold text-[#737373] w-4">{idx + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[11px] font-bold text-headings truncate">{item.file?.originalName}</p>
+                              <div className="flex items-center gap-2 text-[9px] text-[#737373] font-semibold uppercase">
+                                <span className="text-bgBlue">{(item.file?.type || "media").toLowerCase()}</span>
+                                <span>•</span>
+                                <span>{item.duration || item.file?.duration || 0}s</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )} */}
+
+                  <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
+
+                  {/* Details List */}
+                  <div className="flex flex-col gap-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-2">
+                        <Monitor className="w-4 h-4 text-[#737373]" />
+                        <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Device ID</span>
+                      </div>
+                      <span className="text-[#171717] dark:text-white text-[12px] font-bold font-mono truncate ml-4 max-w-[150px]">
+                        {currentDevice.id || "N/A"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">OS</span>
+                      <p className="text-[#171717] dark:text-white text-sm font-bold">
+                        {currentDevice.deviceType || currentDevice.platform || "Android TV"}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">IP Address</span>
+                      <span className="text-[#171717] dark:text-white text-sm font-bold font-mono">
+                        {currentDevice.ip || "---"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-[#737373]" />
+                        <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Serial Number</span>
+                      </div>
+                      <span className="text-[#171717] dark:text-white text-sm font-bold font-mono">
+                        {currentDevice.deviceSerial || "---"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
+
+                  {/* Power Button Section */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Power Status</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
+                            py-3 px-3 cursor-pointer
+                            ${isPlaying ? "bg-bgBlue hover:bg-blue-500" : "bg-bgRed hover:bg-red-600"}`}
+                      >
+                        {isPlaying ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
