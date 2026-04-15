@@ -1,13 +1,11 @@
 import React from "react";
-import { Plus, Trash2, ChevronDown, ChevronRight, X } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface AssignedScreensSectionProps {
     assignedScreens: any[]; // API derived targets grouped by program
     onAddScreen: () => void;
-    onRemoveProgram: (programId: string) => void;
-    onToggleDevice: (deviceId: string, isEnabled: boolean, programId: string) => void;
+    onRemoveDevice: (deviceId: string, programId: string) => void;
     onDeleteSchedule: () => void;
     isNew?: boolean;
 }
@@ -15,13 +13,17 @@ interface AssignedScreensSectionProps {
 const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
     assignedScreens,
     onAddScreen,
-    onRemoveProgram,
-    onToggleDevice,
+    onRemoveDevice,
     onDeleteSchedule,
     isNew
 }) => {
-    const [expandedProgramId, setExpandedProgramId] = React.useState<string | null>(assignedScreens[0]?.groupId || null);
-
+    const assignedDevices = assignedScreens.flatMap((program) =>
+        (program.screens || []).map((device: any) => ({
+            ...device,
+            programId: program.groupId,
+        }))
+    );
+    
     return (
         <section className="bg-navbarBg border border-border rounded-xl p-6 space-y-6 shadow-sm">
             <div className="flex justify-between items-center">
@@ -36,63 +38,25 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
             </div>
 
             <div className="divide-y divide-border">
-                {assignedScreens.map((program) => (
-                    <div key={program.groupId} className="py-2">
-                        <div className="flex items-center justify-between py-2 group">
-                            <div
-                                className="flex items-center gap-3 cursor-pointer flex-1"
-                                onClick={() => setExpandedProgramId(expandedProgramId === program.groupId ? null : program.groupId)}
-                            >
-                                {expandedProgramId === program.groupId ? (
-                                    <ChevronDown className="w-5 h-5 text-gray-400" />
-                                ) : (
-                                    <ChevronRight className="w-5 h-5 text-gray-400" />
-                                )}
-                                <span className="text-lg font-semibold text-headings dark:text-white">
-                                    {program.groupName}
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => onRemoveProgram(program.groupId)}
-                                className="p-1 hover:bg-red-50 rounded-full transition-colors text-red-500"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
+                {assignedDevices.map((device: any) => (
+                    <div key={device.id} className="py-4 grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4">
+                        <span className="text-base text-gray-500 select-none truncate">
+                            {device.name}
+                        </span>
+                        <div className="justify-self-start">
+                            <DeviceStatusBadge status={device.status} />
                         </div>
-
-                        {expandedProgramId === program.groupId && (
-                            <div className="pl-8 pb-4 space-y-3 mt-2">
-                                {program.screens.map((device: any) => (
-                                    <div key={device.id} className="flex items-center gap-4">
-                                        <div className="relative flex items-center">
-                                            <Checkbox
-                                                id={device.id}
-                                                checked={device.isEnabled}
-                                                onCheckedChange={(checked) => onToggleDevice(device.id, !!checked, program.groupId)}
-                                                className="w-5 h-5 border-borderGray data-[state=checked]:bg-bgBlue data-[state=checked]:border-bgBlue"
-                                            />
-                                        </div>
-                                        <label
-                                            htmlFor={device.id}
-                                            className="text-base text-gray-500 cursor-pointer select-none flex-1 truncate"
-                                        >
-                                            {device.name}
-                                        </label>
-
-                                        {/* Status Badge */}
-                                        <div className="flex-shrink-0">
-                                            <DeviceStatusBadge status={device.status} />
-                                        </div>
-                                    </div>
-                                ))}
-                                {(!program.screens || program.screens.length === 0) && (
-                                    <p className="text-sm text-muted italic">No devices assigned to this program</p>
-                                )}
-                            </div>
-                        )}
+                        <button
+                            type="button"
+                            onClick={() => onRemoveDevice(device.id, device.programId)}
+                            className="justify-self-end p-1 hover:bg-red-50 rounded-full transition-colors text-red-500 cursor-pointer"
+                            aria-label={`Remove ${device.name}`}
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
                     </div>
                 ))}
-                {assignedScreens.length === 0 && (
+                {assignedDevices.length === 0 && (
                     <div className="py-8 text-center border-t border-border">
                         <p className="text-muted italic">No devices assigned yet. Click "Add Devices" to get started.</p>
                     </div>

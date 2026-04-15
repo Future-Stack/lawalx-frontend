@@ -326,7 +326,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                  
+
                   {errorId === item.id && (
                     <span className="text-[9px] text-red-500 font-semibold animate-transition-in px-1 text-right">
                       Max duration exceeded!

@@ -15,17 +15,24 @@ interface ContentSectionProps {
     onRemoveContent?: (id: string) => void;
 }
 
-const ContentSection: React.FC<ContentSectionProps> = ({ 
-    contentType, 
-    setContentType, 
-    content, 
+const ContentSection: React.FC<ContentSectionProps> = ({
+    contentType,
+    setContentType,
+    content,
     playingIndex,
     onItemClick,
-    onAddContent, 
-    onRemoveContent 
+    onRemoveContent
 }) => {
 
     const [deleteContent] = useDeleteFileMutation();
+    const contentTypeOptions = [
+        { label: "Select a Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
+        { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
+        { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-gray-500" /> },
+    ];
+    const selectedContentType = contentTypeOptions.some((opt) => opt.value === contentType)
+        ? contentType
+        : "all";
 
     const handleDelete = async (id: string) => {
         try {
@@ -41,25 +48,21 @@ const ContentSection: React.FC<ContentSectionProps> = ({
 
     return (
         <section className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 sm:p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Content</h2>
+            <h2 className="text-lg font-bold text-body mb-4">Content</h2>
             
             {/* Divider */}
             <div className="h-px w-full bg-gray-200 dark:bg-gray-700 mb-5" />
 
             <div className="space-y-5">
                 <div>
-                    <label className="flex items-center gap-1.5 text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                    <label className="flex items-center gap-1.5 text-sm font-bold text-body mb-1.5">
                         Content Type * <Info className="w-4 h-4 text-gray-400" />
                     </label>
                     <BaseSelect
-                        value={contentType}
+                        value={selectedContentType}
                         onChange={setContentType}
-                        options={[
-                            { label: "Select content type", value: "all", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
-                            { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
-                            { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-gray-500" /> }
-                        ]}
-                        placeholder="Select Type"
+                        options={contentTypeOptions}
+                        placeholder="Select a Content Type"
                     />
                 </div>
 

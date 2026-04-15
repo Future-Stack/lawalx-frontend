@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useGetSingleScheduleDataQuery, useUpdateScheduleMutation, useDeleteScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
 import { ScheduleTarget } from "@/redux/api/users/schedules/schedules.type";
-import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useDeleteDeviceMutation, useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { Device } from "@/redux/api/users/devices/devices.type";
 import { ContentItem } from "@/types/content";
 import { getUrl, formatBytes } from "@/lib/content-utils";
@@ -20,6 +20,17 @@ import ContentPreview from "./_components/ContentPreview";
 import AddScreenDialog from "./_components/AddScreenDialog";
 import AddContentDialog from "./_components/AddContentDialog";
 import { DeleteConfirmationModal } from "@/components/schedules/DeleteModal";
+
+type ScheduleTargetDevice = {
+  id: string;
+  name: string;
+  status: string;
+};
+
+type ScheduleTargetProgram = {
+  id: string;
+  name: string;
+};
 
 // Helper: map API contentType to display label
 function mapContentType(ct: string): string {
@@ -98,6 +109,7 @@ export default function ScheduleDetailPage() {
 
   const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
   const [deleteSchedule, { isLoading: isDeleting }] = useDeleteScheduleMutation();
+  const [deleteDevice] = useDeleteDeviceMutation();
 
   const { data: allDevicesData } = useGetMyDevicesDataQuery(undefined);
   const allDevices = allDevicesData?.data || [];
@@ -183,17 +195,53 @@ export default function ScheduleDetailPage() {
   const targets = localTargets ?? schedule?.targets ?? [];
   const programs = localPrograms ?? schedule?.programs ?? [];
 
-  // Map API targets + programs to assignedScreens groups for accordion
-  const assignedScreens = programs
-    ? programs.map((program) => {
-      // Get all devices for this program from allDevices (full data)
-      const groupDevices = allDevices.filter(d => d.programId === program.id);
+  // Map API targets + programs to assignedScreens groups for accordion.
+  // Some schedule APIs return devices only inside targets[].device while programs can be empty.
+  const assignedScreensMap = new Map<string, { groupId: string; groupName: string; screens: any[] }>();
 
-      return {
+  targets.forEach((target: ScheduleTarget & { device?: ScheduleTargetDevice; program?: ScheduleTargetProgram }) => {
+    const programId = target.programId || "unassigned";
+    const matchedProgram = programs.find((program) => program.id === target.programId);
+    const groupName = target.program?.name || matchedProgram?.name || "Unassigned";
+
+    if (!assignedScreensMap.has(programId)) {
+      assignedScreensMap.set(programId, {
+        groupId: programId,
+        groupName,
+        screens: [],
+      });
+    }
+
+    const targetDevice = target.device;
+    const fallbackDevice = allDevices.find((device) => device.id === target.deviceId);
+    const resolvedDeviceId = target.deviceId || targetDevice?.id || fallbackDevice?.id || "";
+    const resolvedDeviceName = targetDevice?.name || fallbackDevice?.name || "";
+    const resolvedDeviceStatus = targetDevice?.status || fallbackDevice?.status || "OFFLINE";
+
+    // Don't render placeholder rows when device details are missing.
+    if (!resolvedDeviceId || !resolvedDeviceName) return;
+
+    // Prevent duplicate rows for same device within the same group.
+    const group = assignedScreensMap.get(programId);
+    const alreadyExists = !!group?.screens.some((screen: any) => screen.id === resolvedDeviceId);
+    if (alreadyExists) return;
+
+    group?.screens.push({
+      id: resolvedDeviceId,
+      name: resolvedDeviceName,
+      status: resolvedDeviceStatus,
+      isEnabled: target.isEnabled,
+    });
+  });
+
+  // Fallback for old response shape: programs + allDevices only.
+  if (assignedScreensMap.size === 0 && programs.length > 0) {
+    programs.forEach((program) => {
+      const groupDevices = allDevices.filter((device) => device.programId === program.id);
+      assignedScreensMap.set(program.id, {
         groupId: program.id,
         groupName: program.name,
         screens: groupDevices.map((device: any) => {
-          // Check if this device is currently targeted in the schedule
           const target = targets.find(
             (t) => t.programId === program.id && t.deviceId === device.id
           );
@@ -204,9 +252,11 @@ export default function ScheduleDetailPage() {
             isEnabled: !!target && target.isEnabled,
           };
         }),
-      };
-    })
-    : [];
+      });
+    });
+  }
+
+  const assignedScreens = Array.from(assignedScreensMap.values());
 
   const getPayload = (
     currentParams: {
@@ -261,61 +311,24 @@ export default function ScheduleDetailPage() {
     };
   };
 
-  const handleToggleDevice = async (deviceId: string, isEnabled: boolean, programId: string) => {
-    const currentTargets = [...targets];
-    const targetIndex = currentTargets.findIndex(
-      (t) => t.deviceId === deviceId && t.programId === programId
+  const handleRemoveDevice = async (deviceId: string, programId: string) => {
+    const nextTargets = targets.filter(
+      (target) => !(target.deviceId === deviceId && target.programId === programId)
     );
-
-    let nextTargets = [];
-    if (targetIndex > -1) {
-      nextTargets = [...currentTargets];
-      nextTargets[targetIndex] = { ...nextTargets[targetIndex], isEnabled };
-    } else if (isEnabled) {
-      nextTargets = [
-        ...currentTargets,
-        {
-          id: `temp-${Date.now()}`,
-          scheduleId: (id as string) || "",
-          programId,
-          deviceId,
-          isEnabled: true,
-        } as ScheduleTarget,
-      ];
-    } else {
-      nextTargets = currentTargets;
-    }
-
-    setLocalTargets(nextTargets);
-
-    if (!isNew) {
-      try {
-        await updateSchedule({
-          id: id as string,
-          data: getPayload({ targets: nextTargets })
-        }).unwrap();
-      } catch (err: any) {
-        toast.error("Failed to update schedule status");
-      }
-    }
-  };
-
-  const handleRemoveProgram = async (programId: string) => {
-    const nextPrograms = programs.filter(p => p.id !== programId);
-    const nextTargets = targets.filter(t => t.programId !== programId);
+    const hasAnyDeviceInProgram = nextTargets.some((target) => target.programId === programId);
+    const nextPrograms = hasAnyDeviceInProgram
+      ? programs
+      : programs.filter((program) => program.id !== programId);
 
     setLocalPrograms(nextPrograms);
     setLocalTargets(nextTargets);
 
     if (!isNew) {
       try {
-        await updateSchedule({
-          id: id as string,
-          data: getPayload({ programs: nextPrograms, targets: nextTargets })
-        }).unwrap();
-        toast.success("Program removed successfully");
+        const response = await deleteDevice({ id: deviceId }).unwrap();
+        toast.success(response?.message || "Device removed successfully");
       } catch (err: any) {
-        toast.error("Failed to remove program from schedule");
+        toast.error(err?.data?.message || err?.error || "Failed to remove device");
       }
     }
   };
@@ -394,7 +407,7 @@ export default function ScheduleDetailPage() {
     const newProgramsToAdd = filteredNewDevices
       .map(d => d.program)
       .filter((p): p is any => !!p && !currentPrograms.some(cp => cp.id === p.id));
-    
+
     // De-duplicate programs
     const uniqueNewPrograms = Array.from(new Map(newProgramsToAdd.map(p => [p.id, p])).values());
 
@@ -474,8 +487,7 @@ export default function ScheduleDetailPage() {
           <AssignedScreensSection
             assignedScreens={assignedScreens}
             onAddScreen={() => setIsAddScreenOpen(true)}
-            onRemoveProgram={handleRemoveProgram}
-            onToggleDevice={handleToggleDevice}
+            onRemoveDevice={handleRemoveDevice}
             onDeleteSchedule={handleDeleteSchedule}
             isNew={isNew}
           />

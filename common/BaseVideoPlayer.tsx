@@ -35,6 +35,7 @@ interface VideoPlayerProps {
   autoPlay?: boolean;
   muted?: boolean;
   rounded?: string;
+  mediaType?: "video" | "audio";
   onEnded?: () => void;
   onPlay?: () => void;
   onPause?: () => void;
@@ -46,6 +47,7 @@ const BaseVideoPlayer = ({
   autoPlay = false,
   muted = true,
   rounded = "rounded-xl",
+  mediaType = "video",
   onEnded,
   onPlay,
   onPause,
@@ -205,7 +207,7 @@ const BaseVideoPlayer = ({
   // ── Memoized source ────────────────────────────────────────
   const source = useMemo(() => {
     const isYouTube = src.includes("youtube.com") || src.includes("youtu.be");
-    if (isYouTube) {
+    if (isYouTube && mediaType === "video") {
       return {
         type: "video" as const,
         poster: poster || "",
@@ -214,12 +216,18 @@ const BaseVideoPlayer = ({
     }
     const isAbsolute = src.startsWith("http://") || src.startsWith("https://");
     const safeSrc = isAbsolute ? src : src.startsWith("/") ? src : `/${src}`;
+    const isMp3 = safeSrc.toLowerCase().includes(".mp3");
+    const isWav = safeSrc.toLowerCase().includes(".wav");
+    const isOgg = safeSrc.toLowerCase().includes(".ogg");
+    const resolvedMime = mediaType === "audio"
+      ? (isMp3 ? "audio/mpeg" : isWav ? "audio/wav" : isOgg ? "audio/ogg" : "audio/mp4")
+      : "video/mp4";
     return {
-      type: "video" as const,
+      type: mediaType as "video" | "audio",
       poster: poster || "",
-      sources: [{ src: safeSrc, type: "video/mp4" }],
+      sources: [{ src: safeSrc, type: resolvedMime }],
     } as any;
-  }, [src, poster]);
+  }, [src, poster, mediaType]);
 
   // ── Memoized options ───────────────────────────────────────
   const plyrOptions = useMemo(() => ({
@@ -230,10 +238,10 @@ const BaseVideoPlayer = ({
 
   return (
     <div
-      className={`relative w-full pt-[56.25%] ${rounded} bg-black overflow-hidden group`}
+      className={`relative w-full ${mediaType === "video" ? "pt-[56.25%]" : "h-full"} ${rounded} bg-black overflow-hidden group`}
       style={{ transform: "translateZ(0)" }}
     >
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className={`${mediaType === "video" ? "absolute inset-0" : "relative h-full"} flex items-center justify-center`}>
         {(!ready || !isMounted) && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-3 transition-opacity duration-300">
             <Loader2 className="w-8 h-8 animate-spin text-white/50" />

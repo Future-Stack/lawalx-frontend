@@ -41,7 +41,7 @@ const devicesAPI = baseApi.injectEndpoints({
         url: `/device/${id}`,
         method: "GET",
       }),
-      providesTags: ["Devices"],
+      providesTags: ["Devices", "Schedules"],
     }),
     assignDeviceToProgram: build.mutation<any, { deviceId: string, programId: string }>({
       query: ({ deviceId, programId }) => ({
@@ -50,12 +50,12 @@ const devicesAPI = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Devices", "Programs", "Schedules"],
     }),
-    deleteDevice: build.mutation<any, { id: string }>({
+    deleteDevice: build.mutation<SuccessResponse, { id: string }>({
       query: ({ id }) => ({
         url: `/device/delete/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Devices"],
+      invalidatesTags: ["Devices", "Schedules"],
     }),
     renameDevice: build.mutation<any, { id: string, name: string }>({
       query: ({ id, name }) => ({
