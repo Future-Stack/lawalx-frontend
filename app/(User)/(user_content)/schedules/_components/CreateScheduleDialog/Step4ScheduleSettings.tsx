@@ -99,16 +99,16 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
 
             {/* Monthly Date Selector */}
             {data.repeat === "monthly" && (
-                <div className="space-y-2">
-                    <Label className="text-sm font-medium text-headings">Select Days</Label>
-                    <div className="grid grid-cols-7 gap-2">
-                        {Array.from({ length: 30 }, (_, i) => i + 1).map((date) => (
+                <div className="space-y-3">
+                    <Label className="text-sm font-semibold text-headings">Select Days</Label>
+                    <div className="grid grid-cols-5 sm:grid-cols-7 lg:grid-cols-10 gap-2">
+                        {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
                             <button
                                 key={date}
                                 type="button"
                                 onClick={() => toggleDate(date)}
                                 className={cn(
-                                    "aspect-square rounded-lg border transition-all font-medium text-sm flex items-center justify-center cursor-pointer",
+                                    "aspect-square rounded-lg border transition-all font-bold text-xs sm:text-sm flex items-center justify-center cursor-pointer",
                                     data.selectedDates.includes(date)
                                         ? "bg-bgBlue text-white border-bgBlue"
                                         : "bg-input text-headings border-borderGray hover:border-bgBlue"

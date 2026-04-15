@@ -25,14 +25,14 @@ const schedulesAPI = baseApi.injectEndpoints({
         url: "/schedule",
         method: "GET",
       }),
-      providesTags: ["Schedules"],
+      providesTags: ["Schedules", "Content", "Devices"],
     }),
     getSingleScheduleData: build.query<GetSingleScheduleResponse, { id: string }>({
       query: ({ id }) => ({
         url: `/schedule/${id}`,
         method: "GET",
       }),
-      providesTags: ["Schedules", "Content"],
+      providesTags: ["Schedules", "Content", "Devices"],
     }),
     updateSchedule: build.mutation<SuccessResponse, { id: string; data: Partial<any> }>({
       query: ({ id, data }) => ({
