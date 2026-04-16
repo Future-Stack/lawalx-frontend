@@ -23,7 +23,7 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
             programId: program.groupId,
         }))
     );
-    
+
     return (
         <section className="bg-navbarBg border border-border rounded-xl p-6 space-y-6 shadow-sm">
             <div className="flex justify-between items-center">
@@ -37,14 +37,16 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
                 </button>
             </div>
 
-            <div className="divide-y divide-border">
+            <div className="space-y-2">
                 {assignedDevices.map((device: any) => (
-                    <div key={device.id} className="py-4 grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-4">
-                        <span className="text-base text-gray-500 select-none truncate">
-                            {device.name}
-                        </span>
-                        <div className="justify-self-start">
-                            <DeviceStatusBadge status={device.status} />
+                    <div key={device.id} className="py-4 flex justify-between items-center gap-4 shadow-sm px-4 rounded-lg">
+                        <div className="flex items-center gap-2 md:gap-6">
+                            <span className="text-base text-headings select-none truncate font-medium">
+                                {device.name}
+                            </span>
+                            <div className="justify-self-start">
+                                <DeviceStatusBadge status={device.status} />
+                            </div>
                         </div>
                         <button
                             type="button"

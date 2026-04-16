@@ -6,6 +6,8 @@ import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.a
 import DeviceLocation from "@/components/common/DeviceLocation";
 import ResolvedLocation from "@/common/ResolvedLocation";
 
+import { Device, TimelineItem } from "@/redux/api/users/devices/devices.type";
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -23,14 +25,15 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     // Handle both array and object responses
     return Array.isArray(detailData.data) ? detailData.data[0] : detailData.data;
   }, [detailData]);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<any>(null);
   const [volume, setVolume] = useState(75);
   const [brightness, setBrightness] = useState(80);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTimelineIndex, setCurrentTimelineIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [videoProgress, setVideoProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [isLooping, setIsLooping] = useState(false);
+  const [isLooping, setIsLooping] = useState(true);
   const [isMetadataLoaded, setIsMetadataLoaded] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -43,6 +46,13 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     return fullUrl.split("/api/v1")[0];
   };
 
+  const getFileUrl = (url: string) => {
+    if (!url) return undefined;
+    if (url.startsWith("http")) return url;
+    const baseUrl = getBaseUrl();
+    return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
+  };
+
   const currentDevice = useMemo(() => {
     if (!deviceDetail) return device;
     return { ...device, ...deviceDetail };
@@ -50,13 +60,60 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
 
 
 
-  const videoSrc = useMemo(() => {
+  const timeline: TimelineItem[] = useMemo(() => {
+    return currentDevice?.program?.timeline || [];
+  }, [currentDevice]);
+
+  const currentItem = useMemo(() => {
+    if (timeline.length === 0) return null;
+    return timeline[currentTimelineIndex] || timeline[0];
+  }, [timeline, currentTimelineIndex]);
+
+  const mediaUrl = useMemo(() => {
+    if (currentItem?.file?.url) {
+      return getFileUrl(currentItem.file.url);
+    }
     if (currentDevice?.program?.videoUrl) {
-      const url = currentDevice.program.videoUrl;
-      return `${getBaseUrl()}${url.startsWith("/") ? "" : "/"}${url}`;
+      return getFileUrl(currentDevice.program.videoUrl);
     }
     return "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
-  }, [currentDevice]);
+  }, [currentItem, currentDevice]);
+
+  const nextIndex = (currentTimelineIndex + 1) % (timeline.length || 1);
+
+  const handleNext = () => {
+    if (timeline.length > 0) {
+      setCurrentTimelineIndex(nextIndex);
+      setVideoProgress(0);
+      setCurrentTime(0);
+    }
+  };
+
+  // Image/Audio Timer logic
+  useEffect(() => {
+    if (!isOpen || !isPlaying || !currentItem) return;
+    
+    // Only set timer for images. Video and Audio are handled by media events.
+    if (currentItem?.file?.type === 'IMAGE') {
+      const itemDuration = (currentItem.duration || currentItem.file?.duration || 5) * 1000;
+      const timer = setTimeout(() => {
+        handleNext();
+      }, itemDuration);
+      
+      // Update progress for images
+      const startTime = Date.now();
+      const progressInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        setVideoProgress((elapsed / itemDuration) * 100);
+        setCurrentTime(elapsed / 1000);
+      }, 100);
+
+      return () => {
+        clearTimeout(timer);
+        clearInterval(progressInterval);
+      };
+    }
+  }, [currentItem, isPlaying, isOpen, currentTimelineIndex]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -64,11 +121,10 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     }
   }, [volume]);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.style.filter = `brightness(${brightness}%)`;
-    }
-  }, [brightness]);
+  // Brightness is applied via CSS filter on the media container
+  const mediaFilter = useMemo(() => ({
+    filter: `brightness(${brightness}%)`
+  }), [brightness]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -91,12 +147,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     };
 
     const handleEnded = () => {
-      if (!isLooping) {
-        setIsPlaying(false);
-        setVideoProgress(0);
-        setCurrentTime(0);
-        video.currentTime = 0;
-      }
+      handleNext();
     };
 
     video.addEventListener("loadedmetadata", handleLoadedMetadata);
@@ -112,18 +163,18 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
       video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("ended", handleEnded);
     };
-  }, [isLooping, isOpen]);
+  }, [isLooping, isOpen, mediaUrl, currentItem]);
 
   // Handle Playback based on isPlaying state
   useEffect(() => {
-    if (videoRef.current) {
+    if (videoRef.current && (currentItem?.file?.type === 'VIDEO' || currentItem?.file?.type === 'AUDIO')) {
       if (isPlaying) {
-        videoRef.current.play().catch(err => console.error("Playback failed", err));
+        videoRef.current.play().catch((err: any) => console.error("Playback failed", err));
       } else {
         videoRef.current.pause();
       }
     }
-  }, [isPlaying, videoSrc]);
+  }, [isPlaying, mediaUrl, currentItem]);
 
   const togglePlayPause = () => {
     if (videoRef.current) {
@@ -217,14 +268,9 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     return `${Math.floor(diff / 86400)} days ago`;
   };
 
-  const getFileUrl = (url: string) => {
-    if (!url) return undefined;
-    if (url.startsWith("http")) return url;
-    const baseUrl = getBaseUrl();
-    return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
-  };
 
-  const timeline = currentDevice.program?.timeline || [];
+
+
 
   return (
     <div
@@ -241,7 +287,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
         <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-6 py-4 bg-navbarBg">
           <div>
             <h2 className="text-xl font-bold text-headings leading-tight">
-              {currentDevice.name || currentDevice.device || "Unnamed Device"}
+              {currentDevice.name || "Unnamed Device"}
             </h2>
             <p className="text-sm text-[#737373] dark:text-gray-400 mt-1">
               {currentDevice.program?.serene_size || "1920 × 1080"}
@@ -260,22 +306,50 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
             {/* Left Column - Media & Controls */}
             <div className="flex-1 flex flex-col gap-6">
               {/* Media Preview Card */}
-              <div className="relative bg-black rounded-[20px] overflow-hidden shadow-lg aspect-video ring-1 ring-black/5">
-                <video
-                  ref={videoRef}
-                  key={videoSrc}
-                  className="w-full h-full object-cover"
-                  src={videoSrc}
-                  playsInline
-                  preload="metadata"
-                />
+              <div 
+                className="relative bg-black rounded-[20px] overflow-hidden shadow-lg aspect-video ring-1 ring-black/5 flex items-center justify-center"
+                style={mediaFilter}
+              >
+                {currentItem?.file?.type === 'IMAGE' ? (
+                  <img
+                    src={mediaUrl}
+                    alt={currentItem?.file?.originalName}
+                    className="w-full h-full object-contain"
+                  />
+                ) : currentItem?.file?.type === 'AUDIO' ? (
+                  <div className="flex flex-col items-center gap-4 text-white">
+                    <Volume2 className="w-16 h-16 text-bgBlue animate-pulse" />
+                    <p className="text-sm font-medium opacity-60">Playing Audio Sequence</p>
+                    <p className="text-xs font-mono">{currentItem?.file?.originalName}</p>
+                    <audio 
+                      ref={videoRef}
+                      src={mediaUrl} 
+                      autoPlay={isPlaying}
+                      onEnded={handleNext}
+                    />
+                  </div>
+                ) : (
+                  <video
+                    ref={videoRef}
+                    key={mediaUrl}
+                    className="w-full h-full object-cover"
+                    src={mediaUrl}
+                    playsInline
+                    preload="metadata"
+                  />
+                )}
 
                 {/* Top Overlay Badge */}
-                <div className="absolute top-4 left-4">
-                  <div className="bg-white/95 dark:bg-gray-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-semibold text-[#171717] dark:text-white shadow-sm border border-white/20">
+                {/* <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  <div className="bg-white/95 dark:bg-gray-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-semibold text-[#171717] dark:text-white shadow-sm border border-white/20 w-fit">
                     {currentDevice.program?.name || "Main Lobby Display"}
                   </div>
-                </div>
+                  {currentItem && (
+                    <div className="bg-bgBlue/90 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold text-white shadow-sm w-fit uppercase">
+                      {currentItem.file?.type} | {currentTimelineIndex + 1}/{timeline.length}
+                    </div>
+                  )}
+                </div> */}
 
                 {/* Bottom Custom Toolbar */}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 py-4">
@@ -467,7 +541,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                   </div>
 
                   {/* Program Timeline (Compact) */}
-                  {/* {timeline.length > 0 && (
+                  {timeline.length > 0 && (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center gap-2">
                         <ListTree className="w-4 h-4 text-bgBlue" />
@@ -475,12 +549,29 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                       </div>
                       <div className="max-h-[220px] overflow-y-auto pr-2 space-y-2 scrollbar-hide">
                         {timeline.map((item: any, idx: number) => (
-                          <div key={item.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
-                            <span className="text-[10px] font-bold text-[#737373] w-4">{idx + 1}</span>
+                          <div
+                            key={item.id}
+                            onClick={() => {
+                              setCurrentTimelineIndex(idx);
+                              setVideoProgress(0);
+                              setIsPlaying(true);
+                            }}
+                            className={`flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer ${idx === currentTimelineIndex
+                                ? "bg-bgBlue/5 border-bgBlue/30 ring-1 ring-bgBlue/20"
+                                : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 hover:border-bgBlue/20"
+                              }`}
+                          >
+                            <span className={`text-[10px] font-bold w-4 ${idx === currentTimelineIndex ? "text-bgBlue" : "text-[#737373]"}`}>
+                              {idx === currentTimelineIndex ? <Play className="w-3 h-3 fill-current" /> : idx + 1}
+                            </span>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[11px] font-bold text-headings truncate">{item.file?.originalName}</p>
+                              <p className={`text-[11px] font-bold truncate ${idx === currentTimelineIndex ? "text-bgBlue" : "text-headings"}`}>
+                                {item.file?.originalName}
+                              </p>
                               <div className="flex items-center gap-2 text-[9px] text-[#737373] font-semibold uppercase">
-                                <span className="text-bgBlue">{(item.file?.type || "media").toLowerCase()}</span>
+                                <span className={idx === currentTimelineIndex ? "text-bgBlue/80" : "text-bgBlue"}>
+                                  {(item.file?.type || "media").toLowerCase()}
+                                </span>
                                 <span>•</span>
                                 <span>{item.duration || item.file?.duration || 0}s</span>
                               </div>
@@ -489,7 +580,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                         ))}
                       </div>
                     </div>
-                  )} */}
+                  )}
 
                   <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
 
@@ -508,7 +599,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                     <div className="flex items-center justify-between">
                       <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">OS</span>
                       <p className="text-[#171717] dark:text-white text-sm font-bold">
-                        {currentDevice.deviceType || currentDevice.platform || "Android TV"}
+                        {currentDevice.deviceType || "Android TV"}
                       </p>
                     </div>
 
