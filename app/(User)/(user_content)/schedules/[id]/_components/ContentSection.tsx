@@ -36,8 +36,8 @@ const ContentSection: React.FC<ContentSectionProps> = ({
 
     const handleDelete = async (id: string) => {
         try {
-            await deleteContent({ id }).unwrap();
-            toast.success("Content deleted successfully");
+            const res = await deleteContent({ id }).unwrap();
+            toast.success(res.message);
             if (onRemoveContent) {
                 onRemoveContent(id);
             }

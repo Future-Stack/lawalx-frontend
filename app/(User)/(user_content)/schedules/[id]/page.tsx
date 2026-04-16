@@ -120,7 +120,7 @@ export default function ScheduleDetailPage() {
   const [isAddScreenOpen, setIsAddScreenOpen] = useState(false);
   const [isAddContentOpen, setIsAddContentOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isExistingContentRemoved, setIsExistingContentRemoved] = useState(false);
+  const [removedFileIds, setRemovedFileIds] = useState<string[]>([]);
 
   // Shared state for the currently playing content item
   const [playingIndex, setPlayingIndex] = useState(0);
@@ -156,28 +156,32 @@ export default function ScheduleDetailPage() {
   // Map API file data to ContentItem[] for ContentSection (handle all items)
   const allContent: ContentItem[] = localFile
     ? [localFile as ContentItem]
-    : (!isExistingContentRemoved && schedule?.files && schedule.files.length > 0
-      ? schedule.files.map((file) => ({
-        id: file.id,
-        title: file.originalName,
-        type: file.type === "VIDEO" ? "video" : file.type === "AUDIO" ? "audio" : "image",
-        thumbnail: file.type === "IMAGE" ? getUrl(file.url) : (file.url ? getUrl(file.url) : ""),
-        video: file.type === "VIDEO" ? getUrl(file.url) : undefined,
-        audio: file.type === "AUDIO" ? getUrl(file.url) : undefined,
-        size: formatBytes(file.size),
-        duration: String(file.duration),
-      }))
-      : (!isExistingContentRemoved && schedule?.programs && schedule.programs.length > 0
-        ? schedule.programs.map((program) => ({
-          id: program.id,
-          title: program.name,
-          type: "video",
-          thumbnail: getUrl(program.videoUrl || ""),
-          video: getUrl(program.videoUrl || ""),
-          size: "Program",
-          duration: "10", // Default for programs
+    : ((schedule?.files && schedule.files.length > 0
+      ? schedule.files
+        .filter(f => !removedFileIds.includes(f.id))
+        .map((file) => ({
+          id: file.id,
+          title: file.originalName,
+          type: file.type === "VIDEO" ? "video" : file.type === "AUDIO" ? "audio" : "image",
+          thumbnail: file.type === "IMAGE" ? getUrl(file.url) : (file.url ? getUrl(file.url) : ""),
+          video: file.type === "VIDEO" ? getUrl(file.url) : undefined,
+          audio: file.type === "AUDIO" ? getUrl(file.url) : undefined,
+          size: formatBytes(file.size),
+          duration: String(file.duration),
         }))
-        : []));
+      : (schedule?.programs && schedule.programs.length > 0
+        ? schedule.programs
+          .filter(p => !removedFileIds.includes(p.id))
+          .map((program) => ({
+            id: program.id,
+            title: program.name,
+            type: "video",
+            thumbnail: getUrl(program.videoUrl || ""),
+            video: getUrl(program.videoUrl || ""),
+            size: "Program",
+            duration: "10", // Default for programs
+          }))
+        : [])));
 
   // Filter content based on selected type
   const content = allContent.filter(item => {
@@ -286,7 +290,7 @@ export default function ScheduleDetailPage() {
     const apiContentType = pContentType === "image-video" ? "IMAGE_VIDEO" : pContentType === "audio" ? "AUDIO" : pContentType === "lower-third" ? "LOWERTHIRD" : "ALL_CONTENT";
 
     // Ensure we only send file IDs for actual files
-    const fileIds = localFile ? [localFile.id] : (!isExistingContentRemoved && schedule?.files && schedule.files.length > 0 ? schedule.files.map(f => f.id) : []);
+    const fileIds = localFile ? [localFile.id] : (schedule?.files ? schedule.files.filter(f => !removedFileIds.includes(f.id)).map(f => f.id) : []);
 
     // Filter for valid UUIDs to prevent backend 400 errors
     const validProgramIds = pPrograms.map((p: any) => p.id).filter(isUUID);
@@ -458,8 +462,8 @@ export default function ScheduleDetailPage() {
             onRemoveContent={(id) => {
               if (localFile?.id === id) {
                 setLocalFile(null);
-              } else if (schedule?.files?.some(f => f.id === id)) {
-                setIsExistingContentRemoved(true);
+              } else {
+                setRemovedFileIds(prev => [...prev, id]);
               }
               // Reset playing index if the removed item was active or out of bounds
               setPlayingIndex(0);
@@ -514,7 +518,7 @@ export default function ScheduleDetailPage() {
         onClose={() => setIsAddContentOpen(false)}
         onSelect={(file) => {
           setLocalFile(file);
-          setIsExistingContentRemoved(false);
+          setRemovedFileIds([]);
         }}
         initialContentType={contentType === "all" ? "all" : contentType}
       />
