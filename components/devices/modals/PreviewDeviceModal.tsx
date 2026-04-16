@@ -270,7 +270,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
 
 
 
-
+  const timeline = currentDevice.program?.timeline || [];
 
   return (
     <div
@@ -518,7 +518,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                         {storagePercent > 100 ? "Limit Exceeded" : `${(100 - storagePercent).toFixed(1)}% Free`}
                       </span>
                     </div>
-                  </div>
 
                   <div className="h-px bg-gray-100 dark:bg-gray-800" />
 
