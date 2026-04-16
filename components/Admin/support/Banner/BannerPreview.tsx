@@ -16,8 +16,8 @@ export default function BannerPreview({ data }: BannerPreviewProps) {
     ArrowRight, Download, Info, Star, Heart, Check, X, Zap, Bell, Mail
   };
 
-  const PrimaryIcon = data.primaryButtonIcon ? IconMap[data.primaryButtonIcon] : ArrowRight;
-  const SecondaryIcon = data.secondaryButtonIcon ? IconMap[data.secondaryButtonIcon] : null;
+  const PrimaryIcon = (data.primaryButtonIcon && data.primaryButtonIcon !== 'none') ? IconMap[data.primaryButtonIcon] : ArrowRight;
+  const SecondaryIcon = (data.secondaryButtonIcon && data.secondaryButtonIcon !== 'none') ? IconMap[data.secondaryButtonIcon] : null;
 
   return (
     <div className="bg-navbarBg rounded-xl shadow-sm border border-border h-full flex flex-col">
@@ -73,7 +73,7 @@ export default function BannerPreview({ data }: BannerPreviewProps) {
                 <div className={`banner-buttons flex gap-3 ${viewMode === 'mobile' ? 'justify-center flex-col' : 'flex-row'}`}>
                   <button className="primary-btn px-6 py-2.5 bg-white text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-customShadow">
                     {data.primaryButtonLabel || 'Get Started'}
-                    {data.primaryButtonLabel && <PrimaryIcon className="w-4 h-4" />}
+                    {data.primaryButtonLabel && PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
                   </button>
 
                   {data.enableSecondaryButton && (

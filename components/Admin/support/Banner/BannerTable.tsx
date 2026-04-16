@@ -1,9 +1,8 @@
 'use client';
 
-import { Search, ChevronDown, Calendar, MoreVertical, TrendingUp } from 'lucide-react';
+import { Search, ChevronDown, Calendar, MoreVertical, TrendingUp, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { banners } from './mockData';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -22,11 +21,20 @@ import Link from 'next/link';
 import DeleteConfirmationModal from '@/components/Admin/modals/DeleteConfirmationModal';
 import BannerPreview from './BannerPreview';
 import { BannerFormData } from './BannerForm';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Edit, Trash2 } from 'lucide-react';
+import { useDeleteBannerMutation, useGetAllBannersAdminQuery } from '@/redux/api/admin/bannerApi';
+import { toast } from 'sonner';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+
+const normalizeValue = (val: string) => {
+    if (!val) return 'null';
+    if (val === 'UPLOAD') return 'Promotion';
+    return val.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+};
 
 const getStatusColor = (status: string) => {
-    switch (status) {
+    const s = normalizeValue(status);
+    switch (s) {
         case 'Active':
             return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800';
         case 'Ended':
@@ -41,8 +49,10 @@ const getStatusColor = (status: string) => {
 };
 
 const getTypeColor = (type: string) => {
-    switch (type) {
+    const t = normalizeValue(type);
+    switch (t) {
         case 'Promotion':
+        case 'Upload':
             return 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-800';
         case 'Announcement':
             return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
@@ -58,18 +68,23 @@ const getTypeColor = (type: string) => {
 const ITEMS_PER_PAGE = 10;
 
 export default function BannerTable() {
+    const { data: banners = [], isLoading, isError } = useGetAllBannersAdminQuery({});
+    const [deleteBanner] = useDeleteBannerMutation();
+
     const [searchTerm, setSearchTerm] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [currentPage, setCurrentPage] = useState(1);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-    const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<string | null>(null);
     const [selectedBanner, setSelectedBanner] = useState<any | null>(null); // For details modal
 
     // Filter Logic
-    const filteredBanners = banners.filter(banner => {
-        const matchesSearch = banner.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            banner.description.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesStatus = statusFilter === 'All' || banner.status === statusFilter;
+    const filteredBanners = (banners as any[]).filter((banner: any) => {
+        const title = banner.title || '';
+        const description = banner.description || '';
+        const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'All' || banner.status === statusFilter.toUpperCase();
         return matchesSearch && matchesStatus;
     });
 
@@ -78,17 +93,23 @@ export default function BannerTable() {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const paginatedBanners = filteredBanners.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-    const handleDeleteClick = (e: React.MouseEvent, id: number) => {
+    const handleDeleteClick = (e: React.MouseEvent, id: string) => {
         e.stopPropagation(); // Prevent row click
         setItemToDelete(id);
         setIsDeleteModalOpen(true);
     };
 
-    const handleDeleteConfirm = () => {
-        // Implement delete logic here (e.g., call API or update local state if this was not mock data)
-        console.log("Deleting banner:", itemToDelete);
-        setIsDeleteModalOpen(false);
-        setItemToDelete(null);
+    const handleDeleteConfirm = async () => {
+        if (!itemToDelete) return;
+        try {
+            await deleteBanner(itemToDelete).unwrap();
+            toast.success("Banner deleted successfully");
+            setIsDeleteModalOpen(false);
+            setItemToDelete(null);
+        } catch (error) {
+            toast.error("Failed to delete banner");
+            console.error("Delete error:", error);
+        }
     };
 
     const handleRowClick = (banner: any) => {
@@ -97,22 +118,22 @@ export default function BannerTable() {
 
     // Convert table row data to BannerFormData for preview (Mock conversion)
     const getPreviewData = (banner: any): BannerFormData => ({
-        bannerType: banner.type,
-        title: banner.title,
-        description: banner.description,
-        image: null, // Basic mock data doesn't have image
-        primaryButtonLabel: 'Get Started',
-        primaryButtonLink: '#',
-        enableSecondaryButton: false,
-        secondaryButtonLabel: '',
-        secondaryButtonLink: '',
-        startDate: banner.startDate,
-        endDate: banner.endDate,
-        targetUserType: 'All Users',
-        customCSS: '',
-        primaryButtonIcon: '',
-        secondaryButtonIcon: '',
-        status: banner.status,
+        bannerType: banner.type || 'Upload',
+        title: banner.title || 'null',
+        description: banner.description || 'null',
+        image: banner.mediaUrl || null,
+        primaryButtonLabel: banner.primaryButtonLabel || 'null',
+        primaryButtonLink: banner.primaryButtonUrl || '#',
+        enableSecondaryButton: banner.secondaryButtonEnabled || false,
+        secondaryButtonLabel: banner.secondaryButtonLabel || '',
+        secondaryButtonLink: banner.secondaryButtonUrl || '',
+        startDate: banner.startDate || 'null',
+        endDate: banner.endDate || 'null',
+        targetUserType: banner.targetUserType || 'All Users',
+        customCSS: banner.customCss || '',
+        primaryButtonIcon: banner.primaryButtonIcon || '',
+        secondaryButtonIcon: banner.secondaryButtonIcon || '',
+        status: banner.status || 'null',
     });
 
     return (
@@ -162,33 +183,39 @@ export default function BannerTable() {
                             </tr>
                         </thead>
                         <tbody className="bg-navbarBg divide-y divide-border">
-                            {paginatedBanners.length > 0 ? (
-                                paginatedBanners.map((banner) => (
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={7} className="px-6 py-8 text-center">
+                                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-bgBlue" />
+                                    </td>
+                                </tr>
+                            ) : paginatedBanners.length > 0 ? (
+                                paginatedBanners.map((banner: any) => (
                                     <tr
                                         key={banner.id}
                                         className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
                                         onClick={() => handleRowClick(banner)}
                                     >
                                         <td className="px-6 py-4">
-                                            <div className="text-sm font-medium text-gray-900 dark:text-white">{banner.title}</div>
-                                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{banner.description}</div>
+                                            <div className="text-sm font-medium text-gray-900 dark:text-white">{banner.title || 'null'}</div>
+                                            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{banner.description || 'null'}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(banner.type)}`}>
-                                                {banner.type}
+                                                {normalizeValue(banner.type)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {banner.views}
+                                                {banner.views || 0}
                                                 {banner.clicks !== '-' && <span className="text-gray-400 dark:text-gray-500 mx-1">/</span>}
-                                                {banner.clicks !== '-' && banner.clicks}
+                                                {banner.clicks !== '-' && (banner.clicks || 0)}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2">
                                                 <span className="text-sm text-gray-900 dark:text-white font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full border border-green-100 dark:border-green-800">
-                                                    {banner.ctr} <TrendingUp className="w-3 h-3 inline ml-1" />
+                                                    {banner.ctr || '0%'} <TrendingUp className="w-3 h-3 inline ml-1" />
                                                 </span>
                                             </div>
                                         </td>
@@ -196,14 +223,27 @@ export default function BannerTable() {
                                             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                                 <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                                                 <div>
-                                                    <div className="font-medium text-gray-900 dark:text-white">{banner.startDate} to {banner.endDate}</div>
-                                                    <div className="text-xs">{banner.duration}</div>
+                                                    <div className="font-medium text-gray-900 dark:text-white">
+                                                        {banner.startDate ? new Date(banner.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'null'} 
+                                                        <span className="text-gray-400 mx-1">-</span>
+                                                        {banner.endDate ? new Date(banner.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'null'}
+                                                    </div>
+                                                    <div className="text-xs text-blue-500 dark:text-blue-400 font-medium">
+                                                        {(() => {
+                                                            if (!banner.startDate || !banner.endDate) return 'Duration null';
+                                                            const start = new Date(banner.startDate);
+                                                            const end = new Date(banner.endDate);
+                                                            const diffTime = Math.abs(end.getTime() - start.getTime());
+                                                            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                                                            return `${diffDays} Days Total`;
+                                                        })()}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(banner.status)}`}>
-                                                {banner.status}
+                                                {normalizeValue(banner.status)}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -237,7 +277,7 @@ export default function BannerTable() {
                             ) : (
                                 <tr>
                                     <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                                        No banners found matching your filters.
+                                        {isError ? "Error loading banners." : "No banners found matching your filters."}
                                     </td>
                                 </tr>
                             )}
@@ -303,7 +343,7 @@ export default function BannerTable() {
                 onConfirm={handleDeleteConfirm}
                 title="Delete Banner"
                 description="Are you sure you want to delete this banner? This action cannot be undone and the banner will be removed from the homepage immediately."
-                itemName={banners.find(b => b.id === itemToDelete)?.title}
+                itemName={banners.find((b: any) => b.id === itemToDelete)?.title}
             />
         </>
     );

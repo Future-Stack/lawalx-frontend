@@ -1,13 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Upload, HelpCircle, Calendar } from 'lucide-react';
+import { Upload, HelpCircle, Calendar, ChevronDown } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 export interface BannerFormData {
     bannerType: string;
     title: string;
     description: string;
     image: string | null;
+    file?: File | null;
     primaryButtonLabel: string;
     primaryButtonLink: string;
     enableSecondaryButton: boolean;
@@ -41,6 +49,7 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            handleChange('file', file);
             const reader = new FileReader();
             reader.onloadend = () => {
                 handleChange('image', reader.result as string);
@@ -55,43 +64,33 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Configure your banner content and appearance</p>
 
             <div className="space-y-6">
-                {/* Banner Type */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banner Type</label>
-                    <div className="relative">
-                        <select
-                            value={data.bannerType}
-                            onChange={(e) => handleChange('bannerType', e.target.value)}
-                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bgBlue cursor-pointer appearance-none"
-                        >
-                            <option value="Upload">Upload</option>
-                            <option value="Announcement">Announcement</option>
-                            <option value="Promotion">Promotion</option>
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-500">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                        </div>
-                    </div>
+                    <Select value={data.bannerType} onValueChange={(val) => handleChange('bannerType', val)}>
+                        <SelectTrigger className="w-full bg-navbarBg border-border">
+                            <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Upload">Upload</SelectItem>
+                            <SelectItem value="Announcement">Announcement</SelectItem>
+                            <SelectItem value="Promotion">Promotion</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
-                {/* Status */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                    <div className="relative">
-                        <select
-                            value={data.status}
-                            onChange={(e) => handleChange('status', e.target.value)}
-                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-bgBlue cursor-pointer appearance-none"
-                        >
-                            <option value="Active">Active</option>
-                            <option value="Draft">Draft</option>
-                            <option value="Paused">Paused</option>
-                            <option value="Ended">Ended</option>
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-500">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                        </div>
-                    </div>
+                    <Select value={data.status} onValueChange={(val) => handleChange('status', val)}>
+                        <SelectTrigger className="w-full bg-navbarBg border-border">
+                            <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Active">Active</SelectItem>
+                            <SelectItem value="Draft">Draft</SelectItem>
+                            <SelectItem value="Paused">Paused</SelectItem>
+                            <SelectItem value="Ended">Ended</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 {/* Title */}
@@ -132,9 +131,13 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
                             accept="image/*"
                             onChange={handleImageUpload}
                         />
-                        <div className="w-10 h-10 bg-navbarBg rounded-lg shadow-sm flex items-center justify-center mb-3 border border-border">
-                            <Upload className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-                        </div>
+                        {data.image ? (
+                            <img src={data.image} alt="Preview" className="max-h-32 mb-3 rounded" />
+                        ) : (
+                            <div className="w-10 h-10 bg-navbarBg rounded-lg shadow-sm flex items-center justify-center mb-3 border border-border">
+                                <Upload className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                            </div>
+                        )}
                         <p className="text-sm font-medium text-blue-500 dark:text-blue-400 mb-1">
                             Click to Upload <span className="text-gray-500 dark:text-gray-400 font-normal">or drag and drop</span>
                         </p>
@@ -156,30 +159,25 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
                     {/* Icon Picker for Primary Button */}
                     <div className="mb-3">
                         <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Button Icon (Optional)</label>
-                        <div className="relative">
-                            <select
-                                value={data.primaryButtonIcon}
-                                onChange={(e) => handleChange('primaryButtonIcon', e.target.value)}
-                                className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                            >
-                                <option value="">No Icon</option>
+                        <Select value={data.primaryButtonIcon} onValueChange={(val) => handleChange('primaryButtonIcon', val)}>
+                            <SelectTrigger className="w-full bg-navbarBg border-border">
+                                <SelectValue placeholder="No Icon" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">No Icon</SelectItem>
                                 {AVAILABLE_ICONS.map((icon) => (
-                                    <option key={icon} value={icon}>{icon}</option>
+                                    <SelectItem key={icon} value={icon}>{icon}</SelectItem>
                                 ))}
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-500">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                            </div>
-                        </div>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <div className="relative">
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">https://</span>
                         <input
                             type="text"
                             value={data.primaryButtonLink}
                             onChange={(e) => handleChange('primaryButtonLink', e.target.value)}
-                            className="w-full pl-16 pr-10 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                            placeholder="tape.io"
+                            className="w-full px-4 pr-10 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                            placeholder="https://example.com"
                         />
                         <HelpCircle className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                     </div>
@@ -207,13 +205,12 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
                             placeholder="Learn More"
                         />
                         <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm">https://</span>
                             <input
                                 type="text"
                                 value={data.secondaryButtonLink}
                                 onChange={(e) => handleChange('secondaryButtonLink', e.target.value)}
-                                className="w-full pl-16 pr-10 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                                placeholder="tape.io/learn"
+                                className="w-full px-4 pr-10 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                placeholder="https://example.com/learn"
                             />
                             <HelpCircle className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
                         </div>
@@ -224,47 +221,44 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
-                        <div className="relative">
-                            <input
-                                type="date"
-                                value={data.startDate}
-                                onChange={(e) => handleChange('startDate', e.target.value)}
-                                className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 dark:text-gray-400"
-                            />
-                            {/* <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none" /> */}
-                        </div>
+                    <div className="relative group">
+                        <input
+                            type="date"
+                            value={data.startDate}
+                            onChange={(e) => handleChange('startDate', e.target.value)}
+                            onClick={(e) => (e.target as any).showPicker?.()}
+                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
+                        />
+                        <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none group-hover:text-bgBlue transition-colors" />
+                    </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
-                        <div className="relative">
-                            <input
-                                type="date"
-                                value={data.endDate}
-                                onChange={(e) => handleChange('endDate', e.target.value)}
-                                className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-500 dark:text-gray-400"
-                            />
-                            {/* <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none" /> */}
-                        </div>
+                    <div className="relative group">
+                        <input
+                            type="date"
+                            value={data.endDate}
+                            onChange={(e) => handleChange('endDate', e.target.value)}
+                            onClick={(e) => (e.target as any).showPicker?.()}
+                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
+                        />
+                        <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none group-hover:text-bgBlue transition-colors" />
+                    </div>
                     </div>
                 </div>
 
-                {/* Target User Type */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Target User Type</label>
-                    <div className="relative">
-                        <select
-                            value={data.targetUserType}
-                            onChange={(e) => handleChange('targetUserType', e.target.value)}
-                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-                        >
-                            <option value="All Users">All Users</option>
-                            <option value="New Users">New Users</option>
-                            <option value="Premium Users">Premium Users</option>
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400 dark:text-gray-500">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-                        </div>
-                    </div>
+                    <Select value={data.targetUserType} onValueChange={(val) => handleChange('targetUserType', val)}>
+                        <SelectTrigger className="w-full bg-navbarBg border-border">
+                            <SelectValue placeholder="Select target users" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="All Users">All Users</SelectItem>
+                            <SelectItem value="New Users">New Users</SelectItem>
+                            <SelectItem value="Premium Users">Premium Users</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
         </div>
