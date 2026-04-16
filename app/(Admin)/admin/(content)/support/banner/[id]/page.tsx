@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ChevronRight, Code, Home, HomeIcon, LayoutTemplate } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Code, Home, HomeIcon, LayoutTemplate, Loader2 } from 'lucide-react';
 import BannerForm, { BannerFormData } from '@/components/Admin/support/Banner/BannerForm';
 import BannerPreview from '@/components/Admin/support/Banner/BannerPreview';
-import { banners } from '@/components/Admin/support/Banner/mockData';
 import { useParams, useRouter } from 'next/navigation';
+import { useGetBannerByIdQuery, useUpdateBannerMutation } from '@/redux/api/admin/bannerApi';
+import { toast } from 'sonner';
 
 const DEFAULT_CSS_TEMPLATE = `/* 
     Available CSS Classes:
@@ -78,6 +79,9 @@ export default function EditBannerPage() {
     const router = useRouter();
     const { id } = params;
 
+    const { data: banner, isLoading: isFetching } = useGetBannerByIdQuery(id as string, { skip: !id });
+    const [updateBanner, { isLoading: isUpdating }] = useUpdateBannerMutation();
+
     const [activeTab, setActiveTab] = useState<'prebuilt' | 'custom'>('prebuilt');
     const [formData, setFormData] = useState<BannerFormData>({
         bannerType: 'Upload',
@@ -98,31 +102,66 @@ export default function EditBannerPage() {
         status: 'Draft',
     });
 
+    const formatValue = (val: string) => {
+        if (!val) return '';
+        return val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+    };
+
     useEffect(() => {
-        if (id) {
-            const banner = banners.find(b => b.id === Number(id));
-            if (banner) {
-                setFormData({
-                    bannerType: banner.type,
-                    title: banner.title,
-                    description: banner.description,
-                    image: null, // Mock data doesn't have image
-                    primaryButtonLabel: 'Get Started', // Default
-                    primaryButtonLink: '',
-                    enableSecondaryButton: false,
-                    secondaryButtonLabel: '',
-                    secondaryButtonLink: '',
-                    startDate: banner.startDate,
-                    endDate: banner.endDate,
-                    targetUserType: 'All Users',
-                    customCSS: DEFAULT_CSS_TEMPLATE,
-                    primaryButtonIcon: '',
-                    secondaryButtonIcon: '',
-                    status: banner.status,
-                });
-            }
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', '') || '';
+        if (banner) {
+            setFormData({
+                bannerType: banner.type ? formatValue(banner.type) : 'Upload',
+                title: banner.title || '',
+                description: banner.description || '',
+                image: banner.mediaUrl ? (banner.mediaUrl.startsWith('http') ? banner.mediaUrl : `${baseUrl}/${banner.mediaUrl}`) : null,
+                primaryButtonLabel: banner.primaryButtonLabel || '',
+                primaryButtonLink: banner.primaryButtonUrl || '',
+                enableSecondaryButton: banner.secondaryButtonEnabled || false,
+                secondaryButtonLabel: banner.secondaryButtonLabel || '',
+                secondaryButtonLink: banner.secondaryButtonUrl || '',
+                startDate: banner.startDate ? new Date(banner.startDate).toISOString().split('T')[0] : '',
+                endDate: banner.endDate ? new Date(banner.endDate).toISOString().split('T')[0] : '',
+                targetUserType: banner.targetUserType ? banner.targetUserType.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ') : 'All Users',
+                customCSS: banner.customCss || DEFAULT_CSS_TEMPLATE,
+                primaryButtonIcon: banner.primaryButtonIcon || '',
+                secondaryButtonIcon: banner.secondaryButtonIcon || '',
+                status: banner.status ? formatValue(banner.status) : 'Draft',
+            });
         }
-    }, [id]);
+    }, [banner]);
+
+    const handleSave = async (overrideStatus?: string) => {
+        try {
+            const data = new FormData();
+            data.append('type', formData.bannerType.toUpperCase());
+            data.append('status', overrideStatus || formData.status.toUpperCase());
+            data.append('title', formData.title);
+            data.append('description', formData.description);
+            if (formData.file) {
+                data.append('media', formData.file);
+            }
+            data.append('mediaType', formData.file?.type.startsWith('video') ? 'VIDEO' : 'IMAGE');
+            data.append('primaryButtonLabel', formData.primaryButtonLabel);
+            data.append('primaryButtonUrl', formData.primaryButtonLink);
+            data.append('primaryButtonIcon', formData.primaryButtonIcon || '');
+            data.append('secondaryButtonEnabled', String(formData.enableSecondaryButton));
+            data.append('secondaryButtonLabel', formData.secondaryButtonLabel);
+            data.append('secondaryButtonUrl', formData.secondaryButtonLink);
+            data.append('secondaryButtonIcon', formData.secondaryButtonIcon || '');
+            data.append('startDate', formData.startDate ? new Date(formData.startDate).toISOString() : '');
+            data.append('endDate', formData.endDate ? new Date(formData.endDate).toISOString() : '');
+            data.append('targetUserType', formData.targetUserType.toUpperCase().replace(' ', '_'));
+            data.append('customCss', formData.customCSS || '');
+
+            await updateBanner({ id: id as string, data }).unwrap();
+            toast.success('Banner updated successfully');
+            router.push('/admin/support/banner');
+        } catch (error: any) {
+            toast.error(error?.data?.message || 'Failed to update banner');
+            console.error('Update error:', error);
+        }
+    };
 
     return (
         <div className="min-h-screen">
@@ -148,69 +187,83 @@ export default function EditBannerPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-4 py-2 border border-border bg-navbarBg rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-customShadow cursor-pointer">
-                        Save Draft
-                    </button>
-                    <button className="px-4 py-2 bg-bgBlue hover:bg-bgBlue/80 dark:bg-bgBlue dark:hover:bg-bgBlue/80 text-white rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer">
-                        Save Changes
+                    {/* <button 
+                        onClick={() => handleSave('DRAFT')}
+                        disabled={isUpdating}
+                        className="px-4 py-2 border border-border bg-navbarBg rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-customShadow cursor-pointer disabled:opacity-50"
+                    >
+                        {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Draft'}
+                    </button> */}
+                    <button 
+                        onClick={() => handleSave()}
+                        disabled={isUpdating}
+                        className="px-4 py-2 bg-bgBlue hover:bg-bgBlue/80 dark:bg-bgBlue dark:hover:bg-bgBlue/80 text-white rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer disabled:opacity-50"
+                    >
+                        {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
                     </button>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-hidden flex flex-col py-6">
-                {/* Tab Switcher */}
-                <div className="rounded-full border border-border p-1 inline-flex mb-6 shrink-0 w-max bg-navbarBg gap-2">
-                    <button
-                        onClick={() => setActiveTab('prebuilt')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${activeTab === 'prebuilt'
-                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-customShadow'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
-                            }`}
-                    >
-                        <LayoutTemplate className="w-4 h-4" />
-                        Prebuilt Form
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('custom')}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${activeTab === 'custom'
-                            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-customShadow'
-                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
-                            }`}
-                    >
-                        <Code className="w-4 h-4" />
-                        Custom Code
-                    </button>
+            {isFetching ? (
+                <div className="flex-1 flex items-center justify-center">
+                    <Loader2 className="w-12 h-12 animate-spin text-bgBlue" />
                 </div>
-
-                {/* Form and Preview Split */}
-                <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
-                    {/* Left Side: Form */}
-                    <div className="lg:col-span-5 h-full overflow-hidden">
-                        {activeTab === 'prebuilt' ? (
-                            <BannerForm data={formData} onChange={setFormData} />
-                        ) : (
-                            <div className="bg-navbarBg rounded-xl shadow-sm border border-border p-6 h-full flex flex-col">
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Custom CSS</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                    Add custom CSS to style your banner. Use classes like <code>.banner-container</code>, <code>.banner-title</code>, <code>.banner-desc</code>, <code>.primary-btn</code>, <code>.secondary-btn</code>.
-                                </p>
-                                <textarea
-                                    className="flex-1 w-full p-4 bg-navbarBg text-blue-400 font-mono text-sm rounded-lg focus:outline-none resize-none border border-border scrollbar-hide"
-                                    placeholder=".banner-title { color: #ff0000; }"
-                                    value={formData.customCSS}
-                                    onChange={(e) => setFormData({ ...formData, customCSS: e.target.value })}
-                                />
-                            </div>
-                        )}
+            ) : (
+                <div className="flex-1 overflow-hidden flex flex-col py-6">
+                    {/* Tab Switcher */}
+                    <div className="rounded-full border border-border p-1 inline-flex mb-6 shrink-0 w-max bg-navbarBg gap-2">
+                        <button
+                            onClick={() => setActiveTab('prebuilt')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${activeTab === 'prebuilt'
+                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-customShadow'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                }`}
+                        >
+                            <LayoutTemplate className="w-4 h-4" />
+                            Prebuilt Form
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('custom')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${activeTab === 'custom'
+                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-customShadow'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                }`}
+                        >
+                            <Code className="w-4 h-4" />
+                            Custom Code
+                        </button>
                     </div>
 
-                    {/* Right Side: Preview */}
-                    <div className="lg:col-span-7 h-full overflow-hidden">
-                        <BannerPreview data={formData} />
+                    {/* Form and Preview Split */}
+                    <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+                        {/* Left Side: Form */}
+                        <div className="lg:col-span-5 h-full overflow-hidden">
+                            {activeTab === 'prebuilt' ? (
+                                <BannerForm data={formData} onChange={setFormData} />
+                            ) : (
+                                <div className="bg-navbarBg rounded-xl shadow-sm border border-border p-6 h-full flex flex-col">
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Custom CSS</h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                        Add custom CSS to style your banner. Use classes like <code>.banner-container</code>, <code>.banner-title</code>, <code>.banner-desc</code>, <code>.primary-btn</code>, <code>.secondary-btn</code>.
+                                    </p>
+                                    <textarea
+                                        className="flex-1 w-full p-4 bg-navbarBg text-blue-400 font-mono text-sm rounded-lg focus:outline-none resize-none border border-border scrollbar-hide"
+                                        placeholder=".banner-title { color: #ff0000; }"
+                                        value={formData.customCSS}
+                                        onChange={(e) => setFormData({ ...formData, customCSS: e.target.value })}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right Side: Preview */}
+                        <div className="lg:col-span-7 h-full overflow-hidden">
+                            <BannerPreview data={formData} />
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

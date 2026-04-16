@@ -2,9 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ChevronRight, Code, HomeIcon, LayoutTemplate } from 'lucide-react';
+import { ChevronRight, Code, HomeIcon, LayoutTemplate, Loader2 } from 'lucide-react';
 import BannerForm, { BannerFormData } from '@/components/Admin/support/Banner/BannerForm';
 import BannerPreview from '@/components/Admin/support/Banner/BannerPreview';
+import { useCreateBannerMutation } from '@/redux/api/admin/bannerApi';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 const DEFAULT_CSS_TEMPLATE = `/* 
     Available CSS Classes:
@@ -72,6 +75,9 @@ const DEFAULT_CSS_TEMPLATE = `/*
 `;
 
 export default function CreateBannerPage() {
+    const router = useRouter();
+    const [createBanner, { isLoading }] = useCreateBannerMutation();
+
     const [activeTab, setActiveTab] = useState<'prebuilt' | 'custom'>('prebuilt');
     const [formData, setFormData] = useState<BannerFormData>({
         bannerType: 'Upload',
@@ -91,6 +97,38 @@ export default function CreateBannerPage() {
         primaryButtonIcon: '',
         secondaryButtonIcon: '',
     });
+
+    const handleSave = async (overrideStatus?: string) => {
+        try {
+            const data = new FormData();
+            data.append('type', formData.bannerType.toUpperCase());
+            data.append('status', overrideStatus || formData.status.toUpperCase());
+            data.append('title', formData.title);
+            data.append('description', formData.description);
+            if (formData.file) {
+                data.append('media', formData.file);
+            }
+            data.append('mediaType', formData.file?.type.startsWith('video') ? 'VIDEO' : 'IMAGE');
+            data.append('primaryButtonLabel', formData.primaryButtonLabel);
+            data.append('primaryButtonUrl', formData.primaryButtonLink);
+            data.append('primaryButtonIcon', formData.primaryButtonIcon || '');
+            data.append('secondaryButtonEnabled', String(formData.enableSecondaryButton));
+            data.append('secondaryButtonLabel', formData.secondaryButtonLabel);
+            data.append('secondaryButtonUrl', formData.secondaryButtonLink);
+            data.append('secondaryButtonIcon', formData.secondaryButtonIcon || '');
+            data.append('startDate', formData.startDate ? new Date(formData.startDate).toISOString() : '');
+            data.append('endDate', formData.endDate ? new Date(formData.endDate).toISOString() : '');
+            data.append('targetUserType', formData.targetUserType.toUpperCase().replace(' ', '_'));
+            data.append('customCss', formData.customCSS || '');
+
+            await createBanner(data).unwrap();
+            toast.success('Banner created successfully');
+            router.push('/admin/support/banner');
+        } catch (error: any) {
+            toast.error(error?.data?.message || 'Failed to create banner');
+            console.error('Create error:', error);
+        }
+    };
 
     return (
         <div className="min-h-screen">
@@ -117,11 +155,19 @@ export default function CreateBannerPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-4 py-2 border border-border bg-navbarBg rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-customShadow cursor-pointer">
-                        Save Draft
-                    </button>
-                    <button className="px-4 py-2 bg-bgBlue hover:bg-bgBlue/80 dark:bg-bgBlue dark:hover:bg-bgBlue/80 text-white rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer">
-                        Save & Publish
+                    {/* <button 
+                        onClick={() => handleSave('DRAFT')}
+                        disabled={isLoading}
+                        className="px-4 py-2 border border-border bg-navbarBg rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-customShadow cursor-pointer disabled:opacity-50"
+                    >
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Draft'}
+                    </button> */}
+                    <button 
+                        onClick={() => handleSave()}
+                        disabled={isLoading}
+                        className="px-4 py-2 bg-bgBlue hover:bg-bgBlue/80 dark:bg-bgBlue dark:hover:bg-bgBlue/80 text-white rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer disabled:opacity-50"
+                    >
+                        {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save'}
                     </button>
                 </div>
             </div>
