@@ -1,12 +1,11 @@
 "use client"
 
-import { X, Camera, Maximize, Volume2, Sun, Play, Pause, Trash2, RefreshCw, Power, PowerOff, ListTree, FileText, Layout, Clock, Monitor, Wifi, Database } from "lucide-react";
+import { X, Camera, Maximize, Volume2, Sun, Play, Pause, Power, PowerOff, ListTree, Layout, Clock, Monitor, Database } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.api";
 import DeviceLocation from "@/components/common/DeviceLocation";
-import ResolvedLocation from "@/common/ResolvedLocation";
 
-import { Device, TimelineItem } from "@/redux/api/users/devices/devices.type";
+import { TimelineItem } from "@/redux/api/users/devices/devices.type";
 
 interface Props {
   isOpen: boolean;
@@ -33,7 +32,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
   const [videoProgress, setVideoProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [isLooping, setIsLooping] = useState(true);
   const [isMetadataLoaded, setIsMetadataLoaded] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
@@ -58,8 +56,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     return { ...device, ...deviceDetail };
   }, [deviceDetail, device]);
 
-
-
   const timeline: TimelineItem[] = useMemo(() => {
     return currentDevice?.program?.timeline || [];
   }, [currentDevice]);
@@ -76,7 +72,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     if (currentDevice?.program?.videoUrl) {
       return getFileUrl(currentDevice.program.videoUrl);
     }
-    return "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
   }, [currentItem, currentDevice]);
 
   const nextIndex = (currentTimelineIndex + 1) % (timeline.length || 1);
@@ -121,6 +116,29 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     }
   }, [volume]);
 
+  const updateProgress = () => {
+    const video = videoRef.current;
+    if (!video || !video.duration) return;
+    const progress = (video.currentTime / video.duration) * 100;
+    setVideoProgress(progress);
+    setCurrentTime(video.currentTime);
+  };
+
+  const handleLoadedMetadata = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    setDuration(video.duration || 0);
+    setIsMetadataLoaded(true);
+  };
+
+  const handleTimeUpdate = () => {
+    updateProgress();
+  };
+
+  const handleEnded = () => {
+    handleNext();
+  };
+
   // Brightness is applied via CSS filter on the media container
   const mediaFilter = useMemo(() => ({
     filter: `brightness(${brightness}%)`
@@ -130,40 +148,10 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     const video = videoRef.current;
     if (!video) return;
 
-    const updateProgress = () => {
-      if (!video.duration) return;
-      const progress = (video.currentTime / video.duration) * 100;
-      setVideoProgress(progress);
-      setCurrentTime(video.currentTime);
-    };
-
-    const handleLoadedMetadata = () => {
-      setDuration(video.duration || 0);
-      setIsMetadataLoaded(true);
-    };
-
-    const handleTimeUpdate = () => {
-      updateProgress();
-    };
-
-    const handleEnded = () => {
-      handleNext();
-    };
-
-    video.addEventListener("loadedmetadata", handleLoadedMetadata);
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    video.addEventListener("ended", handleEnded);
-
     if (video.readyState >= 1) {
       handleLoadedMetadata();
     }
-
-    return () => {
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      video.removeEventListener("ended", handleEnded);
-    };
-  }, [isLooping, isOpen, mediaUrl, currentItem]);
+  }, [mediaUrl, currentItem]);
 
   // Handle Playback based on isPlaying state
   useEffect(() => {
@@ -268,10 +256,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     return `${Math.floor(diff / 86400)} days ago`;
   };
 
-
-
-  const timeline = currentDevice.program?.timeline || [];
-
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
@@ -323,9 +307,15 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                     <p className="text-xs font-mono">{currentItem?.file?.originalName}</p>
                     <audio 
                       ref={videoRef}
+                      key={mediaUrl}
                       src={mediaUrl} 
                       autoPlay={isPlaying}
                       onEnded={handleNext}
+                      onTimeUpdate={handleTimeUpdate}
+                      onLoadedMetadata={handleLoadedMetadata}
+                      preload="metadata"
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
                     />
                   </div>
                 ) : (
@@ -336,6 +326,9 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                     src={mediaUrl}
                     playsInline
                     preload="metadata"
+                    onTimeUpdate={handleTimeUpdate}
+                    onLoadedMetadata={handleLoadedMetadata}
+                    onEnded={handleEnded}
                   />
                 )}
 
@@ -518,7 +511,8 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                         {storagePercent > 100 ? "Limit Exceeded" : `${(100 - storagePercent).toFixed(1)}% Free`}
                       </span>
                     </div>
-
+                    </div>
+                  </div>
                   <div className="h-px bg-gray-100 dark:bg-gray-800" />
 
                   {/* Program Summary */}
@@ -642,7 +636,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }
