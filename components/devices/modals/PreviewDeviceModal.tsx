@@ -87,14 +87,14 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
   // Image/Audio Timer logic
   useEffect(() => {
     if (!isOpen || !isPlaying || !currentItem) return;
-    
+
     // Only set timer for images. Video and Audio are handled by media events.
     if (currentItem?.file?.type === 'IMAGE') {
       const itemDuration = (currentItem.duration || currentItem.file?.duration || 5) * 1000;
       const timer = setTimeout(() => {
         handleNext();
       }, itemDuration);
-      
+
       // Update progress for images
       const startTime = Date.now();
       const progressInterval = setInterval(() => {
@@ -290,7 +290,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
             {/* Left Column - Media & Controls */}
             <div className="flex-1 flex flex-col gap-6">
               {/* Media Preview Card */}
-              <div 
+              <div
                 className="relative bg-black rounded-[20px] overflow-hidden shadow-lg aspect-video ring-1 ring-black/5 flex items-center justify-center"
                 style={mediaFilter}
               >
@@ -305,10 +305,10 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                     <Volume2 className="w-16 h-16 text-bgBlue animate-pulse" />
                     <p className="text-sm font-medium opacity-60">Playing Audio Sequence</p>
                     <p className="text-xs font-mono">{currentItem?.file?.originalName}</p>
-                    <audio 
+                    <audio
                       ref={videoRef}
                       key={mediaUrl}
-                      src={mediaUrl} 
+                      src={mediaUrl}
                       autoPlay={isPlaying}
                       onEnded={handleNext}
                       onTimeUpdate={handleTimeUpdate}
@@ -483,10 +483,13 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                   <div className="flex items-center justify-between py-1">
                     <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Location</span>
                     <span className="text-[#171717] dark:text-white text-sm font-bold text-right truncate ml-4 max-w-[180px]">
-                      {currentDevice?.location && typeof currentDevice.location === 'object' && currentDevice.location.lat && currentDevice.location.lng ? (
-                        <DeviceLocation lat={currentDevice.location.lat} lng={currentDevice.location.lng} />
+                      {currentDevice?.location && typeof currentDevice.location === 'object' ? (
+                        <DeviceLocation
+                          lat={currentDevice.location.lat ?? 0}
+                          lng={currentDevice.location.lng ?? 0}
+                        />
                       ) : (
-                        currentDevice?.location || "Unknown Location"
+                        (typeof currentDevice?.location === 'string' ? currentDevice.location : null) || "Unknown Location"
                       )}
                     </span>
                   </div>
@@ -511,131 +514,131 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                         {storagePercent > 100 ? "Limit Exceeded" : `${(100 - storagePercent).toFixed(1)}% Free`}
                       </span>
                     </div>
+                  </div>
+                </div>
+                <div className="h-px bg-gray-100 dark:bg-gray-800" />
+
+                {/* Program Summary */}
+                <div className="bg-blue-50/50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-100/50 dark:border-blue-800/20">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Layout className="w-4 h-4 text-bgBlue" />
+                    <span className="text-sm font-bold text-headings">Active Program</span>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[#737373] dark:text-gray-400 font-medium">Name</span>
+                      <span className="text-sm font-semibold text-headings">{currentDevice.program?.name || "N/A"}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs text-[#737373] dark:text-gray-400 font-medium">Resolution</span>
+                      <span className="text-sm font-semibold text-headings">{currentDevice.program?.serene_size || "1920x1080"}</span>
                     </div>
                   </div>
-                  <div className="h-px bg-gray-100 dark:bg-gray-800" />
+                </div>
 
-                  {/* Program Summary */}
-                  <div className="bg-blue-50/50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-100/50 dark:border-blue-800/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Layout className="w-4 h-4 text-bgBlue" />
-                      <span className="text-sm font-bold text-headings">Active Program</span>
+                {/* Program Timeline (Compact) */}
+                {timeline.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <ListTree className="w-4 h-4 text-bgBlue" />
+                      <span className="text-sm font-bold text-headings">Timeline Sequence</span>
                     </div>
-                    <div className="space-y-3">
-                      <div className="flex flex-col">
-                        <span className="text-xs text-[#737373] dark:text-gray-400 font-medium">Name</span>
-                        <span className="text-sm font-semibold text-headings">{currentDevice.program?.name || "N/A"}</span>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs text-[#737373] dark:text-gray-400 font-medium">Resolution</span>
-                        <span className="text-sm font-semibold text-headings">{currentDevice.program?.serene_size || "1920x1080"}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Program Timeline (Compact) */}
-                  {timeline.length > 0 && (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center gap-2">
-                        <ListTree className="w-4 h-4 text-bgBlue" />
-                        <span className="text-sm font-bold text-headings">Timeline Sequence</span>
-                      </div>
-                      <div className="max-h-[220px] overflow-y-auto pr-2 space-y-2 scrollbar-hide">
-                        {timeline.map((item: any, idx: number) => (
-                          <div
-                            key={item.id}
-                            onClick={() => {
-                              setCurrentTimelineIndex(idx);
-                              setVideoProgress(0);
-                              setIsPlaying(true);
-                            }}
-                            className={`flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer ${idx === currentTimelineIndex
-                                ? "bg-bgBlue/5 border-bgBlue/30 ring-1 ring-bgBlue/20"
-                                : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 hover:border-bgBlue/20"
-                              }`}
-                          >
-                            <span className={`text-[10px] font-bold w-4 ${idx === currentTimelineIndex ? "text-bgBlue" : "text-[#737373]"}`}>
-                              {idx === currentTimelineIndex ? <Play className="w-3 h-3 fill-current" /> : idx + 1}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <p className={`text-[11px] font-bold truncate ${idx === currentTimelineIndex ? "text-bgBlue" : "text-headings"}`}>
-                                {item.file?.originalName}
-                              </p>
-                              <div className="flex items-center gap-2 text-[9px] text-[#737373] font-semibold uppercase">
-                                <span className={idx === currentTimelineIndex ? "text-bgBlue/80" : "text-bgBlue"}>
-                                  {(item.file?.type || "media").toLowerCase()}
-                                </span>
-                                <span>•</span>
-                                <span>{item.duration || item.file?.duration || 0}s</span>
-                              </div>
+                    <div className="max-h-[220px] overflow-y-auto pr-2 space-y-2 scrollbar-hide">
+                      {timeline.map((item: any, idx: number) => (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setCurrentTimelineIndex(idx);
+                            setVideoProgress(0);
+                            setIsPlaying(true);
+                          }}
+                          className={`flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer ${idx === currentTimelineIndex
+                            ? "bg-bgBlue/5 border-bgBlue/30 ring-1 ring-bgBlue/20"
+                            : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 hover:border-bgBlue/20"
+                            }`}
+                        >
+                          <span className={`text-[10px] font-bold w-4 ${idx === currentTimelineIndex ? "text-bgBlue" : "text-[#737373]"}`}>
+                            {idx === currentTimelineIndex ? <Play className="w-3 h-3 fill-current" /> : idx + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[11px] font-bold truncate ${idx === currentTimelineIndex ? "text-bgBlue" : "text-headings"}`}>
+                              {item.file?.originalName}
+                            </p>
+                            <div className="flex items-center gap-2 text-[9px] text-[#737373] font-semibold uppercase">
+                              <span className={idx === currentTimelineIndex ? "text-bgBlue/80" : "text-bgBlue"}>
+                                {(item.file?.type || "media").toLowerCase()}
+                              </span>
+                              <span>•</span>
+                              <span>{item.duration || item.file?.duration || 0}s</span>
                             </div>
                           </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
-
-                  {/* Details List */}
-                  <div className="flex flex-col gap-4">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-2">
-                        <Monitor className="w-4 h-4 text-[#737373]" />
-                        <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Device ID</span>
-                      </div>
-                      <span className="text-[#171717] dark:text-white text-[12px] font-bold font-mono truncate ml-4 max-w-[150px]">
-                        {currentDevice.id || "N/A"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">OS</span>
-                      <p className="text-[#171717] dark:text-white text-sm font-bold">
-                        {currentDevice.deviceType || "Android TV"}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">IP Address</span>
-                      <span className="text-[#171717] dark:text-white text-sm font-bold font-mono">
-                        {currentDevice.ip || "---"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-[#737373]" />
-                        <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Serial Number</span>
-                      </div>
-                      <span className="text-[#171717] dark:text-white text-sm font-bold font-mono">
-                        {currentDevice.deviceSerial || "---"}
-                      </span>
+                        </div>
+                      ))}
                     </div>
                   </div>
+                )}
 
-                  <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
+                <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
 
-                  {/* Power Button Section */}
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Power Status</span>
-                      <button
-                        type="button"
-                        onClick={() => setIsPlaying(!isPlaying)}
-                        className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
+                {/* Details List */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Monitor className="w-4 h-4 text-[#737373]" />
+                      <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Device ID</span>
+                    </div>
+                    <span className="text-[#171717] dark:text-white text-[12px] font-bold font-mono truncate ml-4 max-w-[150px]">
+                      {currentDevice.id || "N/A"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">OS</span>
+                    <p className="text-[#171717] dark:text-white text-sm font-bold">
+                      {currentDevice.deviceType || "Android TV"}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">IP Address</span>
+                    <span className="text-[#171717] dark:text-white text-sm font-bold font-mono">
+                      {currentDevice.ip || "---"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-[#737373]" />
+                      <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Serial Number</span>
+                    </div>
+                    <span className="text-[#171717] dark:text-white text-sm font-bold font-mono">
+                      {currentDevice.deviceSerial || "---"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
+
+                {/* Power Button Section */}
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Power Status</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsPlaying(!isPlaying)}
+                      className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
                             py-3 px-3 cursor-pointer
                             ${isPlaying ? "bg-bgBlue hover:bg-blue-500" : "bg-bgRed hover:bg-red-600"}`}
-                      >
-                        {isPlaying ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-                      </button>
-                    </div>
+                    >
+                      {isPlaying ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
     </div>
   );
 }
