@@ -10,6 +10,7 @@ import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmatio
 import { Program, Device } from "@/redux/api/users/programs/programs.type";
 import { useDeleteProgramMutation } from "@/redux/api/users/programs/programs.api";
 import ResolvedLocation from "@/common/ResolvedLocation";
+import AssignExistingDeviceModal from "./AssignExistingDeviceModal";
 
 interface ScreenSettingsProps {
     program: Program;
@@ -35,6 +36,7 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
     const router = useRouter();
     const [deleteProgram, { isLoading: isDeleting }] = useDeleteProgramMutation();
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
     const handleRemoveDevice = (id: string) => {
         setLocalDevices(localDevices.filter((device) => device.id !== id));
@@ -145,15 +147,15 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                             className="flex-1 py-2.5 border border-[#89CFF0] text-bgBlue hover:bg-blue-50 transition-all rounded-lg text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-customShadow"
                         >
                             <Plus className="w-4 h-4" />
-                            Add Devices
+                            Add New Devices
                         </button>
-                        {/* <button
-                            onClick={openAddDevice} // Trigger same modal for now
+                        <button
+                            onClick={() => setIsAssignModalOpen(true)}
                             className="flex-1 py-3.5 bg-bgBlue text-white hover:bg-blue-600 transition-all rounded-xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 cursor-pointer shadow-customShadow"
                         >
                             <Plus className="w-5 h-5" />
                             Add Existing Device
-                        </button> */}
+                        </button>
                     </div>
                 </div>
 
@@ -183,6 +185,12 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                 title="Delete Program"
                 description="Are you sure you want to delete this program? This action cannot be undone."
                 itemName={program.name}
+            />
+            <AssignExistingDeviceModal
+                isOpen={isAssignModalOpen}
+                onClose={() => setIsAssignModalOpen(false)}
+                programId={program.id}
+                existingDeviceIds={localDevices.map(d => d.id)}
             />
         </div>
     );

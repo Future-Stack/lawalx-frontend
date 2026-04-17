@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   X, FileText, Video, Monitor, CircleCheckBigIcon,
   Wifi, WifiOff, Search, ChevronLeft, ChevronRight, Loader2, Headphones, Plus,
@@ -182,8 +183,8 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
             else toggleVideoSelection(item.id);
           }}
           className={`flex items-center gap-3 p-3 rounded-lg border border-borderGray dark:border-gray-700 bg-white dark:bg-gray-800 transition-all group ${isSelected
-              ? "border-bgBlue bg-blue-50/50 dark:bg-blue-950/20"
-              : "hover:border-bgBlue hover:bg-blue-50 dark:hover:bg-blue-950/20"
+            ? "border-bgBlue bg-blue-50/50 dark:bg-blue-950/20"
+            : "hover:border-bgBlue hover:bg-blue-50 dark:hover:bg-blue-950/20"
             } cursor-pointer`}
           style={{ marginLeft: depth > 0 ? `${depth * 1.5}rem` : 0 }}
         >
@@ -192,8 +193,8 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
             {item.type !== "folder" && (
               <div
                 className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isSelected
-                    ? "bg-bgBlue border-bgBlue text-white"
-                    : "border-gray-300 dark:border-gray-600 group-hover:border-bgBlue"
+                  ? "bg-bgBlue border-bgBlue text-white"
+                  : "border-gray-300 dark:border-gray-600 group-hover:border-bgBlue"
                   }`}
               >
                 {isSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
@@ -276,9 +277,9 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
 
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[150] p-4 transition-all duration-300 cursor-pointer"
+      className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 transition-all duration-300 cursor-pointer"
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
       <div
@@ -504,34 +505,34 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
                           className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500 cursor-pointer"
                         />
                         <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900 dark:text-white truncate">{device.name}</span>
-                              {device.status === "ONLINE" ? (
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-xs font-semibold">
-                                  <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                                  Online
-                                </div>
-                              ) : device.status === "OFFLINE" ? (
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-xs font-semibold">
-                                  <WifiOff className="w-3.5 h-3.5" />
-                                  Offline
-                                </div>
-                              ) : device.status === "PAIRED" ? (
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-                                  <span className="w-2 h-2 rounded-full bg-blue-500" />
-                                  Paired
-                                </div>
-                              ) : device.status === "WAITING" ? (
-                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold">
-                                  <span className="w-2 h-2 rounded-full bg-orange-500" />
-                                  Waiting
-                                </div>
-                              ) : (
-                                <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] text-[#737373] text-xs font-semibold">
-                                  {device.status}
-                                </div>
-                              )}
-                            </div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900 dark:text-white truncate">{device.name}</span>
+                            {device.status === "ONLINE" ? (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-xs font-semibold">
+                                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
+                                Online
+                              </div>
+                            ) : device.status === "OFFLINE" ? (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-xs font-semibold">
+                                <WifiOff className="w-3.5 h-3.5" />
+                                Offline
+                              </div>
+                            ) : device.status === "PAIRED" ? (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                                <span className="w-2 h-2 rounded-full bg-blue-500" />
+                                Paired
+                              </div>
+                            ) : device.status === "WAITING" ? (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold">
+                                <span className="w-2 h-2 rounded-full bg-orange-500" />
+                                Waiting
+                              </div>
+                            ) : (
+                              <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] text-[#737373] text-xs font-semibold">
+                                {device.status}
+                              </div>
+                            )}
+                          </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{device.deviceSerial}</div>
                         </div>
                       </div>
@@ -599,4 +600,8 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
       )}
     </div>
   );
+
+  if (typeof document === "undefined") return null;
+
+  return createPortal(modalContent, document.body);
 }

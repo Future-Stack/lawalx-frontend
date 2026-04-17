@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { X, Trash2, CheckCircle, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { useUploadFileMutation } from "@/redux/api/users/content/content.api";
 import { baseApi } from "@/redux/api/baseApi";
+import { useGetUserProfileQuery, useUserDataUpdateMutation } from "@/redux/api/users/userProfileApi";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 type UploadStatus = "pending" | "simulating" | "ready" | "uploading" | "done" | "error";
@@ -72,7 +73,12 @@ export default function UploadFileModal({
     const params = useParams();
     const programId = propProgramId || (params?.id as string);
     const dispatch = useDispatch();
+    const router = useRouter();
+
     const [uploadFile] = useUploadFileMutation();
+    const [userDataUpdate] = useUserDataUpdateMutation();
+    const { data: userProfile } = useGetUserProfileQuery();
+    const userInfo = userProfile?.data;
     const [files, setFiles] = useState<FileEntry[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -324,7 +330,20 @@ export default function UploadFileModal({
                 if (uploadedData.length > 0 && onSuccess) {
                     onSuccess(uploadedData);
                 }
-                onClose();
+                
+                // Onboarding Completion Logic
+                if (userInfo?.firstTimeLogin === true) {
+                    try {
+                        await userDataUpdate({}).unwrap();
+                        router.push("/content");
+                    } catch (updateError) {
+                        console.error("Failed to update onboarding status:", updateError);
+                        // Still navigate or close? Usually redirect is priority
+                        router.push("/content");
+                    }
+                } else {
+                    onClose();
+                }
             } else {
                 toast.error(`Upload completed with errors. ${successCount} succeeded, ${failureCount} failed.`);
             }
