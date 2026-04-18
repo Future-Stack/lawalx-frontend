@@ -163,14 +163,16 @@ export default function DevicesPage() {
         device: device.name || device.deviceSerial || "Unknown Device",
         model: device.model || "Unknown Model",
         resolution: device.program?.serene_size || "1920x1080",
-        location: device.location ? `Location (${device.location.lat.toFixed(2)}, ${device.location.lng.toFixed(2)})` : "Unknown Location",
+        location: device.location ? 
+          (device.location.lat === 0 && device.location.lng === 0 ? "N/A" : `Location (${device.location.lat.toFixed(2)}, ${device.location.lng.toFixed(2)})`) 
+          : "Unknown Location",
         type: device.deviceType || "Unknown Type",
         programName: device.program?.name || "No program assigned",
         status: status,
         storage: storageDisplay,
         lastSync: calculateTimeAgo(device.lastSeen),
-        lat: device.location?.lat || 23.8103, // Default to Dhaka if null
-        lng: device.location?.lng || 90.4125,
+        lat: device.location?.lat ?? 23.8103, // Default to Dhaka if null/undefined
+        lng: device.location?.lng ?? 90.4125,
         original: device
       };
     });

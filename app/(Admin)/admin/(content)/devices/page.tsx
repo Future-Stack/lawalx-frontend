@@ -291,9 +291,9 @@ export default function GlobalDevices() {
 
       if (device.location) {
         if (typeof device.location === 'object') {
-          lat = device.location.lat || 0;
-          lng = device.location.lng || 0;
-          locationLabel = `${lat}, ${lng}`;
+          lat = device.location.lat ?? 0;
+          lng = device.location.lng ?? 0;
+          locationLabel = (lat === 0 && lng === 0) ? 'N/A' : `${lat}, ${lng}`;
         } else if (typeof device.location === 'string') {
           locationLabel = device.location;
           const coordRegex = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/;
@@ -301,6 +301,7 @@ export default function GlobalDevices() {
             const [latStr, lngStr] = device.location.split(',');
             lat = parseFloat(latStr.trim()) || 0;
             lng = parseFloat(lngStr.trim()) || 0;
+            if (lat === 0 && lng === 0) locationLabel = 'N/A';
           }
         }
       }
