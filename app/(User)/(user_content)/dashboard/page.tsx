@@ -31,16 +31,37 @@ import CommonLoader from "@/common/CommonLoader";
 import CreateScheduleDialog from "../schedules/_components/CreateScheduleDialog";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import DeviceLocation from "@/components/common/DeviceLocation";
+import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
+import { useEffect } from "react";
 
 export default function Dashboard() {
   const { data: statsData } = useGetAllStatsQuery(undefined);
   const { data: devicesData } = useGetAllDevicesQuery();
+  const { data: userProfile } = useGetUserProfileQuery();
+  const userInfo = userProfile?.data;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(false);
+  const [forceShowProgram, setForceShowProgram] = useState(false);
+
+  // Automatic modals for first time signup
+  useEffect(() => {
+    const isDismissed = sessionStorage.getItem("onboarding_dismissed");
+    if (userInfo?.firstTimeLogin === true && !isDismissed) {
+      setForceShowProgram(false);
+      setIsAddDeviceModalOpen(true);
+    }
+  }, [userInfo?.firstTimeLogin]);
+
+  const handleCloseAddDeviceModal = () => {
+    setIsAddDeviceModalOpen(false);
+    if (userInfo?.firstTimeLogin === true) {
+      sessionStorage.setItem("onboarding_dismissed", "true");
+    }
+  };
 
   const { data: activityData } = useGetAllActivitiesQuery();
   const activities = activityData?.data?.slice(0, 4) || [];
@@ -149,7 +170,10 @@ export default function Dashboard() {
             active
           />
           <button
-            onClick={() => setIsAddDeviceModalOpen(true)}
+            onClick={() => {
+              setForceShowProgram(true);
+              setIsAddDeviceModalOpen(true);
+            }}
             className="flex items-center gap-2 px-3 sm:px-4 py-3 rounded-xl bg-navbarBg cursor-pointer transition-colors hover:shadow-sm"
           >
             <Tv className="w-8 h-8 text-[#155DFC] p-2 bg-blue-50 dark:bg-blue-900/50 rounded-md" />
@@ -315,7 +339,16 @@ export default function Dashboard() {
 
       {/* Modals */}
       <CreateScreenModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
-      <AddDeviceModal isOpen={isAddDeviceModalOpen} onClose={() => setIsAddDeviceModalOpen(false)} />
+      <AddDeviceModal
+        isOpen={isAddDeviceModalOpen}
+        forceShowProgram={forceShowProgram}
+        onClose={handleCloseAddDeviceModal}
+        onSuccess={() => {
+          if (userInfo?.firstTimeLogin === true) {
+            setIsUploadModalOpen(true);
+          }
+        }}
+      />
       {/* Create Schedule Dialog */}
       <CreateScheduleDialog open={isScheduleModalOpen} setOpen={setIsScheduleModalOpen} />
 

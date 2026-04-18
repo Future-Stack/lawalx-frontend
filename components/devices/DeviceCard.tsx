@@ -30,7 +30,7 @@ export default function DeviceCard({ device, isSelected, onToggle, onPreview, on
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{device.mac}</p>
             <div className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 mb-2">
               <MapPin className="w-3 h-3" /> 
-              {device.lat && device.lng ? (
+              {device.lat !== undefined && device.lng !== undefined && device.lat !== null && device.lng !== null ? (
                 <DeviceLocation lat={device.lat} lng={device.lng} fallbackLabel={device.location} />
               ) : (
                 device.location
