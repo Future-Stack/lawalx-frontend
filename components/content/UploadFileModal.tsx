@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+
 import { X, Trash2, CheckCircle, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
@@ -70,10 +70,8 @@ export default function UploadFileModal({
     onSuccess,
     programId: propProgramId,
 }: UploadFileModalProps) {
-    const params = useParams();
-    const programId = propProgramId || (params?.id as string);
+    const programId = propProgramId;
     const dispatch = useDispatch();
-    const router = useRouter();
 
     const [uploadFile] = useUploadFileMutation();
     const [userDataUpdate] = useUserDataUpdateMutation();
@@ -249,7 +247,6 @@ export default function UploadFileModal({
 
     const handleDone = async () => {
         if (files.length === 0) {
-            onClose();
             return;
         }
 
@@ -263,7 +260,6 @@ export default function UploadFileModal({
             );
 
             if (filesToUpload.length === 0) {
-                onClose();
                 return;
             }
 
@@ -272,6 +268,7 @@ export default function UploadFileModal({
             let failureCount = 0;
             const BATCH_SIZE = 4;
 
+            const uploadedResults: any[] = [];
             for (let i = 0; i < filesToUpload.length; i += BATCH_SIZE) {
                 const batch = filesToUpload.slice(i, i + BATCH_SIZE);
 
@@ -302,6 +299,9 @@ export default function UploadFileModal({
 
                         const res = await uploadFile(payload as any).unwrap();
                         successCount++;
+                        if (res?.data) {
+                            uploadedResults.push(res.data);
+                        }
 
                         setFiles((prev) =>
                             prev.map((f) =>
@@ -326,26 +326,29 @@ export default function UploadFileModal({
 
             if (!hasErrorOccurred) {
                 toast.success(filesToUpload.length > 1 ? `All ${filesToUpload.length} files uploaded successfully!` : "File uploaded successfully!");
-                const uploadedData = files.filter(f => f.status === "done").map(f => (f as any).responseData).filter(Boolean);
-                if (uploadedData.length > 0 && onSuccess) {
-                    onSuccess(uploadedData);
+
+                if (uploadedResults.length > 0 && onSuccess) {
+                    onSuccess(uploadedResults);
                 }
-                
+
                 // Onboarding Completion Logic
                 if (userInfo?.firstTimeLogin === true) {
                     try {
                         await userDataUpdate({}).unwrap();
-                        router.push("/content");
                     } catch (updateError) {
                         console.error("Failed to update onboarding status:", updateError);
-                        // Still navigate or close? Usually redirect is priority
-                        router.push("/content");
                     }
-                } else {
-                    onClose();
                 }
+
+                // Auto-close on successful upload
+                setIsPageLoading(false);
+                onClose();
             } else {
                 toast.error(`Upload completed with errors. ${successCount} succeeded, ${failureCount} failed.`);
+                // If at least some succeeded, we should still pass them back but maybe not close automatically if there are errors to show
+                if (uploadedResults.length > 0 && onSuccess) {
+                    onSuccess(uploadedResults);
+                }
             }
         } catch (error: any) {
             toast.error(
@@ -391,15 +394,20 @@ export default function UploadFileModal({
     const isUploading = files.some((f) => f.status === "uploading");
 
     return (
-        <DialogPrimitive.Root open={isOpen} onOpenChange={(open) => { if (!open && !isUploading) onClose(); }}>
+        <DialogPrimitive.Root open={isOpen} onOpenChange={() => { /* controlled externally — never auto-close */ }}>
             <DialogPrimitive.Portal>
                 <DialogPrimitive.Overlay
                     className="fixed inset-0 z-[2147483647] bg-black/50"
                 />
                 <DialogPrimitive.Content
                     className="fixed top-[50%] left-[50%] z-[2147483647] w-full max-w-[560px] translate-x-[-50%] translate-y-[-50%] outline-none"
-                    onPointerDownOutside={(e) => { if (isUploading) e.preventDefault(); }}
+                    onPointerDownOutside={(e) => e.preventDefault()}
+                    onEscapeKeyDown={(e) => e.preventDefault()}
                 >
+                    <DialogPrimitive.Title className="sr-only">Upload File</DialogPrimitive.Title>
+                    <DialogPrimitive.Description className="sr-only">
+                        Upload your media files to the program timeline.
+                    </DialogPrimitive.Description>
                     <div
                         className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh] border border-gray-200 dark:border-gray-700"
                     >
@@ -410,6 +418,7 @@ export default function UploadFileModal({
                             <button
                                 onClick={onClose}
                                 disabled={isUploading}
+                                aria-label="Close"
                                 className="text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full transition-colors cursor-pointer"
                             >
                                 <X className="w-5 h-5" />
