@@ -96,15 +96,16 @@ const AddContentDialog = ({ open, setOpen, programId, programName, existingFileI
             {/* Header */}
             <div className="flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 border-b border-gray-200 dark:border-gray-700 shrink-0">
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
+                <DialogPrimitive.Title className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">
                   Add Content to the {programName}
-                </h2>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                </DialogPrimitive.Title>
+                <DialogPrimitive.Description className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
                   Select videos or images to add to your screen timeline.
-                </p>
+                </DialogPrimitive.Description>
               </div>
               <button
                 onClick={() => setOpen(false)}
+                aria-label="Close"
                 className="text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />

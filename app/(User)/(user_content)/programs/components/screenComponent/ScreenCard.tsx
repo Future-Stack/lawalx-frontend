@@ -8,6 +8,7 @@ import {
   FilePlay,
   TvMinimal,
   Loader2,
+  Music,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -131,6 +132,13 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
                 alt={program.name}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
+            ) : currentItem?.file?.type === "AUDIO" ? (
+              <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-slate-900 to-black flex flex-col items-center justify-center p-4">
+                <Music className="w-10 h-10 text-bgBlue animate-pulse mb-2" />
+                <span className="text-[10px] text-white/70 text-center line-clamp-1 px-2">
+                  {currentItem.file?.originalName}
+                </span>
+              </div>
             ) : (
               <video
                 key={currentItem.file?.id}

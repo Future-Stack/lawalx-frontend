@@ -156,10 +156,10 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
       programId: programId,
       file: file as any,
     }));
-
     const updatedItems = [...items, ...newTimelineItems];
     setItems(updatedItems);
     onChange?.(updatedItems);
+    setIsUploadModalOpen(false);
   };
 
   const handleAppendExisting = (selectedFiles: any[]) => {
