@@ -18,7 +18,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useGetUserInvoicesQuery } from "@/redux/api/admin/payments/subscribersApi";
+import { useGetUserInvoicesQuery } from "@/redux/api/admin/payments/subscriber/subscribersApi";
 
 interface TransactionSheetProps {
   open: boolean;
