@@ -264,8 +264,10 @@ export default function UserManagementPage() {
       toast.success("User report exported successfully");
     } catch (error) {
       console.error("Excel export error:", error);
-      toast.error("An error occurred while exporting the report");    } finally {
-      setShowExportMenu(false);    }
+      toast.error("An error occurred while exporting the report");
+    } finally {
+      setShowExportMenu(false);
+    }
   };
 
   const toggleSelectUser = (id: string) => {
@@ -365,7 +367,7 @@ export default function UserManagementPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-navbarBg p-4 rounded-lg border border-border">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
@@ -426,7 +428,7 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        <div className="bg-navbarBg p-4 rounded-lg border border-border">
+        {/* <div className="bg-navbarBg p-4 rounded-lg border border-border">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
               <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
@@ -441,7 +443,7 @@ export default function UserManagementPage() {
           <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Overdue, Offline, Errors
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Table Section */}
@@ -494,11 +496,11 @@ export default function UserManagementPage() {
               options={["All Status", "Active", "Suspended"]}
               onChange={setStatusFilter}
             />
-            {/* <Dropdown
+            <Dropdown
               value={storageFilter}
               options={[">80% Storage", "50% Storage", "90% Storage"]}
               onChange={setStorageFilter}
-            /> */}
+            />
           </div>
         </div>
 
