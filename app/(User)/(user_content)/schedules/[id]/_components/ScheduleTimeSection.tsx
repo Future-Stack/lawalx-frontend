@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import BaseSelect from "@/common/BaseSelect";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { useRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface ScheduleTimeSectionProps {
     data: {
@@ -13,9 +14,11 @@ interface ScheduleTimeSectionProps {
         endDate?: string;
     };
     onChange: (data: any) => void;
+    daysOfWeek: string[];
+    dayOfMonth: number[];
 }
 
-const ScheduleTimeSection: React.FC<ScheduleTimeSectionProps> = ({ data, onChange }) => {
+const ScheduleTimeSection: React.FC<ScheduleTimeSectionProps> = ({ data, onChange, daysOfWeek, dayOfMonth }) => {
     const startTimeRef = useRef<HTMLInputElement>(null);
     const endTimeRef = useRef<HTMLInputElement>(null);
     const startDateRef = useRef<HTMLInputElement>(null);
@@ -26,6 +29,32 @@ const ScheduleTimeSection: React.FC<ScheduleTimeSectionProps> = ({ data, onChang
             (ref.current as any).showPicker();
         }
     };
+
+    const weekDays = [
+        { short: "Mon", full: "Monday" },
+        { short: "Tue", full: "Tuesday" },
+        { short: "Wed", full: "Wednesday" },
+        { short: "Thu", full: "Thursday" },
+        { short: "Fri", full: "Friday" },
+        { short: "Sat", full: "Saturday" },
+        { short: "Sun", full: "Sunday" }
+    ];
+
+    const toggleDay = (day: string) => {
+        const updatedDays = daysOfWeek.includes(day)
+            ? daysOfWeek.filter(d => d !== day)
+            : [...daysOfWeek, day];
+        onChange({ daysOfWeek: updatedDays });
+    };
+
+    const toggleDate = (date: number) => {
+        const updatedDates = dayOfMonth.includes(date)
+            ? dayOfMonth.filter(d => d !== date)
+            : [...dayOfMonth, date];
+        onChange({ dayOfMonth: updatedDates });
+    };
+
+    const isRunOnce = data.repeat.toLowerCase() === "once";
 
     return (
         <section className="bg-navbarBg border border-border rounded-xl p-6 space-y-4 shadow-sm">
@@ -44,6 +73,54 @@ const ScheduleTimeSection: React.FC<ScheduleTimeSectionProps> = ({ data, onChang
                         ]}
                     />
                 </div>
+
+                {/* Weekly Day Selector */}
+                {data.repeat.toLowerCase() === "weekly" && (
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-headings">Select Days</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {weekDays.map((day) => (
+                                <button
+                                    key={day.short}
+                                    type="button"
+                                    onClick={() => toggleDay(day.short)}
+                                    className={cn(
+                                        "px-3 py-1 rounded-md border transition-all font-medium text-xs cursor-pointer",
+                                        daysOfWeek.includes(day.short)
+                                            ? "bg-bgBlue text-white border-bgBlue"
+                                            : "bg-input text-headings border-borderGray hover:border-bgBlue"
+                                    )}
+                                >
+                                    {day.short}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Monthly Date Selector */}
+                {data.repeat.toLowerCase() === "monthly" && (
+                    <div className="space-y-3">
+                        <Label className="text-sm font-semibold text-headings">Select Days</Label>
+                        <div className="grid grid-cols-7 sm:grid-cols-10 lg:grid-cols-11 gap-1.5">
+                            {Array.from({ length: 31 }, (_, i) => i + 1).map((date) => (
+                                <button
+                                    key={date}
+                                    type="button"
+                                    onClick={() => toggleDate(date)}
+                                    className={cn(
+                                        "aspect-square rounded-md border transition-all font-bold text-[10px] sm:text-xs flex items-center justify-center cursor-pointer",
+                                        dayOfMonth.includes(date)
+                                            ? "bg-bgBlue text-white border-bgBlue"
+                                            : "bg-input text-headings border-borderGray hover:border-bgBlue"
+                                    )}
+                                >
+                                    {date}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Play Times */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -84,7 +161,7 @@ const ScheduleTimeSection: React.FC<ScheduleTimeSectionProps> = ({ data, onChang
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label className="text-sm font-medium text-headings">
-                            {data.repeat === "Run Once" ? "Select Date" : "Start Date"} <span className="text-red-500">*</span>
+                            {isRunOnce ? "Select Date" : "Start Date"} <span className="text-red-500">*</span>
                         </Label>
                         <div className="relative cursor-pointer" onClick={() => handleIconClick(startDateRef)}>
                             <Input
@@ -98,7 +175,7 @@ const ScheduleTimeSection: React.FC<ScheduleTimeSectionProps> = ({ data, onChang
                         </div>
                     </div>
 
-                    {data.repeat !== "Run Once" && (
+                    {!isRunOnce && (
                         <div className="space-y-2">
                             <Label className="text-sm font-medium text-headings">
                                 End Date <span className="text-red-500">*</span>
