@@ -39,6 +39,8 @@ interface VideoPlayerProps {
   onEnded?: () => void;
   onPlay?: () => void;
   onPause?: () => void;
+  fillParent?: boolean; // New prop to force h-full instead of aspect-ratio padding
+  className?: string; // Standard className override
 }
 
 const BaseVideoPlayer = ({
@@ -51,10 +53,13 @@ const BaseVideoPlayer = ({
   onEnded,
   onPlay,
   onPause,
+  fillParent = false,
+  className = "",
 }: VideoPlayerProps) => {
   const playerRef = useRef<APITypes>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [ready, setReady] = useState(false);
+  const hasStartedRef = useRef(false);
 
   // Stable callback refs
   const onEndedRef  = useRef(onEnded);
@@ -150,8 +155,11 @@ const BaseVideoPlayer = ({
     };
   }, [isMounted]);
 
-  // ── 3. Reset ready on src change ───────────────────────────
-  useEffect(() => { setReady(false); }, [src]);
+  // ── 3. Reset ready and hasStarted on src change ───────────
+  useEffect(() => { 
+    setReady(false); 
+    hasStartedRef.current = false;
+  }, [src]);
 
   // ── 4. Drive autoPlay — mute to start, then restore volume ─
   useEffect(() => {
@@ -159,7 +167,14 @@ const BaseVideoPlayer = ({
     if (!player || !ready) return;
 
     if (autoPlay) {
-      // Step 1: mute so browser allows autoplay
+      if (hasStartedRef.current) {
+        // If already started once, just call play directly for smooth resume
+        player.play();
+        return;
+      }
+
+      // Initial Autoplay Sequence: toggle mute so browser allows autoplay
+      hasStartedRef.current = true;
       player.muted  = true;
       player.volume = 0;
 
@@ -238,10 +253,15 @@ const BaseVideoPlayer = ({
 
   return (
     <div
-      className={`relative w-full ${mediaType === "video" ? "pt-[56.25%]" : "h-full"} ${rounded} bg-black overflow-hidden group`}
-      style={{ transform: "translateZ(0)" }}
+      className={`relative w-full ${
+        fillParent || mediaType === "audio" ? "h-full" : "pt-[56.25%]"
+      } ${rounded} bg-black overflow-hidden group ${className}`}
+      style={{ 
+        transform: "translateZ(0)",
+        ["--plyr-color-main" as any]: "#0FA6FF",
+      }}
     >
-      <div className={`${mediaType === "video" ? "absolute inset-0" : "relative h-full"} flex items-center justify-center`}>
+      <div className={`${(fillParent || mediaType === "video") ? "absolute inset-0" : "relative h-full"} flex items-center justify-center`}>
         {(!ready || !isMounted) && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-3 transition-opacity duration-300">
             <Loader2 className="w-8 h-8 animate-spin text-white/50" />
