@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
 import BaseSelect from "@/common/BaseSelect";
-import { Crown } from "lucide-react";
+import { Crown, Loader2 } from "lucide-react";
+import { useUpdatePlanMutation } from "@/redux/api/admin/payments/plans/plansApi";
+import { toast } from "sonner";
 
 interface CreatePlanDialogProps {
     open: boolean;
@@ -19,23 +21,66 @@ const CreatePlanDialog = ({
     editMode,
     initialData,
 }: CreatePlanDialogProps) => {
-    const [planName, setPlanName] = useState(initialData?.name || "");
-    const [description, setDescription] = useState(initialData?.description || "");
-    const [price, setPrice] = useState(
-        initialData?.price?.replace("$", "") || "0"
-    );
+    const [updatePlan, { isLoading: isUpdating }] = useUpdatePlanMutation();
+
+    const [planName, setPlanName] = useState("");
+    const [description, setDescription] = useState("");
+    const [price, setPrice] = useState("0");
     const [currency, setCurrency] = useState("USD");
-    const [isAdvanced, setIsAdvanced] = useState(editMode || !!initialData);
+    const [isAdvanced, setIsAdvanced] = useState(false);
 
     const [limits, setLimits] = useState({
-        deviceLimit: initialData?.devices || 20,
-        storageLimit: initialData?.storage?.replace(" GB", "") || 50,
-        fileLimit: initialData?.uploadLimits || "",
-        fileSizeLimit: "",
+        deviceLimit: 20,
+        storageLimit: 50,
+        fileLimit: 100,
+        fileSizeLimit: 10,
     });
+
+    useEffect(() => {
+        if (open && initialData) {
+            setPlanName(initialData.name || "");
+            setDescription(initialData.description || "");
+            setPrice(initialData.price || "0");
+            setCurrency(initialData.currency || "USD");
+            setIsAdvanced(initialData.isAdvanceEnabled || false);
+            setLimits({
+                deviceLimit: initialData.deviceLimit || 20,
+                storageLimit: initialData.storageLimitGb || 50,
+                fileLimit: initialData.fileLimit || 100,
+                fileSizeLimit: initialData.fileSizeLimitMb || 10,
+            });
+        }
+    }, [open, initialData]);
 
     const handleLimitChange = (field: string, value: any) => {
         setLimits((prev) => ({ ...prev, [field]: value }));
+    };
+
+    const handleSave = async () => {
+        if (!editMode || !initialData?.id) {
+            toast.error("Create plan not implemented yet");
+            return;
+        }
+
+        try {
+            const payload = {
+                description,
+                price: parseFloat(price),
+                currency,
+                deviceLimit: parseInt(limits.deviceLimit.toString()),
+                storageLimitGb: parseInt(limits.storageLimit.toString()),
+                fileLimit: parseInt(limits.fileLimit.toString()),
+                fileSizeLimitMb: parseInt(limits.fileSizeLimit.toString()),
+                isAdvanceEnabled: isAdvanced,
+                isActive: initialData.isActive,
+            };
+
+            await updatePlan({ id: initialData.id, data: payload }).unwrap();
+            toast.success("Plan updated successfully!");
+            setOpen(false);
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Failed to update plan");
+        }
     };
 
     const inputClass =
@@ -59,7 +104,11 @@ const CreatePlanDialog = ({
                         value={planName}
                         onChange={(e) => setPlanName(e.target.value)}
                         className={inputClass}
+                        disabled={editMode}
                     />
+                    {editMode && (
+                        <p className="text-xs text-muted">Plan name cannot be changed</p>
+                    )}
                 </div>
 
                 {/* Description */}
@@ -132,6 +181,7 @@ const CreatePlanDialog = ({
                             <input
                                 type="number"
                                 placeholder="100"
+                                value={limits.deviceLimit}
                                 onChange={(e) =>
                                     handleLimitChange("deviceLimit", e.target.value)
                                 }
@@ -147,6 +197,7 @@ const CreatePlanDialog = ({
                                 <input
                                     type="number"
                                     placeholder="100"
+                                    value={limits.storageLimit}
                                     onChange={(e) =>
                                         handleLimitChange("storageLimit", e.target.value)
                                     }
@@ -163,7 +214,7 @@ const CreatePlanDialog = ({
                                 File Limit
                             </Label>
                             <input
-                                type="text"
+                                type="number"
                                 value={limits.fileLimit}
                                 placeholder="100"
                                 onChange={(e) =>
@@ -175,16 +226,16 @@ const CreatePlanDialog = ({
 
                         <div className="space-y-2">
                             <Label className="text-headings font-medium">
-                                File Size Limit
+                                File Size Limit (MB)
                             </Label>
                             <input
-                                type="text"
+                                type="number"
                                 value={limits.fileSizeLimit}
-                                placeholder="100 MB"
+                                placeholder="100"
                                 onChange={(e) =>
                                     handleLimitChange("fileSizeLimit", e.target.value)
                                 }
-                                className={` ${inputClass}`}
+                                className={inputClass}
                             />
                         </div>
                     </div>
@@ -195,15 +246,24 @@ const CreatePlanDialog = ({
                     <button
                         onClick={() => setOpen(false)}
                         className="px-6 py-2 border border-border rounded-lg font-medium text-headings hover:text-bgBlue transition shadow-customShadow cursor-pointer"
+                        disabled={isUpdating}
                     >
                         Cancel
                     </button>
 
                     <button
-                        onClick={() => setOpen(false)}
-                        className="px-6 py-2 bg-bgBlue text-white rounded-lg font-medium hover:bg-bgBlue/80 transition flex items-center gap-2 shadow-customShadow cursor-pointer"
+                        onClick={handleSave}
+                        disabled={isUpdating}
+                        className="px-6 py-2 bg-bgBlue text-white rounded-lg font-medium hover:bg-bgBlue/80 transition flex items-center gap-2 shadow-customShadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {editMode ? "Save Plan" : (
+                        {isUpdating ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                {editMode ? "Saving..." : "Creating..."}
+                            </>
+                        ) : editMode ? (
+                            "Save Plan"
+                        ) : (
                             <>
                                 <Crown className="w-4 h-4" /> Create Plan
                             </>

@@ -15,6 +15,8 @@ const baseQuery = fetchBaseQuery({
     if (token) {
       headers.set("authorization", token);
     }
+    // Ngrok warning bypass for development
+    headers.set("ngrok-skip-browser-warning", "true");
     return headers;
   },
 });
