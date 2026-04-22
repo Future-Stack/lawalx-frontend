@@ -354,6 +354,7 @@ const ScreenCardDetails = () => {
                         src={previewUrl || ""}
                         poster={undefined}
                         autoPlay={true}
+                        fillParent={true}
                         rounded="rounded-lg"
                         onEnded={handleVideoEnded}
                         onPlay={() => setIsPaused(false)}

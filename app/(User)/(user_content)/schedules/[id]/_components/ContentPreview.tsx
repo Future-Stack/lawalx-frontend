@@ -1,10 +1,10 @@
 "use client";
 
-import { Video, Clock } from "lucide-react";
+import { Video, Clock, Play, Pause } from "lucide-react";
 import { ContentItem } from "@/types/content";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition, useCallback } from "react";
 import Marquee from "react-fast-marquee";
 import { LowerThirdPayload } from "@/redux/api/users/schedules/schedules.type";
 
@@ -24,6 +24,8 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
   lowerThird,
 }) => {
   const [isFading, setIsFading] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
     // Reset index if items change significantly or current index exceeds bounds
@@ -32,17 +34,17 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     }
   }, [items?.length, playingIndex, setPlayingIndex]);
 
-  const advance = () => {
+  const advance = useCallback(() => {
     if (!items || items.length <= 1) return;
     setIsFading(true);
     setTimeout(() => {
       setPlayingIndex((playingIndex + 1) % items.length);
       setIsFading(false);
     }, 500); // 500ms fade duration
-  };
+  }, [items.length, playingIndex, setPlayingIndex]);
 
   useEffect(() => {
-    if (!items || items.length <= 1) return;
+    if (!items || items.length <= 1 || !isPlaying) return;
 
     const currentItem = items[playingIndex];
     // If it's a video, we rely on the onEnded callback of the video player
@@ -53,7 +55,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     const timer = setTimeout(advance, Math.max(0, (displayDuration * 1000) - 500));
 
     return () => clearTimeout(timer);
-  }, [playingIndex, items]);
+  }, [playingIndex, items.length, isPlaying, advance]);
 
   const content = items[playingIndex];
 
@@ -73,7 +75,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
           <div className="w-full h-full flex flex-col overflow-hidden bg-black rounded-lg">
             {/* TOP TICKER */}
             {lowerThird && lowerThird.text && lowerThird.position === "Top" && (
-              <div 
+              <div
                 className="py-3 overflow-hidden shrink-0"
                 style={{
                   backgroundColor: `${lowerThird.backgroundColor}${Math.round(
@@ -91,8 +93,8 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                     className="font-semibold px-4"
                     style={{
                       color: lowerThird.textColor,
-                      fontSize: lowerThird.fontSize === "Small" ? "14px" : 
-                                lowerThird.fontSize === "Medium" ? "16px" : "20px",
+                      fontSize: lowerThird.fontSize === "Small" ? "14px" :
+                        lowerThird.fontSize === "Medium" ? "16px" : "20px",
                       fontFamily: lowerThird.font || "inherit",
                     }}
                   >
@@ -111,7 +113,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                       key={videoSrc}
                       src={videoSrc}
                       poster={thumbnailSrc}
-                      autoPlay={true}
+                      autoPlay={isPlaying}
                       rounded="rounded-none"
                       onEnded={advance}
                     />
@@ -119,7 +121,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                     <BaseVideoPlayer
                       key={content.audio}
                       src={content.audio}
-                      autoPlay={true}
+                      autoPlay={isPlaying}
                       rounded="rounded-none"
                       mediaType="audio"
                       onEnded={advance}
@@ -151,7 +153,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
 
             {/* BOTTOM / MIDDLE TICKER (Middle defaults to bottom for this layout) */}
             {lowerThird && lowerThird.text && lowerThird.position !== "Top" && (
-              <div 
+              <div
                 className="py-2.5 overflow-hidden shrink-0"
                 style={{
                   backgroundColor: `${lowerThird.backgroundColor}${Math.round(
@@ -169,8 +171,8 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                     className="font-semibold px-4"
                     style={{
                       color: lowerThird.textColor,
-                      fontSize: lowerThird.fontSize === "Small" ? "14px" : 
-                                lowerThird.fontSize === "Medium" ? "16px" : "20px",
+                      fontSize: lowerThird.fontSize === "Small" ? "14px" :
+                        lowerThird.fontSize === "Medium" ? "16px" : "20px",
                       fontFamily: lowerThird.font || "inherit",
                     }}
                   >
@@ -183,11 +185,30 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
         </div>
 
         <div className="p-6 space-y-4">
-          <div className="flex items-center gap-3 text-muted">
-            <Video className="w-5 h-5 flex-shrink-0" />
-            <span className="text-sm font-medium line-clamp-1">
-              Playing: {content?.title || "None"}
-            </span>
+          <div className="flex items-center justify-between gap-3 text-muted">
+            <div className="flex items-center gap-3">
+              <Video className="w-5 h-5 flex-shrink-0" />
+              <span className="text-sm font-medium line-clamp-1">
+                Playing: {content?.title || "None"}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                startTransition(() => {
+                  setIsPlaying(!isPlaying);
+                });
+              }}
+              className="w-10 h-10 flex items-center justify-center bg-bgBlue text-white rounded-xl transition-all hover:bg-blue-600 cursor-pointer shadow-customShadow shrink-0"
+              title={isPlaying ? "Pause Preview" : "Play Preview"}
+            >
+              <div className="w-5 h-5 flex items-center justify-center">
+                {isPlaying ? (
+                  <Pause className="w-5 h-5 fill-white" />
+                ) : (
+                  <Play className="w-5 h-5 fill-white ml-0.5" />
+                )}
+              </div>
+            </button>
           </div>
 
           <div className="flex items-center gap-3 text-muted">

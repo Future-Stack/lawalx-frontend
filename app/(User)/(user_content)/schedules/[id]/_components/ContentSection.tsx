@@ -29,6 +29,7 @@ const ContentSection: React.FC<ContentSectionProps> = ({
         { label: "Select a Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
         { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
         { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-gray-500" /> },
+        { label: "Lower Third", value: "lower-third", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
     ];
     const selectedContentType = contentTypeOptions.some((opt) => opt.value === contentType)
         ? contentType

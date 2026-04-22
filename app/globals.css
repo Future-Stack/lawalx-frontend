@@ -156,6 +156,7 @@ body {
 /* Ensure Plyr container doesn't overlap portaled modals */
 .plyr {
   z-index: 0 !important;
+  --plyr-color-main: #0FA6FF; /* Match brand blue */
 }
 
 .plyr--fullscreen {

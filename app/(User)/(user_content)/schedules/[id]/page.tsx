@@ -138,9 +138,10 @@ export default function ScheduleDetailPage() {
   const [localStartDate, setLocalStartDate] = useState<string | null>(null);
   const [localEndDate, setLocalEndDate] = useState<string | null>(null);
 
-  // Program & Screen selection
   const [localTargets, setLocalTargets] = useState<ScheduleTarget[] | null>(null);
   const [localPrograms, setLocalPrograms] = useState<any[] | null>(null);
+  const [localDaysOfWeek, setLocalDaysOfWeek] = useState<string[] | null>(null);
+  const [localDayOfMonth, setLocalDayOfMonth] = useState<number[] | null>(null);
 
   // Derive current values: prefer local edits, fallback to API data
   const name = localName ?? schedule?.name ?? "";
@@ -198,6 +199,8 @@ export default function ScheduleDetailPage() {
 
   const targets = localTargets ?? schedule?.targets ?? [];
   const programs = localPrograms ?? schedule?.programs ?? [];
+  const daysOfWeek = localDaysOfWeek ?? schedule?.daysOfWeek ?? [];
+  const dayOfMonth = localDayOfMonth ?? schedule?.dayOfMonth ?? [];
 
   // Map API targets + programs to assignedScreens groups for accordion.
   // Some schedule APIs return devices only inside targets[].device while programs can be empty.
@@ -274,6 +277,8 @@ export default function ScheduleDetailPage() {
       endDate?: string;
       programs?: any[];
       targets?: ScheduleTarget[];
+      daysOfWeek?: string[];
+      dayOfMonth?: number[];
     } = {}
   ) => {
     const pName = currentParams.name ?? name;
@@ -286,6 +291,8 @@ export default function ScheduleDetailPage() {
     const pEndDate = currentParams.endDate ?? endDate;
     const pPrograms = currentParams.programs ?? programs;
     const pTargets = currentParams.targets ?? targets;
+    const pDaysOfWeek = currentParams.daysOfWeek ?? daysOfWeek;
+    const pDayOfMonth = currentParams.dayOfMonth ?? dayOfMonth;
 
     const apiContentType = pContentType === "image-video" ? "IMAGE_VIDEO" : pContentType === "audio" ? "AUDIO" : pContentType === "lower-third" ? "LOWERTHIRD" : "ALL_CONTENT";
 
@@ -306,8 +313,8 @@ export default function ScheduleDetailPage() {
       endDate: pRepeat.toLowerCase() === "once" ? (pStartDate.includes("T") ? pStartDate : `${pStartDate}T23:59:59Z`) : (pEndDate.includes("T") ? pEndDate : `${pEndDate || pStartDate}T23:59:59Z`),
       startTime: pStartTime.includes("T") ? pStartTime : `1970-01-01T${pStartTime}:00Z`,
       endTime: pEndTime.includes("T") ? pEndTime : `1970-01-01T${pEndTime}:00Z`,
-      daysOfWeek: schedule?.daysOfWeek || [],
-      dayOfMonth: schedule?.dayOfMonth || [],
+      daysOfWeek: pDaysOfWeek,
+      dayOfMonth: pDayOfMonth,
       programIds: validProgramIds,
       deviceIds: validDeviceIds,
       fileIds: validFileIds,
@@ -485,7 +492,11 @@ export default function ScheduleDetailPage() {
               if (newData.endTime !== undefined) setLocalEndTime(newData.endTime);
               if (newData.startDate !== undefined) setLocalStartDate(newData.startDate);
               if (newData.endDate !== undefined) setLocalEndDate(newData.endDate);
+              if (newData.daysOfWeek !== undefined) setLocalDaysOfWeek(newData.daysOfWeek);
+              if (newData.dayOfMonth !== undefined) setLocalDayOfMonth(newData.dayOfMonth);
             }}
+            daysOfWeek={daysOfWeek}
+            dayOfMonth={dayOfMonth}
           />
 
           <AssignedScreensSection
