@@ -3,8 +3,12 @@ import { baseApi } from "../baseApi";
 
 export type GlobalDeviceUser = {
   id: string;
-  full_name: string;
+  full_name?: string;
+  username?: string;
+  email?: string;
   company_name: string | null;
+  usedStorage?: number;
+  totalStorage?: number;
 };
 
 export type GlobalDevice = {
@@ -22,7 +26,7 @@ export type GlobalDevice = {
   createdAt: string;
   updatedAt: string;
   deviceSerial: string;
-  location: string | null;
+  location: string | { lat: number; lng: number } | null;
   pinExpiresAt: string | null;
   failedAttempts: number;
   lockUntil: string | null;
@@ -70,49 +74,7 @@ export type GlobalDeviceDetailsResponse = {
   statusCode: number;
   success: boolean;
   message: string;
-  data: {
-    header: {
-      name: string;
-      serial: string;
-      id: string;
-    };
-    deviceInfo: {
-      owner: {
-        name: string;
-        email: string;
-      };
-      model: string;
-      screenSize: string;
-      operatingSystem: string;
-      osVersion: string;
-      firmware: string;
-    };
-    status: {
-      connection: string;
-      lastSync: string;
-      uptime: string;
-    };
-    location: {
-      address: string;
-      timezone: string;
-      coordinates: {
-        lat: number;
-        lng: number;
-      };
-    };
-    storage: {
-      used: string;
-      total: string;
-      percentageFree: string;
-      cache: string;
-    };
-    activityLogs: Array<{
-      id: string;
-      action: string;
-      timestamp: string;
-      details: string;
-    }>;
-  };
+  data: GlobalDevice;
 };
 
 export type GlobalDevicesExportResponse = {
