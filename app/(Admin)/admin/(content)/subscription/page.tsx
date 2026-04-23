@@ -8,7 +8,6 @@ import BillingTab from "./_components/BillingTab";
 import TransactionSheet from "./_components/TransactionSheet";
 import Breadcrumb from "@/common/BreadCrumb";
 import Image from "next/image";
-import profile from "../../../../../public/images/profile-settings.png";
 import Link from "next/link";
 import PlansTab from "./_components/PlansTab";
 import CouponsTab from "./_components/CouponsTab";
@@ -28,14 +27,14 @@ const SubscriptionPage = () => {
     <div className="">
       <Breadcrumb
         items={[
-          { label: "Home", href: "/" },
+          { label: "Home", href: "/admin/dashboard" },
           { label: "Subscription & Billing", href: "/subscription" },
         ]}
       />
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4 mt-5">
         <div>
           <div className="flex items-center gap-3">
-            <Image src={profile} alt="Subscription" width={50} height={50} />
+            {/* <Image src={profile} alt="Subscription" width={50} height={50} /> */}
             <div>
               <h1 className="text-lg md:text-2xl font-semibold text-headings">
                 Subscription & Billing
