@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Eye, Plus, MoreVertical, FileText, User, HelpCircle, AlertTriangle, Users, Play, Edit, Trash2, Home, ChevronRight, Video, ChevronDown, Check, HomeIcon } from 'lucide-react';
+import { Search, Eye, Plus, MoreVertical, FileText, User, HelpCircle, AlertTriangle, Users, Play, Edit, Trash2, Home, ChevronRight, Video, ChevronDown, Check, HomeIcon, UserCheck, VideoIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
     Select,
@@ -25,10 +25,8 @@ import { Button } from '@/components/ui/button';
 
 // Mock Data
 const mockStats = [
-    { label: 'Total Articles', value: '1,100', subtext: '-8.2 % From Last Month', icon: User, trend: 'down' },
-    { label: 'FAQs', value: '1,100', subtext: '+8.2 % From Last Month', icon: User, trend: 'up' }, // Using User icon as placeholder if specific one not available or matching design
-    { label: 'Trial Users', value: '1,100', subtext: '45 % Conversion rate', icon: Users, trend: 'neutral' }, // Using Users for Trial Users
-    { label: 'Need Attention', value: '12', subtext: 'Overdue, Offline, Errors', icon: AlertTriangle, trend: 'warn' },
+    { label: 'Total FAQs', value: '1,100', subtext: '-8.2 % From Last Month', icon: UserCheck, trend: 'down' },
+    { label: 'Total Video Tutorials', value: '1,100', subtext: '+8.2 % From Last Month', icon: VideoIcon, trend: 'up' },
 ];
 
 const mockFAQs: FAQData[] = [
@@ -184,7 +182,7 @@ export default function KnowledgeBase() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {mockStats.map((stat, idx) => (
                     <div key={idx} className="bg-navbarBg border border-border rounded-xl p-6 shadow-sm">
                         <div className="flex items-center gap-3 mb-4">
