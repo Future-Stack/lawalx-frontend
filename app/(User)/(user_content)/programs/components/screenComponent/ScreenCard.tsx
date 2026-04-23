@@ -3,12 +3,12 @@
 import {
   Clock,
   Settings2,
-  PowerOff,
-  Power,
   FilePlay,
   TvMinimal,
   Loader2,
   Music,
+  Play,
+  Pause,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -18,9 +18,6 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect } from "react";
 dayjs.extend(relativeTime);
-
-import ScreenSettings from "./ScreenSettings";
-import TurnOffProgramDialog from "./TurnOffProgramDialog";
 
 interface ScreenCardProps {
   program: Program;
@@ -34,8 +31,14 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const navigate = useRouter();
 
-  // More robust status check
-  const isActive = program.status === "PUBLISH";
+  // More robust status check (handling case sensitivity)
+  const isActiveProp = program.status?.toUpperCase() === "PUBLISH";
+  const [localActive, setLocalActive] = useState(isActiveProp);
+
+  // Sync local state with prop when server data updates
+  useEffect(() => {
+    setLocalActive(isActiveProp);
+  }, [isActiveProp]);
 
   const lastUpdated = dayjs(program.updated_at).fromNow();
   const videos = program.timeline?.filter((t) => t.file?.type === "VIDEO")?.length || 0;
@@ -59,7 +62,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
 
   useEffect(() => {
     const timeline = program.timeline;
-    if (!timeline || timeline.length <= 1) return;
+    if (!timeline || timeline.length <= 1 || !localActive) return;
 
     const currentItem = timeline[currentIndex];
     if (currentItem?.file?.type === "VIDEO") return;
@@ -67,18 +70,18 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
     const duration = currentItem?.file?.duration ? currentItem.file.duration * 1000 : 7000;
     const timer = setTimeout(advance, Math.max(0, duration - 500));
     return () => clearTimeout(timer);
-  }, [currentIndex, program.timeline]);
+  }, [currentIndex, program.timeline, localActive]);
 
-  // Handle autoPlay based on isActive
+  // Handle autoPlay based on localActive
   useEffect(() => {
     if (videoRef.current) {
-      if (isActive) {
+      if (localActive) {
         videoRef.current.play().catch(err => console.error("Playback failed", err));
       } else {
         videoRef.current.pause();
       }
     }
-  }, [isActive, currentIndex]);
+  }, [localActive, currentIndex]);
 
   const currentItem = program.timeline?.[currentIndex];
   const previewData = getFileUrl(currentItem?.file?.url || "");
@@ -91,33 +94,30 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   const handlePowerClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("Power button clicked. Program status:", program.status, "Evaluated isActive:", isActive);
 
-    if (isActive) {
-      // Handle Turn Off immediately
-      updateProgram({
-        id: program.id,
-        data: { status: WorkoutStatus.DRAFT }
-      }).unwrap()
-        .then(() => {
-          console.log("Program turned off successfully");
-        })
-        .catch((err) => {
-          console.error("Failed to turn off program", err);
-        });
-    } else {
-      // Handle Turn On
-      updateProgram({
-        id: program.id,
-        data: { status: WorkoutStatus.PUBLISH }
-      }).unwrap()
-        .then(() => {
-          console.log("Program turned on successfully");
-        })
-        .catch((err) => {
-          console.error("Failed to turn on program", err);
-        });
-    }
+    if (isUpdating) return;
+
+    const nextState = !localActive;
+    const targetStatus = nextState ? WorkoutStatus.PUBLISH : WorkoutStatus.DRAFT;
+
+    console.log("Power button clicked. Next status:", targetStatus);
+
+    // Immediate UI feedback
+    setLocalActive(nextState);
+
+    // Update server state
+    updateProgram({
+      id: program.id,
+      data: { status: targetStatus }
+    }).unwrap()
+      .then(() => {
+        console.log("Program status updated successfully to:", targetStatus);
+      })
+      .catch((err) => {
+        console.error("Failed to update program status", err);
+        // Revert local state on failure
+        setLocalActive(!nextState);
+      });
   };
 
   return (
@@ -134,7 +134,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
               />
             ) : currentItem?.file?.type === "AUDIO" ? (
               <div className="w-full h-full bg-gradient-to-br from-indigo-900 via-slate-900 to-black flex flex-col items-center justify-center p-4">
-                <Music className="w-10 h-10 text-bgBlue animate-pulse mb-2" />
+                <Music className={`w-10 h-10 text-bgBlue mb-2 ${localActive ? "animate-pulse" : ""}`} />
                 <span className="text-[10px] text-white/70 text-center line-clamp-1 px-2">
                   {currentItem.file?.originalName}
                 </span>
@@ -147,7 +147,14 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 muted
                 playsInline
+                autoPlay={localActive}
+                loop={program.timeline?.length === 1}
                 onEnded={advance}
+                onCanPlay={(e) => {
+                  if (localActive) {
+                    e.currentTarget.play().catch(() => {});
+                  }
+                }}
               />
             )}
           </div>
@@ -214,19 +221,22 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
           <button
             type="button"
             onClick={handlePowerClick}
-            aria-label={isActive ? "Turn Off Program" : "Turn On Program"}
+            disabled={isUpdating}
+            aria-label={localActive ? "Turn Off Program" : "Turn On Program"}
             className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
-              py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
-              ${isActive
+              py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
+              ${localActive
                 ? "bg-bgBlue hover:bg-blue-500"
                 : "bg-bgRed hover:bg-red-600"
               }`}
-            title={isActive ? "Turn Off" : "Turn On"}
+            title={localActive ? "Turn Off" : "Turn On"}
           >
-            {isActive ? (
-              <Power className="w-4 h-4 sm:w-5 sm:h-5" />
+            {isUpdating ? (
+              <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+            ) : localActive ? (
+              <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
             ) : (
-              <PowerOff className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Play className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </button>
         </div>
