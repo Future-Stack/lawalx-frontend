@@ -982,7 +982,7 @@ const FinancialReport = () => {
               </div>
             </div>
 
-            <div className="bg-navbarBg rounded-lg p-6 border border-border">
+            {/* <div className="bg-navbarBg rounded-lg p-6 border border-border">
               <h3 className="text-lg font-semibold mb-4">Conversion Insights</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
@@ -1007,7 +1007,7 @@ const FinancialReport = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         )}
       </div>
