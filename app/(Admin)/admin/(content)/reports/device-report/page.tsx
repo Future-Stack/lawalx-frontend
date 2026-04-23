@@ -205,7 +205,7 @@ const DeviceReportDashboard = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="bg-navbarBg rounded-lg p-6 border border-border">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-gray-500 dark:text-gray-400">Total Devices</span>
@@ -239,18 +239,18 @@ const DeviceReportDashboard = () => {
             <div className="text-xs text-gray-500 dark:text-gray-400">Requires attention</div>
           </div>
 
-          <div className="bg-navbarBg rounded-lg p-6 border border-border">
+          {/* <div className="bg-navbarBg rounded-lg p-6 border border-border">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-gray-500 dark:text-gray-400">Average Uptime</span>
               <TrendingUp className="w-5 h-5 text-blue-500" />
             </div>
             <div className="text-3xl font-bold mb-1">{data.summary.avgUptime.toFixed(1)}%</div>
             <div className="text-xs text-gray-500 dark:text-gray-400">Last 30 days</div>
-          </div>
+          </div> */}
         </div>
 
         {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 gap-6 mb-6">
           {/* Device Distribution by Region */}
           <div className="bg-navbarBg rounded-lg p-6 border border-border">
             <h2 className="text-lg font-semibold mb-4">Device Distribution by Region</h2>
@@ -281,7 +281,7 @@ const DeviceReportDashboard = () => {
           </div>
 
           {/* System Uptime */}
-          <div className="bg-navbarBg rounded-lg p-6 border border-border">
+          {/* <div className="bg-navbarBg rounded-lg p-6 border border-border">
             <h2 className="text-lg font-semibold mb-4">
               System Uptime (Last {timeRange === 1 ? '24 Hours' : timeRange === 7 ? '7 Days' : timeRange === 30 ? '30 Days' : 'Year'})
             </h2>
@@ -318,7 +318,7 @@ const DeviceReportDashboard = () => {
                 />
               </LineChart>
             </ResponsiveContainer>
-          </div>
+          </div> */}
         </div>
 
         {/* Regional Device Statistics */}
