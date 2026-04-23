@@ -28,6 +28,7 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import Dropdown from "@/components/shared/Dropdown";
+import SliderDropdown from "@/components/shared/SliderDropdown";
 import Link from "next/link";
 import {
   useGetUsersQuery,
@@ -112,7 +113,7 @@ export default function UserManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [planFilter, setPlanFilter] = useState("All Plans");
   const [statusFilter, setStatusFilter] = useState("All Status");
-  const [storageFilter, setStorageFilter] = useState(">80% Storage");
+  const [storageFilter, setStorageFilter] = useState(0);
 
   const limit = 10;
 
@@ -496,9 +497,9 @@ export default function UserManagementPage() {
               options={["All Status", "Active", "Suspended"]}
               onChange={setStatusFilter}
             />
-            <Dropdown
+            <SliderDropdown
+              label="Storage"
               value={storageFilter}
-              options={[">80% Storage", "50% Storage", "90% Storage"]}
               onChange={setStorageFilter}
             />
           </div>
