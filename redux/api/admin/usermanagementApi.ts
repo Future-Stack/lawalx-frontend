@@ -10,7 +10,7 @@ export const usermanagementApi = baseApi.injectEndpoints({
         if (params?.search) queryParams.append("search", params.search);
         if (params?.status && params.status !== "All Status") queryParams.append("status", params.status.toUpperCase());
         if (params?.plan && params.plan !== "All Plans") queryParams.append("plan", params.plan);
-        if (params?.storageUsage && params.storageUsage !== ">80% Storage") queryParams.append("storageUsage", params.storageUsage);
+        if (params?.storageUsage) queryParams.append("storageUsage", params.storageUsage);
 
         return {
           url: `/usermanagement?${queryParams.toString()}`,
@@ -36,7 +36,7 @@ export const usermanagementApi = baseApi.injectEndpoints({
         if (params?.search) queryParams.append("search", params.search);
         if (params?.status && params.status !== "All Status") queryParams.append("status", params.status.toUpperCase());
         if (params?.plan && params.plan !== "All Plans") queryParams.append("plan", params.plan);
-        if (params?.storageUsage && params.storageUsage !== ">80% Storage") queryParams.append("storageUsage", params.storageUsage);
+        if (params?.storageUsage) queryParams.append("storageUsage", params.storageUsage);
 
         return {
           url: `/usermanagement/export?${queryParams.toString()}`,
