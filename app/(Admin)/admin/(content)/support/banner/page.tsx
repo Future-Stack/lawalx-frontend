@@ -14,7 +14,7 @@ export default function BannerPage() {
         <div>
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-6">
             <Link href="/admin/dashboard">
-                <HomeIcon className="w-4 h-4 cursor-pointer hover:text-bgBlue" />
+              <HomeIcon className="w-4 h-4 cursor-pointer hover:text-bgBlue" />
             </Link>
             <ChevronRight className="w-4 h-4" />
             <span>Customer Supports</span>
@@ -29,10 +29,10 @@ export default function BannerPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-border bg-navbarBg rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-customShadow">
+          {/* <button className="flex items-center gap-2 px-4 py-2 border border-border bg-navbarBg rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-customShadow">
             <Eye className="w-4 h-4" />
             View Reports
-          </button>
+          </button> */}
           <Link
             href="/admin/support/banner/create"
             className="flex items-center gap-2 px-4 py-2 bg-bgBlue hover:bg-bgBlue/80 text-white rounded-lg font-medium transition-colors shadow-customShadow"
