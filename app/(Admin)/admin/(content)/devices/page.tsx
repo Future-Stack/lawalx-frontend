@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon, ArrowUpRight } from 'lucide-react';
+import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon, ArrowUpRight, Eye } from 'lucide-react';
 import GoogleMapModal from '@/components/shared/modals/GoogleMapModal';
 import { useDeleteDeviceMutation, useGetGlobalDeviceDetailsQuery, useGetGlobalDevicesQuery, useLazyExportGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
 import Link from 'next/link';
@@ -127,52 +127,41 @@ type Device = {
 type ActionMenuProps = {
   device: Device;
   onAction: (action: string, device: Device) => void;
-  isLastRows: boolean;
-  isFirstRows?: boolean;
 };
 
-const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction, isLastRows, isFirstRows }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const actions = [
-    { label: 'View Details', icon: ArrowUpRight, color: 'text-blue-600 dark:text-blue-400' },
-    { label: 'Delete Device', icon: Trash2, color: 'text-red-600 dark:text-red-400' },
-  ];
-
+const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction }) => {
   return (
-    <div className="relative">
+    <div className="flex items-center gap-3">
       <button
         onClick={(e) => {
           e.stopPropagation();
-          setIsOpen(!isOpen);
+          onAction('View Details', device);
         }}
-        className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 cursor-pointer"
+        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer"
+        title="View Details"
       >
-        <MoreVertical className="w-5 h-5" />
+        <Eye className="w-5 h-5" />
       </button>
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className={`absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 ${isFirstRows ? 'right-full mr-2' :
-            isLastRows ? 'bottom-full mb-2' : 'top-full mt-2'
-            }`}>
-            {actions.map((action) => (
-              <button
-                key={action.label}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAction(action.label, device);
-                  setIsOpen(false);
-                }}
-                className={`w-full cursor-pointer text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg flex items-center gap-2 ${action.color}`}
-              >
-                <action.icon className="w-4 h-4" />
-                {action.label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onAction('Edit Device', device);
+        }}
+        className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors cursor-pointer"
+        title="Edit"
+      >
+        <Edit className="w-5 h-5" />
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onAction('Delete Client', device);
+        }}
+        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors cursor-pointer"
+        title="Delete Device"
+      >
+        <Trash2 className="w-5 h-5" />
+      </button>
     </div>
   );
 };
@@ -283,7 +272,7 @@ export default function GlobalDevices() {
     return apiDevices.map((device: any, index: number) => {
       const daysAgo = device.lastSeen ? Math.max(0, Math.round((Date.now() - new Date(device.lastSeen).getTime()) / (1000 * 60 * 60 * 24))) : 365;
       const uptime = data?.data?.stats?.avgUptime ?? 'N/A';
-      
+
       // Improved Location Parsing
       let lat = 0;
       let lng = 0;
@@ -443,6 +432,54 @@ export default function GlobalDevices() {
 
     switch (modalContent.action) {
 
+      case 'Edit Device':
+        return (
+          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setModalOpen(false); }}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Device Name</label>
+              <input
+                type="text"
+                defaultValue={modalContent.device.device}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Model</label>
+              <input
+                type="text"
+                defaultValue={modalContent.device.model}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+              <select
+                defaultValue={modalContent.device.status}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="Online">Online</option>
+                <option value="Offline">Offline</option>
+                <option value="Syncing">Syncing</option>
+              </select>
+            </div>
+            <div className="flex gap-2 pt-4">
+              <button
+                type="button"
+                onClick={() => setModalOpen(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 px-4 py-2 bg-bgBlue text-white rounded-lg hover:bg-blue-700"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
+        );
+
       case 'Delete Client':
         return (
           <div className="space-y-4">
@@ -497,7 +534,7 @@ export default function GlobalDevices() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Global Devices</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Device Management</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">Monitor and manage all connected devices across customers</p>
           </div>
           <div className="flex flex-nowrap gap-2">
@@ -546,7 +583,7 @@ export default function GlobalDevices() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <StatCard
             title="Total Devices"
             value={stats.total.toLocaleString()}
@@ -564,12 +601,6 @@ export default function GlobalDevices() {
             value={stats.offline}
             subtitle="Requires attention"
             icon={WifiOff}
-          />
-          <StatCard
-            title="Average Uptime"
-            value={stats.avgUptime}
-            subtitle={timeRange}
-            icon={Clock}
           />
         </div>
 
@@ -615,8 +646,7 @@ export default function GlobalDevices() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Storage</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Last Sync</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Uptime</th>
-                    <th className="px-6 py-3"></th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -625,8 +655,8 @@ export default function GlobalDevices() {
                       const isLastRows = index >= paginatedDevices.length - 2;
                       const isFirstRows = index < 2;
                       return (
-                        <tr 
-                          key={device.id} 
+                        <tr
+                          key={device.id}
                           onClick={() => router.push(`/admin/devices/${device.id}`)}
                           className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                         >
@@ -644,7 +674,7 @@ export default function GlobalDevices() {
                               }}
                               className="text-bgBlue hover:underline cursor-pointer transition-all"
                             >
-                              <DeviceLocation lat={device.lat} lng={device.lng}/>
+                              <DeviceLocation lat={device.lat} lng={device.lng} />
                             </button>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.type}</td>
@@ -656,20 +686,14 @@ export default function GlobalDevices() {
                           <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.storage}</td>
                           <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{device.lastSync}</td>
                           <td className="px-6 py-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                              <span className="text-sm text-gray-900 dark:text-white">{device.uptime}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <ActionMenu device={device} onAction={handleAction} isLastRows={isLastRows} isFirstRows={isFirstRows} />
+                            <ActionMenu device={device} onAction={handleAction} />
                           </td>
                         </tr>
                       );
                     })
                   ) : (
                     <tr>
-                      <td colSpan={9} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                         No devices found for the selected time range and filters.
                       </td>
                     </tr>
@@ -685,8 +709,8 @@ export default function GlobalDevices() {
                   const isLastRows = index >= paginatedDevices.length - 2;
                   const isFirstRows = index < 2;
                   return (
-                    <div 
-                      key={device.id} 
+                    <div
+                      key={device.id}
                       onClick={() => router.push(`/admin/devices/${device.id}`)}
                       className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 cursor-pointer hover:shadow-md transition-shadow"
                     >
@@ -700,7 +724,7 @@ export default function GlobalDevices() {
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(device.status)}`}>
                             {device.status}
                           </span>
-                          <ActionMenu device={device} onAction={handleAction} isLastRows={isLastRows} isFirstRows={isFirstRows} />
+                          <ActionMenu device={device} onAction={handleAction} />
                         </div>
                       </div>
 
@@ -745,14 +769,6 @@ export default function GlobalDevices() {
                         </div>
                       </div>
 
-                      {/* Uptime */}
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Uptime:</span>
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                          <span className="text-gray-900 dark:text-white">{device.uptime}</span>
-                        </div>
-                      </div>
                     </div>
                   );
                 })
