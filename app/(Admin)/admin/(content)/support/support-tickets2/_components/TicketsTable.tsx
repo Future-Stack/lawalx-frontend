@@ -393,6 +393,7 @@ export default function TicketsTable() {
                   checked={allSelected}
                   onCheckedChange={toggleAll}
                   aria-label="Select all"
+                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                 />
               </TableHead>
               <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -447,6 +448,7 @@ export default function TicketsTable() {
                       checked={selectedIds.has(ticket.id)}
                       onCheckedChange={() => toggleOne(ticket.id)}
                       aria-label={`Select ${ticket.ticketId}`}
+                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                     />
                   </TableCell>
 
