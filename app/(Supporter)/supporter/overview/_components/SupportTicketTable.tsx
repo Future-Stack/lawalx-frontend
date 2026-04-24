@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import TicketConversationDialog from './TicketConversationDialog';
 import {
   Table,
   TableBody,
@@ -78,6 +79,13 @@ export default function SupportTicketTable() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [conversationOpen, setConversationOpen] = useState(false);
+  const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
+
+  const openConversation = (ticket: Ticket) => {
+    setActiveTicket(ticket);
+    setConversationOpen(true);
+  };
 
   const filtered = useMemo(() => {
     return MOCK_TICKETS.filter((t) => {
@@ -277,6 +285,7 @@ export default function SupportTicketTable() {
                   {/* Action */}
                   <TableCell className="px-4 py-3">
                     <button
+                      onClick={() => openConversation(ticket)}
                       className={cn(
                         'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
                         idx === 0
@@ -350,6 +359,13 @@ export default function SupportTicketTable() {
           </button>
         </div>
       </div>
+
+      {/* Conversation dialog */}
+      <TicketConversationDialog
+        open={conversationOpen}
+        onOpenChange={setConversationOpen}
+        ticket={activeTicket}
+      />
     </div>
   );
 }
