@@ -350,10 +350,16 @@ export default function UserManagementPage() {
                 <span className="hidden lg:block">Export Report</span>
               </button>
               {showExportMenu && (
-                <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
-                  <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                  <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
-                </div>
+                <>
+                  <div
+                    className="fixed inset-0 z-10"
+                    onClick={() => setShowExportMenu(false)}
+                  />
+                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 min-w-[140px]">
+                    <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
+                    <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+                  </div>
+                </>
               )}
             </div>
             <button
@@ -576,12 +582,29 @@ export default function UserManagementPage() {
                 return (
                   <tr
                     key={user.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                    onClick={() => {
+                      const query = new URLSearchParams({
+                        name: user.full_name || user.username,
+                        email: user.account?.email || "",
+                        plan: plan,
+                        status: user.status,
+                        device: `${deviceLimit || 0}`,
+                        storage: `${storageGB || 0}`,
+                        deviceUsage: `${deviceUsage}`,
+                        storageUsage: `${storageUsage}`,
+                        phone: user.phoneNumber || "",
+                        location: user.location || "",
+                        joinDate: user.account?.created_at || "",
+                      }).toString();
+                      router.push(`/admin/user-management/${user.id}?${query}`);
+                    }}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
                     <td className="px-4 py-3">
                       <input
                         type="checkbox"
                         checked={selectedUsers.has(user.id)}
+                        onClick={(e) => e.stopPropagation()}
                         onChange={() => toggleSelectUser(user.id)}
                         className="rounded border-gray-300 dark:border-gray-600"
                       />
@@ -674,11 +697,12 @@ export default function UserManagementPage() {
                     <td className="px-4 py-3">
                       <div className="relative">
                         <button
-                          onClick={() =>
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setOpenActionMenu(
                               openActionMenu === user.id ? null : user.id
-                            )
-                          }
+                            );
+                          }}
                           className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer"
                         >
                           <MoreVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -687,7 +711,10 @@ export default function UserManagementPage() {
                           <>
                             <div
                               className="fixed inset-0 z-10"
-                              onClick={() => setOpenActionMenu(null)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenActionMenu(null);
+                              }}
                             />
                             <div
                               className={`absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 ${isFirstRows
@@ -698,18 +725,22 @@ export default function UserManagementPage() {
                                 }`}
                             >
                               <button
-                                onClick={() => {
-                                  router.push(
-                                    `/admin/user-management/${user.id
-                                    }?name=${encodeURIComponent(
-                                      user.full_name || user.username
-                                    )}&email=${encodeURIComponent(
-                                      user.account?.email || ""
-                                    )}&plan=${plan}&status=${user.status
-                                    }&device=${deviceLimit || 0}&storage=${storageGB || 0}
-                                    }&deviceUsage=${deviceUsage
-                                    }&storageUsage=${storageUsage}`
-                                  );
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const query = new URLSearchParams({
+                                    name: user.full_name || user.username,
+                                    email: user.account?.email || "",
+                                    plan: plan,
+                                    status: user.status,
+                                    device: `${deviceLimit || 0}`,
+                                    storage: `${storageGB || 0}`,
+                                    deviceUsage: `${deviceUsage}`,
+                                    storageUsage: `${storageUsage}`,
+                                    phone: user.phoneNumber || "",
+                                    location: user.location || "",
+                                    joinDate: user.account?.created_at || "",
+                                  }).toString();
+                                  router.push(`/admin/user-management/${user.id}?${query}`);
                                 }}
                                 className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
                               >
@@ -717,7 +748,8 @@ export default function UserManagementPage() {
                                 View Profile
                               </button>
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSelectedUser(user);
                                   setIsEditModalOpen(true);
                                   setOpenActionMenu(null);
@@ -729,7 +761,8 @@ export default function UserManagementPage() {
                               </button>
 
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   handleLoginAsUser(user.id);
                                   setOpenActionMenu(null);
                                 }}
@@ -740,7 +773,8 @@ export default function UserManagementPage() {
                               </button>
 
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSelectedUser(user);
                                   setIsResetPasswordOpen(true);
                                   setOpenActionMenu(null);
@@ -753,7 +787,8 @@ export default function UserManagementPage() {
 
                               {user.status === "SUSPENDED" ? (
                                 <button
-                                  onClick={async () => {
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
                                     try {
                                       await unsuspendUser(user.id).unwrap();
                                       toast.success("User unsuspended successfully");
@@ -769,7 +804,8 @@ export default function UserManagementPage() {
                                 </button>
                               ) : (
                                 <button
-                                  onClick={() => {
+                                  onClick={(e) => {
+                                    e.stopPropagation();
                                     setSelectedUser(user);
                                     setIsSuspendModalOpen(true);
                                     setOpenActionMenu(null);
@@ -782,7 +818,8 @@ export default function UserManagementPage() {
                               )}
 
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   setSelectedUser(user);
                                   setIsDeleteModalOpen(true);
                                   setOpenActionMenu(null);
