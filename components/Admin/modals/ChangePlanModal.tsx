@@ -4,19 +4,35 @@ import { X, Shuffle, CreditCard, Info, Sliders, Building2, Upload, Plus } from "
 import { useState, useEffect } from "react";
 import Dropdown from "@/components/shared/Dropdown";
 
+interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  plan: string;
+  device: string;
+  storage: string;
+  status: string;
+  organization?: string;
+  designation?: string;
+  location?: string;
+  phone?: string;
+}
+
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: (data: any) => void;
-  currentPlan: string;
+  userData: UserData | null;
 }
 
-export default function ChangePlanModal({ isOpen, onClose, onConfirm, currentPlan }: Props) {
+export default function ChangePlanModal({ isOpen, onClose, onConfirm, userData }: Props) {
   const [formData, setFormData] = useState({
-    plan: currentPlan,
+    // Subscription
+    deviceSize: "24\"",
+    plan: "Basic",
     deviceLimit: "50",
     storageLimit: "100",
-    price: "$299",
+    price: "$99",
     // Advance Customization
     advanceCustomization: false,
     imageLimit: "1000",
@@ -32,25 +48,73 @@ export default function ChangePlanModal({ isOpen, onClose, onConfirm, currentPla
     enableCustomBranding: false,
     companyName: "",
     industryType: "Select industry",
-    totalEmployee: "",
     website: "",
     companyLocation: "",
     companyLogo: null as File | null,
     companyLogoPreview: "" as string,
   });
 
-  useEffect(() => {
-    if (isOpen) {
-      setFormData(prev => ({ ...prev, plan: currentPlan }));
+  const [industries, setIndustries] = useState(["Technology", "Healthcare", "Finance", "Education", "Manufacturing", "Retail"]);
+  const [industrySearchTerm, setIndustrySearchTerm] = useState("");
+  const [showAddIndustryModal, setShowAddIndustryModal] = useState(false);
+  const [newIndustryName, setNewIndustryName] = useState("");
+
+  const filteredIndustries = industries.filter(industry =>
+    industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
+  );
+
+  const handleIndustrySearchChange = (val: string) => {
+    setIndustrySearchTerm(val);
+    const exactMatch = industries.find(i => i.toLowerCase() === val.toLowerCase());
+    if (exactMatch) {
+      setFormData({ ...formData, industryType: exactMatch });
     }
-  }, [isOpen, currentPlan]);
+  };
+
+  const handleAddIndustry = () => {
+    if (newIndustryName.trim() && !industries.includes(newIndustryName.trim())) {
+      setIndustries([...industries, newIndustryName.trim()]);
+      setFormData({ ...formData, industryType: newIndustryName.trim() });
+      setNewIndustryName("");
+      setShowAddIndustryModal(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen && userData) {
+      setFormData({
+        deviceSize: "24\"",
+        plan: userData.plan || "Basic",
+        deviceLimit: userData.device?.split("/")?.[1] || (userData.plan === "Enterprise" ? "100" : "50"),
+        storageLimit: userData.storage?.replace(" GB", "") || (userData.plan === "Enterprise" ? "200" : "100"),
+        price: userData.plan === "Enterprise" ? "$5000" : "$99",
+        advanceCustomization: userData.plan === "Enterprise",
+        imageLimit: "1000",
+        maxImageSize: "20MB",
+        imageFormat: "JPG, PNG, WEBP",
+        videoLimit: "1000",
+        maxVideoSize: "200MB",
+        videoFormat: "MP4, MKV",
+        audioLimit: "1000",
+        maxAudioSize: "50MB",
+        audioFormat: "MP3",
+        enableCustomBranding: userData.plan === "Enterprise",
+        companyName: userData.organization || "",
+        industryType: "Select industry",
+        website: "https://example.com",
+        companyLocation: userData.location || "City, Country",
+        companyLogo: null,
+        companyLogoPreview: "",
+      });
+    }
+  }, [isOpen, userData]);
 
   const handleConfirm = () => {
     onConfirm(formData);
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !userData) return null;
 
   return (
     <div className="fixed inset-0 bg-black/30 dark:bg-black/50 flex items-center justify-center z-50 p-4">
@@ -58,8 +122,8 @@ export default function ChangePlanModal({ isOpen, onClose, onConfirm, currentPla
         {/* Header */}
         <div className="p-6 flex justify-between items-start shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-navbarBg rounded-full flex items-center justify-center border border-border">
-              <Shuffle className="w-5 h-5 text-gray-400" />
+            <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center border border-blue-100 dark:border-blue-800">
+              <Shuffle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
@@ -87,6 +151,18 @@ export default function ChangePlanModal({ isOpen, onClose, onConfirm, currentPla
               Subscription Plan
             </h3>
             <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Device Size
+                </label>
+                <Dropdown
+                  value={formData.deviceSize}
+                  options={["24\"", "32\"", "43\"", "55\""]}
+                  onChange={(val) => setFormData({ ...formData, deviceSize: val })}
+                  className="w-full h-10"
+                />
+              </div>
+
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
                   Choose Plan * <Info className="w-3 h-3 text-gray-400 cursor-help" />
@@ -187,12 +263,9 @@ export default function ChangePlanModal({ isOpen, onClose, onConfirm, currentPla
                       </div>
                       <div>
                         <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Format</label>
-                        <Dropdown
-                          value={item.format}
-                          options={item.label === "Image" ? ["JPG, PNG, WEBP"] : item.label === "Video" ? ["MP4, MKV"] : ["MP3"]}
-                          onChange={() => {}}
-                          className="w-full h-[38px]"
-                        />
+                        <div className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-500 dark:text-gray-400">
+                          {item.format}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -226,46 +299,55 @@ export default function ChangePlanModal({ isOpen, onClose, onConfirm, currentPla
                           <input
                             type="text"
                             value={formData.companyName}
-                            placeholder="TechCorp Inc."
                             onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
                             className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                           />
                         </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Industry Type</label>
-                          <Dropdown
-                            value={formData.industryType}
-                            options={["Select industry", "Technology", "Healthcare"]}
-                            onChange={(val) => setFormData({ ...formData, industryType: val })}
-                            className="w-full h-10"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Total Employee</label>
-                          <input
-                            type="text"
-                            value={formData.totalEmployee}
-                            placeholder="100"
-                            onChange={(e) => setFormData({ ...formData, totalEmployee: e.target.value })}
-                            className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
-                          />
+                        <div className="col-span-1">
+                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex justify-between items-center">
+                            Industry Type
+                          </label>
+                          <div className="flex gap-2 mb-2">
+                            <div className="flex-1">
+                              <Dropdown
+                                value={formData.industryType}
+                                options={["Select industry", ...filteredIndustries]}
+                                onChange={(val) => setFormData({ ...formData, industryType: val })}
+                                className="w-full h-10"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowAddIndustryModal(true)}
+                              className="w-10 h-10 flex shrink-0 items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-customShadow"
+                            >
+                              <Plus className="w-5 h-5" />
+                            </button>
+                          </div>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              placeholder="Search industry..."
+                              value={industrySearchTerm}
+                              onChange={(e) => handleIndustrySearchChange(e.target.value)}
+                              className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          </div>
                         </div>
                         <div>
                           <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Website</label>
                           <input
                             type="text"
                             value={formData.website}
-                            placeholder="https://example.com"
                             onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                             className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div className="col-span-1">
                           <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Company Location</label>
                           <input
                             type="text"
                             value={formData.companyLocation}
-                            placeholder="City, Country"
                             onChange={(e) => setFormData({ ...formData, companyLocation: e.target.value })}
                             className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                           />
@@ -328,7 +410,7 @@ export default function ChangePlanModal({ isOpen, onClose, onConfirm, currentPla
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border flex justify-between shrink-0">
+        <div className="p-4 border-t border-border flex justify-end gap-3 shrink-0">
           <button
             onClick={onClose}
             className="px-6 py-2 border border-border text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
@@ -337,11 +419,44 @@ export default function ChangePlanModal({ isOpen, onClose, onConfirm, currentPla
           </button>
           <button
             onClick={handleConfirm}
-            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-customShadow"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-customShadow"
           >
             Update Plan
           </button>
         </div>
+
+        {/* Add Industry Modal */}
+        {showAddIndustryModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+            <div className="bg-navbarBg border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Add New Industry</h3>
+              <input
+                type="text"
+                placeholder="Enter industry name..."
+                value={newIndustryName}
+                onChange={(e) => setNewIndustryName(e.target.value)}
+                className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 mb-6"
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => {
+                    setShowAddIndustryModal(false);
+                    setNewIndustryName("");
+                  }}
+                  className="px-4 py-2 border border-border text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddIndustry}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-bold transition-colors shadow-customShadow"
+                >
+                  Add
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

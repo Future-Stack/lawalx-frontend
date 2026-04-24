@@ -18,9 +18,10 @@ import {
 interface DetailsTabProps {
   user: any;
   onEdit: () => void;
+  onEditPersonalInfo: () => void;
 }
 
-export default function DetailsTab({ user, onEdit }: DetailsTabProps) {
+export default function DetailsTab({ user, onEdit, onEditPersonalInfo }: DetailsTabProps) {
   // Use user data or fallbacks
   const personalInfo = {
     email: user.email,
@@ -51,7 +52,7 @@ export default function DetailsTab({ user, onEdit }: DetailsTabProps) {
             Personal Info
           </h2>
           <button
-            onClick={onEdit}
+            onClick={onEditPersonalInfo}
             className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 transition-colors cursor-pointer shadow-customShadow"
           >
             <Edit2 className="w-4 h-4" />
@@ -159,15 +160,15 @@ export default function DetailsTab({ user, onEdit }: DetailsTabProps) {
       <div className="bg-navbarBg rounded-xl border border-border shadow-sm">
         <div className="flex justify-between items-center mb-6 border-b border-border p-4">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-            Enterprise Info
+            Plan Info
           </h2>
-          <button
+          {/* <button
             onClick={onEdit}
             className="px-4 shadow-customShadow py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 transition-colors cursor-pointer"
           >
             <Edit2 className="w-4 h-4" />
             Edit
-          </button>
+          </button> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-y-8 gap-x-4 p-4">
@@ -212,17 +213,6 @@ export default function DetailsTab({ user, onEdit }: DetailsTabProps) {
             </div>
             <div className="text-sm font-medium text-gray-900 dark:text-white">
               {enterpriseInfo.companyLocation}
-            </div>
-          </div>
-
-          {/* Total Employee */}
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <Users className="w-3.5 h-3.5" />
-              <span>Total Employee</span>
-            </div>
-            <div className="text-sm font-medium text-gray-900 dark:text-white">
-              {enterpriseInfo.totalEmployee}
             </div>
           </div>
 
