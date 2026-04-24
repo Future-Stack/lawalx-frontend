@@ -180,8 +180,8 @@ export default function SupportTicketTable() {
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-800/60">
-              <TableHead className="w-10 px-4">
+            <TableRow className="border-0 bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-800/60">
+              <TableHead className="w-10 px-4 border-0">
                 <Checkbox
                   checked={allSelected}
                   onCheckedChange={toggleAll}
@@ -204,7 +204,7 @@ export default function SupportTicketTable() {
 
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow>
+              <TableRow className="border-0">
                 <TableCell
                   colSpan={7}
                   className="text-center py-12 text-sm text-gray-500 dark:text-gray-400"
@@ -217,9 +217,12 @@ export default function SupportTicketTable() {
                 <TableRow
                   key={ticket.id}
                   className={cn(
-                    'hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors',
-                    selectedIds.has(ticket.id) &&
-                    'bg-blue-50/40 dark:bg-blue-900/10'
+                    'border-0 transition-colors',
+                    selectedIds.has(ticket.id)
+                      ? 'bg-blue-50/40 dark:bg-blue-900/10'
+                      : idx % 2 === 1
+                        ? 'bg-[#F7F9FA] dark:bg-gray-800/40 hover:bg-[#eef0f2] dark:hover:bg-gray-800/60'
+                        : 'bg-white dark:bg-gray-900 hover:bg-[#F7F9FA] dark:hover:bg-gray-800/30'
                   )}
                 >
                   {/* Checkbox */}
@@ -278,7 +281,7 @@ export default function SupportTicketTable() {
                         'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
                         idx === 0
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                          : 'border border-[#4881FF] text-[#4881FF] hover:bg-[#4881FF]/20'
                       )}
                     >
                       Open
