@@ -1,14 +1,11 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon, ArrowUpRight, Eye } from 'lucide-react';
+import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon, ArrowUpRight, Eye, FileText } from 'lucide-react';
 import GoogleMapModal from '@/components/shared/modals/GoogleMapModal';
-import { useDeleteDeviceMutation, useGetGlobalDeviceDetailsQuery, useGetGlobalDevicesQuery, useLazyExportGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
+import { useDeleteDeviceMutation, useGetGlobalDeviceDetailsQuery, useGetGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 import DeviceLocation from "@/components/common/DeviceLocation";
 
 // Reusable Dropdown Component
@@ -178,7 +175,6 @@ export default function GlobalDevices() {
   const [modalContent, setModalContent] = useState<{ title: string; device: Device | null; action: string }>({ title: '', device: null, action: '' });
   const [mapModalOpen, setMapModalOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; label: string; device: Device | null }>({ lat: 0, lng: 0, label: '', device: null });
-  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
 
   const periodMap: Record<string, string> = {
     'Last 1 day': '1day',
@@ -187,74 +183,8 @@ export default function GlobalDevices() {
     'Last 1 year': '1year',
   };
 
-  const [exportGlobalDevices] = useLazyExportGlobalDevicesQuery();
+
   const [deleteDevice] = useDeleteDeviceMutation();
-
-  const downloadPDF = async (data: any[]) => {
-    const doc = new jsPDF();
-    const tableColumn = ['Name', 'Serial', 'Customer', 'Owner', 'Type', 'Status', 'Active Program', 'Storage Used', 'Last Seen', 'Uptime', 'Created At'];
-    const tableRows = data.map(device => [
-      device.name || 'N/A',
-      device.serial || 'N/A',
-      device.customer || 'N/A',
-      device.owner || 'N/A',
-      device.type || 'N/A',
-      device.status || 'N/A',
-      device.activeProgram || 'N/A',
-      device.storageUsed || 'N/A',
-      device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A',
-      device.uptime || 'N/A',
-      device.createdAt ? new Date(device.createdAt).toLocaleString() : 'N/A',
-    ]);
-
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 20,
-    });
-    doc.text('Global Devices Report', 14, 15);
-    doc.save('devices_report.pdf');
-  };
-
-  const downloadExcel = (data: any[]) => {
-    const worksheet = XLSX.utils.json_to_sheet(data.map(device => ({
-      Name: device.name || 'N/A',
-      Serial: device.serial || 'N/A',
-      Customer: device.customer || 'N/A',
-      Owner: device.owner || 'N/A',
-      Type: device.type || 'N/A',
-      Status: device.status || 'N/A',
-      'Active Program': device.activeProgram || 'N/A',
-      'Storage Used': device.storageUsed || 'N/A',
-      'Last Seen': device.lastSeen ? new Date(device.lastSeen).toLocaleString() : 'N/A',
-      Uptime: device.uptime || 'N/A',
-      'Created At': device.createdAt ? new Date(device.createdAt).toLocaleString() : 'N/A',
-    })));
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Devices');
-    XLSX.writeFile(workbook, 'devices_report.xlsx');
-  };
-
-  const handleExport = async (format: 'pdf' | 'excel') => {
-    try {
-      const result = await exportGlobalDevices({
-        page: currentPage,
-        limit: itemsPerPage,
-        search: searchQuery || undefined,
-        status: statusFilter !== 'All Status' ? statusFilter : undefined,
-        type: typeFilter !== 'All Types' ? typeFilter : undefined,
-        period: periodMap[timeRange] ?? 'all',
-      }).unwrap();
-      if (format === 'pdf') {
-        downloadPDF(result.data);
-      } else {
-        downloadExcel(result.data);
-      }
-      setExportDropdownOpen(false);
-    } catch (error) {
-      console.error('Failed to export devices:', error);
-    }
-  };
 
   // Removed useGetGlobalDeviceDetailsQuery from here as we navigate to a new page
 
@@ -543,42 +473,13 @@ export default function GlobalDevices() {
               options={['Last 1 day', 'Last 7 days', 'Last 30 days', 'Last 1 year']}
               onChange={setTimeRange}
             />
-            <div className="relative w-44">
-              <button
-                onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
-                className="w-full text-nowrap px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span className="hidden lg:block">Export Devices</span>
-              </button>
-              {exportDropdownOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setExportDropdownOpen(false)} />
-                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 w-full overflow-hidden">
-                    <button
-                      onClick={() => {
-                        handleExport('pdf');
-                        setExportDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                    >
-                      📄 PDF
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleExport('excel');
-                        setExportDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                    >
-                      📊 Excel
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
+            <button
+              onClick={() => router.push('/admin/reports/device-report')}
+              className="text-nowrap px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            >
+              <FileText className="w-4 h-4" />
+              View Reports
+            </button>
           </div>
         </div>
 
