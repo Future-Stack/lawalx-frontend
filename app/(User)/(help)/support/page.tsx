@@ -1,41 +1,44 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Paperclip, Send, User, X, ChevronLeft } from "lucide-react";
 import CreateTicketModal from "@/components/support/CreateTicketModal";
 
 import { useGetMyTicketsQuery, useCreateSupportTicketMutation } from "@/redux/api/users/support/supportApi";
 import { IssueType } from "@/redux/api/users/support/support.types";
 import { toast } from "sonner";
-
-interface Message {
-  id: string;
-  sender: string;
-  text: string;
-  timestamp: string;
-  isUser: boolean;
-  attachment?: string;
-}
+import { useTicketChat } from "@/hooks/useTicketChat";
+import { useAppSelector } from "@/redux/store/hook";
+import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 
 const Support = () => {
   const { data: ticketsResponse, isLoading } = useGetMyTicketsQuery();
   const [createSupportTicket] = useCreateSupportTicketMutation();
+  const currentUser = useAppSelector(selectCurrentUser);
 
   const tickets = ticketsResponse?.data || [];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
-  const [showChatOnMobile, setShowChatOnMobile] = useState(false); // New state for mobile navigation
+  const [showChatOnMobile, setShowChatOnMobile] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const { messages, sendMessage, isConnected } = useTicketChat(selectedTicket?.id ?? null);
 
   // Set initial selected ticket safely
-  React.useEffect(() => {
+  useEffect(() => {
     if (tickets.length > 0 && !selectedTicket) {
       setSelectedTicket(tickets[0]);
     }
   }, [tickets, selectedTicket]);
+
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const openModal = () => setIsModalOpen(true);
 
@@ -83,27 +86,7 @@ const Support = () => {
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedTicket) return;
-
-    // Chat functionality disabled for now as per instructions
-    console.log("Chat functionality is not integrated yet.");
-    /*
-    const newMsg: Message = {
-      id: String(selectedTicket.messages?.length || 0 + 1),
-      sender: "You",
-      text: newMessage,
-      timestamp: `Today, ${new Date().toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })}`,
-      isUser: true,
-      attachment: attachedFiles.length > 0 ? attachedFiles[0].name : undefined,
-    };
-
-    // Update state correctly based on whether we use RTK Query data or local state.
-    // For now we don't do this.
-    */
-
+    sendMessage(newMessage);
     setNewMessage("");
     setAttachedFiles([]);
   };
@@ -243,8 +226,20 @@ const Support = () => {
                     </div>
                   </div>
 
-                  {/* Right - Assigned To */}
-                  <div className="text-right min-w-0 flex-shrink-0">
+                  {/* Right - Connection status + Assigned To */}
+                  <div className="text-right min-w-0 flex-shrink-0 flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                          isConnected
+                            ? 'bg-green-500'
+                            : 'bg-gray-400 dark:bg-gray-600'
+                        }`}
+                      />
+                      <span className="text-[0.65rem] text-gray-400 dark:text-gray-500">
+                        {isConnected ? 'Live' : 'Offline'}
+                      </span>
+                    </div>
                     <p className="text-[0.7rem] xs:text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       Assigned to
                     </p>
@@ -256,62 +251,65 @@ const Support = () => {
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-navbarBg scrollbar-hide">
-                  {!selectedTicket.messages || selectedTicket.messages.length === 0 ? (
+                  {messages.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                      <p className="mb-2">Description: {selectedTicket.description || 'No description provided.'}</p>
-                      <p className="text-xs italic">No chat messages yet. Chat will be available soon!</p>
+                      <p className="mb-2 text-sm text-center">
+                        {selectedTicket.description || 'No description provided.'}
+                      </p>
+                      <p className="text-xs italic">
+                        {isConnected
+                          ? 'No messages yet. Start the conversation!'
+                          : 'Connecting to chat...'}
+                      </p>
                     </div>
                   ) : (
-                    selectedTicket.messages.map((msg: any) => (
-                      <div
-                        key={msg.id}
-                        className={`flex gap-4 ${msg.isUser ? "flex-row-reverse" : ""
-                          }`}
-                      >
-                        <div className="shrink-0">
-                          {msg.isUser ? (
-                            <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                              <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                            </div>
-                          ) : (
-                            <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
-                              JD
-                            </div>
-                          )}
-                        </div>
-
+                    messages.map((msg, index) => {
+                      const isOwn = msg.senderId === currentUser?.id;
+                      return (
                         <div
-                          className={`max-w-[85%] sm:max-w-md ${msg.isUser ? "text-right" : ""
-                            }`}
+                          key={msg.id ?? index}
+                          className={`flex gap-4 ${isOwn ? 'flex-row-reverse' : ''}`}
                         >
-                          {!msg.isUser && (
-                            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              {msg.sender}
-                            </p>
-                          )}
-                          <div
-                            className={`rounded-2xl px-4 py-3 text-left ${msg.isUser
-                              ? "bg-gray-800 dark:bg-white/20 text-white"
-                              : "bg-cardBackground2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700"
-                              }`}
-                          >
-                            <p className="text-sm leading-relaxed break-words">
-                              {msg.text}
-                            </p>
-                            {msg.attachment && (
-                              <div className="mt-3 flex items-center gap-2 text-xs opacity-80">
-                                <Paperclip className="w-4 h-4" />
-                                {msg.attachment}
+                          <div className="shrink-0">
+                            {isOwn ? (
+                              <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                              </div>
+                            ) : (
+                              <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                                {msg.senderName?.charAt(0)?.toUpperCase() ?? 'S'}
                               </div>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            {msg.timestamp}
-                          </p>
+
+                          <div className={`max-w-[85%] sm:max-w-md ${isOwn ? 'text-right' : ''}`}>
+                            {!isOwn && msg.senderName && (
+                              <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {msg.senderName}
+                              </p>
+                            )}
+                            <div
+                              className={`rounded-2xl px-4 py-3 text-left ${
+                                isOwn
+                                  ? 'bg-gray-800 dark:bg-white/20 text-white'
+                                  : 'bg-cardBackground2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                              }`}
+                            >
+                              <p className="text-sm leading-relaxed break-words">{msg.text}</p>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                              {new Date(msg.createdAt).toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true,
+                              })}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Message Input */}
