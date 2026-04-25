@@ -201,21 +201,21 @@ export default function TicketConversationDialog({
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                     aria-label="Attach file"
                   >
                     <Paperclip className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                     aria-label="Emoji"
                   >
                     <SmilePlus className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                     aria-label="Format"
                   >
                     <Pen className="w-4 h-4" />
@@ -231,7 +231,7 @@ export default function TicketConversationDialog({
                 type="button"
                 onClick={handleSend}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-2 bg-[#1C73E0] hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm',
+                  'flex items-center gap-2 px-4 py-2 bg-[#1C73E0] hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm cursor-pointer',
                   !message.trim() && 'opacity-70 cursor-not-allowed'
                 )}
               >

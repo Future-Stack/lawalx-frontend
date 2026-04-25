@@ -287,7 +287,7 @@ export default function SupportTicketTable() {
                     <button
                       onClick={() => openConversation(ticket)}
                       className={cn(
-                        'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
+                        'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap cursor-pointer',
                         idx === 0
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : 'border border-[#4881FF] text-[#4881FF] hover:bg-[#4881FF]/20'
@@ -318,7 +318,7 @@ export default function SupportTicketTable() {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Prev
@@ -337,7 +337,7 @@ export default function SupportTicketTable() {
                 key={p}
                 onClick={() => setCurrentPage(p as number)}
                 className={cn(
-                  'w-8 h-8 rounded-lg text-sm font-medium transition-colors',
+                  'w-8 h-8 rounded-lg text-sm font-medium transition-colors cursor-pointer',
                   currentPage === p
                     ? 'bg-blue-600 text-white'
                     : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -352,7 +352,7 @@ export default function SupportTicketTable() {
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Next
             <ChevronRight className="w-3.5 h-3.5" />
