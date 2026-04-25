@@ -11,7 +11,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
-import type { Ticket, Employee } from './types';
+import type { Ticket } from '@/redux/api/admin/support/adminSupportTicketApi';
+import type { Employee } from '@/redux/api/admin/support/adminSupporterApi';
 import { useGetAllSupportersQuery } from '@/redux/api/admin/support/adminSupporterApi';
 
 // Removed MOCK_EMPLOYEES

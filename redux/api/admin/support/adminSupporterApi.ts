@@ -15,6 +15,16 @@ export enum SupporterRole {
   GENERAL_SUPPORT = 'GENERAL_SUPPORT',
 }
 
+export interface Employee {
+  id: string;
+  name: string;
+  role: string;
+  initials: string;
+  status: 'Available' | 'Busy';
+  activeTickets: number;
+  ticketTags: string[];
+}
+
 export interface CreateSupporterDto {
   username: string;
   email: string;

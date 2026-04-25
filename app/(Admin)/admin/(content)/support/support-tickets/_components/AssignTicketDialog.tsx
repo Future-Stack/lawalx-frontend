@@ -17,7 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { Ticket, Employee, TicketStatus, TicketPriority } from './types';
+import type { Ticket, TicketStatus, TicketPriority } from '@/redux/api/admin/support/adminSupportTicketApi';
+import type { Employee } from '@/redux/api/admin/support/adminSupporterApi';
 
 // ── Priority pill colour map ───────────────────────────────────────────────────
 

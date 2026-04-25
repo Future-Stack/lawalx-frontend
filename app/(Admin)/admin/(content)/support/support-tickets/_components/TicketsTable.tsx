@@ -25,7 +25,8 @@ import TicketDetailsDialog from './TicketDetailsDialog';
 import TicketEditDialog from './TicketEditDialog';
 import TeamWorkloadDialog from './TeamWorkloadDialog';
 import AssignTicketDialog from './AssignTicketDialog';
-import type { Ticket, Employee, TicketStatus, TicketPriority } from './types';
+import type { Ticket, TicketStatus, TicketPriority } from '@/redux/api/admin/support/adminSupportTicketApi';
+import type { Employee } from '@/redux/api/admin/support/adminSupporterApi';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,8 @@ const statusStyles: Record<TicketStatus, string> = {
     'text-blue-600 bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400',
   'In Progress':
     'text-teal-600 bg-teal-50 border border-teal-200 dark:bg-teal-900/20 dark:border-teal-800 dark:text-teal-400',
+  Closed:
+    'text-gray-600 bg-gray-50 border border-gray-200 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400',
 };
 
 const priorityStyles: Record<TicketPriority, string> = {
@@ -119,7 +122,7 @@ export default function TicketsTable() {
         'Open': 'Opened',
         'InProgress': 'In Progress',
         'Resolved': 'Resolved',
-        'Closed': 'Resolved'
+        'Closed': 'Closed',
       };
 
       const priorityMap: Record<string, any> = {
@@ -128,10 +131,12 @@ export default function TicketsTable() {
         'High': 'High'
       };
 
-      const assignedTo = t.assignments?.length > 0 && t.assignments[0]?.user ? {
-        name: t.assignments[0].user.username || 'Supporter',
-        initials: (t.assignments[0].user.username || 'S').substring(0, 2).toUpperCase(),
-        role: t.assignments[0].user.role || 'Support'
+      const firstAssignment = t.assignments?.length > 0 ? t.assignments[0] : null;
+      const assignedTo = firstAssignment?.user ? {
+        id: firstAssignment.supporterId || undefined,
+        name: firstAssignment.user.username || 'Supporter',
+        initials: (firstAssignment.user.username || 'S').substring(0, 2).toUpperCase(),
+        role: firstAssignment.user.role || 'Support',
       } : null;
 
       return {
@@ -147,6 +152,7 @@ export default function TicketsTable() {
         lastUpdated: new Date(t.updatedAt).toLocaleDateString(),
         priority: priorityMap[t.priority] || 'Normal',
         assignedTo,
+        assignedToId: firstAssignment?.supporterId || undefined,
         description: t.description,
         createdAt: new Date(t.createdAt).toLocaleDateString(),
         updatedAt: new Date(t.updatedAt).toLocaleDateString(),

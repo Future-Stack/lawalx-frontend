@@ -14,6 +14,39 @@ export enum AdminTicketPriority {
   HIGH = 'High',
 }
 
+export type TicketStatus = 'Opened' | 'Resolved' | 'In Progress' | 'Closed';
+export type TicketPriority = 'High' | 'Medium' | 'Low' | 'Normal';
+
+export interface Company {
+  name: string;
+  iconBg: string;
+  iconText: string;
+}
+
+export interface Assignee {
+  id?: string;
+  name: string;
+  initials: string;
+  role?: string;
+}
+
+export interface Ticket {
+  id: string;
+  ticketId: string;
+  company: Company;
+  subject: string;
+  status: TicketStatus;
+  lastUpdated: string;
+  priority: TicketPriority;
+  assignedTo: Assignee | null;
+  assignedToId?: string;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+  adminNote?: string;
+  raw?: any;
+}
+
 export interface AdminTicketUser {
   id: string;
   username: string;
@@ -33,6 +66,8 @@ export interface TicketAssignmentUser {
 }
 
 export interface TicketAssignment {
+  id?: string;
+  supporterId?: string;
   user: TicketAssignmentUser;
 }
 
