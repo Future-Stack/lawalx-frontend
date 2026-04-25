@@ -41,6 +41,7 @@ const ScreenCardDetails = () => {
   const { data: programResponse, isLoading } = useGetSingleProgramDataQuery({ id: String(id) });
   const [updateProgram, { isLoading: isUpdating }] = useUpdateSingleProgramMutation();
   const program = programResponse?.data;
+  console.log("update program", program);
 
   const [activeTab, setActiveTab] = useState<"timeline" | "settings">(
     "timeline"

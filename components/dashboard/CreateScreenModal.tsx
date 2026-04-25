@@ -30,9 +30,10 @@ import {
 interface CreateScreenModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModalProps) {
+export default function CreateScreenModal({ isOpen, onClose, onSuccess }: CreateScreenModalProps) {
   const { data: allContentData, isLoading: isContentLoading } = useGetAllContentDataQuery(undefined);
   const { data: devicesData, isLoading: isDevicesLoading } = useGetMyDevicesDataQuery(undefined);
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
@@ -268,6 +269,7 @@ export default function CreateScreenModal({ isOpen, onClose }: CreateScreenModal
 
       if (response.success) {
         toast.success(response.message || "Program created successfully");
+        if (onSuccess) onSuccess();
         handleClose();
       }
     } catch (error: any) {

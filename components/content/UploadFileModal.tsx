@@ -331,14 +331,7 @@ export default function UploadFileModal({
                     onSuccess(uploadedResults);
                 }
 
-                // Onboarding Completion Logic
-                if (userInfo?.firstTimeLogin === true) {
-                    try {
-                        await userDataUpdate({}).unwrap();
-                    } catch (updateError) {
-                        console.error("Failed to update onboarding status:", updateError);
-                    }
-                }
+
 
                 // Auto-close on successful upload
                 setIsPageLoading(false);

@@ -163,8 +163,8 @@ export default function DevicesPage() {
         device: device.name || device.deviceSerial || "Unknown Device",
         model: device.model || "Unknown Model",
         resolution: device.program?.serene_size || "1920x1080",
-        location: device.location ? 
-          (device.location.lat === 0 && device.location.lng === 0 ? "N/A" : `Location (${device.location.lat.toFixed(2)}, ${device.location.lng.toFixed(2)})`) 
+        location: device.location ?
+          (device.location.lat === 0 && device.location.lng === 0 ? "N/A" : `Location (${device.location.lat.toFixed(2)}, ${device.location.lng.toFixed(2)})`)
           : "Unknown Location",
         type: device.deviceType || "Unknown Type",
         programName: device.program?.name || "No program assigned",

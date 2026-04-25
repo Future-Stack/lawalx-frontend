@@ -32,7 +32,7 @@ import { useGetMyNotificationsQuery, useReadAllNotificationsMutation, useReadNot
 import { formatDistanceToNow } from "date-fns";
 import CommonLoader from "@/common/CommonLoader";
 import NavbarNewDropdown from "./NavbarNewDropdown";
-import { useNavbarActions } from "@/hooks/useNavbarActions";
+import { useNavbarActions, OnboardingStep } from "@/hooks/useNavbarActions";
 import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 import CreateScreenModal from "@/components/dashboard/CreateScreenModal";
 import UploadFileModal from "@/components/content/UploadFileModal";
@@ -58,6 +58,11 @@ export default function UserDashboardNavbar() {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const dispatch = useAppDispatch();
 
+  // User Profile
+  // const { data: userProfile } = useGetUserProfileQuery(undefined);
+  const { data: userProfile } = useGetUserProfileQuery(undefined, { pollingInterval: 60000 });
+  const userInfo = userProfile?.data;
+
   const {
     isAddDeviceOpen,
     setIsAddDeviceOpen,
@@ -72,8 +77,10 @@ export default function UserDashboardNavbar() {
     isPageLoading,
     setIsPageLoading,
     onboardingStep,
+    setOnboardingStep,
     startOnboarding,
     completeStep,
+    finishOnboarding,
     handleUploadClick,
   } = useNavbarActions();
 
@@ -81,15 +88,30 @@ export default function UserDashboardNavbar() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // Avoid hydration mismatch
   useEffect(() => {
     setMounted(true);
-    // Check for new user onboarding
-    const isNewUser = localStorage.getItem("is_new_user");
-    if (isNewUser === "true" && !onboardingStep) {
-      startOnboarding();
-    }
   }, []);
+
+  // Avoid hydration mismatch and trigger onboarding
+  useEffect(() => {
+    if (!mounted) return;
+
+    // Check for new user onboarding - handle both /dashboard and /user/dashboard
+    const isDashboardPath = /^\/(user\/)?dashboard\/?$/.test(pathname || "");
+    const isNewUser = localStorage.getItem("is_new_user") === "true";
+    const savedStep = localStorage.getItem("onboarding_step") as OnboardingStep;
+
+    if (isDashboardPath && isNewUser && userInfo?.firstTimeLogin === false) {
+      if (savedStep && !onboardingStep) {
+        // Resume onboarding from saved step
+        setOnboardingStep(savedStep);
+        if (savedStep === "add-device") setIsAddDeviceOpen(true);
+        if (savedStep === "program") setIsCreateProgramOpen(true);
+      } else if (!onboardingStep) {
+        startOnboarding();
+      }
+    }
+  }, [pathname, userInfo?.firstTimeLogin, onboardingStep, startOnboarding, mounted, setOnboardingStep, setIsAddDeviceOpen, setIsCreateProgramOpen]);
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -102,10 +124,6 @@ export default function UserDashboardNavbar() {
   const confirmLogout = () => {
     dispatch(logout());
   };
-
-  // User Profile
-  const { data: userProfile } = useGetUserProfileQuery();
-  const userInfo = userProfile?.data;
 
   const isActive = (href: string) => pathname?.startsWith(href);
 
@@ -623,24 +641,34 @@ export default function UserDashboardNavbar() {
       {/* Modals */}
       <AddDeviceModal
         isOpen={isAddDeviceOpen}
+        forceShowProgram={onboardingStep === "add-device" ? false : undefined}
         onClose={() => {
           setIsAddDeviceOpen(false);
-          completeStep("add-device");
+          // Auto-proceed to next onboarding step even if closed manually
+          if (onboardingStep === "add-device") {
+            completeStep("add-device");
+          }
         }}
+        onSuccess={() => completeStep("add-device")}
       />
       <UploadFileModal
         isOpen={isUploadModalOpen}
-        onClose={() => {
-          setIsUploadModalOpen(false);
-          completeStep("upload");
-        }}
+        onClose={() => setIsUploadModalOpen(false)}
         setIsPageLoading={setIsPageLoading}
       />
       <CreateScreenModal
         isOpen={isCreateProgramOpen}
         onClose={() => {
           setIsCreateProgramOpen(false);
-          completeStep("program");
+          // If in onboarding, finish the flow if closed manually
+          if (onboardingStep === "program") {
+            completeStep("program");
+          }
+        }}
+        onSuccess={() => {
+          if (onboardingStep === "program") {
+            completeStep("program");
+          }
         }}
       />
       <CreateFolderDialog

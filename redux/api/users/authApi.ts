@@ -21,12 +21,8 @@ export const authApi = baseApi.injectEndpoints({
               })
             );
 
-            // Handle onboarding modal trigger
-            if (data.data.firstTimeLogin === false) {
-              localStorage.setItem("is_new_user", "true");
-            } else {
-              localStorage.removeItem("is_new_user");
-            }
+            // Clear any existing onboarding flag during normal login
+            localStorage.removeItem("is_new_user");
           }
         } catch (error) {
           // console.error("Login failed:", error);
