@@ -40,7 +40,7 @@
 }
 
 /* Dark mode support for audio player text/icons */
-.dark .rhap_time, 
+.dark .rhap_time,
 .dark .rhap_current-time,
 .dark .rhap_total-time {
   color: #a3a3a3 !important;
@@ -62,6 +62,7 @@
   transform: scale(1.2);
   transition: transform 0.2s ease !important;
 }
+
 /* ------------------------------------------------ */
 
 
@@ -156,7 +157,8 @@ body {
 /* Ensure Plyr container doesn't overlap portaled modals */
 .plyr {
   z-index: 0 !important;
-  --plyr-color-main: #0FA6FF; /* Match brand blue */
+  --plyr-color-main: #0FA6FF;
+  /* Match brand blue */
 }
 
 .plyr--fullscreen {
@@ -837,28 +839,30 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 
 /* Professional Media Preview Animations */
 @keyframes preview-exit {
-  0% { 
-    opacity: 1; 
-    transform: scale(1); 
-    filter: blur(0px); 
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
   }
-  100% { 
-    opacity: 0; 
-    transform: scale(0.98); 
-    filter: blur(4px); 
+
+  100% {
+    opacity: 0;
+    transform: scale(0.98);
+    filter: blur(4px);
   }
 }
 
 @keyframes preview-enter {
-  0% { 
-    opacity: 0; 
-    transform: scale(0.98); 
-    filter: blur(4px); 
+  0% {
+    opacity: 0;
+    transform: scale(0.98);
+    filter: blur(4px);
   }
-  100% { 
-    opacity: 1; 
-    transform: scale(1); 
-    filter: blur(0px); 
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
   }
 }
 

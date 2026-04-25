@@ -47,20 +47,8 @@ export default function Dashboard() {
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [forceShowProgram, setForceShowProgram] = useState(false);
 
-  // Automatic modals for first time signup
-  useEffect(() => {
-    const isDismissed = sessionStorage.getItem("onboarding_dismissed");
-    if (userInfo?.firstTimeLogin === true && !isDismissed) {
-      setForceShowProgram(false);
-      setIsAddDeviceModalOpen(true);
-    }
-  }, [userInfo?.firstTimeLogin]);
-
   const handleCloseAddDeviceModal = () => {
     setIsAddDeviceModalOpen(false);
-    if (userInfo?.firstTimeLogin === true) {
-      sessionStorage.setItem("onboarding_dismissed", "true");
-    }
   };
 
   const { data: activityData } = useGetAllActivitiesQuery();
@@ -344,9 +332,7 @@ export default function Dashboard() {
         forceShowProgram={forceShowProgram}
         onClose={handleCloseAddDeviceModal}
         onSuccess={() => {
-          if (userInfo?.firstTimeLogin === true) {
-            setIsUploadModalOpen(true);
-          }
+          // Success behavior for dashboard
         }}
       />
       {/* Create Schedule Dialog */}

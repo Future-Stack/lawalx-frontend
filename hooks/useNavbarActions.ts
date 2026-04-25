@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useUserDataUpdateMutation } from "@/redux/api/users/userProfileApi";
 
 export type OnboardingStep = "add-device" | "upload" | "program" | "schedule" | null;
@@ -16,29 +16,47 @@ export function useNavbarActions() {
 
     const [userDataUpdate] = useUserDataUpdateMutation();
 
-    const startOnboarding = () => {
+    const startOnboarding = useCallback(() => {
+        localStorage.setItem("onboarding_step", "add-device");
         setOnboardingStep("add-device");
         setIsAddDeviceOpen(true);
-    };
+    }, []);
 
-    const completeStep = (step: OnboardingStep) => {
+    const finishOnboarding = useCallback(async () => {
+        setOnboardingStep(null);
+        setIsAddDeviceOpen(false);
+        setIsUploadModalOpen(false);
+        setIsCreateProgramOpen(false);
+        localStorage.removeItem("is_new_user");
+        localStorage.removeItem("onboarding_step");
+        try {
+            await userDataUpdate({ firstTimeLogin: true }).unwrap();
+        } catch (error) {
+            console.error("Failed to finish onboarding:", error);
+        }
+    }, [userDataUpdate]);
+
+    const completeStep = useCallback((step: OnboardingStep) => {
         if (onboardingStep !== step) return;
 
         if (step === "add-device") {
-            setOnboardingStep("upload");
-            setIsUploadModalOpen(true);
+            localStorage.setItem("onboarding_step", "program");
+            setOnboardingStep("program");
+            setIsAddDeviceOpen(false);
+            // Delay to allow first modal to close
+            setTimeout(() => setIsCreateProgramOpen(true), 150);
+        } else if (step === "program") {
+            finishOnboarding();
         } else if (step === "upload") {
+            // Support legacy upload step if needed, but not part of automatic flow now
             setOnboardingStep(null);
-            localStorage.removeItem("is_new_user");
-            userDataUpdate({});
-        } else if (step === "schedule") {
-            setOnboardingStep(null);
+            setIsUploadModalOpen(false);
         }
-    };
+    }, [onboardingStep, finishOnboarding]);
 
-    const handleUploadClick = () => {
+    const handleUploadClick = useCallback(() => {
         setIsUploadModalOpen(true);
-    };
+    }, []);
 
     return {
         isAddDeviceOpen,
@@ -54,8 +72,10 @@ export function useNavbarActions() {
         isPageLoading,
         setIsPageLoading,
         onboardingStep,
+        setOnboardingStep,
         startOnboarding,
         completeStep,
+        finishOnboarding,
         handleUploadClick,
     };
 }

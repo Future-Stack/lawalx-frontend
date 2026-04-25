@@ -48,11 +48,7 @@ const SignInForm = () => {
                     email,
                 }));
 
-                if (res.data.firstTimeLogin === false) {
-                    localStorage.setItem("is_new_user", "true");
-                } else {
-                    localStorage.removeItem("is_new_user");
-                }
+                localStorage.removeItem("is_new_user");
 
                 setTimeout(() => {
                     toast.success(res.message);
