@@ -33,6 +33,8 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
                 const role = user.role.toUpperCase();
                 if (role === 'ADMIN' || role === 'SUPERADMIN' || role === 'SUPER_ADMIN') {
                     router.push("/admin/dashboard");
+                } else if (role === 'SUPPORTER') {
+                    router.push("/supporter/overview");
                 } else {
                     router.push("/dashboard");
                 }
