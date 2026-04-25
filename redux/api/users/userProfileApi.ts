@@ -10,9 +10,10 @@ export const userProfileApi = baseApi.injectEndpoints({
       providesTags: ["User"],
     }),
     userDataUpdate: builder.mutation<any, any>({
-      query: () => ({
+      query: (body) => ({
         url: "/users/update-first-time-login",
         method: "PATCH",
+        body,
       }),
       invalidatesTags: ["User"],
     }),

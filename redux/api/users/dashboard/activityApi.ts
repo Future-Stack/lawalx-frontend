@@ -8,14 +8,14 @@ export const activityApi = baseApi.injectEndpoints({
         url: "/activity/all",
         method: "GET",
       }),
-      providesTags: ["Activity"],
+      providesTags: ["Activity", "Devices"],
     }),
     getAllDevices: build.query<RecentDevicesResponse, void>({
       query: () => ({
         url: `/userdashboard/recent-devices?limit=7`,
         method: "GET",
       }),
-      providesTags: ["Activity"],
+      providesTags: ["Activity", "Devices"],
     }),
     getAllStats: build.query<DashboardStatsResponse, void>({
       query: () => ({
@@ -29,7 +29,7 @@ export const activityApi = baseApi.injectEndpoints({
         url: `/activity/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Activity"],
+      invalidatesTags: ["Activity", "Devices"],
     }),
   }),
 });

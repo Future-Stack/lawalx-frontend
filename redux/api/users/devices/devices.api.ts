@@ -26,7 +26,7 @@ const devicesAPI = baseApi.injectEndpoints({
         url: "/device/my-devices",
         method: "GET",
       }),
-      providesTags: ["Devices"],
+      providesTags: ["Devices", "Activity"],
     }),
     // get device pin wise data 
     getDevicePinWiseData: build.query<DeviceResponse, { devicePin: string }>({
@@ -34,14 +34,14 @@ const devicesAPI = baseApi.injectEndpoints({
         url: `/device/info/${devicePin}`,
         method: "GET",
       }),
-      providesTags: ["Devices"],
+      providesTags: ["Devices", "Activity"],
     }),
     getSingleDeviceData: build.query<DeviceListResponse, { id: string }>({
       query: ({ id }) => ({
         url: `/device/${id}`,
         method: "GET",
       }),
-      providesTags: ["Devices", "Schedules"],
+      providesTags: ["Devices", "Schedules", "Activity"],
     }),
     assignDeviceToProgram: build.mutation<any, { deviceId: string, programId: string }>({
       query: ({ deviceId, programId }) => ({

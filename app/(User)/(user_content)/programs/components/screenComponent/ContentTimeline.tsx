@@ -41,6 +41,8 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [errorId, setErrorId] = useState<string | null>(null);
+  console.log("items", items);
+
 
   useEffect(() => {
     if (timeline) {
@@ -49,10 +51,16 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   }, [timeline]);
 
   const calculateTotal = () => {
-    const totalSeconds = items.reduce((sum, item) => sum + item.duration, 0);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${String(minutes).padStart(2, "0")} min ${String(seconds).padStart(2, "0")} sec`;
+    const totalSeconds = items.reduce((sum, item) => sum + Number(item.duration || 0), 0);
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    let timeStr = "";
+    if (hrs > 0) timeStr += `${hrs} hr `;
+    if (mins > 0 || hrs > 0) timeStr += `${mins} min `;
+    timeStr += `${secs} sec`;
+    return timeStr.trim();
   };
 
   const handleRemove = async (item: Timeline) => {
@@ -78,14 +86,75 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
     onChange?.(newItems);
   };
 
+  const formatDuration = (seconds: number) => {
+    const s = Number(seconds || 0);
+    if (s < 60) return `${s}s`;
+    
+    const hrs = Math.floor(s / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+
+    if (hrs > 0) {
+      return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
+
   const formatStartTime = (timelineItems: Timeline[], index: number) => {
     let totalSeconds = 0;
     for (let i = 0; i < index; i++) {
-      totalSeconds += timelineItems[i].duration;
+      totalSeconds += Number(timelineItems[i].duration || 0);
     }
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+    
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    if (hrs > 0) {
+      return `${String(hrs).padStart(2, "0")}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+    }
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
+
+  const handleTimeChange = (index: number, type: "h" | "m" | "s", value: string) => {
+    const item = items[index];
+    if (!item) return;
+
+    const currentTotal = Number(item.duration || 0);
+    const hrs = Math.floor(currentTotal / 3600);
+    const mins = Math.floor((currentTotal % 3600) / 60);
+    const secs = currentTotal % 60;
+
+    let newHrs = hrs;
+    let newMins = mins;
+    let newSecs = secs;
+
+    const val = parseInt(value) || 0;
+
+    if (type === "h") newHrs = Math.max(0, val);
+    if (type === "m") newMins = Math.max(0, Math.min(59, val));
+    if (type === "s") newSecs = Math.max(0, Math.min(59, val));
+
+    let newDuration = (newHrs * 3600) + (newMins * 60) + newSecs;
+    if (newDuration < 1) newDuration = 1;
+
+    // Check if file is video or audio and cap duration at its original length
+    const file = item.file;
+    if (file && (file.type === "VIDEO" || file.type === "AUDIO")) {
+      const maxDuration = Math.ceil(file.duration || 0);
+      if (newDuration > maxDuration) {
+        newDuration = maxDuration;
+        setErrorId(item.id);
+        const timer = setTimeout(() => setErrorId(null), 3000);
+      }
+    }
+
+    const updatedItems = items.map((it, i) =>
+      i === index ? { ...it, duration: newDuration } : it
+    );
+
+    setItems(updatedItems);
+    onChange?.(updatedItems);
   };
 
   const handleDurationChange = (index: number, value: string) => {
@@ -94,20 +163,15 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
     if (!item) return;
 
     const file = item.file;
-
-    // Check if file is video or audio and cap duration at its original length
     if (file && (file.type === "VIDEO" || file.type === "AUDIO")) {
       const maxDuration = Math.ceil(file.duration || 0);
       if (newDuration > maxDuration) {
         newDuration = maxDuration;
-        // Set local error state instead of toast
         setErrorId(item.id);
         const timer = setTimeout(() => setErrorId(null), 3000);
-        return () => clearTimeout(timer);
       }
     }
 
-    // Use map to ensure we create a new array and new object for the target item only
     const updatedItems = items.map((it, i) =>
       i === index ? { ...it, duration: newDuration } : it
     );
@@ -150,7 +214,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
     const newTimelineItems: Timeline[] = uploadedFiles.map((file: FileData) => ({
       id: `temp-${Math.random().toString(36).substr(2, 9)}`,
       fileId: file.id,
-      duration: file.duration || 10,
+      duration: Math.ceil(file.duration || 10),
       position: items.length,
       createdAt: new Date().toISOString(),
       programId: programId,
@@ -166,7 +230,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
     const newTimelineItems: Timeline[] = selectedFiles.map((file) => ({
       id: `temp-${Math.random().toString(36).substr(2, 9)}`,
       fileId: file.id,
-      duration: file.duration || 10,
+      duration: Math.ceil(file.duration || 10),
       position: items.length,
       createdAt: new Date().toISOString(),
       programId: programId,
@@ -270,48 +334,72 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
                       Start: <span className="font-medium text-body">{formatStartTime(items, index)}</span>
                     </span>
                     <span className="flex items-center gap-1">
-                      Duration: <span className="font-medium text-body">{item.duration}s</span>
+                      Duration: <span className="font-medium text-body">{formatDuration(item.duration)}</span>
                     </span>
                   </div>
                 </div>
 
                 <div className="shrink-0 flex flex-col items-end gap-1">
                   <div className="flex items-center gap-2">
-                    <div className="flex items-center bg-cardBackground border border-border rounded-lg px-1 shadow-sm">
+                    <div className="flex items-center bg-cardBackground border border-border rounded-lg px-2 py-1 shadow-sm gap-1 group-hover:border-blue-300 transition-colors">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleIncrement(index, -1);
                         }}
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-muted transition-colors cursor-pointer outline-none"
-                        title="Decrease duration"
+                        className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-muted hover:text-red-500 transition-colors cursor-pointer outline-none"
+                        title="Decrease 1s"
                       >
-                        <Minus className="w-3 h-3" />
+                        <Minus className="w-3.5 h-3.5" />
                       </button>
 
-                      <input
-                        type="number"
-                        min="1"
-                        max={
-                          (item.file?.type === "VIDEO" || item.file?.type === "AUDIO")
-                            ? Math.ceil(item.file.duration || 0)
-                            : undefined
-                        }
-                        value={item.duration || ""}
-                        onChange={(e) => handleDurationChange(index, e.target.value)}
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-8 text-[11px] font-bold text-bgBlue bg-transparent border-none outline-none text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                      />
+                      <div className="flex items-center px-1 text-[11px] font-bold text-bgBlue bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-100 dark:border-gray-700">
+                        <div className="flex flex-col items-center">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={String(Math.floor((item.duration || 0) / 3600)).padStart(1, "0")}
+                            onChange={(e) => handleTimeChange(index, "h", e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 bg-transparent border-none outline-none text-center text-bgBlue placeholder:text-gray-300"
+                            placeholder="0"
+                          />
+                        </div>
+                        <span className="text-gray-400 font-medium pb-0.5">:</span>
+                        <div className="flex flex-col items-center">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={String(Math.floor(((item.duration || 0) % 3600) / 60)).padStart(2, "0")}
+                            onChange={(e) => handleTimeChange(index, "m", e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-6 bg-transparent border-none outline-none text-center text-bgBlue placeholder:text-gray-300"
+                            placeholder="00"
+                          />
+                        </div>
+                        <span className="text-gray-400 font-medium pb-0.5">:</span>
+                        <div className="flex flex-col items-center">
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={String((item.duration || 0) % 60).padStart(2, "0")}
+                            onChange={(e) => handleTimeChange(index, "s", e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-6 bg-transparent border-none outline-none text-center text-bgBlue placeholder:text-gray-300"
+                            placeholder="00"
+                          />
+                        </div>
+                      </div>
 
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleIncrement(index, 1);
                         }}
-                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded text-muted transition-colors cursor-pointer outline-none"
-                        title="Increase duration"
+                        className="p-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded text-muted hover:text-bgBlue transition-colors cursor-pointer outline-none"
+                        title="Increase 1s"
                       >
-                        <Plus className="w-3 h-3" />
+                        <Plus className="w-3.5 h-3.5" />
                       </button>
                     </div>
 
