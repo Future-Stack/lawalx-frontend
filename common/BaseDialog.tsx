@@ -31,6 +31,9 @@ interface BaseDialogProps {
 
   /** Full width modal */
   fullWidth?: boolean;
+
+  /** Hide scrollbar */
+  hideScrollbar?: boolean;
 }
 
 const widthMap: Record<DialogSize, string> = {
@@ -61,6 +64,7 @@ const BaseDialog = ({
   maxHeight = "lg",
   className,
   fullWidth = false,
+  hideScrollbar = false,
 }: BaseDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -83,7 +87,10 @@ const BaseDialog = ({
         </DialogHeader>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 [&::-webkit-scrollbar-thumb]:rounded-full">
+        <div className={clsx(
+          "flex-1 overflow-y-auto",
+          hideScrollbar ? "scrollbar-hide" : "pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-800 [&::-webkit-scrollbar-thumb]:rounded-full"
+        )}>
           <div className="space-y-4">{children}</div>
         </div>
       </DialogContent>

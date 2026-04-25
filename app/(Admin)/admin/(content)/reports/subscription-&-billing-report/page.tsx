@@ -824,7 +824,7 @@ const BillingDashboard = () => {
         <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Failed Payments Analysis</h3>
         <p className={`${theme.textSecondary} text-sm mb-6`}>Tracker for failed transaction attempts and recovery</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <div className="h-80 pb-6">
             <h4 className={`font-semibold mb-4 ${theme.text}`}>Failed Payments vs Recovery</h4>
             <ResponsiveContainer width="100%" height="100%">
@@ -854,7 +854,7 @@ const BillingDashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="h-80 pb-6">
+          {/* <div className="h-80 pb-6">
             <h4 className={`font-semibold mb-4 ${theme.text}`}>Recovery Rate Trend</h4>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={recoveryRateData}>
@@ -870,7 +870,7 @@ const BillingDashboard = () => {
                 <Line type="monotone" dataKey="rate" stroke="#8b5cf6" strokeWidth={2} name="Recovery Rate %" />
               </LineChart>
             </ResponsiveContainer>
-          </div>
+          </div> */}
         </div>
       </div>
 
