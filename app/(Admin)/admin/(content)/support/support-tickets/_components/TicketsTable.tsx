@@ -19,6 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { useGetAllSupportTicketsQuery } from '@/redux/api/admin/support/adminSupportTicketApi';
 import TicketDetailsDialog from './TicketDetailsDialog';
 import TicketEditDialog from './TicketEditDialog';
 import TeamWorkloadDialog from './TeamWorkloadDialog';
@@ -27,162 +28,9 @@ import type { Ticket, Employee, TicketStatus, TicketPriority } from './types';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
-const ISSUE_DESCRIPTION =
-  `Hello Support Team,\nI'm trying to export our analytics data to CSV format but keep getting an error message. When I click on the "Export to CSV" button in the Reports section, the loading spinner appears for about 10 seconds and then displays "Export Failed: Unknown Error".\nI've tried this on multiple browsers (Chrome, Firefox, and Edge) with the same result. This functionality was working fine last week. Could you please look into this issue as soon as possible? We need this data for our quarterly review.`;
-
-const ADMIN_NOTE =
-  "Customer reported this issue after the v2.4.0 deployment. live verified their account is active and they're on the Enterprise plan. The issue seems to be";
-
-const MOCK_TICKETS: Ticket[] = [
-  {
-    id: '1',
-    ticketId: '#CN25204',
-    company: { name: 'Acme', iconBg: 'bg-blue-500', iconText: 'A' },
-    subject: 'Unable to export data to CSV format',
-    status: 'Opened',
-    lastUpdated: '2 hours ago',
-    priority: 'High',
-    assignedTo: null,
-    description: ISSUE_DESCRIPTION,
-    createdAt: '3-July-2025',
-    updatedAt: '3-July-2025',
-    adminNote: ADMIN_NOTE,
-  },
-  {
-    id: '2',
-    ticketId: '#CN25205',
-    company: { name: 'Global Tech', iconBg: 'bg-purple-500', iconText: 'G' },
-    subject: 'Chart render failed',
-    status: 'Opened',
-    lastUpdated: '4 hours ago',
-    priority: 'High',
-    assignedTo: { name: 'Leslie Alexander', initials: 'LA', role: 'Frontend Eng.' },
-    description: ISSUE_DESCRIPTION,
-    createdAt: '3-July-2025',
-    updatedAt: '3-July-2025',
-  },
-  {
-    id: '3',
-    ticketId: '#CN25206',
-    company: { name: 'Tech Stark', iconBg: 'bg-green-500', iconText: 'T' },
-    subject: "I don't know what happen...",
-    status: 'Resolved',
-    lastUpdated: 'Yesterday',
-    priority: 'Medium',
-    assignedTo: { name: 'Annette Black', initials: 'AB', role: 'Support Eng.' },
-    description: ISSUE_DESCRIPTION,
-    createdAt: '25-Jun-2025',
-    updatedAt: '26-Jun-2025',
-  },
-  {
-    id: '4',
-    ticketId: '#CN25207',
-    company: { name: 'Next Gen', iconBg: 'bg-sky-500', iconText: 'N' },
-    subject: 'Chart render failed',
-    status: 'Resolved',
-    lastUpdated: 'Jun 25, 10:20AM',
-    priority: 'Low',
-    assignedTo: { name: 'Arlene McCoy', initials: 'AM', role: 'DevOPS Eng.' },
-    description: ISSUE_DESCRIPTION,
-    createdAt: '25-Jun-2025',
-    updatedAt: '25-Jun-2025',
-  },
-  {
-    id: '5',
-    ticketId: '#CN25208',
-    company: { name: 'Softvence', iconBg: 'bg-amber-500', iconText: 'S' },
-    subject: 'Chart render failed',
-    status: 'Resolved',
-    lastUpdated: 'Jun 25, 10:20AM',
-    priority: 'Normal',
-    assignedTo: { name: 'Debian Junior', initials: 'DJ', role: 'Backend Eng.' },
-    description: ISSUE_DESCRIPTION,
-    createdAt: '25-Jun-2025',
-    updatedAt: '25-Jun-2025',
-  },
-  {
-    id: '6',
-    ticketId: '#CN25209',
-    company: { name: 'Next Gen', iconBg: 'bg-sky-500', iconText: 'N' },
-    subject: 'Chart render failed',
-    status: 'In Progress',
-    lastUpdated: 'Jun 25, 10:20AM',
-    priority: 'Low',
-    assignedTo: { name: 'Arlene McCoy', initials: 'AM', role: 'DevOPS Eng.' },
-    description: ISSUE_DESCRIPTION,
-    createdAt: '25-Jun-2025',
-    updatedAt: '25-Jun-2025',
-  },
-  {
-    id: '7',
-    ticketId: '#CN25210',
-    company: { name: 'Acme', iconBg: 'bg-blue-500', iconText: 'A' },
-    subject: 'Chart render failed',
-    status: 'In Progress',
-    lastUpdated: 'Jun 25, 10:20AM',
-    priority: 'Normal',
-    assignedTo: { name: 'Kathryn Murphy', initials: 'KM', role: 'DevOPS Eng.' },
-    description: ISSUE_DESCRIPTION,
-    createdAt: '25-Jun-2025',
-    updatedAt: '25-Jun-2025',
-    adminNote: ADMIN_NOTE,
-  },
-  {
-    id: '8',
-    ticketId: '#CN25211',
-    company: { name: 'Global Tech', iconBg: 'bg-purple-500', iconText: 'G' },
-    subject: 'Chart render failed',
-    status: 'In Progress',
-    lastUpdated: 'Jun 25, 10:20AM',
-    priority: 'Low',
-    assignedTo: { name: 'Debian Junior', initials: 'DJ', role: 'Backend Eng.' },
-    description: ISSUE_DESCRIPTION,
-    createdAt: '25-Jun-2025',
-    updatedAt: '25-Jun-2025',
-  },
-  {
-    id: '9',
-    ticketId: '#CN25212',
-    company: { name: 'Tech Stark', iconBg: 'bg-green-500', iconText: 'T' },
-    subject: 'Chart render failed',
-    status: 'In Progress',
-    lastUpdated: 'Jun 25, 10:20AM',
-    priority: 'Normal',
-    assignedTo: { name: 'Annette Black', initials: 'AB', role: 'Support Eng.' },
-    description: ISSUE_DESCRIPTION,
-    createdAt: '25-Jun-2025',
-    updatedAt: '25-Jun-2025',
-  },
-  {
-    id: '10',
-    ticketId: '#CN25213',
-    company: { name: 'Softvence', iconBg: 'bg-amber-500', iconText: 'S' },
-    subject: 'Chart render failed',
-    status: 'In Progress',
-    lastUpdated: 'Jun 25, 10:20AM',
-    priority: 'Low',
-    assignedTo: { name: 'Leslie Alexander', initials: 'LA', role: 'Frontend Eng.' },
-    description: ISSUE_DESCRIPTION,
-    createdAt: '25-Jun-2025',
-    updatedAt: '25-Jun-2025',
-  },
-  {
-    id: '11',
-    ticketId: '#CN25214',
-    company: { name: 'Acme', iconBg: 'bg-blue-500', iconText: 'A' },
-    subject: 'Chart render failed',
-    status: 'In Progress',
-    lastUpdated: 'Jun 25, 10:20AM',
-    priority: 'Normal',
-    assignedTo: null,
-    description: ISSUE_DESCRIPTION,
-    createdAt: '25-Jun-2025',
-    updatedAt: '25-Jun-2025',
-  },
-];
+// ── Data variables ─────────────────────────────────────────────────────────────────
 
 const ITEMS_PER_PAGE = 11;
-const TOTAL_COUNT = 500;
 
 // ── Badge helpers ─────────────────────────────────────────────────────────────
 
@@ -253,6 +101,57 @@ export default function TicketsTable() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
 
+  const { data: ticketsResponse, isLoading } = useGetAllSupportTicketsQuery({
+    userName: search || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    priority: priorityFilter === 'all' ? undefined : priorityFilter,
+  });
+
+
+  const apiTickets: Ticket[] = useMemo(() => {
+    if (!ticketsResponse?.data) return [];
+    return ticketsResponse.data.map((t: any) => {
+      const statusMap: Record<string, any> = {
+        'Open': 'Opened',
+        'InProgress': 'In Progress',
+        'Resolved': 'Resolved',
+        'Closed': 'Resolved'
+      };
+
+      const priorityMap: Record<string, any> = {
+        'Low': 'Low',
+        'Medium': 'Medium',
+        'High': 'High'
+      };
+
+      const assignedTo = t.assignments?.length > 0 ? {
+        name: t.assignments[0]?.supporter?.user?.username || 'Supporter',
+        initials: (t.assignments[0]?.supporter?.user?.username || 'S').charAt(0).toUpperCase(),
+        role: 'Support'
+      } : null;
+
+      return {
+        id: t.id,
+        ticketId: t.customId || t.id,
+        company: {
+          name: t.user?.username || 'Unknown',
+          iconBg: 'bg-blue-500',
+          iconText: t.user?.username?.charAt(0)?.toUpperCase() || 'U'
+        },
+        subject: t.subject,
+        status: statusMap[t.status] || 'Opened',
+        lastUpdated: new Date(t.updatedAt).toLocaleDateString(),
+        priority: priorityMap[t.priority] || 'Normal',
+        assignedTo,
+        description: t.description,
+        createdAt: new Date(t.createdAt).toLocaleDateString(),
+        updatedAt: new Date(t.updatedAt).toLocaleDateString(),
+        adminNote: t.adminNote || undefined,
+        raw: t,
+      } as unknown as Ticket;
+    });
+  }, [ticketsResponse]);
+
   // Dialog state
   const [viewTicket, setViewTicket] = useState<Ticket | null>(null);
   const [editTicket, setEditTicket] = useState<Ticket | null>(null);
@@ -278,21 +177,9 @@ export default function TicketsTable() {
     setConfirmData(null);
   };
 
-  const filtered = useMemo(() => {
-    return MOCK_TICKETS.filter((t) => {
-      const q = search.toLowerCase();
-      const matchSearch =
-        !q ||
-        t.ticketId.toLowerCase().includes(q) ||
-        t.company.name.toLowerCase().includes(q) ||
-        t.subject.toLowerCase().includes(q) ||
-        (t.assignedTo?.name.toLowerCase().includes(q) ?? false);
-      const matchStatus = statusFilter === 'all' || t.status === statusFilter;
-      const matchPriority = priorityFilter === 'all' || t.priority === priorityFilter;
-      return matchSearch && matchStatus && matchPriority;
-    });
-  }, [search, statusFilter, priorityFilter]);
+  const filtered = apiTickets;
 
+  const TOTAL_COUNT = filtered.length;
   const totalPages = Math.max(1, Math.ceil(TOTAL_COUNT / ITEMS_PER_PAGE));
   const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const end = Math.min(currentPage * ITEMS_PER_PAGE, TOTAL_COUNT);
@@ -356,9 +243,10 @@ export default function TicketsTable() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Opened">Opened</SelectItem>
+                <SelectItem value="Open">Opened</SelectItem>
                 <SelectItem value="Resolved">Resolved</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="InProgress">In Progress</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
               </SelectContent>
             </Select>
 
@@ -378,7 +266,6 @@ export default function TicketsTable() {
                 <SelectItem value="High">High</SelectItem>
                 <SelectItem value="Medium">Medium</SelectItem>
                 <SelectItem value="Low">Low</SelectItem>
-                <SelectItem value="Normal">Normal</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -424,7 +311,13 @@ export default function TicketsTable() {
           </TableHeader>
 
           <TableBody>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={9} className="py-12 text-center text-sm text-gray-400">
+                  Loading tickets...
+                </TableCell>
+              </TableRow>
+            ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={9}
@@ -434,7 +327,7 @@ export default function TicketsTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((ticket) => (
+              filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((ticket) => (
                 <TableRow
                   key={ticket.id}
                   className={cn(
@@ -553,7 +446,7 @@ export default function TicketsTable() {
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Showing {start} to {end} of{' '}
             <span className="font-semibold text-blue-600 dark:text-blue-400">{TOTAL_COUNT}</span>{' '}
-            client
+            tickets
           </p>
 
           <div className="flex items-center gap-1 flex-wrap">
