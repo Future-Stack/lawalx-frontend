@@ -38,7 +38,7 @@ interface AssignTicketDialogProps {
   open: boolean;
   onBack: () => void;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (data: { status: TicketStatus; priority: TicketPriority }) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -160,7 +160,7 @@ export default function AssignTicketDialog({
           </Button>
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-6"
-            onClick={onConfirm}
+            onClick={() => onConfirm({ status, priority })}
           >
             Assign Now
           </Button>

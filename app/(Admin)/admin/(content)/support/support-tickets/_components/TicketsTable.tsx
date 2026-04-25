@@ -19,7 +19,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { useGetAllSupportTicketsQuery } from '@/redux/api/admin/support/adminSupportTicketApi';
+import { toast } from 'sonner';
+import { useGetAllSupportTicketsQuery, useAssignSupportTicketMutation, useUpdateSupportTicketMutation } from '@/redux/api/admin/support/adminSupportTicketApi';
 import TicketDetailsDialog from './TicketDetailsDialog';
 import TicketEditDialog from './TicketEditDialog';
 import TeamWorkloadDialog from './TeamWorkloadDialog';
@@ -101,6 +102,9 @@ export default function TicketsTable() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
 
+  const [assignSupportTicket] = useAssignSupportTicketMutation();
+  const [updateSupportTicket] = useUpdateSupportTicketMutation();
+
   const { data: ticketsResponse, isLoading } = useGetAllSupportTicketsQuery({
     userName: search || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
@@ -124,10 +128,10 @@ export default function TicketsTable() {
         'High': 'High'
       };
 
-      const assignedTo = t.assignments?.length > 0 ? {
-        name: t.assignments[0]?.supporter?.user?.username || 'Supporter',
-        initials: (t.assignments[0]?.supporter?.user?.username || 'S').charAt(0).toUpperCase(),
-        role: 'Support'
+      const assignedTo = t.assignments?.length > 0 && t.assignments[0]?.user ? {
+        name: t.assignments[0].user.username || 'Supporter',
+        initials: (t.assignments[0].user.username || 'S').substring(0, 2).toUpperCase(),
+        role: t.assignments[0].user.role || 'Support'
       } : null;
 
       return {
@@ -168,9 +172,41 @@ export default function TicketsTable() {
     if (workloadTicket) setConfirmData({ ticket: workloadTicket, employee });
   };
   const handleBackToWorkload = () => setConfirmData(null);
-  const handleConfirmAssign = () => {
-    setWorkloadTicket(null);
-    setConfirmData(null);
+  const handleConfirmAssign = async (data: { status: TicketStatus; priority: TicketPriority }) => {
+    if (!confirmData?.ticket || !confirmData?.employee) return;
+
+    try {
+      await assignSupportTicket({
+        ticketId: confirmData.ticket.id,
+        body: { supporterId: confirmData.employee.id },
+      }).unwrap();
+
+      const statusMapBack: Record<string, string> = {
+        'Opened': 'Open',
+        'In Progress': 'InProgress',
+        'Resolved': 'Resolved',
+        'Closed': 'Closed'
+      };
+
+      if (
+        data.status !== confirmData.ticket.status ||
+        data.priority !== confirmData.ticket.priority
+      ) {
+        await updateSupportTicket({
+          ticketId: confirmData.ticket.id,
+          body: {
+            status: statusMapBack[data.status] || data.status,
+            priority: data.priority,
+          }
+        }).unwrap();
+      }
+
+      toast.success('Supporter assigned successfully');
+      setWorkloadTicket(null);
+      setConfirmData(null);
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to assign supporter');
+    }
   };
   const handleCloseAssignFlow = () => {
     setWorkloadTicket(null);

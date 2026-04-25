@@ -23,6 +23,19 @@ export interface AdminTicketUser {
   };
 }
 
+export interface TicketAssignmentUser {
+  username: string;
+  image_url: string | null;
+  role: string;
+  account: {
+    email: string;
+  };
+}
+
+export interface TicketAssignment {
+  user: TicketAssignmentUser;
+}
+
 export interface AdminSupportTicket {
   id: string;
   userId: string;
@@ -38,7 +51,7 @@ export interface AdminSupportTicket {
   adminNote: string | null;
   customId: string;
   user: AdminTicketUser;
-  assignments: any[];
+  assignments: TicketAssignment[];
 }
 
 export interface GetAllTicketsParams {
