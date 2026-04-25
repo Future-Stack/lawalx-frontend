@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -78,7 +77,6 @@ export default function SupportTicketTable() {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [conversationOpen, setConversationOpen] = useState(false);
   const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
 
@@ -98,33 +96,6 @@ export default function SupportTicketTable() {
   const totalPages = Math.max(1, Math.ceil(TOTAL_COUNT / ITEMS_PER_PAGE));
   const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const end = Math.min(currentPage * ITEMS_PER_PAGE, TOTAL_COUNT);
-
-  const allSelected =
-    filtered.length > 0 && filtered.every((t) => selectedIds.has(t.id));
-
-  const toggleAll = () => {
-    if (allSelected) {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        filtered.forEach((t) => next.delete(t.id));
-        return next;
-      });
-    } else {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        filtered.forEach((t) => next.add(t.id));
-        return next;
-      });
-    }
-  };
-
-  const toggleOne = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
 
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
 
@@ -189,14 +160,6 @@ export default function SupportTicketTable() {
         <Table>
           <TableHeader>
             <TableRow className="border-0 bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-800/60">
-              <TableHead className="w-10 px-4 border-0">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={toggleAll}
-                  aria-label="Select all"
-                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-              </TableHead>
               {['Ticket ID', 'Client Name', 'Priority', 'Issue Type', 'Status', 'Action'].map(
                 (col) => (
                   <TableHead
@@ -226,23 +189,11 @@ export default function SupportTicketTable() {
                   key={ticket.id}
                   className={cn(
                     'border-0 transition-colors',
-                    selectedIds.has(ticket.id)
-                      ? 'bg-blue-50/40 dark:bg-blue-900/10'
-                      : idx % 2 === 1
-                        ? 'bg-[#F7F9FA] dark:bg-gray-800/40 hover:bg-[#eef0f2] dark:hover:bg-gray-800/60'
-                        : 'bg-white dark:bg-gray-900 hover:bg-[#F7F9FA] dark:hover:bg-gray-800/30'
+                    idx % 2 === 1
+                      ? 'bg-[#F7F9FA] dark:bg-gray-800/40 hover:bg-[#eef0f2] dark:hover:bg-gray-800/60'
+                      : 'bg-white dark:bg-gray-900 hover:bg-[#F7F9FA] dark:hover:bg-gray-800/30'
                   )}
                 >
-                  {/* Checkbox */}
-                  <TableCell className="px-4 py-3">
-                    <Checkbox
-                      checked={selectedIds.has(ticket.id)}
-                      onCheckedChange={() => toggleOne(ticket.id)}
-                      aria-label={`Select ${ticket.clientName}`}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                    />
-                  </TableCell>
-
                   {/* Ticket ID */}
                   <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">
                     {ticket.ticketId}

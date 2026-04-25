@@ -215,7 +215,7 @@ export default function TicketConversationDialog({
                   </button>
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointersss"
                     aria-label="Format"
                   >
                     <Pen className="w-4 h-4" />
