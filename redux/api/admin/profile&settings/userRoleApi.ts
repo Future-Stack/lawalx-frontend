@@ -17,7 +17,27 @@ const userRoleApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["AdminSettings"],
     }),
+    getEmployeeById: builder.query({
+      query: (id) => ({
+        url: `/admin/support/employee/${id}`,
+        method: "GET",
+      }),
+      providesTags: ["AdminSettings"],
+    }),
+    updateEmployee: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/admin/support/employee/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["AdminSettings"],
+    }),
   }),
 });
 
-export const { useGetAllEmployeesQuery, useCreateEmployeeMutation } = userRoleApi;
+export const { 
+  useGetAllEmployeesQuery, 
+  useCreateEmployeeMutation, 
+  useGetEmployeeByIdQuery, 
+  useUpdateEmployeeMutation 
+} = userRoleApi;
