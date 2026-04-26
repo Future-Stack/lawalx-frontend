@@ -16,14 +16,11 @@ export interface UseTicketChatReturn {
 /**
  * Reusable real-time chat hook for a single ticket room.
  *
- * Key behaviours:
- * - joinTicket is re-emitted on every connect/reconnect so the client
- *   stays in the room even after network drops or token refreshes.
- * - connectionSuccess (server auth confirmed) also triggers joinTicket.
- * - sendMessage adds an optimistic message instantly so the sender
- *   sees their own message without waiting for a server echo.
- * - Incoming messages deduplicate by ID to handle server echoes of
- *   optimistic messages.
+ * Messages are stored in a map keyed by ticketId so that:
+ *  - Switching tickets never wipes history (Bug 2 fix).
+ *  - Incoming events are routed to their own bucket by msg.ticketId,
+ *    so messages from other open rooms never bleed into the current
+ *    ticket view (Bug 1 fix).
  */
 export function useTicketChat(
   ticketId: string | null,
@@ -31,28 +28,34 @@ export function useTicketChat(
 ): UseTicketChatReturn {
   const token = useAppSelector(selectCurrentToken);
   const currentUser = useAppSelector(selectCurrentUser);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const currentUserRef = useRef(currentUser);
+
+  // Per-ticket message buckets — never cleared on ticket switch
+  const [messagesMap, setMessagesMap] = useState<Record<string, ChatMessage[]>>({});
   const [isConnected, setIsConnected] = useState(false);
   const [presence, setPresence] = useState<PresenceUpdate[]>([]);
 
-  // Keep a ref to currentUser so closures inside the effect always see latest value
-  const currentUserRef = useRef(currentUser);
+  // Keep ref fresh so closures created inside effects see the latest user
   useEffect(() => {
     currentUserRef.current = currentUser;
   }, [currentUser]);
 
-  // Load initial messages from REST API when available, merging with any
-  // socket messages already received (deduplication by id)
+  // Expose only the current ticket's messages; empty array for unseen tickets
+  const messages: ChatMessage[] = ticketId ? (messagesMap[ticketId] ?? []) : [];
+
+  // Merge REST-fetched initial messages into the correct ticket bucket,
+  // preserving any socket messages already received for that ticket
   const initialMessagesString = JSON.stringify(initialMessages);
   useEffect(() => {
-    if (!initialMessages || initialMessages.length === 0) return;
-    setMessages((prev) => {
+    if (!ticketId || initialMessages.length === 0) return;
+    setMessagesMap((prev) => {
+      const existing = prev[ticketId] ?? [];
       const serverIds = new Set(initialMessages.map((m) => m.id));
-      // Keep socket messages that aren't in the REST response (newer), ensuring they belong to current ticket
-      const onlySocket = prev.filter((m) => m.id && !serverIds.has(m.id) && m.ticketId === ticketId);
-      return [...initialMessages, ...onlySocket].sort(
+      const socketOnly = existing.filter((m) => m.id && !serverIds.has(m.id));
+      const merged = [...initialMessages, ...socketOnly].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );
+      return { ...prev, [ticketId]: merged };
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketId, initialMessagesString]);
@@ -61,14 +64,12 @@ export function useTicketChat(
     if (!token || !ticketId) return;
 
     const socket = getSocket(token);
+    const tid = ticketId; // stable capture for closures below
 
-    // Centralised room-join so it can be called from multiple places
-    const joinRoom = () => {
-      socket.emit('joinTicket', { ticketId });
-    };
+    const joinRoom = () => socket.emit('joinTicket', { ticketId: tid });
 
-    // Re-emit joinTicket on every (re)connect so the client is always in
-    // the room, even after network drops or token rotation
+    // Re-emit joinTicket on every (re)connect so the client stays in the
+    // room even after network drops or token rotation
     const onConnect = () => {
       setIsConnected(true);
       joinRoom();
@@ -82,27 +83,37 @@ export function useTicketChat(
 
     const onDisconnect = () => setIsConnected(false);
 
-    const onMessage = (msg: ChatMessage) =>
-      setMessages((prev) => {
-        // Replace matching optimistic message (same text + senderId, local id)
+    const onMessage = (msg: ChatMessage) => {
+      const targetId = msg.ticketId;
+      if (!targetId) return;
+
+      // Route message into its own ticket bucket regardless of which
+      // ticket is currently selected — this prevents cross-ticket bleed
+      setMessagesMap((prev) => {
+        const current = prev[targetId] ?? [];
+
+        // Replace optimistic placeholder if this is a server echo of our own message
         if (msg.id && msg.senderId === currentUserRef.current?.id) {
-          const optimisticIdx = prev.findIndex(
+          const optIdx = current.findIndex(
             (m) =>
               typeof m.id === 'string' &&
               m.id.startsWith('local-') &&
               m.text === msg.text &&
               m.senderId === msg.senderId
           );
-          if (optimisticIdx !== -1) {
-            const next = [...prev];
-            next[optimisticIdx] = msg;
-            return next;
+          if (optIdx !== -1) {
+            const next = [...current];
+            next[optIdx] = msg;
+            return { ...prev, [targetId]: next };
           }
         }
-        // Generic deduplication by id
-        if (msg.id && prev.some((m) => m.id === msg.id)) return prev;
-        return [...prev, msg];
+
+        // Generic deduplication by server-assigned id
+        if (msg.id && current.some((m) => m.id === msg.id)) return prev;
+
+        return { ...prev, [targetId]: [...current, msg] };
       });
+    };
 
     const onPresence = (data: PresenceUpdate) =>
       setPresence((prev) => {
@@ -121,8 +132,7 @@ export function useTicketChat(
     socket.on('new_chat_message', onMessage);
     socket.on('presence_update', onPresence);
 
-    // If the singleton socket is already connected (switching ticket),
-    // join the new room immediately without waiting for connect event
+    // Singleton socket already connected (e.g. switching ticket) — join immediately
     if (socket.connected) {
       joinRoom();
       setIsConnected(true);
@@ -134,8 +144,8 @@ export function useTicketChat(
       socket.off('disconnect', onDisconnect);
       socket.off('new_chat_message', onMessage);
       socket.off('presence_update', onPresence);
-      setMessages([]);
-      setPresence([]);
+      // Intentionally NOT clearing messagesMap here — history is preserved
+      // per-ticket so switching back restores previous messages
     };
   }, [token, ticketId]);
 
@@ -144,8 +154,7 @@ export function useTicketChat(
       if (!token || !ticketId || !text.trim()) return;
       const user = currentUserRef.current;
 
-      // Optimistic update — sender sees their message instantly without
-      // needing the server to echo it back
+      // Optimistic update so sender sees their own message instantly
       const optimisticMsg: ChatMessage = {
         id: `local-${Date.now()}`,
         ticketId,
@@ -154,7 +163,10 @@ export function useTicketChat(
         senderName: user?.name ?? '',
         createdAt: new Date().toISOString(),
       };
-      setMessages((prev) => [...prev, optimisticMsg]);
+      setMessagesMap((prev) => ({
+        ...prev,
+        [ticketId]: [...(prev[ticketId] ?? []), optimisticMsg],
+      }));
 
       getSocket(token).emit('sendMessage', { ticketId, text });
     },
