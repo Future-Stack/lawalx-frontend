@@ -22,7 +22,7 @@ const Support = () => {
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
 
   // Fetch full details of the selected ticket to get the initial messages
-  const { data: selectedTicketDetails } = useGetTicketDetailsQuery(selectedTicket?.id, {
+  const { currentData: selectedTicketDetails, isFetching } = useGetTicketDetailsQuery(selectedTicket?.id, {
     skip: !selectedTicket?.id,
   });
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);

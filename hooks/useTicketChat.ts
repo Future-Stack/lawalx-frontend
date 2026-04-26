@@ -48,8 +48,8 @@ export function useTicketChat(
     if (!initialMessages || initialMessages.length === 0) return;
     setMessages((prev) => {
       const serverIds = new Set(initialMessages.map((m) => m.id));
-      // Keep socket messages that aren't in the REST response (newer)
-      const onlySocket = prev.filter((m) => m.id && !serverIds.has(m.id));
+      // Keep socket messages that aren't in the REST response (newer), ensuring they belong to current ticket
+      const onlySocket = prev.filter((m) => m.id && !serverIds.has(m.id) && m.ticketId === ticketId);
       return [...initialMessages, ...onlySocket].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       );

@@ -35,9 +35,9 @@ export default function TicketConversationDialog({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const currentUser = useAppSelector(selectCurrentUser);
 
-  const { data: ticketDetails } = useGetAssignedTicketDetailsQuery(
+  const { currentData: ticketDetails } = useGetAssignedTicketDetailsQuery(
     ticket?.id || '',
-    { skip: !open || !ticket?.id }
+    { skip: !open || !ticket?.id, refetchOnMountOrArgChange: true }
   );
 
   const initialMessages = ticketDetails?.data?.messages || [];
@@ -80,13 +80,13 @@ export default function TicketConversationDialog({
             Support Ticket Query
           </DialogTitle>
           <div className="flex items-center gap-1.5">
-            <span
+            {/* <span
               className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-600'
                 }`}
             />
             <span className="text-xs text-gray-400 dark:text-gray-500">
               {isConnected ? 'Live' : 'Connecting...'}
-            </span>
+            </span> */}
           </div>
         </div>
 
