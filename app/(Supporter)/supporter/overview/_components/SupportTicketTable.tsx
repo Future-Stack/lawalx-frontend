@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -21,42 +20,30 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-type Priority = 'High' | 'Medium' | 'Low';
-type TicketStatus = 'open' | 'In progress' | 'Resolved';
+import { useGetAssignedTicketsQuery } from '@/redux/api/supporter/supporterTicketApi';
 
-interface Ticket {
+type Priority = 'High' | 'Medium' | 'Low' | string;
+type TicketStatus = 'open' | 'In progress' | 'Resolved' | string;
+
+export interface SupporterTableTicket {
   id: string;
   ticketId: string;
   clientName: string;
   priority: Priority;
   issueType: string;
   status: TicketStatus;
+  raw?: any;
 }
 
-const MOCK_TICKETS: Ticket[] = [
-  { id: '1', ticketId: '#0123456', clientName: 'Dianne Russel', priority: 'High', issueType: 'Login Issue', status: 'open' },
-  { id: '2', ticketId: '#0123456', clientName: 'Brooklyn Simmons', priority: 'High', issueType: 'Billing Query', status: 'open' },
-  { id: '3', ticketId: '#0123456', clientName: 'Darlene Robertson', priority: 'Medium', issueType: 'Feature Request', status: 'In progress' },
-  { id: '4', ticketId: '#0123456', clientName: 'Arlene McCoy', priority: 'Low', issueType: 'System Error', status: 'Resolved' },
-  { id: '5', ticketId: '#0123456', clientName: 'Marvin McKinney', priority: 'Low', issueType: 'Integration Issue', status: 'Resolved' },
-  { id: '6', ticketId: '#0123457', clientName: 'James Wilson', priority: 'High', issueType: 'Account Access', status: 'open' },
-  { id: '7', ticketId: '#0123458', clientName: 'Sarah Johnson', priority: 'Medium', issueType: 'Payment Failed', status: 'In progress' },
-  { id: '8', ticketId: '#0123459', clientName: 'Michael Brown', priority: 'Low', issueType: 'UI Bug', status: 'Resolved' },
-  { id: '9', ticketId: '#0123460', clientName: 'Emily Davis', priority: 'High', issueType: 'Data Loss', status: 'open' },
-  { id: '10', ticketId: '#0123461', clientName: 'Robert Miller', priority: 'Medium', issueType: 'Slow Performance', status: 'In progress' },
-  { id: '11', ticketId: '#0123462', clientName: 'Linda Moore', priority: 'Low', issueType: 'Export Error', status: 'Resolved' },
-];
-
-const TOTAL_COUNT = 500;
 const ITEMS_PER_PAGE = 11;
 
-const PRIORITY_STYLES: Record<Priority, string> = {
+const PRIORITY_STYLES: Record<string, string> = {
   High: 'text-red-500 border border-red-300 bg-red-50 dark:bg-red-900/20 dark:border-red-700 dark:text-red-400',
   Medium: 'text-amber-500 border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-400',
   Low: 'text-green-600 border border-green-300 bg-green-50 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400',
 };
 
-const STATUS_STYLES: Record<TicketStatus, string> = {
+const STATUS_STYLES: Record<string, string> = {
   'open': 'text-green-600 border border-green-300 bg-green-50 dark:bg-green-900/20 dark:border-green-700 dark:text-green-400',
   'In progress': 'text-teal-600 border border-teal-300 bg-teal-50 dark:bg-teal-900/20 dark:border-teal-700 dark:text-teal-400',
   'Resolved': 'text-blue-600 border border-blue-300 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-700 dark:text-blue-400',
@@ -75,56 +62,49 @@ function buildPageNumbers(current: number, total: number): (number | '...')[] {
 }
 
 export default function SupportTicketTable() {
+  const { data: ticketsResponse, isLoading } = useGetAssignedTicketsQuery();
+
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [conversationOpen, setConversationOpen] = useState(false);
-  const [activeTicket, setActiveTicket] = useState<Ticket | null>(null);
+  const [activeTicket, setActiveTicket] = useState<SupporterTableTicket | null>(null);
 
-  const openConversation = (ticket: Ticket) => {
+  const openConversation = (ticket: SupporterTableTicket) => {
     setActiveTicket(ticket);
     setConversationOpen(true);
   };
 
+  const tickets = useMemo(() => {
+    if (!ticketsResponse?.data) return [];
+    return ticketsResponse.data.map((t) => ({
+      id: t.id,
+      ticketId: t.customId || t.id,
+      clientName: t.user?.full_name || t.user?.username || 'Unknown',
+      priority: t.priority as Priority,
+      issueType: t.issueType?.[0]?.replace('_', ' ') || 'Support Request',
+      status: (t.status === 'InProgress' ? 'In progress' : t.status === 'Open' ? 'open' : t.status) as TicketStatus,
+      raw: t,
+    }));
+  }, [ticketsResponse]);
+
   const filtered = useMemo(() => {
-    return MOCK_TICKETS.filter((t) => {
+    return tickets.filter((t) => {
       if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
-      if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+      const mappedStatus = t.status === 'InProgress' ? 'In progress' : t.status === 'Open' ? 'open' : t.status;
+      if (statusFilter !== 'all' && mappedStatus !== statusFilter) return false;
       return true;
     });
-  }, [priorityFilter, statusFilter]);
+  }, [priorityFilter, statusFilter, tickets]);
 
+  const TOTAL_COUNT = filtered.length;
   const totalPages = Math.max(1, Math.ceil(TOTAL_COUNT / ITEMS_PER_PAGE));
-  const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const start = (currentPage - 1) * ITEMS_PER_PAGE + (TOTAL_COUNT > 0 ? 1 : 0);
   const end = Math.min(currentPage * ITEMS_PER_PAGE, TOTAL_COUNT);
 
-  const allSelected =
-    filtered.length > 0 && filtered.every((t) => selectedIds.has(t.id));
-
-  const toggleAll = () => {
-    if (allSelected) {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        filtered.forEach((t) => next.delete(t.id));
-        return next;
-      });
-    } else {
-      setSelectedIds((prev) => {
-        const next = new Set(prev);
-        filtered.forEach((t) => next.add(t.id));
-        return next;
-      });
-    }
-  };
-
-  const toggleOne = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
+  const paginatedTickets = useMemo(() => {
+    return filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  }, [filtered, currentPage]);
 
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
 
@@ -189,14 +169,6 @@ export default function SupportTicketTable() {
         <Table>
           <TableHeader>
             <TableRow className="border-0 bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-800/60">
-              <TableHead className="w-10 px-4 border-0">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={toggleAll}
-                  aria-label="Select all"
-                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-              </TableHead>
               {['Ticket ID', 'Client Name', 'Priority', 'Issue Type', 'Status', 'Action'].map(
                 (col) => (
                   <TableHead
@@ -211,38 +183,35 @@ export default function SupportTicketTable() {
           </TableHeader>
 
           <TableBody>
-            {filtered.length === 0 ? (
+            {isLoading ? (
               <TableRow className="border-0">
                 <TableCell
-                  colSpan={7}
+                  colSpan={6}
+                  className="text-center py-12 text-sm text-gray-500 dark:text-gray-400"
+                >
+                  Loading tickets...
+                </TableCell>
+              </TableRow>
+            ) : paginatedTickets.length === 0 ? (
+              <TableRow className="border-0">
+                <TableCell
+                  colSpan={6}
                   className="text-center py-12 text-sm text-gray-500 dark:text-gray-400"
                 >
                   No tickets found.
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((ticket, idx) => (
+              paginatedTickets.map((ticket, idx) => (
                 <TableRow
                   key={ticket.id}
                   className={cn(
                     'border-0 transition-colors',
-                    selectedIds.has(ticket.id)
-                      ? 'bg-blue-50/40 dark:bg-blue-900/10'
-                      : idx % 2 === 1
-                        ? 'bg-[#F7F9FA] dark:bg-gray-800/40 hover:bg-[#eef0f2] dark:hover:bg-gray-800/60'
-                        : 'bg-white dark:bg-gray-900 hover:bg-[#F7F9FA] dark:hover:bg-gray-800/30'
+                    idx % 2 === 1
+                      ? 'bg-[#F7F9FA] dark:bg-gray-800/40 hover:bg-[#eef0f2] dark:hover:bg-gray-800/60'
+                      : 'bg-white dark:bg-gray-900 hover:bg-[#F7F9FA] dark:hover:bg-gray-800/30'
                   )}
                 >
-                  {/* Checkbox */}
-                  <TableCell className="px-4 py-3">
-                    <Checkbox
-                      checked={selectedIds.has(ticket.id)}
-                      onCheckedChange={() => toggleOne(ticket.id)}
-                      aria-label={`Select ${ticket.clientName}`}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                    />
-                  </TableCell>
-
                   {/* Ticket ID */}
                   <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">
                     {ticket.ticketId}
@@ -258,7 +227,7 @@ export default function SupportTicketTable() {
                     <span
                       className={cn(
                         'inline-flex items-center justify-center px-3 py-0.5 rounded text-xs font-medium',
-                        PRIORITY_STYLES[ticket.priority]
+                        PRIORITY_STYLES[ticket.priority] || 'text-gray-600 border border-gray-300 bg-gray-50 dark:bg-gray-800 dark:text-gray-300'
                       )}
                     >
                       {ticket.priority}
@@ -275,7 +244,7 @@ export default function SupportTicketTable() {
                     <span
                       className={cn(
                         'inline-flex items-center justify-center px-3 py-0.5 rounded text-xs font-medium',
-                        STATUS_STYLES[ticket.status]
+                        STATUS_STYLES[ticket.status] || 'text-gray-600 border border-gray-300 bg-gray-50 dark:bg-gray-800 dark:text-gray-300'
                       )}
                     >
                       {ticket.status}
@@ -287,7 +256,7 @@ export default function SupportTicketTable() {
                     <button
                       onClick={() => openConversation(ticket)}
                       className={cn(
-                        'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap',
+                        'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap cursor-pointer',
                         idx === 0
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : 'border border-[#4881FF] text-[#4881FF] hover:bg-[#4881FF]/20'
@@ -318,7 +287,7 @@ export default function SupportTicketTable() {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Prev
@@ -337,7 +306,7 @@ export default function SupportTicketTable() {
                 key={p}
                 onClick={() => setCurrentPage(p as number)}
                 className={cn(
-                  'w-8 h-8 rounded-lg text-sm font-medium transition-colors',
+                  'w-8 h-8 rounded-lg text-sm font-medium transition-colors cursor-pointer',
                   currentPage === p
                     ? 'bg-blue-600 text-white'
                     : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -352,7 +321,7 @@ export default function SupportTicketTable() {
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Next
             <ChevronRight className="w-3.5 h-3.5" />

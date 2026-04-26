@@ -27,9 +27,21 @@ export default function CreateTicketModal({
 
   if (!isOpen) return null;
 
+  const mapIssueType = (type: string) => {
+    switch (type) {
+      case "Device": return "DEVICE_ISSUE";
+      case "Login": return "ACCOUNT_ISSUE";
+      case "Content": return "CONTENT_ISSUE";
+      case "Payment": return "PAYMENT_ISSUE";
+      case "Technical": return "TECHNICAL_ISSUE";
+      case "Storage": return "STORAGE_ISSUE";
+      default: return "OTHER";
+    }
+  };
+
   const handleSubmit = () => {
     if (!subject.trim() || !message.trim()) return;
-    onSubmit({ issueType, subject, message, file: attachedFile });
+    onSubmit({ issueType: mapIssueType(issueType), subject, message, file: attachedFile });
     onClose();
   };
 
@@ -58,7 +70,7 @@ export default function CreateTicketModal({
             </label>
             <Dropdown
               value={issueType}
-              options={["Device", "Login", "Content", "Payment", "Other"]}
+              options={["Device", "Login", "Content", "Payment", "Technical", "Storage", "Other"]}
               onChange={setIssueType}
               className="w-full"
             />

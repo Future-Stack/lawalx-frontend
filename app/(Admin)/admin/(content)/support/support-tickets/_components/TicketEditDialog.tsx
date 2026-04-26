@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Building2, ArrowLeft, HelpCircle } from 'lucide-react';
+import { Building2, ArrowLeft, HelpCircle, ChevronDown } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -9,15 +9,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import type { Ticket, TicketPriority } from './types';
+import { toast } from 'sonner';
+import { useGetAllSupportersQuery } from '@/redux/api/admin/support/adminSupporterApi';
+import { useUpdateSupportTicketMutation } from '@/redux/api/admin/support/adminSupportTicketApi';
+import type { Ticket, TicketPriority } from '@/redux/api/admin/support/adminSupportTicketApi';
 
 interface TicketEditDialogProps {
   ticket: Ticket | null;
@@ -32,23 +28,67 @@ export default function TicketEditDialog({
   open,
   onClose,
 }: TicketEditDialogProps) {
-  const [priority, setPriority] = useState<TicketPriority>('High');
-  const [assignedTo, setAssignedTo] = useState('');
+  const [updateTicket, { isLoading: isUpdating }] = useUpdateSupportTicketMutation();
+  const { data: supportersResponse, isLoading: isLoadingSupporters } = useGetAllSupportersQuery();
+
+  const [priority, setPriority] = useState<string>('High');
+  const [status, setStatus] = useState<string>('Open');
+  const [assignedTo, setAssignedTo] = useState<string>('none');
   const [adminNote, setAdminNote] = useState('');
   const [showDescription, setShowDescription] = useState(true);
 
-  // Sync local state whenever the selected ticket changes
+  const [prevTicketId, setPrevTicketId] = useState<string | null>(null);
+
+  // Sync state synchronously during render if ticket changes
+  if (ticket && ticket.id !== prevTicketId) {
+    setPrevTicketId(ticket.id);
+    setPriority(ticket.priority);
+
+    const statusMapBack: Record<string, string> = {
+      'Opened': 'Open',
+      'In Progress': 'InProgress',
+      'Resolved': 'Resolved',
+      'Closed': 'Closed',
+    };
+    setStatus(statusMapBack[ticket.status] || 'Open');
+    setAssignedTo(ticket?.assignedToId || 'none');
+    setAdminNote(ticket.adminNote ?? '');
+    setShowDescription(true);
+  }
+
+  // When supporters load, try to match the assignee if assignedToId was missing
   useEffect(() => {
-    if (ticket) {
-      setPriority(ticket.priority);
-      setAssignedTo(ticket.assignedTo?.name ?? '');
-      setAdminNote(ticket.adminNote ?? '');
-      setShowDescription(true);
+    if (ticket?.assignedTo?.name && supportersResponse?.data && assignedTo === 'none') {
+      const found = supportersResponse.data.find((s: any) => s.user?.username === ticket.assignedTo!.name);
+      if (found) setAssignedTo(found.id);
     }
-  }, [ticket]);
+  }, [supportersResponse, ticket, assignedTo]);
+
+  const handleSave = async () => {
+    if (!ticket) return;
+    try {
+      const payload: any = {
+        priority,
+        status,
+        adminNote,
+      };
+      if (assignedTo && assignedTo !== 'none') {
+        payload.supporterId = assignedTo;
+      }
+
+      await updateTicket({
+        ticketId: ticket.id, // wait, ticket.id is the UUID? In TicketsTable, ticket.id = t.id.
+        body: payload
+      }).unwrap();
+
+      toast.success('Ticket updated successfully');
+      onClose();
+    } catch (error: any) {
+      toast.error(error?.data?.message || 'Failed to update ticket');
+    }
+  };
 
   if (!ticket) return null;
-
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="p-0 gap-0 sm:max-w-md focus:outline-none">
@@ -94,17 +134,39 @@ export default function TicketEditDialog({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Priority
             </label>
-            <Select value={priority} onValueChange={(v) => setPriority(v as TicketPriority)}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="High">High</SelectItem>
-                <SelectItem value="Medium">Medium</SelectItem>
-                <SelectItem value="Low">Low</SelectItem>
-                <SelectItem value="Normal">Normal</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <select
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+                className="w-full h-10 pl-3 pr-10 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer appearance-none shadow-sm"
+              >
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+                <option value="Normal">Normal</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Status */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Status
+            </label>
+            <div className="relative">
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className="w-full h-10 pl-3 pr-10 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer appearance-none shadow-sm"
+              >
+                <option value="Open">Opened</option>
+                <option value="Resolved">Resolved</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Closed">Closed</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            </div>
           </div>
 
           {/* Assign to */}
@@ -112,18 +174,21 @@ export default function TicketEditDialog({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Assign to
             </label>
-            <Select value={assignedTo} onValueChange={setAssignedTo}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select assignee" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Kathryn Murphy">Kathryn Murphy</SelectItem>
-                <SelectItem value="Leslie Alexander">Leslie Alexander</SelectItem>
-                <SelectItem value="Annette Black">Annette Black</SelectItem>
-                <SelectItem value="Arlene McCoy">Arlene McCoy</SelectItem>
-                <SelectItem value="Debian Junior">Debian Junior</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="relative">
+              <select
+                value={assignedTo}
+                onChange={(e) => setAssignedTo(e.target.value)}
+                className="w-full h-10 pl-3 pr-10 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer appearance-none shadow-sm"
+              >
+                <option value="none">No Change / Unassigned</option>
+                {supportersResponse?.data?.map((supporter: any) => (
+                  <option key={supporter.id} value={supporter.id}>
+                    {supporter.user?.username || 'Unknown'}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            </div>
           </div>
 
           {/* Admin Note */}
@@ -171,8 +236,12 @@ export default function TicketEditDialog({
             <ArrowLeft className="w-4 h-4" />
             Cancel
           </Button>
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-5">
-            Save changes
+          <Button
+            className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-5"
+            onClick={handleSave}
+            disabled={isUpdating}
+          >
+            {isUpdating ? 'Saving...' : 'Save changes'}
           </Button>
         </div>
       </DialogContent>

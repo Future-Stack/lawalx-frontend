@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { Ticket, TicketStatus, TicketPriority } from './types';
+import type { Ticket, TicketStatus, TicketPriority } from '@/redux/api/admin/support/adminSupportTicketApi';
 
 interface TicketDetailsDialogProps {
   ticket: Ticket | null;
@@ -27,6 +27,8 @@ const statusStyles: Record<TicketStatus, string> = {
     'text-blue-600 bg-blue-50 border border-blue-300 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400',
   'In Progress':
     'text-teal-600 bg-teal-50 border border-teal-300 dark:bg-teal-900/20 dark:border-teal-800 dark:text-teal-400',
+  Closed:
+    'text-gray-500 bg-gray-50 border border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400',
 };
 
 const priorityStyles: Record<TicketPriority, string> = {

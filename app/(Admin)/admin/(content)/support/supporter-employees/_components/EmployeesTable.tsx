@@ -47,22 +47,22 @@ interface Employee {
 // ── Mock data (from Figma screenshot) ─────────────────────────────────────────
 
 const MOCK_EMPLOYEES: Employee[] = [
-  { id: '1',  name: 'Dianne Russell',   email: 'tanya.hill@example.com',      role: 'Support Manager', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '4/4/18',   level: 'Active',    initials: 'DR', avatarBg: 'bg-pink-400' },
-  { id: '2',  name: 'Brooklyn Simmons', email: 'curtis.weaver@example.com',    role: 'Sales Officer',   skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '12/4/17',  level: 'Active',    initials: 'BS', avatarBg: 'bg-orange-400' },
-  { id: '3',  name: 'Darlene Robertson',email: 'michelle.rivera@example.com',  role: 'Cat attendance',  skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/31/14',  level: 'In Active', initials: 'DR', avatarBg: 'bg-yellow-500' },
-  { id: '4',  name: 'Arlene McCoy',     email: 'jackson.graham@example.com',   role: 'Sales Officer',   skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '3/4/16',   level: 'Active',    initials: 'AM', avatarBg: 'bg-purple-400' },
-  { id: '5',  name: 'Marvin McKinney',  email: 'bill.sanders@example.com',     role: 'Sales Officer',   skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '5/7/18',   level: 'Active',    initials: 'MM', avatarBg: 'bg-green-500' },
-  { id: '6',  name: 'Jane Cooper',      email: 'nathan.roberts@example.com',   role: 'System Eng.',     skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '2/11/12',  level: 'Active',    initials: 'JC', avatarBg: 'bg-blue-400' },
-  { id: '7',  name: 'Theresa Webb',     email: 'tim.jennings@example.com',     role: 'Viewer',          skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '6/19/14',  level: 'In Active', initials: 'TW', avatarBg: 'bg-red-400' },
-  { id: '8',  name: 'Darrell Steward',  email: 'deanna.curtis@example.com',    role: 'Support Manager', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '9/18/16',  level: 'Active',    initials: 'DS', avatarBg: 'bg-indigo-400' },
-  { id: '9',  name: 'Jacob Jones',      email: 'willie.jennings@example.com',  role: 'Support Manager', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '7/11/19',  level: 'Active',    initials: 'JJ', avatarBg: 'bg-teal-500' },
-  { id: '10', name: 'Savannah Nguyen',  email: 'dolores.chambers@example.com', role: 'Viewer',          skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '8/30/14',  level: 'Active',    initials: 'SN', avatarBg: 'bg-cyan-500' },
-  { id: '11', name: 'Devon Lane',       email: 'debra.holt@example.com',       role: 'Viewer',          skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '5/27/15',  level: 'Active',    initials: 'DL', avatarBg: 'bg-amber-500' },
-  { id: '12', name: 'Robert Fox',       email: 'kenzi.lawson@example.com',     role: 'Viewer',          skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '5/19/12',  level: 'Active',    initials: 'RF', avatarBg: 'bg-lime-500' },
-  { id: '13', name: 'Albert Flores',    email: 'alma.lawson@example.com',      role: 'Viewer',          skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '10/6/13',  level: 'Active',    initials: 'AF', avatarBg: 'bg-rose-400' },
-  { id: '14', name: 'Kathryn Murphy',   email: 'felicia.reid@example.com',     role: 'Viewer',          skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/15/12',  level: 'In Active', initials: 'KM', avatarBg: 'bg-violet-400' },
-  { id: '15', name: 'Wade Warren',      email: 'michael.mitc@example.com',     role: 'Viewer',          skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/15/12',  level: 'In Active', initials: 'WW', avatarBg: 'bg-emerald-500' },
-  { id: '16', name: 'Kristin Watson',   email: 'nevaeh.simmons@example.com',   role: 'Viewer',          skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/15/12',  level: 'In Active', initials: 'KW', avatarBg: 'bg-sky-400' },
+  { id: '1', name: 'Dianne Russell', email: 'tanya.hill@example.com', role: 'Support Manager', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '4/4/18', level: 'Active', initials: 'DR', avatarBg: 'bg-pink-400' },
+  { id: '2', name: 'Brooklyn Simmons', email: 'curtis.weaver@example.com', role: 'Sales Officer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '12/4/17', level: 'Active', initials: 'BS', avatarBg: 'bg-orange-400' },
+  { id: '3', name: 'Darlene Robertson', email: 'michelle.rivera@example.com', role: 'Cat attendance', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/31/14', level: 'In Active', initials: 'DR', avatarBg: 'bg-yellow-500' },
+  { id: '4', name: 'Arlene McCoy', email: 'jackson.graham@example.com', role: 'Sales Officer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '3/4/16', level: 'Active', initials: 'AM', avatarBg: 'bg-purple-400' },
+  { id: '5', name: 'Marvin McKinney', email: 'bill.sanders@example.com', role: 'Sales Officer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '5/7/18', level: 'Active', initials: 'MM', avatarBg: 'bg-green-500' },
+  { id: '6', name: 'Jane Cooper', email: 'nathan.roberts@example.com', role: 'System Eng.', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '2/11/12', level: 'Active', initials: 'JC', avatarBg: 'bg-blue-400' },
+  { id: '7', name: 'Theresa Webb', email: 'tim.jennings@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '6/19/14', level: 'In Active', initials: 'TW', avatarBg: 'bg-red-400' },
+  { id: '8', name: 'Darrell Steward', email: 'deanna.curtis@example.com', role: 'Support Manager', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '9/18/16', level: 'Active', initials: 'DS', avatarBg: 'bg-indigo-400' },
+  { id: '9', name: 'Jacob Jones', email: 'willie.jennings@example.com', role: 'Support Manager', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '7/11/19', level: 'Active', initials: 'JJ', avatarBg: 'bg-teal-500' },
+  { id: '10', name: 'Savannah Nguyen', email: 'dolores.chambers@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '8/30/14', level: 'Active', initials: 'SN', avatarBg: 'bg-cyan-500' },
+  { id: '11', name: 'Devon Lane', email: 'debra.holt@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '5/27/15', level: 'Active', initials: 'DL', avatarBg: 'bg-amber-500' },
+  { id: '12', name: 'Robert Fox', email: 'kenzi.lawson@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '5/19/12', level: 'Active', initials: 'RF', avatarBg: 'bg-lime-500' },
+  { id: '13', name: 'Albert Flores', email: 'alma.lawson@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '10/6/13', level: 'Active', initials: 'AF', avatarBg: 'bg-rose-400' },
+  { id: '14', name: 'Kathryn Murphy', email: 'felicia.reid@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/15/12', level: 'In Active', initials: 'KM', avatarBg: 'bg-violet-400' },
+  { id: '15', name: 'Wade Warren', email: 'michael.mitc@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/15/12', level: 'In Active', initials: 'WW', avatarBg: 'bg-emerald-500' },
+  { id: '16', name: 'Kristin Watson', email: 'nevaeh.simmons@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/15/12', level: 'In Active', initials: 'KW', avatarBg: 'bg-sky-400' },
 ];
 
 const ITEMS_PER_PAGE = 11;
@@ -72,14 +72,14 @@ const TOTAL_COUNT = 500;
 
 const ROLE_STYLES: Record<EmployeeRole, string> = {
   'Support Manager': 'text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-400',
-  'Sales Officer':   'text-cyan-600   bg-cyan-50   border-cyan-200   dark:bg-cyan-900/20   dark:border-cyan-800   dark:text-cyan-400',
-  'Cat attendance':  'text-gray-600   bg-gray-100  border-gray-200   dark:bg-gray-800      dark:border-gray-700   dark:text-gray-400',
-  'System Eng.':     'text-blue-600   bg-blue-50   border-blue-200   dark:bg-blue-900/20   dark:border-blue-800   dark:text-blue-400',
-  'Viewer':          'text-gray-600   bg-gray-100  border-gray-200   dark:bg-gray-800      dark:border-gray-700   dark:text-gray-400',
+  'Sales Officer': 'text-cyan-600   bg-cyan-50   border-cyan-200   dark:bg-cyan-900/20   dark:border-cyan-800   dark:text-cyan-400',
+  'Cat attendance': 'text-gray-600   bg-gray-100  border-gray-200   dark:bg-gray-800      dark:border-gray-700   dark:text-gray-400',
+  'System Eng.': 'text-blue-600   bg-blue-50   border-blue-200   dark:bg-blue-900/20   dark:border-blue-800   dark:text-blue-400',
+  'Viewer': 'text-gray-600   bg-gray-100  border-gray-200   dark:bg-gray-800      dark:border-gray-700   dark:text-gray-400',
 };
 
 const LEVEL_STYLES: Record<EmployeeLevel, string> = {
-  'Active':    'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400',
+  'Active': 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400',
   'In Active': 'text-red-500   bg-red-50   border-red-200   dark:bg-red-900/20   dark:border-red-800   dark:text-red-400',
 };
 
@@ -296,12 +296,6 @@ export default function EmployeesTable() {
                 {/* Action icons */}
                 <TableCell className="px-4 py-3">
                   <div className="flex items-center gap-0.5">
-                    <button
-                      className="p-1.5 rounded-md hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors"
-                      aria-label="View employee"
-                    >
-                      <Eye className="w-4 h-4 text-cyan-500" />
-                    </button>
                     <button
                       className="p-1.5 rounded-md hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
                       aria-label="Edit employee"

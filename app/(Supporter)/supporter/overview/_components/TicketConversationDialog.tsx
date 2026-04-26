@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Paperclip, SmilePlus, Pen, Send } from 'lucide-react';
 import {
   Dialog,
@@ -8,6 +8,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { useTicketChat } from '@/hooks/useTicketChat';
+import { useAppSelector } from '@/redux/store/hook';
+import { selectCurrentUser } from '@/redux/features/auth/authSlice';
+import { useGetAssignedTicketDetailsQuery } from '@/redux/api/supporter/supporterTicketApi';
 
 interface Ticket {
   id: string;
@@ -15,37 +19,6 @@ interface Ticket {
   clientName: string;
   issueType: string;
 }
-
-interface Message {
-  id: string;
-  side: 'customer' | 'supporter';
-  senderName?: string;
-  text: string;
-  timestamp: string;
-}
-
-const MOCK_MESSAGES: Message[] = [
-  {
-    id: '1',
-    side: 'customer',
-    senderName: 'Jennifer Jones',
-    text: 'I\'m trying to export our analytics data to CSV format but keep getting an error message. When I click on the "Export to CSV" button in the Reports section, the loading spinner appears for about 10 seconds.',
-    timestamp: 'Today, 10:43 AM',
-  },
-  {
-    id: '2',
-    side: 'supporter',
-    text: 'I\'m trying to export our analytics data to CSV format but keep getting an error message. When I click on the "Export to CSV" button in the Reports section, the loading spinner appears for about 10 seconds.',
-    timestamp: 'Today, 10:43 AM',
-  },
-  {
-    id: '3',
-    side: 'customer',
-    senderName: 'Jhon Doe',
-    text: 'I\'m trying to export our analytics data to CSV format but keep getting an error message. When I click on the "Export to CSV" button in the Reports section, the loading spinner appears for about 10 seconds.',
-    timestamp: 'Today, 10:43 AM',
-  },
-];
 
 interface TicketConversationDialogProps {
   open: boolean;
@@ -60,19 +33,34 @@ export default function TicketConversationDialog({
 }: TicketConversationDialogProps) {
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const currentUser = useAppSelector(selectCurrentUser);
 
+  const { currentData: ticketDetails } = useGetAssignedTicketDetailsQuery(
+    ticket?.id || '',
+    { skip: !open || !ticket?.id, refetchOnMountOrArgChange: true }
+  );
+
+  const initialMessages = ticketDetails?.data?.messages || [];
+
+  const { messages, sendMessage, isConnected } = useTicketChat(
+    open && ticket ? ticket.id : null,
+    initialMessages
+  );
+
+  // Scroll to bottom when dialog opens or new messages arrive
   useEffect(() => {
     if (open) {
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 80);
     }
-  }, [open]);
+  }, [open, messages]);
 
   if (!ticket) return null;
 
   const handleSend = () => {
     if (!message.trim()) return;
+    sendMessage(message);
     setMessage('');
   };
 
@@ -87,10 +75,19 @@ export default function TicketConversationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full sm:max-w-xl lg:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl">
         {/* Dialog title */}
-        <div className="px-5 sm:px-6 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800">
+        <div className="px-5 sm:px-6 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight">
             Support Ticket Query
           </DialogTitle>
+          <div className="flex items-center gap-1.5">
+            {/* <span
+              className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${isConnected ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-600'
+                }`}
+            />
+            <span className="text-xs text-gray-400 dark:text-gray-500">
+              {isConnected ? 'Live' : 'Connecting...'}
+            </span> */}
+          </div>
         </div>
 
         {/* Inner conversation card */}
@@ -117,70 +114,87 @@ export default function TicketConversationDialog({
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Currently Assigned:
+                Client:
               </p>
               <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
-                Jhon Daleria
+                {ticket.clientName}
               </p>
             </div>
           </div>
 
           {/* Messages scrollable area */}
           <div className="px-4 sm:px-5 py-4 space-y-4 dark:bg-gray-950 min-h-[220px] max-h-[260px] sm:max-h-[300px] overflow-y-auto">
-            {MOCK_MESSAGES.map((msg) =>
-              msg.side === 'customer' ? (
-                /* Customer — left side */
-                <div key={msg.id} className="flex items-start gap-2.5">
-                  {/* TA avatar */}
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 mt-1 shadow-sm">
-                    TA
-                  </div>
-                  <div className="min-w-0 max-w-[80%] sm:max-w-[75%]">
-                    <div className="bg-[#F5F8FA] dark:bg-gray-800 rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm">
-                      {msg.senderName && (
-                        <p className="text-xs font-semibold text-gray-900 dark:text-white mb-1">
-                          {msg.senderName}
+            {messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-xs italic">
+                {isConnected
+                  ? 'No messages yet. Start the conversation!'
+                  : 'Connecting to chat...'}
+              </div>
+            ) : (
+              messages.map((msg, index) => {
+                const isOwn = msg.senderId === currentUser?.id;
+                return isOwn ? (
+                  /* Supporter (own) — right side */
+                  <div key={msg.id ?? index} className="flex items-start gap-2.5 justify-end">
+                    <div className="min-w-0 max-w-[80%] sm:max-w-[75%]">
+                      <div className="bg-[#F5F8FA] dark:bg-gray-800 rounded-2xl rounded-tr-sm px-3.5 py-2.5 shadow-sm">
+                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                          {msg.text}
                         </p>
-                      )}
-                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                        {msg.text}
+                      </div>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 text-right mr-1">
+                        {new Date(msg.createdAt).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        })}
                       </p>
                     </div>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 ml-1">
-                      {msg.timestamp}
-                    </p>
+                    {/* Supporter avatar */}
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4 text-indigo-500 dark:text-indigo-400"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                /* Supporter — right side */
-                <div key={msg.id} className="flex items-start gap-2.5 justify-end">
-                  <div className="min-w-0 max-w-[80%] sm:max-w-[75%]">
-                    <div className="bg-[#F5F8FA] dark:bg-gray-800 rounded-2xl rounded-tr-sm px-3.5 py-2.5 shadow-sm">
-                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                        {msg.text}
+                ) : (
+                  /* Customer — left side */
+                  <div key={msg.id ?? index} className="flex items-start gap-2.5">
+                    {/* Avatar */}
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600 flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 mt-1 shadow-sm">
+                      {msg.senderName?.charAt(0)?.toUpperCase() ?? 'C'}
+                    </div>
+                    <div className="min-w-0 max-w-[80%] sm:max-w-[75%]">
+                      <div className="bg-[#F5F8FA] dark:bg-gray-800 rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm">
+                        {msg.senderName && (
+                          <p className="text-xs font-semibold text-gray-900 dark:text-white mb-1">
+                            {msg.senderName}
+                          </p>
+                        )}
+                        <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                          {msg.text}
+                        </p>
+                      </div>
+                      <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 ml-1">
+                        {new Date(msg.createdAt).toLocaleTimeString('en-US', {
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        })}
                       </p>
                     </div>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 text-right mr-1">
-                      {msg.timestamp}
-                    </p>
                   </div>
-                  {/* Supporter avatar */}
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0 mt-1 shadow-sm">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="w-4 h-4 text-indigo-500 dark:text-indigo-400"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              )
+                );
+              })
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -197,42 +211,33 @@ export default function TicketConversationDialog({
                 className="w-full px-4 sm:px-5 pt-3.5 pb-1 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-transparent border-none outline-none resize-none"
               />
               <div className="flex items-end justify-end px-4 sm:px-5 pb-3.5">
-                {/* Action icons */}
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                     aria-label="Attach file"
                   >
                     <Paperclip className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-                    aria-label="Emoji"
-                  >
-                    <SmilePlus className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
                     aria-label="Format"
                   >
                     <Pen className="w-4 h-4" />
                   </button>
                 </div>
-
               </div>
             </div>
             {/* Send button */}
             <div className="flex items-end justify-end px-4 sm:px-5 pb-3.5 mt-5">
-
               <button
                 type="button"
                 onClick={handleSend}
+                disabled={!message.trim() || !isConnected}
                 className={cn(
-                  'flex items-center gap-2 px-4 py-2 bg-[#1C73E0] hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm',
-                  !message.trim() && 'opacity-70 cursor-not-allowed'
+                  'flex items-center gap-2 px-4 py-2 bg-[#1C73E0] hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm cursor-pointer',
+                  (!message.trim() || !isConnected) && 'opacity-70 cursor-not-allowed'
                 )}
               >
                 Send
