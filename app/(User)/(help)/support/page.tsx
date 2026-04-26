@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Paperclip, Send, User, X, ChevronLeft } from "lucide-react";
 import CreateTicketModal from "@/components/support/CreateTicketModal";
 
-import { useGetMyTicketsQuery, useCreateSupportTicketMutation } from "@/redux/api/users/support/supportApi";
+import { useGetMyTicketsQuery, useCreateSupportTicketMutation, useGetTicketDetailsQuery } from "@/redux/api/users/support/supportApi";
 import { IssueType } from "@/redux/api/users/support/support.types";
 import { toast } from "sonner";
 import { useTicketChat } from "@/hooks/useTicketChat";
@@ -20,13 +20,19 @@ const Support = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+
+  // Fetch full details of the selected ticket to get the initial messages
+  const { data: selectedTicketDetails } = useGetTicketDetailsQuery(selectedTicket?.id, {
+    skip: !selectedTicket?.id,
+  });
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const { messages, sendMessage, isConnected } = useTicketChat(selectedTicket?.id ?? null);
+  const initialMessages = selectedTicketDetails?.data?.messages || [];
+  const { messages, sendMessage, isConnected } = useTicketChat(selectedTicket?.id ?? null, initialMessages);
 
   // Set initial selected ticket safely
   useEffect(() => {

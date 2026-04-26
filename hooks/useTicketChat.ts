@@ -19,11 +19,31 @@ export interface UseTicketChatReturn {
  * and exposes sendMessage. Cleans up listeners on unmount without
  * closing the singleton socket so it can be reused elsewhere.
  */
-export function useTicketChat(ticketId: string | null): UseTicketChatReturn {
+export function useTicketChat(ticketId: string | null, initialMessages: ChatMessage[] = []): UseTicketChatReturn {
   const token = useAppSelector(selectCurrentToken);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [presence, setPresence] = useState<PresenceUpdate[]>([]);
+
+  const initialMessagesString = JSON.stringify(initialMessages);
+  useEffect(() => {
+    try {
+      const parsed = JSON.parse(initialMessagesString);
+      setMessages((prev) => {
+        if (!parsed || parsed.length === 0) {
+          // If no initial messages, just keep current socket messages (or clear if switching ticket, handled below)
+          return prev;
+        }
+        const existingIds = new Set(parsed.map((m: any) => m.id));
+        const newSocketMessages = prev.filter((m) => !existingIds.has(m.id) && m.id);
+        return [...parsed, ...newSocketMessages].sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
+    } catch (e) {
+      // safely ignore
+    }
+  }, [ticketId, initialMessagesString]);
 
   useEffect(() => {
     if (!token || !ticketId) return;
