@@ -127,7 +127,7 @@ export const adminSupportTicketApi = baseApi.injectEndpoints({
     }),
     assignSupportTicket: builder.mutation<{ success: boolean; message: string; data: any }, { ticketId: string; body: AssignTicketDto }>({
       query: ({ ticketId, body }) => ({
-        url: `/admin/support/assign/${ticketId}`,
+        url: `/admin/support/${ticketId}/assign`,
         method: 'POST',
         body,
       }),
