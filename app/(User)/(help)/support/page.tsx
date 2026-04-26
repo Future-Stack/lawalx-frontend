@@ -1,156 +1,87 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Paperclip, Send, User, X, ChevronLeft } from "lucide-react";
 import CreateTicketModal from "@/components/support/CreateTicketModal";
 
-interface Ticket {
-  id: string;
-  issueType: string;
-  status: "Not Assigned" | "In Progress" | "Resolved";
-  title: string;
-  assignedTo: string;
-  messages: Message[];
-}
-
-interface Message {
-  id: string;
-  sender: string;
-  text: string;
-  timestamp: string;
-  isUser: boolean;
-  attachment?: string;
-}
+import { useGetMyTicketsQuery, useCreateSupportTicketMutation, useGetTicketDetailsQuery } from "@/redux/api/users/support/supportApi";
+import { IssueType } from "@/redux/api/users/support/support.types";
+import { toast } from "sonner";
+import { useTicketChat } from "@/hooks/useTicketChat";
+import { useAppSelector } from "@/redux/store/hook";
+import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 
 const Support = () => {
-  const [tickets, setTickets] = useState<Ticket[]>([
-    {
-      id: "#TKT-001",
-      issueType: "Device Failure",
-      status: "Not Assigned",
-      title: "Unable to upload videos to playlist",
-      assignedTo: "Jhon Doe",
-      messages: [
-        {
-          id: "1",
-          sender: "You",
-          text: 'I am trying to upload a 4K video file but it keeps failing. The error message says "Upload failed, please try again." I have tried multiple times with different files.',
-          timestamp: "Today, Ticket Created",
-          isUser: true,
-        },
-        {
-          id: "2",
-          sender: "Jhon Doe",
-          text: "Thank you for reaching out. We are looking into the upload issue and will get back to you shortly.",
-          timestamp: "Today, 12:34 PM",
-          isUser: false,
-        },
-      ],
-    },
-    {
-      id: "#TKT-002",
-      issueType: "Login Failure",
-      status: "In Progress",
-      title: "Cannot login to account",
-      assignedTo: "Jhon Doe",
-      messages: [],
-    },
-    {
-      id: "#TKT-003",
-      issueType: "Login Failure",
-      status: "Resolved",
-      title: "Password reset issue",
-      assignedTo: "Jhon Doe",
-      messages: [],
-    },
-    {
-      id: "#TKT-004",
-      issueType: "Login Failure",
-      status: "Resolved",
-      title: "Two-factor authentication problem",
-      assignedTo: "Jhon Doe",
-      messages: [],
-    },
-    {
-      id: "#TKT-005",
-      issueType: "Content Issue",
-      status: "Resolved",
-      title: "Video playback not working",
-      assignedTo: "Jhon Doe",
-      messages: [],
-    },
-    {
-      id: "#TKT-006",
-      issueType: "Payment Issue",
-      status: "Resolved",
-      title: "Billing discrepancy",
-      assignedTo: "Jhon Doe",
-      messages: [],
-    },
-    {
-      id: "#TKT-007",
-      issueType: "Other",
-      status: "Resolved",
-      title: "General inquiry",
-      assignedTo: "Jhon Doe",
-      messages: [],
-    },
-    {
-      id: "#TKT-008",
-      issueType: "Device Issue",
-      status: "Resolved",
-      title: "Screen not displaying content",
-      assignedTo: "Jhon Doe",
-      messages: [],
-    },
-  ]);
+  const { data: ticketsResponse, isLoading } = useGetMyTicketsQuery();
+  const [createSupportTicket] = useCreateSupportTicketMutation();
+  const currentUser = useAppSelector(selectCurrentUser);
+
+  const tickets = ticketsResponse?.data || [];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
-  const [showChatOnMobile, setShowChatOnMobile] = useState(false); // New state for mobile navigation
+  const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+
+  // Fetch full details of the selected ticket to get the initial messages
+  const { currentData: selectedTicketDetails, isFetching } = useGetTicketDetailsQuery(selectedTicket?.id, {
+    skip: !selectedTicket?.id,
+  });
+  const [showChatOnMobile, setShowChatOnMobile] = useState(false);
   const [newMessage, setNewMessage] = useState("");
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const initialMessages = selectedTicketDetails?.data?.messages || [];
+  const { messages, sendMessage, isConnected } = useTicketChat(selectedTicket?.id ?? null, initialMessages);
 
   // Set initial selected ticket safely
-  React.useEffect(() => {
+  useEffect(() => {
     if (tickets.length > 0 && !selectedTicket) {
       setSelectedTicket(tickets[0]);
     }
   }, [tickets, selectedTicket]);
 
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const openModal = () => setIsModalOpen(true);
 
-  const handleCreateTicket = (data: {
+  const handleCreateTicket = async (data: {
     issueType: string;
     subject: string;
     message: string;
     file?: File | null;
   }) => {
-    const newTicket: Ticket = {
-      id: `#TKT-${String(tickets.length + 1).padStart(3, "0")}`,
-      issueType: `${data.issueType} Issue`,
-      status: "Not Assigned",
-      title: data.subject,
-      assignedTo: "Jhon Doe",
-      messages: [
-        {
-          id: "1",
-          sender: "You",
-          text: data.message,
-          timestamp: "Today, Ticket Created",
-          isUser: true,
-          attachment: data.file?.name,
-        },
-      ],
-    };
+    try {
+      const formData = new FormData();
+      formData.append('subject', data.subject);
+      formData.append('description', data.message);
+      // Map frontend issueType to enum if needed, or send as is
+      formData.append('issueType', data.issueType);
 
-    setTickets([newTicket, ...tickets]);
-    setSelectedTicket(newTicket);
-    setShowChatOnMobile(true);
+      if (data.file) {
+        formData.append('files', data.file);
+      }
+
+      const res = await createSupportTicket(formData).unwrap();
+      if (res.success) {
+        setIsModalOpen(false);
+        // Automatically select the new ticket
+        setSelectedTicket(res.data);
+        setShowChatOnMobile(true);
+        toast.success(res.message || "Ticket created successfully");
+      } else {
+        toast.error(res.message || "Failed to create ticket");
+      }
+    } catch (error: any) {
+      console.error('Failed to create ticket', error);
+      toast.error(error?.data?.message || "Something went wrong while creating ticket");
+    }
   };
 
-  const handleTicketSelect = (ticket: Ticket) => {
+  const handleTicketSelect = (ticket: any) => {
     setSelectedTicket(ticket);
     setShowChatOnMobile(true);
   };
@@ -161,33 +92,7 @@ const Support = () => {
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedTicket) return;
-
-    const newMsg: Message = {
-      id: String(selectedTicket.messages.length + 1),
-      sender: "You",
-      text: newMessage,
-      timestamp: `Today, ${new Date().toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      })}`,
-      isUser: true,
-      attachment: attachedFiles.length > 0 ? attachedFiles[0].name : undefined,
-    };
-
-    const updatedTickets = tickets.map((ticket) =>
-      ticket.id === selectedTicket.id
-        ? { ...ticket, messages: [...ticket.messages, newMsg] }
-        : ticket
-    );
-
-    setTickets(updatedTickets);
-    setSelectedTicket((prev) =>
-      prev?.id === selectedTicket.id
-        ? { ...prev, messages: [...prev.messages, newMsg] }
-        : prev
-    );
-
+    sendMessage(newMessage);
     setNewMessage("");
     setAttachedFiles([]);
   };
@@ -200,7 +105,7 @@ const Support = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Not Assigned":
+      case "Open":
         return "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300";
       case "In Progress":
         return "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400";
@@ -259,32 +164,42 @@ const Support = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {tickets.map((ticket) => (
-                    <tr
-                      key={ticket.id}
-                      onClick={() => handleTicketSelect(ticket)}
-                      className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${selectedTicket?.id === ticket.id
-                        ? "bg-blue-50/60 dark:bg-blue-800/30"
-                        : ""
-                        }`}
-                    >
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
-                        {ticket.id}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
-                        {ticket.issueType}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex px-3 py-2.5 text-xs font-medium rounded-full ${getStatusColor(
-                            ticket.status
-                          )}`}
-                        >
-                          {ticket.status}
-                        </span>
-                      </td>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">Loading tickets...</td>
                     </tr>
-                  ))}
+                  ) : tickets.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">No tickets found.</td>
+                    </tr>
+                  ) : (
+                    tickets.map((ticket: any) => (
+                      <tr
+                        key={ticket.id}
+                        onClick={() => handleTicketSelect(ticket)}
+                        className={`cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${selectedTicket?.id === ticket.id
+                          ? "bg-blue-50/60 dark:bg-blue-800/30"
+                          : ""
+                          }`}
+                      >
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                          {ticket.customId || ticket.id}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
+                          {Array.isArray(ticket.issueType) ? ticket.issueType.join(', ') : ticket.issueType}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex px-3 py-2.5 text-xs font-medium rounded-full ${getStatusColor(
+                              ticket.status
+                            )}`}
+                          >
+                            {ticket.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -309,82 +224,98 @@ const Support = () => {
                   <div className="flex items-center gap-6 sm:gap-8 min-w-0 flex-1">
                     <div className="truncate">
                       <h3 className="text-[0.825rem] xs:text-sm sm:text-base font-medium text-gray-900 dark:text-gray-300 tracking-wider truncate">
-                        {selectedTicket.title}
+                        {selectedTicket.subject || selectedTicket.title}
                       </h3>
                       <p className="text-[0.7rem] xs:text-xs text-gray-500 dark:text-gray-400">
-                        ID: {selectedTicket.id}
+                        ID: {selectedTicket.customId || selectedTicket.id}
                       </p>
                     </div>
                   </div>
 
-                  {/* Right - Assigned To */}
-                  <div className="text-right min-w-0 flex-shrink-0">
+                  {/* Right - Connection status + Assigned To */}
+                  <div className="text-right min-w-0 flex-shrink-0 flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
+                          isConnected
+                            ? 'bg-green-500'
+                            : 'bg-gray-400 dark:bg-gray-600'
+                        }`}
+                      />
+                      <span className="text-[0.65rem] text-gray-400 dark:text-gray-500">
+                        {isConnected ? 'Live' : 'Offline'}
+                      </span>
+                    </div>
                     <p className="text-[0.7rem] xs:text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       Assigned to
                     </p>
                     <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-300 truncate max-w-32 sm:max-w-none">
-                      {selectedTicket.assignedTo}
+                      {selectedTicket.assignedTo || "Not Assigned"}
                     </p>
                   </div>
                 </div>
 
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-navbarBg scrollbar-hide">
-                  {selectedTicket.messages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                      No messages yet. Start the conversation!
+                  {messages.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                      <p className="mb-2 text-sm text-center">
+                        {selectedTicket.description || 'No description provided.'}
+                      </p>
+                      <p className="text-xs italic">
+                        {isConnected
+                          ? 'No messages yet. Start the conversation!'
+                          : 'Connecting to chat...'}
+                      </p>
                     </div>
                   ) : (
-                    selectedTicket.messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`flex gap-4 ${msg.isUser ? "flex-row-reverse" : ""
-                          }`}
-                      >
-                        <div className="shrink-0">
-                          {msg.isUser ? (
-                            <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
-                              <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                            </div>
-                          ) : (
-                            <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
-                              JD
-                            </div>
-                          )}
-                        </div>
-
+                    messages.map((msg, index) => {
+                      const isOwn = msg.senderId === currentUser?.id;
+                      return (
                         <div
-                          className={`max-w-[85%] sm:max-w-md ${msg.isUser ? "text-right" : ""
-                            }`}
+                          key={msg.id ?? index}
+                          className={`flex gap-4 ${isOwn ? 'flex-row-reverse' : ''}`}
                         >
-                          {!msg.isUser && (
-                            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              {msg.sender}
-                            </p>
-                          )}
-                          <div
-                            className={`rounded-2xl px-4 py-3 text-left ${msg.isUser
-                              ? "bg-gray-800 dark:bg-white/20 text-white"
-                              : "bg-cardBackground2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700"
-                              }`}
-                          >
-                            <p className="text-sm leading-relaxed break-words">
-                              {msg.text}
-                            </p>
-                            {msg.attachment && (
-                              <div className="mt-3 flex items-center gap-2 text-xs opacity-80">
-                                <Paperclip className="w-4 h-4" />
-                                {msg.attachment}
+                          <div className="shrink-0">
+                            {isOwn ? (
+                              <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                              </div>
+                            ) : (
+                              <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                                {msg.senderName?.charAt(0)?.toUpperCase() ?? 'S'}
                               </div>
                             )}
                           </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            {msg.timestamp}
-                          </p>
+
+                          <div className={`max-w-[85%] sm:max-w-md ${isOwn ? 'text-right' : ''}`}>
+                            {!isOwn && msg.senderName && (
+                              <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {msg.senderName}
+                              </p>
+                            )}
+                            <div
+                              className={`rounded-2xl px-4 py-3 text-left ${
+                                isOwn
+                                  ? 'bg-gray-800 dark:bg-white/20 text-white'
+                                  : 'bg-cardBackground2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                              }`}
+                            >
+                              <p className="text-sm leading-relaxed break-words">{msg.text}</p>
+                            </div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                              {new Date(msg.createdAt).toLocaleTimeString('en-US', {
+                                hour: 'numeric',
+                                minute: '2-digit',
+                                hour12: true,
+                              })}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
+                  <div ref={messagesEndRef} />
                 </div>
 
                 {/* Message Input */}

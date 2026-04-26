@@ -17,7 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import type { Ticket, Employee, TicketStatus, TicketPriority } from './types';
+import type { Ticket, TicketStatus, TicketPriority } from '@/redux/api/admin/support/adminSupportTicketApi';
+import type { Employee } from '@/redux/api/admin/support/adminSupporterApi';
 
 // ── Priority pill colour map ───────────────────────────────────────────────────
 
@@ -38,7 +39,7 @@ interface AssignTicketDialogProps {
   open: boolean;
   onBack: () => void;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (data: { status: TicketStatus; priority: TicketPriority }) => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -160,7 +161,7 @@ export default function AssignTicketDialog({
           </Button>
           <Button
             className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-6"
-            onClick={onConfirm}
+            onClick={() => onConfirm({ status, priority })}
           >
             Assign Now
           </Button>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, LogOut, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, LogOut, UserCog } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +12,7 @@ interface SupporterSidebarProps {
 
 const navItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard, href: '/supporter/overview' },
+  { id: 'settings', label: 'Profile Setting', icon: UserCog, href: '/supporter/settings' },
 ];
 
 export default function SupporterSidebar({ isCollapsed }: SupporterSidebarProps) {
