@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { useTicketChat } from '@/hooks/useTicketChat';
 import { useAppSelector } from '@/redux/store/hook';
 import { selectCurrentUser } from '@/redux/features/auth/authSlice';
+import { useGetAssignedTicketDetailsQuery } from '@/redux/api/supporter/supporterTicketApi';
 
 interface Ticket {
   id: string;
@@ -34,8 +35,16 @@ export default function TicketConversationDialog({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const currentUser = useAppSelector(selectCurrentUser);
 
+  const { data: ticketDetails } = useGetAssignedTicketDetailsQuery(
+    ticket?.id || '',
+    { skip: !open || !ticket?.id }
+  );
+
+  const initialMessages = ticketDetails?.data?.messages || [];
+
   const { messages, sendMessage, isConnected } = useTicketChat(
-    open && ticket ? ticket.id : null
+    open && ticket ? ticket.id : null,
+    initialMessages
   );
 
   // Scroll to bottom when dialog opens or new messages arrive
