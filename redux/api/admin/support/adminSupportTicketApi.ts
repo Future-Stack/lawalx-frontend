@@ -115,6 +115,21 @@ export interface UpdateTicketDto {
   supporterId?: string;
 }
 
+export interface TicketStatsData {
+  total: number;
+  open: number;
+  assigned: number;
+  unassigned: number;
+  solved: number;
+}
+
+export interface TicketStatsResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: TicketStatsData;
+}
+
 export const adminSupportTicketApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllSupportTickets: builder.query<GetAllTicketsResponse, GetAllTicketsParams | void>({
@@ -141,12 +156,21 @@ export const adminSupportTicketApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['AdminSupportTicket'],
     }),
+    getTicketStatistics: builder.query<TicketStatsResponse, void>({
+      query: () => ({
+        url: '/admin/support/stats',
+        method: 'GET',
+      }),
+      providesTags: ['AdminSupportTicket'],
+    }),
   }),
   overrideExisting: false,
 });
 
 export const {
   useGetAllSupportTicketsQuery,
+  useLazyGetAllSupportTicketsQuery,
   useAssignSupportTicketMutation,
   useUpdateSupportTicketMutation,
+  useGetTicketStatisticsQuery,
 } = adminSupportTicketApi;
