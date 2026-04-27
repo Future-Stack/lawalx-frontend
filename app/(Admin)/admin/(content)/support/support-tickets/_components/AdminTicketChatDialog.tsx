@@ -170,7 +170,6 @@ export default function AdminTicketChatDialog({
   const [resolveTicket, { isLoading: isResolving }] = useResolveTicketByAdminMutation();
 
   const handleResolve = async () => {
-    window.alert('RESOLVE BUTTON CLICKED');
     console.log('[AdminChat] CLICKED RESOLVE BUTTON');
     if (!ticket?.id) {
       console.error('[AdminChat] No ticket ID found');
@@ -313,24 +312,35 @@ export default function AdminTicketChatDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="p-0 gap-0 sm:max-w-2xl focus:outline-none">
+      <DialogContent className="p-0 gap-0 sm:max-w-2xl focus:outline-none overflow-hidden rounded-2xl">
         {/* Header */}
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-gray-200 dark:border-gray-700 sm:text-left">
-          <div className="flex items-center justify-between">
+        <DialogHeader className="px-6 pt-5 pb-4 border-b border-gray-200 dark:border-gray-700 sm:text-left pr-12">
+          <div className="flex items-center gap-3 flex-wrap">
             <DialogTitle className="text-base font-semibold text-gray-900 dark:text-white">
               Reply to Customer
             </DialogTitle>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-50 dark:bg-gray-800 rounded-full border border-gray-100 dark:border-gray-700">
               <span
                 className={cn(
-                  'inline-block w-2 h-2 rounded-full',
-                  isConnected ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-600'
+                  'inline-block w-1.5 h-1.5 rounded-full',
+                  isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-gray-600'
                 )}
               />
-              <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
+              <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 {isConnected ? 'Live' : 'Connecting...'}
               </span>
             </div>
+            {ticket?.status !== 'Resolved' && (
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50 whitespace-nowrap ml-1"
+                onClick={handleResolve}
+                disabled={isResolving}
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                {isResolving ? 'Resolving...' : 'Mark as Resolve'}
+              </button>
+            )}
           </div>
         </DialogHeader>
 
@@ -453,16 +463,6 @@ export default function AdminTicketChatDialog({
             <Button variant="outline" className="h-9" onClick={onClose}>
               Cancel
             </Button>
-            {ticket?.status !== 'Resolved' && (
-              <button
-                type="button"
-                className="h-9 px-4 rounded-md border border-green-200 text-green-600 hover:bg-green-50 text-xs font-medium transition-colors disabled:opacity-50"
-                onClick={handleResolve}
-                disabled={isResolving}
-              >
-                {isResolving ? 'Resolving...' : 'Mark as Resolve'}
-              </button>
-            )}
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-5 flex items-center gap-2"
               onClick={handleSend}
