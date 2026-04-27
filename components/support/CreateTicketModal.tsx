@@ -42,6 +42,13 @@ export default function CreateTicketModal({
   const handleSubmit = () => {
     if (!subject.trim() || !message.trim()) return;
     onSubmit({ issueType: mapIssueType(issueType), subject, message, file: attachedFile });
+    
+    // Reset states for next time
+    setSubject("");
+    setMessage("");
+    setAttachedFile(null);
+    setIssueType("Device");
+    
     onClose();
   };
 
