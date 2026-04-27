@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useRef, useEffect, useState, useMemo } from "react";
@@ -249,6 +250,7 @@ const BaseVideoPlayer = ({
     autoplay: autoPlay,
     muted: muted || autoPlay,
     controls: ["play", "progress", "current-time", "duration", "mute", "volume", "settings", "fullscreen"],
+    storage: { enabled: false },
   }), [autoPlay, muted]);
 
   return (
@@ -406,21 +408,6 @@ export default BaseVideoPlayer;
 //     muted: muted || autoPlay,
 //     controls: [
 //       "play",
-//       "progress",
-//       "current-time",
-//       "duration",
-//       "mute",
-//       "volume",
-//       "settings",
-//       "fullscreen",
-//     ],
-//   }), [autoPlay, muted]);
-
-//   // Keep handlers in refs so they never trigger effect re-runs
-//   const onEndedRef = useRef(onEnded);
-//   const onPlayRef = useRef(onPlay);
-//   const onPauseRef = useRef(onPause);
-
 //   onEndedRef.current = onEnded;
 //   onPlayRef.current = onPlay;
 //   onPauseRef.current = onPause;

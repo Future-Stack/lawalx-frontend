@@ -2,11 +2,10 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { createPortal } from "react-dom";
 import {
   X, FileText, Video, Monitor, CircleCheckBigIcon,
-  Wifi, WifiOff, Search, ChevronLeft, ChevronRight, Loader2, Headphones, Plus,
-  ArrowRight, Play, GalleryThumbnails, AudioLines, Image as ImageIcon
+  Search, ChevronLeft, ChevronRight, Loader2, Plus,
+  AudioLines, Image as ImageIcon, WifiOff
 } from "lucide-react";
 import Dropdown from "@/common/Dropdown";
 import Image from "next/image";
@@ -18,6 +17,13 @@ import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api"
 import { WorkoutStatus } from "@/redux/api/users/programs/programs.type";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import { toast } from "sonner";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 import {
   Select,
@@ -65,18 +71,7 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
 
   useEffect(() => {
     setIsMounted(true);
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-      document.body.style.height = "100vh";
-    } else {
-      document.body.style.overflow = "unset";
-      document.body.style.height = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "unset";
-      document.body.style.height = "auto";
-    };
-  }, [isOpen]);
+  }, []);
 
   const transformedContent = useMemo(() => {
     if (!allContentData?.data) return [];
@@ -113,7 +108,6 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     return devicesData.data;
   }, [devicesData]);
 
-  // ─── Reset modal state when closed ───────────────────────────────────────────
   const handleClose = () => {
     setCurrentStep(1);
     setSearchQuery("");
@@ -130,7 +124,6 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
   };
 
   const handleNext = () => {
-    // Validate before moving forward
     if (currentStep === 1) {
       if (!programData.name.trim()) {
         toast.error("Please enter a program name");
@@ -150,7 +143,6 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     if (currentStep > 1) setCurrentStep((s) => s - 1);
   };
 
-  // ─── Toggle content selection (step 2) ───────────────────────────────────────
   const toggleVideoSelection = (contentId: string) => {
     setProgramData((prev) => ({
       ...prev,
@@ -160,7 +152,6 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     }));
   };
 
-  // ─── Toggle device selection (step 3) ────────────────────────────────────────
   const toggleDeviceSelection = (deviceId: string) => {
     setProgramData((prev) => ({
       ...prev,
@@ -170,8 +161,30 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     }));
   };
 
-  // ─── Final submit ─────────────────────────────────────────────────────────────
-  // ─── Recursive content item renderer ──────────────────────────────────────────
+  const handleCreate = async () => {
+    if (!programData.name.trim()) {
+      toast.error("Please enter a program name");
+      setCurrentStep(1);
+      return;
+    }
+    if (programData.content_ids.length === 0) {
+      toast.error("Please select at least one content");
+      setCurrentStep(2);
+      return;
+    }
+
+    try {
+      const response = await createProgram(programData).unwrap();
+      if (response.success) {
+        toast.success(response.message || "Program created successfully");
+        if (onSuccess) onSuccess();
+        handleClose();
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to create program");
+    }
+  };
+
   const renderContentItem = (item: any, depth = 0) => {
     const isSelected = programData.content_ids.includes(item.id);
     const isExpanded = expandedFolders.has(item.id);
@@ -189,7 +202,6 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
             } cursor-pointer`}
           style={{ marginLeft: depth > 0 ? `${depth * 1.5}rem` : 0 }}
         >
-          {/* Checkbox for files */}
           <div className="flex-shrink-0">
             {item.type !== "folder" && (
               <div
@@ -236,10 +248,8 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
               {item.type === "folder" ? `${item.fileCount || 0} items` : `${item.size} ${item.duration ? `• ${item.duration}` : ""}`}
             </p>
           </div>
-
         </div>
 
-        {/* Nested items */}
         {item.type === "folder" && isExpanded && item.children && (
           <div className="space-y-2">
             {item.children.map((child: any) => renderContentItem(child, depth + 1))}
@@ -249,47 +259,18 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     );
   };
 
-  // ─── Final submit ─────────────────────────────────────────────────────────────
-  const handleCreate = async () => {
-    if (!programData.name.trim()) {
-      toast.error("Please enter a program name");
-      setCurrentStep(1);
-      return;
-    }
-    if (programData.content_ids.length === 0) {
-      toast.error("Please select at least one content");
-      setCurrentStep(2);
-      return;
-    }
-
-    try {
-      console.log("Program Payload:", programData);
-      const response = await createProgram(programData).unwrap();
-      console.log("api response data", response);
-
-      if (response.success) {
-        toast.success(response.message || "Program created successfully");
-        if (onSuccess) onSuccess();
-        handleClose();
-      }
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to create program");
-    }
-  };
-
-  if (!isOpen) return null;
-
-  const modalContent = (
-    <div
-      className="fixed inset-0 bg-black/30 dark:bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 transition-all duration-300 cursor-pointer"
-      onClick={(e) => e.target === e.currentTarget && handleClose()}
-    >
-      <div
-        className="relative bg-white dark:bg-gray-900 rounded-2xl border border-bgGray dark:border-gray-700 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl cursor-default"
-        onClick={(e) => e.stopPropagation()}
+  return (
+    <Dialog open={isOpen} onOpenChange={(val) => { if (!val) handleClose(); }}>
+      <DialogContent 
+        showCloseButton={false}
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        className="bg-white dark:bg-gray-900 rounded-2xl border border-bgGray dark:border-gray-700 sm:max-w-[896px] w-[95vw] lg:w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl p-0 outline-none"
       >
+        <DialogTitle className="sr-only">Create New Program</DialogTitle>
+        <DialogDescription className="sr-only">Modal for creating a new program</DialogDescription>
 
-        {/* Header */}
+        {/* Header matches original style exactly */}
         <div className="flex items-start sm:items-center justify-between p-6 gap-4 sm:gap-0">
           <h2 className="text-xl sm:text-3xl font-bold text-Headings dark:text-white text-nowrap">
             Create New Program
@@ -299,7 +280,7 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
           </button>
         </div>
 
-        {/* Steps Indicator */}
+        {/* Steps Indicator matches original style exactly */}
         <div className="flex items-center justify-center md:justify-between px-6 py-5 border-b border-borderGray dark:border-gray-700 gap-4">
           {/* Step 1 */}
           <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-3">
@@ -354,10 +335,8 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
           </div>
         </div>
 
-        {/* Content Area */}
+        {/* Content Area matches original style exactly */}
         <div className="flex-1 overflow-y-auto p-6">
-
-          {/* ── Step 1: Program Info ─────────────────────────────────────── */}
           {currentStep === 1 && (
             <div className="space-y-5">
               <div>
@@ -389,7 +368,7 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
                   <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-borderGray dark:border-gray-600 py-2.5 md:py-3.5 h-auto rounded-lg">
                     <SelectValue placeholder="Select screen size" />
                   </SelectTrigger>
-                  <SelectContent className="z-[2147483647]">
+                  <SelectContent className="z-[1000001]">
                     <SelectItem value="1920x1080">Full HD (1920x1080)</SelectItem>
                     <SelectItem value="1280x720">HD (1280x720)</SelectItem>
                     <SelectItem value="3840x2160">4K (3840x2160)</SelectItem>
@@ -400,17 +379,8 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
             </div>
           )}
 
-          {/* ── Step 2: Content Selection ────────────────────────────────── */}
           {currentStep === 2 && (
             <div className="space-y-4">
-              {/* Selected count badge */}
-              {/* {programData.content_ids.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
-                  <CircleCheckBigIcon className="w-4 h-4" />
-                  {programData.content_ids.length} content{programData.content_ids.length > 1 ? "s" : ""} selected
-                </div>
-              )} */}
-
               <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
                 <div className="relative w-full sm:w-1/2">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -464,17 +434,8 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
             </div>
           )}
 
-          {/* ── Step 3: Device Selection ─────────────────────────────────── */}
           {currentStep === 3 && (
             <div className="space-y-5">
-              {/* Selected count badge */}
-              {/* {programData.device_ids.length > 0 && (
-                <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 font-medium">
-                  <CircleCheckBigIcon className="w-4 h-4" />
-                  {programData.device_ids.length} device{programData.device_ids.length > 1 ? "s" : ""} selected
-                </div>
-              )} */}
-
               <div>
                 <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
                   Select Devices <span className="text-gray-400 font-normal">(optional)</span>
@@ -546,11 +507,10 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer matches original style exactly */}
         <div className="flex items-center justify-center md:justify-between px-6 py-4 border-t border-borderGray dark:border-gray-700 gap-3">
           <button
             onClick={handlePrevious}
-            disabled={currentStep === 1}
             className={`flex items-center gap-2 px-3 py-1.5 md:px-5 md:py-2.5 border border-borderGray dark:border-gray-600 rounded-lg font-medium transition-colors shadow-customShadow ${currentStep === 1
               ? "text-gray-400 dark:text-gray-500 cursor-not-allowed opacity-50"
               : "text-gray-700 dark:text-gray-300 hover:scale-[1.02] hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
@@ -573,7 +533,6 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
           ) : (
             <button
               onClick={handleCreate}
-              disabled={isCreating}
               className="px-6 py-2.5 bg-bgBlue hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer flex items-center gap-2"
             >
               {isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -581,8 +540,7 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
             </button>
           )}
         </div>
-
-      </div>
+      </DialogContent>
 
       <UploadFileModal
         isOpen={isUploadModalOpen}
@@ -590,9 +548,9 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
         setIsPageLoading={setIsPageLoading}
       />
 
-      {/* Full Page Loader Overlay */}
+      {/* Full Page Loader Overlay matches original style exactly */}
       {isPageLoading && (
-        <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-[3200] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
           <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-gray-200 dark:border-gray-700">
             <Loader2 className="w-14 h-14 animate-spin text-bgBlue mb-2" />
             <p className="text-xl font-bold text-Headings dark:text-white">Uploading files...</p>
@@ -600,10 +558,6 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
           </div>
         </div>
       )}
-    </div>
+    </Dialog>
   );
-
-  if (typeof document === "undefined") return null;
-
-  return createPortal(modalContent, document.body);
 }
