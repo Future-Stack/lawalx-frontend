@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppSelector } from '@/redux/store/hook';
 import { selectCurrentToken, selectCurrentUser } from '@/redux/features/auth/authSlice';
 import { getSocket } from '@/lib/socket';
-import type { ChatMessage, PresenceUpdate } from '@/types/chat';
+import { toast } from 'sonner';
+import type { ChatMessage, ChatAttachment, PresenceUpdate } from '@/types/chat';
 
 export interface UseTicketChatReturn {
   messages: ChatMessage[];
-  sendMessage: (text: string) => void;
+  sendMessage: (text: string, tempFileId?: string) => void;
   isConnected: boolean;
   presence: PresenceUpdate[];
 }
@@ -57,7 +58,7 @@ export function useTicketChat(
       );
       return { ...prev, [ticketId]: merged };
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ticketId, initialMessagesString]);
 
   useEffect(() => {
@@ -71,12 +72,14 @@ export function useTicketChat(
     // Re-emit joinTicket on every (re)connect so the client stays in the
     // room even after network drops or token rotation
     const onConnect = () => {
+      console.log('[Socket] Connected to server. Joining room:', tid);
       setIsConnected(true);
       joinRoom();
     };
 
     // connectionSuccess fires after server-side JWT auth completes
-    const onConnectionSuccess = (_data: { userId: string }) => {
+    const onConnectionSuccess = (data: { userId: string }) => {
+      console.log('[Socket] Auth Success. UserID:', data.userId, 'Joining room:', tid);
       setIsConnected(true);
       joinRoom();
     };
@@ -84,6 +87,7 @@ export function useTicketChat(
     const onDisconnect = () => setIsConnected(false);
 
     const onMessage = (msg: ChatMessage) => {
+      console.log('[Socket] New message received:', msg);
       const targetId = msg.ticketId;
       if (!targetId) return;
 
@@ -126,16 +130,33 @@ export function useTicketChat(
         return [...prev, data];
       });
 
+    // Socket error from backend (e.g. 'Access Denied' from canAccessTicket)
+    const onSocketError = (err: { message?: string }) => {
+      console.error('[Socket] error event:', err);
+      toast.error(err?.message || 'Chat error');
+    };
+
+    // Socket.IO connection error (network, CORS, auth rejection)
+    const onConnectError = (err: Error) => {
+      console.error('[Socket] connect_error:', err.message);
+      setIsConnected(false);
+    };
+
     socket.on('connect', onConnect);
     socket.on('connectionSuccess', onConnectionSuccess);
     socket.on('disconnect', onDisconnect);
     socket.on('new_chat_message', onMessage);
     socket.on('presence_update', onPresence);
+    socket.on('error', onSocketError);
+    socket.on('connect_error', onConnectError);
 
     // Singleton socket already connected (e.g. switching ticket) — join immediately
     if (socket.connected) {
+      console.log('[Socket] already connected, joining room:', tid);
       joinRoom();
       setIsConnected(true);
+    } else {
+      console.log('[Socket] waiting for connection, ticketId:', tid);
     }
 
     return () => {
@@ -144,14 +165,17 @@ export function useTicketChat(
       socket.off('disconnect', onDisconnect);
       socket.off('new_chat_message', onMessage);
       socket.off('presence_update', onPresence);
+      socket.off('error', onSocketError);
+      socket.off('connect_error', onConnectError);
       // Intentionally NOT clearing messagesMap here — history is preserved
       // per-ticket so switching back restores previous messages
     };
   }, [token, ticketId]);
 
   const sendMessage = useCallback(
-    (text: string) => {
-      if (!token || !ticketId || !text.trim()) return;
+    (text: string, tempFileId?: string) => {
+      if (!token || !ticketId) return;
+      if (!text.trim() && !tempFileId) return;
       const user = currentUserRef.current;
 
       // Optimistic update so sender sees their own message instantly
@@ -168,7 +192,11 @@ export function useTicketChat(
         [ticketId]: [...(prev[ticketId] ?? []), optimisticMsg],
       }));
 
-      getSocket(token).emit('sendMessage', { ticketId, text });
+      getSocket(token).emit('sendMessage', {
+        ticketId,
+        text,
+        ...(tempFileId ? { tempFileId } : {}),
+      });
     },
     [token, ticketId]
   );

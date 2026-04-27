@@ -67,6 +67,17 @@ export interface ResolveTicketResponse {
   };
 }
 
+export interface UploadSupportFileResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: {
+    tempFileId: string;
+    fileUrl: string;
+    fileName: string;
+  };
+}
+
 // API Injection
 export const supporterTicketApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({

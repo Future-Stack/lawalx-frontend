@@ -1,15 +1,36 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Paperclip, Send, User, X, ChevronLeft } from "lucide-react";
+import { Paperclip, Send, User, X, ChevronLeft, FileIcon } from "lucide-react";
 import CreateTicketModal from "@/components/support/CreateTicketModal";
 
-import { useGetMyTicketsQuery, useCreateSupportTicketMutation, useGetTicketDetailsQuery } from "@/redux/api/users/support/supportApi";
+import {
+  useGetMyTicketsQuery,
+  useCreateSupportTicketMutation,
+  useGetTicketDetailsQuery,
+  useUploadSupportFileMutation,
+} from "@/redux/api/users/support/supportApi";
 import { IssueType } from "@/redux/api/users/support/support.types";
 import { toast } from "sonner";
 import { useTicketChat } from "@/hooks/useTicketChat";
 import { useAppSelector } from "@/redux/store/hook";
 import { selectCurrentUser } from "@/redux/features/auth/authSlice";
+import type { ChatAttachment } from "@/types/chat";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? '';
+
+function roleLabel(role?: string): string {
+  if (!role) return 'Support';
+  const r = role.toUpperCase();
+  if (r === 'USER') return 'Client';
+  if (r === 'SUPPORTER') return 'Supporter';
+  if (r === 'ADMIN' || r === 'SUPERADMIN') return 'Admin';
+  return role;
+}
+
+function isImageUrl(url: string) {
+  return /\.(png|jpe?g|gif|webp|svg)$/i.test(url);
+}
 
 const Support = () => {
   const { data: ticketsResponse, isLoading } = useGetMyTicketsQuery();
@@ -20,18 +41,29 @@ const Support = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
-
-  // Fetch full details of the selected ticket to get the initial messages
-  const { currentData: selectedTicketDetails, isFetching } = useGetTicketDetailsQuery(selectedTicket?.id, {
-    skip: !selectedTicket?.id,
-  });
   const [showChatOnMobile, setShowChatOnMobile] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
+  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [uploadSupportFile] = useUploadSupportFileMutation();
 
-  const initialMessages = selectedTicketDetails?.data?.messages || [];
+  // Fetch full details of the selected ticket to get the initial messages
+  const { currentData: selectedTicketDetails } = useGetTicketDetailsQuery(selectedTicket?.id, {
+    skip: !selectedTicket?.id,
+  });
+
+  // Map raw API messages → ChatMessage (adds ticketId + senderName fields)
+  const rawMessages = selectedTicketDetails?.data?.messages ?? [];
+  const initialMessages = rawMessages.map((m) => ({
+    id: m.id,
+    ticketId: selectedTicket?.id ?? '',
+    text: m.text,
+    senderId: m.senderId,
+    createdAt: m.createdAt,
+    attachments: m.attachments ?? [],
+  }));
   const { messages, sendMessage, isConnected } = useTicketChat(selectedTicket?.id ?? null, initialMessages);
 
   // Set initial selected ticket safely
@@ -91,17 +123,41 @@ const Support = () => {
   };
 
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedTicket) return;
-    sendMessage(newMessage);
+    if (!newMessage.trim() && pendingAttachments.length === 0) return;
+    if (!selectedTicket) return;
+    // Backend only accepts one tempFileId per message
+    const tempFileId = pendingAttachments[0]?.tempFileId;
+    sendMessage(newMessage, tempFileId);
     setNewMessage("");
-    setAttachedFiles([]);
+    setPendingAttachments([]);
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setAttachedFiles(Array.from(e.target.files));
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setIsUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await uploadSupportFile(fd).unwrap();
+        if (res.success) {
+          setPendingAttachments((prev) => [
+            ...prev,
+            { tempFileId: res.data.tempFileId, fileUrl: res.data.fileUrl, fileName: res.data.fileName },
+          ]);
+        }
+      }
+    } catch {
+      toast.error('File upload failed');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const removeAttachment = (idx: number) =>
+    setPendingAttachments((prev) => prev.filter((_, i) => i !== idx));
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -236,11 +292,10 @@ const Support = () => {
                   <div className="text-right min-w-0 flex-shrink-0 flex flex-col items-end gap-1">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
-                          isConnected
-                            ? 'bg-green-500'
-                            : 'bg-gray-400 dark:bg-gray-600'
-                        }`}
+                        className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${isConnected
+                          ? 'bg-green-500'
+                          : 'bg-gray-400 dark:bg-gray-600'
+                          }`}
                       />
                       <span className="text-[0.65rem] text-gray-400 dark:text-gray-500">
                         {isConnected ? 'Live' : 'Offline'}
@@ -250,7 +305,14 @@ const Support = () => {
                       Assigned to
                     </p>
                     <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-300 truncate max-w-32 sm:max-w-none">
-                      {selectedTicket.assignedTo || "Not Assigned"}
+                      {(() => {
+                        const assignments = selectedTicketDetails?.data?.assignments;
+                        if (assignments && assignments.length > 0) {
+                          const user = assignments[0].user;
+                          return user.full_name || user.username || "Assigned";
+                        }
+                        return "Not Assigned";
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -263,14 +325,17 @@ const Support = () => {
                         {selectedTicket.description || 'No description provided.'}
                       </p>
                       <p className="text-xs italic">
-                        {isConnected
-                          ? 'No messages yet. Start the conversation!'
-                          : 'Connecting to chat...'}
+                        {isConnected ? 'No messages yet. Start the conversation!' : 'Connecting to chat...'}
                       </p>
                     </div>
                   ) : (
                     messages.map((msg, index) => {
                       const isOwn = msg.senderId === currentUser?.id;
+                      const rLabel = isOwn ? 'Client' : roleLabel(msg.senderRole);
+                      // Prefer real-time sender info (socket), then senderName, then role label
+                      const senderDisplay = isOwn
+                        ? 'You'
+                        : (msg.sender?.full_name || msg.sender?.username || msg.senderName || rLabel);
                       return (
                         <div
                           key={msg.id ?? index}
@@ -283,25 +348,44 @@ const Support = () => {
                               </div>
                             ) : (
                               <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
-                                {msg.senderName?.charAt(0)?.toUpperCase() ?? 'S'}
+                                {senderDisplay.charAt(0).toUpperCase()}
                               </div>
                             )}
                           </div>
 
                           <div className={`max-w-[85%] sm:max-w-md ${isOwn ? 'text-right' : ''}`}>
-                            {!isOwn && msg.senderName && (
+                            {!isOwn && (
                               <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                {msg.senderName}
+                                {senderDisplay}
                               </p>
                             )}
                             <div
-                              className={`rounded-2xl px-4 py-3 text-left ${
-                                isOwn
-                                  ? 'bg-gray-800 dark:bg-white/20 text-white'
-                                  : 'bg-cardBackground2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                              }`}
+                              className={`rounded-2xl px-4 py-3 text-left ${isOwn
+                                ? 'bg-gray-800 dark:bg-white/20 text-white'
+                                : 'bg-cardBackground2 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+                                }`}
                             >
-                              <p className="text-sm leading-relaxed break-words">{msg.text}</p>
+                              {msg.text && (
+                                <p className="text-sm leading-relaxed break-words">{msg.text}</p>
+                              )}
+                              {msg.attachments && msg.attachments.length > 0 && (
+                                <div className="mt-2 space-y-1.5">
+                                  {msg.attachments.map((att, i) => {
+                                    const fullUrl = att.fileUrl.startsWith('http') ? att.fileUrl : `${BASE_URL}/${att.fileUrl}`;
+                                    const isImg = isImageUrl(att.fileUrl);
+                                    return isImg ? (
+                                      <a key={i} href={fullUrl} target="_blank" rel="noreferrer" className="block">
+                                        <img src={fullUrl} alt={att.fileName} className="max-w-[200px] max-h-[160px] rounded-lg object-cover" />
+                                      </a>
+                                    ) : (
+                                      <a key={i} href={fullUrl} target="_blank" rel="noreferrer" className={`flex items-center gap-1 text-xs underline truncate max-w-[220px] ${isOwn ? 'text-blue-200' : 'text-blue-600 dark:text-blue-400'}`}>
+                                        <FileIcon className="w-3 h-3 flex-shrink-0" />
+                                        {att.fileName}
+                                      </a>
+                                    );
+                                  })}
+                                </div>
+                              )}
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                               {new Date(msg.createdAt).toLocaleTimeString('en-US', {
@@ -309,6 +393,7 @@ const Support = () => {
                                 minute: '2-digit',
                                 hour12: true,
                               })}
+                              <span className="ml-1 text-gray-400 dark:text-gray-600">· {rLabel}</span>
                             </p>
                           </div>
                         </div>
@@ -320,24 +405,20 @@ const Support = () => {
 
                 {/* Message Input */}
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-cardBackground2">
-                  {attachedFiles.length > 0 && (
+                  {pendingAttachments.length > 0 && (
                     <div className="mb-3 flex flex-wrap gap-2">
-                      {attachedFiles.map((file, i) => (
+                      {pendingAttachments.map((att, i) => (
                         <div
                           key={i}
-                          className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs"
+                          className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs border border-gray-200 dark:border-gray-700"
                         >
-                          <Paperclip className="w-4 h-4" />
-                          <span>{file.name}</span>
+                          <Paperclip className="w-3.5 h-3.5 flex-shrink-0" />
+                          <span className="max-w-[140px] truncate">{att.fileName}</span>
                           <button
-                            onClick={() =>
-                              setAttachedFiles(
-                                attachedFiles.filter((_, idx) => idx !== i)
-                              )
-                            }
-                            className="text-gray-500 hover:text-red-600"
+                            onClick={() => removeAttachment(i)}
+                            className="text-gray-400 hover:text-red-500 transition-colors"
                           >
-                            <X className="w-4 h-4" />
+                            <X className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       ))}
@@ -354,27 +435,29 @@ const Support = () => {
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0"
+                      disabled={isUploading}
+                      className="p-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0 disabled:opacity-50"
                     >
                       <Paperclip className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                     </button>
 
                     <textarea
-                      placeholder="Type your message..."
+                      placeholder={isUploading ? 'Uploading file...' : 'Type your message...'}
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={(e) =>
-                        e.key === "Enter" &&
-                        !e.shiftKey &&
-                        handleSendMessage()
-                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
                       rows={1}
                       className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue text-sm text-gray-900 dark:text-white resize-none"
                     />
 
                     <button
                       onClick={handleSendMessage}
-                      disabled={!newMessage.trim()}
+                      disabled={(!newMessage.trim() && pendingAttachments.length === 0) || isUploading || !isConnected}
                       className="px-5 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 flex-shrink-0"
                     >
                       <span className="hidden sm:inline">Send</span>

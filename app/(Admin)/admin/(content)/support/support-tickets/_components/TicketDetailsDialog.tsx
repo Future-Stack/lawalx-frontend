@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Building2, Calendar, Clock, HelpCircle, ArrowLeft } from 'lucide-react';
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Ticket, TicketStatus, TicketPriority } from '@/redux/api/admin/support/adminSupportTicketApi';
+import AdminTicketChatDialog from './AdminTicketChatDialog';
 
 interface TicketDetailsDialogProps {
   ticket: Ticket | null;
@@ -47,6 +48,8 @@ export default function TicketDetailsDialog({
   open,
   onClose,
 }: TicketDetailsDialogProps) {
+  const [chatOpen, setChatOpen] = useState(false);
+
   if (!ticket) return null;
 
   return (
@@ -170,12 +173,21 @@ export default function TicketDetailsDialog({
             <Button variant="outline" className="h-9 flex-1 sm:flex-none">
               Mark as resolved
             </Button>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white h-9 flex-1 sm:flex-none">
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white h-9 flex-1 sm:flex-none"
+              onClick={() => setChatOpen(true)}
+            >
               Reply to Customer
             </Button>
           </div>
         </div>
       </DialogContent>
+
+      <AdminTicketChatDialog
+        ticket={ticket}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
     </Dialog>
   );
 }
