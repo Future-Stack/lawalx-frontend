@@ -72,12 +72,13 @@ export default function TicketEditDialog({
         status,
         adminNote,
       };
-      if (assignedTo && assignedTo !== 'none') {
+      const isAlreadyAssigned = !!(ticket?.assignedToId || ticket?.assignedTo?.name);
+      if (!isAlreadyAssigned && assignedTo && assignedTo !== 'none') {
         payload.supporterId = assignedTo;
       }
 
       await updateTicket({
-        ticketId: ticket.id, // wait, ticket.id is the UUID? In TicketsTable, ticket.id = t.id.
+        ticketId: ticket.id,
         body: payload
       }).unwrap();
 
@@ -89,6 +90,8 @@ export default function TicketEditDialog({
   };
 
   if (!ticket) return null;
+  const isAlreadyAssigned = !!(ticket?.assignedToId || ticket?.assignedTo?.name);
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="p-0 gap-0 sm:max-w-md focus:outline-none">
@@ -172,13 +175,14 @@ export default function TicketEditDialog({
           {/* Assign to */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Assign to
+              Assign to {isAlreadyAssigned && <span className="text-[10px] text-blue-500 font-normal ml-1">(Already Assigned)</span>}
             </label>
             <div className="relative">
               <select
                 value={assignedTo}
                 onChange={(e) => setAssignedTo(e.target.value)}
-                className="w-full h-10 pl-3 pr-10 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer appearance-none shadow-sm"
+                disabled={isAlreadyAssigned}
+                className="w-full h-10 pl-3 pr-10 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer appearance-none shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="none">No Change / Unassigned</option>
                 {supportersResponse?.data?.map((supporter: any) => (
