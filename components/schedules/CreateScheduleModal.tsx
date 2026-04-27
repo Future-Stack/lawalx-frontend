@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // components/schedules/CreateScheduleModal.tsx
 "use client";
 
@@ -18,6 +19,7 @@ import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 import Dropdown from "@/components/shared/Dropdown";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useCreateLowerThirdMutation } from "@/redux/api/users/schedules/schedules.api";
+import Image from "next/image";
 
 // Import the exact same ContentItem type used in SchedulesPage
 interface ContentItem {
@@ -417,9 +419,9 @@ export default function ScheduleModal({
                       }}
                       className="w-5 h-5 rounded border-gray-300 text-bgBlue focus:ring-bgBlue"
                     />
-                    <div className="w-20 h-14 bg-gray-200 dark:bg-gray-700 rounded-lg border overflow-hidden flex items-center justify-center">
+                    <div className="relative w-20 h-14 bg-gray-200 dark:bg-gray-700 rounded-lg border overflow-hidden flex items-center justify-center">
                       {item.type === "Video" && <video src={item.thumbnail} className="w-full h-full object-cover" />}
-                      {item.type === "Image" && <img src={item.thumbnail} className="w-full h-full object-cover" />}
+                      {item.type === "Image" && <Image src={item.thumbnail} fill className="object-cover" alt={item.name} />}
                       {item.type === "Playlist" && <div className="text-xs font-semibold text-gray-700 dark:text-gray-400">{item.items.length} items</div>}
                     </div>
                     <div className="flex-1">
@@ -540,10 +542,11 @@ export default function ScheduleModal({
                            className="w-full h-full object-cover" 
                          />
                        ) : selectedMedia.type === "Image" ? (
-                         <img 
+                         <Image
                            src={selectedMedia.thumbnail} 
-                           className="w-full h-full object-cover" 
-                           alt="Selection Preview"
+                           fill
+                           className="object-cover" 
+                           alt={selectedMedia.name || "Selection Preview"}
                          />
                        ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-gray-400">

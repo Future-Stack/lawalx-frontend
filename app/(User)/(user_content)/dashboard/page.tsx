@@ -34,6 +34,7 @@ import UploadFileModal from "@/components/content/UploadFileModal";
 import DeviceLocation from "@/components/common/DeviceLocation";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { useEffect } from "react";
+import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 
 export default function Dashboard() {
   const { data: statsData } = useGetAllStatsQuery(undefined);
@@ -226,31 +227,7 @@ export default function Dashboard() {
                         <span className="text-[16px] font-semibold text-headings" style={{ fontFamily: "Inter, sans-serif" }}>
                           {typeof device.name === 'object' ? 'Device' : (device.name || "Unknown Device")}
                         </span>
-                        {device.status === "ONLINE" ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-xs font-semibold">
-                            <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                            Online
-                          </div>
-                        ) : device.status === "OFFLINE" ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-xs font-semibold">
-                            <WifiOff className="w-3.5 h-3.5" />
-                            Offline
-                          </div>
-                        ) : device.status === "PAIRED" ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-                            <span className="w-2 h-2 rounded-full bg-blue-500" />
-                            Paired
-                          </div>
-                        ) : device.status === "WAITING" ? (
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold">
-                            <span className="w-2 h-2 rounded-full bg-orange-500" />
-                            Waiting
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] text-[#737373] text-xs font-semibold">
-                            {device.status}
-                          </div>
-                        )}
+                        <DeviceStatusBadge status={device.status} />
                       </div>
                       {/* <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
                         <MoreVertical className="w-5 h-5" />
