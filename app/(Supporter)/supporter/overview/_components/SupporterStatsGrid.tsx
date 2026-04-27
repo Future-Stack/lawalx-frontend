@@ -12,16 +12,16 @@ export default function SupporterStatsGrid() {
 
   const stats = [
     {
-      id: 'assigned',
+      id: 'total',
       icon: <Folders className="w-5 h-5 text-white" />,
-      iconBg: 'bg-[#0151FFD6]',
+      iconBg: 'bg-[#0151FF]',
       title: 'Total Assigned Ticket',
       value: apiStats?.total || 0,
     },
     {
       id: 'resolved',
       icon: <ClipboardCheck className="w-5 h-5 text-white" />,
-      iconBg: 'bg-[#069576]',
+      iconBg: 'bg-[#10B981]',
       title: 'Ticket Resolved',
       value: apiStats?.resolved || 0,
     },
@@ -32,10 +32,24 @@ export default function SupporterStatsGrid() {
       title: 'Ticket In Progress',
       value: apiStats?.inProgress || 0,
     },
+    {
+      id: 'open',
+      icon: <Clock className="w-5 h-5 text-white" />,
+      iconBg: 'bg-[#0EA5E9]',
+      title: 'Open Tickets',
+      value: apiStats?.open || 0,
+    },
+    {
+      id: 'closed',
+      icon: <LayoutGrid className="w-5 h-5 text-white" />,
+      iconBg: 'bg-[#64748B]',
+      title: 'Closed Tickets',
+      value: apiStats?.closed || 0,
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
       {stats.map((stat) => (
         <SupporterStatCard
           key={stat.id}
