@@ -21,9 +21,11 @@ import {
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { useGetAllSupportersQuery } from '@/redux/api/admin/support/adminSupporterApi';
+import { useGetAllSupportersQuery, useDeleteSupporterHardMutation } from '@/redux/api/admin/support/adminSupporterApi';
 import { usePresence } from '@/hooks/usePresence';
 import type { EmployeeData } from '@/redux/api/admin/support/adminSupporterApi';
+import EditEmployeeDialog from './EditEmployeeDialog';
+import { toast } from 'sonner';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -88,9 +90,14 @@ export default function EmployeesTable() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  
+  // Edit state
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeData | null>(null);
 
   // ── Data fetching ─────────────────────────────────────────────────────────
   const { data, isLoading, isError } = useGetAllSupportersQuery();
+  const [deleteEmployee] = useDeleteSupporterHardMutation();
   const presenceMap = usePresence(); // real-time socket presence
 
   const employees: EmployeeData[] = data?.data ?? [];
@@ -142,6 +149,17 @@ export default function EmployeesTable() {
     return formatLastActive(emp.user.lastOnlineAt);
   };
 
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) return;
+    
+    try {
+      await deleteEmployee(id).unwrap();
+      toast.success('Employee deleted successfully');
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to delete employee');
+    }
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
@@ -151,8 +169,8 @@ export default function EmployeesTable() {
           Support Employees List
         </h2>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* Search */}
+        {/* <div className="flex items-center gap-2 w-full sm:w-auto">
+       
           <div className="relative flex-1 sm:w-60">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
@@ -167,13 +185,13 @@ export default function EmployeesTable() {
             />
           </div>
 
-          {/* Filter By */}
+
           <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0">
             <SlidersHorizontal className="w-3.5 h-3.5" />
             Filter By
             <ChevronDown className="w-3.5 h-3.5" />
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* ── Table ──────────────────────────────────────────────────────── */}
@@ -347,12 +365,17 @@ export default function EmployeesTable() {
                     <button
                       className="p-1.5 rounded-md hover:bg-violet-50 dark:hover:bg-violet-900/20 transition-colors"
                       aria-label="Edit employee"
+                      onClick={() => {
+                        setSelectedEmployee(emp);
+                        setIsEditDialogOpen(true);
+                      }}
                     >
                       <Pencil className="w-4 h-4 text-violet-500" />
                     </button>
                     <button
                       className="p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                       aria-label="Delete employee"
+                      onClick={() => handleDelete(emp.id, displayName)}
                     >
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>
@@ -420,6 +443,12 @@ export default function EmployeesTable() {
           </button>
         </div>
       </div>
+
+      <EditEmployeeDialog 
+        employee={selectedEmployee}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+      />
     </div>
   );
 }

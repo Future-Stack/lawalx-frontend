@@ -214,6 +214,13 @@ export const adminSupportTicketApi = baseApi.injectEndpoints({
       }),
       providesTags: (result, error, id) => [{ type: 'AdminSupportTicket', id }],
     }),
+    resolveTicketByAdmin: builder.mutation<{ success: boolean; message: string; data: any }, string>({
+      query: (ticketId) => ({
+        url: `/admin/support/${ticketId}/resolve-by-admin`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: (result, error, id) => ['AdminSupportTicket', { type: 'AdminSupportTicket', id }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -225,4 +232,5 @@ export const {
   useUpdateSupportTicketMutation,
   useGetTicketStatisticsQuery,
   useGetAdminTicketDetailsQuery,
+  useResolveTicketByAdminMutation,
 } = adminSupportTicketApi;

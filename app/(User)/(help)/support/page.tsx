@@ -305,7 +305,14 @@ const Support = () => {
                       Assigned to
                     </p>
                     <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-300 truncate max-w-32 sm:max-w-none">
-                      {selectedTicket.assignedTo || "Not Assigned"}
+                      {(() => {
+                        const assignments = selectedTicketDetails?.data?.assignments;
+                        if (assignments && assignments.length > 0) {
+                          const user = assignments[0].user;
+                          return user.full_name || user.username || "Assigned";
+                        }
+                        return "Not Assigned";
+                      })()}
                     </p>
                   </div>
                 </div>

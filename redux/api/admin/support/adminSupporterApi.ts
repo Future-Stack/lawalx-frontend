@@ -113,9 +113,17 @@ export const adminSupporterApi = baseApi.injectEndpoints({
       invalidatesTags: ['AdminEmployee', 'AdminSupporter'],
     }),
     deleteSupporterHard: builder.mutation<{ success: boolean; message: string; data: any }, string>({
-      query: (supporterId) => ({
-        url: `/admin/support/${supporterId}/hard`,
+      query: (id) => ({
+        url: `/admin/support/employee/${id}/hard`,
         method: 'DELETE',
+      }),
+      invalidatesTags: ['AdminEmployee', 'AdminSupporter'],
+    }),
+    updateEmployee: builder.mutation<{ success: boolean; message: string; data: any }, { id: string; body: any }>({
+      query: ({ id, body }) => ({
+        url: `/admin/support/employee/${id}`,
+        method: 'PATCH',
+        body,
       }),
       invalidatesTags: ['AdminEmployee', 'AdminSupporter'],
     }),
@@ -129,4 +137,5 @@ export const {
   useGetAllSupportersQuery,
   useUpdateSupporterMutation,
   useDeleteSupporterHardMutation,
+  useUpdateEmployeeMutation,
 } = adminSupporterApi;

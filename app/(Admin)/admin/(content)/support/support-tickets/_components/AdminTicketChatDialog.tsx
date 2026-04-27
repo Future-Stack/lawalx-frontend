@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Paperclip, Send, X, FileIcon } from 'lucide-react';
+import { Paperclip, Send, X, FileIcon, CheckCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,10 @@ import { cn } from '@/lib/utils';
 import { useTicketChat } from '@/hooks/useTicketChat';
 import { useAppSelector } from '@/redux/store/hook';
 import { selectCurrentUser } from '@/redux/features/auth/authSlice';
-import { useGetAdminTicketDetailsQuery } from '@/redux/api/admin/support/adminSupportTicketApi';
+import { 
+  useGetAdminTicketDetailsQuery,
+  useResolveTicketByAdminMutation,
+} from '@/redux/api/admin/support/adminSupportTicketApi';
 import { useUploadSupportFileMutation } from '@/redux/api/users/support/supportApi';
 import type { ChatAttachment, ChatMessage } from '@/types/chat';
 import type { Ticket } from '@/redux/api/admin/support/adminSupportTicketApi';
@@ -164,6 +167,25 @@ export default function AdminTicketChatDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentUser = useAppSelector(selectCurrentUser);
   const [uploadSupportFile] = useUploadSupportFileMutation();
+  const [resolveTicket, { isLoading: isResolving }] = useResolveTicketByAdminMutation();
+
+  const handleResolve = async () => {
+    window.alert('RESOLVE BUTTON CLICKED');
+    console.log('[AdminChat] CLICKED RESOLVE BUTTON');
+    if (!ticket?.id) {
+      console.error('[AdminChat] No ticket ID found');
+      toast.error('Ticket ID not found');
+      return;
+    }
+    try {
+      await resolveTicket(ticket.id).unwrap();
+      toast.success('Ticket marked as resolved');
+      onClose();
+    } catch (err: any) {
+      console.error('[AdminChat] resolve error:', err);
+      toast.error(err?.data?.message || 'Failed to resolve ticket');
+    }
+  };
 
   // Fetch full ticket details for initial message history
   const { data: ticketDetails, isLoading: isLoadingDetails } = useGetAdminTicketDetailsQuery(
@@ -305,7 +327,7 @@ export default function AdminTicketChatDialog({
                   isConnected ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-600'
                 )}
               />
-              <span className="text-xs text-gray-400 dark:text-gray-500">
+              <span className="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">
                 {isConnected ? 'Live' : 'Connecting...'}
               </span>
             </div>
@@ -431,6 +453,16 @@ export default function AdminTicketChatDialog({
             <Button variant="outline" className="h-9" onClick={onClose}>
               Cancel
             </Button>
+            {ticket?.status !== 'Resolved' && (
+              <button
+                type="button"
+                className="h-9 px-4 rounded-md border border-green-200 text-green-600 hover:bg-green-50 text-xs font-medium transition-colors disabled:opacity-50"
+                onClick={handleResolve}
+                disabled={isResolving}
+              >
+                {isResolving ? 'Resolving...' : 'Mark as Resolve'}
+              </button>
+            )}
             <Button
               className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-5 flex items-center gap-2"
               onClick={handleSend}
