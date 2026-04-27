@@ -44,7 +44,6 @@ export default function CreateFAQModal({ isOpen, onClose, onSave, initialData }:
     const [title, setTitle] = useState('');
     const [answer, setAnswer] = useState('');
     const [category, setCategory] = useState('');
-    const [status, setStatus] = useState<'Draft' | 'Published'>('Draft');
 
     useEffect(() => {
         if (isOpen) {
@@ -52,110 +51,89 @@ export default function CreateFAQModal({ isOpen, onClose, onSave, initialData }:
                 setTitle(initialData.question);
                 setAnswer(initialData.answer);
                 setCategory(initialData.category);
-                setStatus(initialData.status);
             } else {
-                // Reset form for new entry
                 setTitle('');
                 setAnswer('');
                 setCategory('');
-                setStatus('Draft');
             }
         }
     }, [isOpen, initialData]);
 
-    const handleSave = () => {
+    const handleSave = (publish: boolean) => {
         onSave({
             id: initialData?.id,
             question: title,
             answer,
             category,
-            status
+            status: publish ? 'Published' : 'Draft'
         });
         onClose();
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-2xl p-0 bg-white dark:bg-gray-900 border-none rounded-2xl overflow-hidden focus:outline-none">
-                <div className="p-6">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                        <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
-                            {initialData ? 'Edit FAQ' : 'Create FAQ'}
-                        </DialogTitle>
-                        <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                            <X className="w-5 h-5 text-gray-500" />
-                        </button>
+            <DialogContent showCloseButton={false} className="max-w-2xl p-0 bg-white dark:bg-cardBg border-none rounded-2xl overflow-hidden focus:outline-none">
+                {/* Header */}
+                <div className="flex items-center justify-between p-6 border-b border-border/50">
+                    <DialogTitle className="text-xl font-bold text-headings">
+                        {initialData ? 'Edit FAQ' : 'Create FAQ'}
+                    </DialogTitle>
+                    <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors cursor-pointer group">
+                        <X className="w-5 h-5 text-muted group-hover:text-red-500" />
+                    </button>
+                </div>
+
+                <div className="p-6 space-y-7">
+                    {/* Title / Question */}
+                    <div className="space-y-3">
+                        <label className="text-sm font-bold text-headings">
+                            Question
+                        </label>
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            placeholder="How do I reset my password?"
+                            className="w-full h-12 px-4 text-sm bg-navbarBg dark:bg-inputBg border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-bgBlue/30 focus:border-bgBlue border transition-all placeholder:text-muted/50 text-headings"
+                        />
                     </div>
 
-                    <div className="space-y-5">
-                        {/* Title / Question */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                                Question
-                            </label>
-                            <input
-                                type="text"
-                                value={title}
-                                onChange={(e) => setTitle(e.target.value)}
-                                placeholder="e.g., Business"
-                                className="w-full h-11 px-4 text-sm bg-white dark:bg-gray-800 border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 border"
-                            />
-                        </div>
+                    {/* Answer */}
+                    <div className="space-y-3">
+                        <label className="text-sm font-bold text-headings">
+                            Answer
+                        </label>
+                        <textarea
+                            value={answer}
+                            onChange={(e) => setAnswer(e.target.value)}
+                            placeholder={`To reset your password, click on "Forgot Password" on the login page and follow the instructions sent to your email.`}
+                            className="w-full h-32 p-4 text-sm bg-navbarBg dark:bg-inputBg border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-bgBlue/30 focus:border-bgBlue border resize-none transition-all placeholder:text-muted/50 text-headings"
+                        />
+                    </div>
 
-                        {/* Answer */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                                Answer
-                            </label>
-                            <textarea
-                                value={answer}
-                                onChange={(e) => setAnswer(e.target.value)}
-                                placeholder="Enter your answer here..."
-                                className="w-full h-32 p-4 text-sm bg-white dark:bg-gray-800 border-border rounded-xl focus:outline-none focus:ring-1 focus:ring-blue-500 border resize-none"
-                            />
-                        </div>
-
-                        {/* Category & Status Row */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                                    Category
-                                </label>
-                                <Select value={category} onValueChange={setCategory}>
-                                    <SelectTrigger className="w-full h-11 rounded-xl bg-white dark:bg-gray-800 border-border">
-                                        <SelectValue placeholder="Select Category" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {CATEGORIES.map((cat) => (
-                                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                                    Status
-                                </label>
-                                <Select value={status} onValueChange={(val: 'Draft' | 'Published') => setStatus(val)}>
-                                    <SelectTrigger className="w-full h-11 rounded-xl bg-white dark:bg-gray-800 border-border">
-                                        <SelectValue placeholder="Select Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Draft">Draft</SelectItem>
-                                        <SelectItem value="Published">Published</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
+                    {/* Category */}
+                    <div className="space-y-3">
+                        <label className="text-sm font-bold text-headings">
+                            Category
+                        </label>
+                        <Select value={category} onValueChange={setCategory}>
+                            <SelectTrigger className="w-full h-12 rounded-xl bg-navbarBg dark:bg-inputBg border-border focus:ring-2 focus:ring-bgBlue/30 transition-all text-headings">
+                                <SelectValue placeholder="Subscription" />
+                            </SelectTrigger>
+                            <SelectContent className="z-[2147483647]">
+                                {CATEGORIES.map((cat) => (
+                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                ))}
+                                <SelectItem value="Subscription">Subscription</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center justify-between mt-8">
+                    <div className="flex items-center justify-between pt-6">
                         <Button
                             variant="outline"
-                            className="rounded-xl h-11 px-6 font-semibold border-border text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 shadow-sm"
+                            className="rounded-xl h-12 px-8 font-bold border-border text-headings hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-bgBlue dark:hover:text-bgBlue shadow-sm transition-all cursor-pointer"
                             onClick={onClose}
                         >
                             Close
@@ -163,31 +141,14 @@ export default function CreateFAQModal({ isOpen, onClose, onSave, initialData }:
                         <div className="flex items-center gap-3">
                             <Button
                                 variant="outline"
-                                className="rounded-xl h-11 px-6 font-bold border-border text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 shadow-sm"
-                                onClick={() => {
-                                    /* Save as Draft logic if separated, currently maps to same onSave but with Draft status if handled */
-                                    setStatus('Draft');
-                                    handleSave();
-                                }}
+                                className="rounded-xl h-12 px-8 font-bold border-border text-headings hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-bgBlue dark:hover:text-bgBlue shadow-sm transition-all cursor-pointer"
+                                onClick={() => handleSave(false)}
                             >
                                 Save
                             </Button>
                             <Button
-                                className="rounded-xl h-11 px-6 font-bold bg-bgBlue hover:bg-blue-600 text-white shadow-customShadow"
-                                onClick={() => {
-                                    setStatus('Published');
-                                    // Need to execute save with 'Published' status, but state update is async. 
-                                    // Better to pass explicit status to save function or rely on current state if user selected "Published" in dropdown.
-                                    // For this button specifically "Publish", we should probably force status to Published.
-                                    onSave({
-                                        id: initialData?.id,
-                                        question: title,
-                                        answer,
-                                        category,
-                                        status: 'Published'
-                                    });
-                                    onClose();
-                                }}
+                                className="rounded-xl h-12 px-8 font-bold bg-bgBlue hover:bg-blue-600 text-white shadow-customShadow transition-all cursor-pointer"
+                                onClick={() => handleSave(true)}
                             >
                                 Publish
                             </Button>

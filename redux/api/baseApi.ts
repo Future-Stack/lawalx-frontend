@@ -15,6 +15,8 @@ const baseQuery = fetchBaseQuery({
     if (token) {
       headers.set("authorization", token);
     }
+    // Ngrok warning bypass for development
+    headers.set("ngrok-skip-browser-warning", "true");
     return headers;
   },
 });
@@ -60,5 +62,5 @@ export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
   endpoints: () => ({}),
-  tagTypes: ["User", "NotificationPermission", "Notification", "Activity", "Content", "Devices", "Programs", "Schedules", "Device", "AdminSettings", "Subscription", "ReportHub", "ReportHistory", "Banner"],
+  tagTypes: ["User", "NotificationPermission", "Notification", "Activity", "Content", "Devices", "Programs", "Schedules", "Device", "AdminSettings", "Subscription", "ReportHub", "ReportHistory", "Banner", "Billing", "SupportTicket", "AdminSupportTicket", "AdminEmployee", "AdminSupporter", "SupporterTicket", "SupporterTicketStats"],
 });

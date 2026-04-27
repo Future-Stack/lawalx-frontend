@@ -18,6 +18,7 @@ import {
   Activity,
 } from "lucide-react";
 import EditUserModal from "@/components/Admin/modals/EditUserModal";
+import EditPersonalInfoModal from "@/components/Admin/modals/EditPersonalInfoModal";
 import ResetPasswordModal from "@/components/Admin/modals/ResetPasswordModal";
 import ChangePlanModal from "@/components/Admin/modals/ChangePlanModal";
 import DeleteUserModal from "@/components/Admin/modals/DeleteUserModal";
@@ -30,6 +31,14 @@ import DevicesTab from "@/components/Admin/usermanagement/tabs/DevicesTab";
 import ActivityLogsTab from "@/components/Admin/usermanagement/tabs/ActivityLogsTab";
 import Link from "next/link";
 import { formatBytes } from "@/lib/content-utils";
+import { toast } from "sonner";
+import {
+  useLoginAsUserMutation,
+  useDeleteUserMutation,
+  useSuspendUserMutation,
+  useUnsuspendUserMutation,
+  useAdminResetPasswordMutation,
+} from "@/redux/api/admin/usermanagementApi";
 
 type TabType =
   | "Details"
@@ -49,6 +58,9 @@ interface UserData {
   storageUsage: number;
   status: string;
   issues?: string[];
+  phone?: string;
+  location?: string;
+  joinDate?: string;
 }
 
 export default function UserProfilePage() {
@@ -62,10 +74,29 @@ export default function UserProfilePage() {
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditPersonalInfoOpen, setIsEditPersonalInfoOpen] = useState(false);
   const [isChangePlanOpen, setIsChangePlanOpen] = useState(false);
   const [isSuspendOpen, setIsSuspendOpen] = useState(false);
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [isDeleteUserOpen, setIsDeleteUserOpen] = useState(false);
+
+  const [loginAsUser] = useLoginAsUserMutation();
+  const [deleteUser] = useDeleteUserMutation();
+  const [suspendUser] = useSuspendUserMutation();
+  const [unsuspendUser] = useUnsuspendUserMutation();
+
+  const handleLoginAsUser = async (id: string) => {
+    try {
+      const res = await loginAsUser(id).unwrap();
+      if (res.success) {
+        toast.success("Login tokens generated successfully");
+        // Store tokens and redirect if needed
+        console.log("Tokens:", res.data);
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to login as user");
+    }
+  };
 
   // Load user data from localStorage or URL params
   useEffect(() => {
@@ -87,6 +118,10 @@ export default function UserProfilePage() {
       const deviceUsage = searchParams.get("deviceUsage");
       const storageUsage = searchParams.get("storageUsage");
 
+      const phone = searchParams.get("phone");
+      const location = searchParams.get("location");
+      const joinDate = searchParams.get("joinDate");
+
       if (name && email) {
         setUserData({
           id: userId,
@@ -98,6 +133,9 @@ export default function UserProfilePage() {
           storage: storage || "100 GB",
           storageUsage: Number(storageUsage) || 0,
           status: status || "Active",
+          phone: phone || "N/A",
+          location: location || "N/A",
+          joinDate: joinDate || "N/A",
         });
       }
     }
@@ -138,11 +176,13 @@ export default function UserProfilePage() {
     ? {
         id: userData.id,
         name: userData.name,
-        userId: `U${userData.id.toUpperCase()}`,
+        userId: `U${userData.id.toUpperCase().slice(0, 6)}`,
         email: userData.email,
-        phone: "+1 (555) 123-4567",
-        location: "San Francisco, CA",
-        joinDate: "January 15, 2025",
+        phone: userData.phone || "+1 (555) 123-4567",
+        location: userData.location || "Not specified",
+        joinDate: userData.joinDate && userData.joinDate !== "N/A" 
+          ? new Date(userData.joinDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+          : "January 15, 2025",
         organization: "TechCorp Inc.",
         role: "Administrator",
         plan: userData.plan,
@@ -163,6 +203,15 @@ export default function UserProfilePage() {
         revenueInfo: "+2.4% vs last month",
       }
     : null;
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   // Show loading state while data is being fetched
   if (!user) {
@@ -280,7 +329,7 @@ export default function UserProfilePage() {
         <div className="flex justify-between items-start">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 font-semibold text-lg">
-              JS
+              {getInitials(user.name)}
             </div>
             <div>
               <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
@@ -300,7 +349,10 @@ export default function UserProfilePage() {
               <Edit2 className="w-4 h-4" />
               Edit User
             </button> */}
-            <button className="cursor-pointer px-6 py-2 bg-primary-action text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-customShadow">
+            <button
+              onClick={() => handleLoginAsUser(user.id)}
+              className="cursor-pointer px-6 py-2 bg-primary-action text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-customShadow"
+            >
               <User className="w-4 h-4" />
               Login as user
             </button>
@@ -414,7 +466,11 @@ export default function UserProfilePage() {
       {/* Tab Content */}
       <div className="">
         {activeTab === "Details" && (
-          <DetailsTab user={user} onEdit={() => setIsEditModalOpen(true)} />
+          <DetailsTab 
+            user={user} 
+            onEdit={() => setIsEditModalOpen(true)} 
+            onEditPersonalInfo={() => setIsEditPersonalInfoOpen(true)}
+          />
         )}
         {activeTab === "Subscription & Billing" && (
           <SubscriptionTab onOpenChangePlan={() => setIsChangePlanOpen(true)} />
@@ -430,16 +486,25 @@ export default function UserProfilePage() {
         userData={userData}
         onSave={() => {}}
       />
+      <EditPersonalInfoModal
+        isOpen={isEditPersonalInfoOpen}
+        onClose={() => setIsEditPersonalInfoOpen(false)}
+        onSave={(data) => {
+          console.log("Saving personal info:", data);
+          toast.success("Personal information updated successfully");
+        }}
+        userData={userData}
+      />
       <ChangePlanModal
         isOpen={isChangePlanOpen}
         onClose={() => setIsChangePlanOpen(false)}
-        currentPlan={user.plan}
+        userData={userData}
         onConfirm={handleChangePlan}
       />
       <SuspendUserModal
         isOpen={isSuspendOpen}
         onClose={() => setIsSuspendOpen(false)}
-        userName={user.name}
+        userName={user?.name || ""}
         onConfirm={() => {}}
       />
       <ResetPasswordModal
@@ -450,13 +515,12 @@ export default function UserProfilePage() {
       <DeleteUserModal
         isOpen={isDeleteUserOpen}
         onClose={() => setIsDeleteUserOpen(false)}
-        userName={user.name}
+        userName={user?.name || ""}
         onConfirm={() => {}}
       />
     </div>
   );
 }
-
 
 // import { useState } from "react";
 // import { useRouter } from "next/navigation";

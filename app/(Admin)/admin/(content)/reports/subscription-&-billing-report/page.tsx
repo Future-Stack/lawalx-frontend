@@ -596,7 +596,7 @@ const BillingDashboard = () => {
     { id: 'delinquency', label: 'Delinquency' },
     { id: 'refund', label: 'Refund' },
     { id: 'tax', label: 'Tax' },
-    { id: 'dso', label: 'DSO' }
+    // { id: 'dso', label: 'DSO' }
   ];
 
   // --- Render Functions ---
@@ -824,7 +824,7 @@ const BillingDashboard = () => {
         <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Failed Payments Analysis</h3>
         <p className={`${theme.textSecondary} text-sm mb-6`}>Tracker for failed transaction attempts and recovery</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <div className="h-80 pb-6">
             <h4 className={`font-semibold mb-4 ${theme.text}`}>Failed Payments vs Recovery</h4>
             <ResponsiveContainer width="100%" height="100%">
@@ -854,7 +854,7 @@ const BillingDashboard = () => {
             </ResponsiveContainer>
           </div>
 
-          <div className="h-80 pb-6">
+          {/* <div className="h-80 pb-6">
             <h4 className={`font-semibold mb-4 ${theme.text}`}>Recovery Rate Trend</h4>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={recoveryRateData}>
@@ -870,7 +870,7 @@ const BillingDashboard = () => {
                 <Line type="monotone" dataKey="rate" stroke="#8b5cf6" strokeWidth={2} name="Recovery Rate %" />
               </LineChart>
             </ResponsiveContainer>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -1291,80 +1291,80 @@ const BillingDashboard = () => {
     </div>
   );
 
-  const renderDSOTab = () => (
-    <div className="space-y-6">
-      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>DSO Analysis</h3>
-        <p className={`${theme.textSecondary} text-sm mb-6`}>Day Sales Outstanding (DSO) trend and efficiency metrics</p>
+  // const renderDSOTab = () => (
+  //   <div className="space-y-6">
+  //     <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+  //       <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>DSO Analysis</h3>
+  //       <p className={`${theme.textSecondary} text-sm mb-6`}>Day Sales Outstanding (DSO) trend and efficiency metrics</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="p-4 bg-green-50 rounded-xl border border-green-200">
-            <div className="text-sm text-gray-600 mb-1">Current DSO</div>
-            <div className="text-3xl font-bold text-green-600">{dsoMetrics.currentDso || 0} days</div>
-            <div className="text-sm text-green-600">{dsoMetrics.dsoStatus || 'No status'}</div>
-          </div>
-          <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <div className="text-sm text-gray-600 mb-1">Best Possible DSO</div>
-            <div className="text-3xl font-bold text-blue-600">{dsoMetrics.bestPossibleDso || 0} days</div>
-            <div className="text-sm text-blue-600">Theoretical minimum</div>
-          </div>
-          <div className="p-4 bg-purple-50 rounded-xl border border-purple-200">
-            <div className="text-sm text-gray-600 mb-1">Collection Efficiency</div>
-            <div className="text-3xl font-bold text-purple-600">{dsoMetrics.collectionEfficiency || '0%'}</div>
-            <div className="text-sm text-purple-600">Collection Effectiveness Index</div>
-          </div>
-        </div>
+  //       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  //         <div className="p-4 bg-green-50 rounded-xl border border-green-200">
+  //           <div className="text-sm text-gray-600 mb-1">Current DSO</div>
+  //           <div className="text-3xl font-bold text-green-600">{dsoMetrics.currentDso || 0} days</div>
+  //           <div className="text-sm text-green-600">{dsoMetrics.dsoStatus || 'No status'}</div>
+  //         </div>
+  //         <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+  //           <div className="text-sm text-gray-600 mb-1">Best Possible DSO</div>
+  //           <div className="text-3xl font-bold text-blue-600">{dsoMetrics.bestPossibleDso || 0} days</div>
+  //           <div className="text-sm text-blue-600">Theoretical minimum</div>
+  //         </div>
+  //         <div className="p-4 bg-purple-50 rounded-xl border border-purple-200">
+  //           <div className="text-sm text-gray-600 mb-1">Collection Efficiency</div>
+  //           <div className="text-3xl font-bold text-purple-600">{dsoMetrics.collectionEfficiency || '0%'}</div>
+  //           <div className="text-sm text-purple-600">Collection Effectiveness Index</div>
+  //         </div>
+  //       </div>
 
-        <div className="h-80 p-6">
-          <h4 className={`font-semibold mb-4 ${theme.text}`}>DSO Trend vs Target</h4>
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={dsoTrendData}>
-              <defs>
-                <linearGradient id="colorDso" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis dataKey={xAxisKey} stroke={isDark ? '#9ca3af' : '#6b7280'} />
-              <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} />
-              <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                  border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`
-                }}
-              />
-              <Area type="monotone" dataKey="actual" stroke="#3b82f6" fillOpacity={1} fill="url(#colorDso)" name="Actual DSO" />
-              <Area type="monotone" dataKey="target" stroke="#ef4444" strokeDasharray="5 5" fill="none" name="Target (30 Days)" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+  //       <div className="h-80 p-6">
+  //         <h4 className={`font-semibold mb-4 ${theme.text}`}>DSO Trend vs Target</h4>
+  //         <ResponsiveContainer width="100%" height="100%">
+  //           <AreaChart data={dsoTrendData}>
+  //             <defs>
+  //               <linearGradient id="colorDso" x1="0" y1="0" x2="0" y2="1">
+  //                 <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+  //                 <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+  //               </linearGradient>
+  //             </defs>
+  //             <XAxis dataKey={xAxisKey} stroke={isDark ? '#9ca3af' : '#6b7280'} />
+  //             <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} />
+  //             <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
+  //             <Tooltip
+  //               contentStyle={{
+  //                 backgroundColor: isDark ? '#1f2937' : '#ffffff',
+  //                 border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`
+  //               }}
+  //             />
+  //             <Area type="monotone" dataKey="actual" stroke="#3b82f6" fillOpacity={1} fill="url(#colorDso)" name="Actual DSO" />
+  //             <Area type="monotone" dataKey="target" stroke="#ef4444" strokeDasharray="5 5" fill="none" name="Target (30 Days)" />
+  //           </AreaChart>
+  //         </ResponsiveContainer>
+  //       </div>
+  //     </div>
 
-      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Aging Bucket Analysis</h3>
-        <p className={`${theme.textSecondary} text-sm mb-4`}>Current accounts receivable aging distribution compared to industry standard</p>
+  //     <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+  //       <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Aging Bucket Analysis</h3>
+  //       <p className={`${theme.textSecondary} text-sm mb-4`}>Current accounts receivable aging distribution compared to industry standard</p>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            {agingBucketAnalysis.map((item: any, idx: number) => (
-              <div key={idx} className="flex justify-between items-center">
-                <span className={`${theme.text} w-24 capitalize`}>{item.label}</span>
-                <div className="flex-1 mx-4 bg-gray-200 rounded-full h-4 overflow-hidden">
-                  <div className={`h-full rounded-full ${item.label.includes('Current') ? 'bg-green-500' :
-                    item.label.includes('1-30') ? 'bg-yellow-500' :
-                      item.label.includes('31-60') ? 'bg-orange-500' :
-                        'bg-red-500'
-                    }`} style={{ width: `${item.percentage}%` }}></div>
-                </div>
-                <span className={`${theme.text} w-16 text-right`}>{item.percentage}%</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  //       <div className="space-y-4">
+  //         <div className="space-y-2">
+  //           {agingBucketAnalysis.map((item: any, idx: number) => (
+  //             <div key={idx} className="flex justify-between items-center">
+  //               <span className={`${theme.text} w-24 capitalize`}>{item.label}</span>
+  //               <div className="flex-1 mx-4 bg-gray-200 rounded-full h-4 overflow-hidden">
+  //                 <div className={`h-full rounded-full ${item.label.includes('Current') ? 'bg-green-500' :
+  //                   item.label.includes('1-30') ? 'bg-yellow-500' :
+  //                     item.label.includes('31-60') ? 'bg-orange-500' :
+  //                       'bg-red-500'
+  //                   }`} style={{ width: `${item.percentage}%` }}></div>
+  //               </div>
+  //               <span className={`${theme.text} w-16 text-right`}>{item.percentage}%</span>
+  //             </div>
+  //           ))}
+  //         </div>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   return (
     <div className={`min-h-screen`}>
@@ -1411,7 +1411,7 @@ const BillingDashboard = () => {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-6">
           <div className={`bg-navbarBg rounded-lg p-4 shadow-sm border border-border`}>
             <div className="flex items-center justify-between mb-2">
               <span className={`text-sm ${theme.textSecondary}`}>Success Rate</span>
@@ -1438,7 +1438,7 @@ const BillingDashboard = () => {
             </div>
           </div>
 
-          <div className={`bg-navbarBg rounded-lg p-4 shadow-sm border border-border`}>
+          {/* <div className={`bg-navbarBg rounded-lg p-4 shadow-sm border border-border`}>
             <div className="flex items-center justify-between mb-2">
               <span className={`text-sm ${theme.textSecondary}`}>Overdue Invoices</span>
               <AlertTriangle size={20} className="text-orange-600" />
@@ -1463,7 +1463,7 @@ const BillingDashboard = () => {
             </div>
             <div className={`text-2xl font-bold ${theme.text}`}>{kpiData.avgDSO.value} days</div>
             <div className={`text-sm ${theme.textSecondary} mt-1`}>Below {kpiData.avgDSO.target}-day target</div>
-          </div>
+          </div> */}
         </div>
 
         {/* Tabs */}
@@ -1490,7 +1490,7 @@ const BillingDashboard = () => {
           {activeTab === 'delinquency' && renderDelinquencyTab()}
           {activeTab === 'refund' && renderRefundTab()}
           {activeTab === 'tax' && renderTaxTab()}
-          {activeTab === 'dso' && renderDSOTab()}
+          {/* {activeTab === 'dso' && renderDSOTab()} */}
         </div>
       </div>
     </div>
