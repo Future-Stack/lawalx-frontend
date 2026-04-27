@@ -18,6 +18,7 @@ export function getSocket(token: string): Socket {
     _socket = null;
   }
 
+  console.log('[Socket] Initializing connection with token:', token.substring(0, 10) + '...');
   _socket = io(`${SOCKET_URL}/support`, {
     auth: { token },
     autoConnect: true,
