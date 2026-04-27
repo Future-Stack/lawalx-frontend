@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -152,7 +153,7 @@ export default function DevicesPage() {
     if (!devicesData?.data) return [];
 
     return devicesData.data.map((device) => {
-      let status = device.status || "OFFLINE";
+      const status = device.status || "OFFLINE";
 
       const usedStorage = device.user?.usedStorage || 0;
       const totalStorage = device.user?.totalStorage || 0;

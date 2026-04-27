@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useRef, useEffect, useState, useMemo } from "react";
@@ -37,6 +38,7 @@ const BaseAudioPlayer = ({
       "settings",
     ],
     settings: ["speed"],
+    storage: { enabled: false },
   }), [autoPlay]);
 
   // Keep onEnded in a ref

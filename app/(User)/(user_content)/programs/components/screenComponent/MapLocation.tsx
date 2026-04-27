@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { ZoomIn, ZoomOut, Monitor, MapPin } from "lucide-react";
-import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { Device } from "@/redux/api/users/programs/programs.type";
 import ResolvedLocation from "@/common/ResolvedLocation";
@@ -92,9 +93,9 @@ const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
       // @ts-ignore
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
-        iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+        iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
       });
     }
     setIsMounted(true);
@@ -145,7 +146,7 @@ const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
             center={centerPosition}
             zoom={devices.length > 0 ? 12 : 6}
             zoomControl={false}
-            className="rounded-xl z-0"
+            className="rounded-xl"
             style={{ height: "100%", width: "100%" }}
           >
             <TileLayer
@@ -200,7 +201,7 @@ const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
       <style>
         {`
         .leaflet-container {
-          z-index: 0 !important;
+          z-index: 1 !important;
           border-radius: 0.75rem; /* matches rounded-xl */
           overflow: hidden;
         }
@@ -209,7 +210,7 @@ const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
         .leaflet-overlay-pane,
         .leaflet-shadow-pane,
         .leaflet-popup-pane {
-          z-index: 0 !important;
+          z-index: 1 !important;
         }
         .leaflet-popup {
           z-index: 10 !important;
