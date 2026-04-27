@@ -7,16 +7,10 @@ import { Users, DollarSign, Percent, TrendingUp, TrendingDown, UserPlus, Chevron
 import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
 import {
-  useGetFinancialOverviewQuery,
-  useGetMrrBreakdownQuery,
-  useGetSubscriberOverviewQuery,
-  useGetSubscriberActivityQuery,
-  useGetChurnByPlanQuery,
-  useGetPlanPerformanceQuery,
-  useGetFinancialChartsQuery,
-  useGetArpuAnalyticsQuery,
-  useGetTrialConversionQuery,
-  useLazyGetFinancialExportQuery,
+  useGetFinancialStatsQuery,
+  useGetMrrStatsQuery,
+  useGetMrrTrendQuery,
+  useGetFinancialBreakdownQuery,
 } from "@/redux/api/admin/financialreportApi";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -39,337 +33,97 @@ const FinancialReport = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   const timeRangeString = useMemo(() => {
-    if (timeRange === 1) return "1d";
-    if (timeRange === 7) return "7d";
-    if (timeRange === 365) return "1y";
-    return "30d";
+    if (timeRange === 1) return "last 1 day";
+    if (timeRange === 7) return "last 7 days";
+    if (timeRange === 365) return "last 1 year";
+    return "last 30 days";
   }, [timeRange]);
 
   // API Queries
-  const { data: overviewData, isLoading: isOverviewLoading } = useGetFinancialOverviewQuery({ timeRange: timeRangeString });
-  const { data: mrrBreakdownData } = useGetMrrBreakdownQuery({ timeRange: timeRangeString });
-  const { data: subscriberOverviewData } = useGetSubscriberOverviewQuery({ timeRange: timeRangeString });
-  const { data: subscriberActivityData } = useGetSubscriberActivityQuery({ timeRange: timeRangeString });
-  const { data: churnByPlanData } = useGetChurnByPlanQuery({ timeRange: timeRangeString });
-  const { data: planPerformanceData } = useGetPlanPerformanceQuery({ timeRange: timeRangeString });
-  // const { data: chartsData } = useGetFinancialChartsQuery({ timeRange: timeRangeString });
-  const { data: arpuData } = useGetArpuAnalyticsQuery({ timeRange: timeRangeString });
-  const { data: trialsData } = useGetTrialConversionQuery({ timeRange: timeRangeString });
-  const [triggerExport] = useLazyGetFinancialExportQuery();
-
-  const handleExport = async () => {
-    try {
-      const result = await triggerExport({ timeRange: timeRangeString });
-
-      if (result.error || !result.data || !result.data.success) {
-        console.error("Export data fetch error:", result.error || result.data?.message);
-        toast.error("Failed to fetch export data. Please try again.");
-        return;
-      }
-
-      const rawData = result.data.data;
-      const doc = new jsPDF();
-      const SECTION_GAP = 25;
-      const HEADING_GAP = 10;
-
-      // Helper to safely format numbers
-      const formatCurrency = (val: any) => `$${(Number(val) || 0).toLocaleString()}`;
-      const formatNumber = (val: any) => (Number(val) || 0).toLocaleString();
-      const formatPercent = (val: any) => `${val || 0}%`;
-
-      // Add Title
-      doc.setFontSize(18);
-      doc.text('Financial Report', 14, 20);
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Filter: ${timeRangeString} | Exported At: ${new Date().toLocaleString()}`, 14, 28);
-
-      // 1. Overview Section
-      let currentY = 45;
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(0);
-      doc.text('Overview Metrics', 14, currentY);
-      doc.setFont("helvetica", "normal");
-
-      const overview = rawData?.overview || {};
-      const overviewRows = [
-        ['MRR', formatCurrency(overview.mrr?.value), formatPercent(overview.mrr?.growth)],
-        ['ARR', formatCurrency(overview.arr?.value), formatPercent(overview.arr?.growth)],
-        ['Churn Rate', formatPercent(overview.churnRate?.value), formatPercent(overview.churnRate?.growth)],
-        ['ARPU', formatCurrency(overview.arpu?.value), formatPercent(overview.arpu?.growth)],
-        ['New Subscriptions', formatNumber(overview.newSubscriptions?.value), formatPercent(overview.newSubscriptions?.growth)],
-      ];
-
-      autoTable(doc, {
-        head: [['Metric', 'Value', 'Growth']],
-        body: overviewRows,
-        startY: currentY + HEADING_GAP,
-        theme: 'striped',
-        headStyles: { fillColor: [59, 130, 246] },
-      });
-
-      // 2. MRR Breakdown Summary
-      currentY = ((doc as any).lastAutoTable?.cursor?.y || currentY + 40) + SECTION_GAP;
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text('MRR Breakdown Summary', 14, currentY);
-      doc.setFont("helvetica", "normal");
-
-      const mrrSummary = rawData?.mrrBreakdown?.summary || {};
-      const mrrRows = [
-        ['New Sales', formatCurrency(mrrSummary.newSales)],
-        ['Upgrades', formatCurrency(mrrSummary.upgrades)],
-        ['Downgrades', formatCurrency(mrrSummary.downgrades)],
-        ['Churned', formatCurrency(mrrSummary.churned)],
-        ['Net New MRR', formatCurrency(mrrSummary.netNewMRR)],
-      ];
-
-      autoTable(doc, {
-        head: [['Component', 'Value']],
-        body: mrrRows,
-        startY: currentY + HEADING_GAP,
-        theme: 'striped',
-        headStyles: { fillColor: [139, 92, 246] },
-      });
-
-      // 3. Subscriber Overview
-      currentY = ((doc as any).lastAutoTable?.cursor?.y || currentY + 40) + SECTION_GAP;
-      if (currentY > 250) {
-        doc.addPage();
-        currentY = 20;
-      }
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text('Subscriber Overview', 14, currentY);
-      doc.setFont("helvetica", "normal");
-
-      const subOverview = rawData?.subscriberOverview || {};
-      const subRows = [
-        ['New Sign-ups', formatNumber(subOverview.newSignUps)],
-        ['Cancellations', formatNumber(subOverview.cancellations)],
-        ['Net Growth', formatNumber(subOverview.netGrowth)],
-        ['Retention Rate', formatPercent(subOverview.retentionRate)],
-      ];
-
-      autoTable(doc, {
-        head: [['Metric', 'Value']],
-        body: subRows,
-        startY: currentY + HEADING_GAP,
-        theme: 'striped',
-        headStyles: { fillColor: [16, 185, 129] },
-      });
-
-      // 4. Trial Conversion Summary
-      currentY = ((doc as any).lastAutoTable?.cursor?.y || currentY + 40) + SECTION_GAP;
-      if (currentY > 250) {
-        doc.addPage();
-        currentY = 20;
-      }
-      doc.setFontSize(14);
-      doc.setFont("helvetica", "bold");
-      doc.text('Trial Conversion Summary', 14, currentY);
-      doc.setFont("helvetica", "normal");
-
-      const trials = rawData?.trialConversion || {};
-      const trialRows = [
-        ['Overall Conversion', formatPercent(trials.overallConversion?.value)],
-        ['Trials Started', formatNumber(trials.trialsStarted?.value)],
-        ['Converted to Paid', formatNumber(trials.convertedToPaid?.value)],
-        ['Avg Trial Duration', `${trials.averageTrialDuration?.value || 0} days`],
-      ];
-
-      autoTable(doc, {
-        head: [['Metric', 'Value']],
-        body: trialRows,
-        startY: currentY + HEADING_GAP,
-        theme: 'striped',
-        headStyles: { fillColor: [236, 72, 153] },
-      });
-
-      doc.save(`financial-report-${timeRangeString}-${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success("Financial report exported successfully");
-    } catch (error) {
-      console.error("Detailed Export error:", error);
-      toast.error("An error occurred during export. Check console for details.");
-    } finally {
-      setShowExportMenu(false);
-    }
-  };
-
-  const handleExportExcel = async () => {
-    try {
-      const result = await triggerExport({ timeRange: timeRangeString });
-      if (result.error || !result.data || !result.data.success) {
-        console.error("Export error:", result.error);
-        toast.error("Failed to fetch export data. Please try again.");
-        return;
-      }
-
-      const rawData = result.data.data;
-      const wb = XLSX.utils.book_new();
-
-      // Overview sheet
-      const overview = rawData?.overview || {};
-      const overviewRows = [
-        ['Metric', 'Value', 'Growth'],
-        ['MRR', `$${(overview.mrr?.value || 0).toLocaleString()}`, `${overview.mrr?.growth || 0}%`],
-        ['ARR', `$${(overview.arr?.value || 0).toLocaleString()}`, `${overview.arr?.growth || 0}%`],
-        ['Churn Rate', `${overview.churnRate?.value || 0}%`, `${overview.churnRate?.growth || 0}%`],
-        ['ARPU', `$${(overview.arpu?.value || 0).toLocaleString()}`, `${overview.arpu?.growth || 0}%`],
-        ['New Subscriptions', overview.newSubscriptions?.value || 0, `${overview.newSubscriptions?.growth || 0}%`]
-      ];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(overviewRows), 'Overview');
-
-      // Trial conversion sheet
-      const trialConversion = rawData?.trialConversion || {};
-      const trialRows = [
-        ['Metric', 'Value'],
-        ['Overall Conversion', `${trialConversion.overallConversion?.value || 0}%`],
-        ['Trials Started', trialConversion.trialsStarted?.value || 0],
-        ['Converted to Paid', trialConversion.convertedToPaid?.value || 0],
-        ['Avg Trial Duration', `${trialConversion.averageTrialDuration?.value || 0} days`]
-      ];
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(trialRows), 'Trial Conversion');
-
-      XLSX.writeFile(wb, `financial-report-${timeRangeString}-${new Date().toISOString().split('T')[0]}.xlsx`);
-      toast.success("Financial report exported successfully");
-    } catch (error) {
-      console.error("Excel export error:", error);
-      toast.error("An error occurred during export. Check console for details.");
-    } finally {
-      setShowExportMenu(false);
-    }
-  };
+  const { data: statsData, isLoading: isStatsLoading } = useGetFinancialStatsQuery({ timeRange: timeRangeString });
+  const { data: mrrStatsData } = useGetMrrStatsQuery({ timeRange: timeRangeString });
+  const { data: mrrTrendData } = useGetMrrTrendQuery({ timeRange: timeRangeString });
+  const { data: breakdownData } = useGetFinancialBreakdownQuery({ timeRange: timeRangeString });
 
   const data = useMemo(() => {
-    const overview = overviewData?.data || {};
-    const mrrBreakdown = mrrBreakdownData?.data || {};
-    const subscriberOverview = subscriberOverviewData?.data || {};
-    const subscriberActivity = subscriberActivityData?.data || [];
-    const churnByPlan = churnByPlanData?.data || [];
-    const planPerformance = planPerformanceData?.data || [];
-    const arpu = arpuData?.data || {};
-    const trials = trialsData?.data || {};
-
-    // Default Fallbacks for empty API data
-    const defaultChurnByPlan = [
-      { plan: 'Starter Plan', rate: 0 },
-      { plan: 'Business Plan', rate: 0 },
-      { plan: 'Enterprise Plan', rate: 0 }
-    ];
-
-    const defaultConversionByPlan = [
-      { plan: 'Starter Plan', trials: 0, converted: 0, rate: 0 },
-      { plan: 'Business Plan', trials: 0, converted: 0, rate: 0 },
-      { plan: 'Enterprise Plan', trials: 0, converted: 0, rate: 0 }
-    ];
+    const stats = statsData?.data || {};
+    const mrrStats = mrrStatsData?.data || {};
+    const mrrTrend = mrrTrendData?.data?.mrrTrend || [];
+    const componentBreakdown = breakdownData?.data?.componentBreakdown || [];
 
     return {
       summary: {
-        mrr: overview.mrr?.value || 0,
-        mrrGrowth: overview.mrr?.growth || 0,
-        mrrPeriod: overview.mrr?.period || 0,
-        arr: overview.arr?.value || 0,
-        arrGrowth: overview.arr?.growth || 0,
-        arrPeriod: overview.arr?.period || 0,
-        churnRate: overview.churnRate?.value || 0,
-        churnRateGrowth: overview.churnRate?.growth || 0,
-        churnRatePeriod: overview.churnRate?.period || 0,
-        arpu: overview.arpu?.value || 0,
-        arpuGrowth: overview.arpu?.growth || 0,
-        arpuPeriod: overview.arpu?.period || 0,
-        newSubscriptions: overview.newSubscriptions?.value || 0,
-        newSubscriptionsGrowth: overview.newSubscriptions?.growth || 0,
-        newSubscriptionsPeriod: overview.newSubscriptions?.period || 0
+        mrr: stats.mrr?.value || 0,
+        mrrGrowth: stats.mrr?.growth || 0,
+        mrrPeriod: stats.mrr?.period || "",
+        arr: stats.arr?.value || 0,
+        arrGrowth: stats.arr?.growth || 0,
+        arrPeriod: stats.arr?.period || "",
+        churnRate: stats.churnRate?.value || 0,
+        churnRateGrowth: stats.churnRate?.growth || 0,
+        churnRatePeriod: stats.churnRate?.period || "",
+        arpu: stats.arpu?.value || 0,
+        arpuGrowth: stats.arpu?.growth || 0,
+        arpuPeriod: stats.arpu?.period || "",
+        newSubscriptions: stats.newSubscriptions?.value || 0,
+        newSubscriptionsGrowth: stats.newSubscriptions?.growth || 0,
+        newSubscriptionsPeriod: stats.newSubscriptions?.period || ""
       },
       mrrArr: {
-        newSales: mrrBreakdown.summary?.newSales || 0,
-        upgrades: mrrBreakdown.summary?.upgrades || 0,
-        downgrades: mrrBreakdown.summary?.downgrades || 0,
-        churned: mrrBreakdown.summary?.churned || 0,
-        mrrTrend: (mrrBreakdown.mrrTrend || []).map((item: any) => ({
+        newSales: mrrStats.summary?.newSales || 0,
+        upgrades: mrrStats.summary?.upgrades || 0,
+        downgrades: mrrStats.summary?.downgrades || 0,
+        churned: mrrStats.summary?.churned || 0,
+        mrrTrend: mrrTrend.map((item: any) => ({
           month: item.label,
           mrr: item.value
         })),
-        monthlyBreakdown: (mrrBreakdown.breakdown || []).map((item: any) => ({
+        monthlyBreakdown: componentBreakdown.map((item: any) => ({
           month: item.label,
           churned: item.churned,
           downgrades: item.downgrades,
           newSales: item.newSales,
           upgrades: item.upgrades
         })),
-        annualRevenue: overview.arr?.value || 0,
-        growthRate: overview.growthRate?.value || 0
+        annualRevenue: mrrStats.footer?.annualRecurringRevenue || 0,
+        growthRate: mrrStats.footer?.growthRate || 0
       },
+      // Other tabs will have empty data as their APIs were removed
       churn: {
-        newSignups: subscriberOverview.newSignUps || 0,
-        cancellations: subscriberOverview.cancellations || 0,
-        netGrowth: subscriberOverview.netGrowth || 0,
-        retentionRate: subscriberOverview.retentionRate || 0,
-        activityData: subscriberActivity.map((item: any) => ({
-          month: item.month,
-          cancellations: item.cancellations,
-          netGrowth: item.netGrowth,
-          newSignups: item.newSignUps
-        })),
-        churnByPlan: churnByPlan.length > 0
-          ? churnByPlan.map((item: any) => ({
-            plan: item.planName || item.plan,
-            rate: item.churnRate || item.rate
-          }))
-          : defaultChurnByPlan
+        newSignups: 0,
+        cancellations: 0,
+        netGrowth: 0,
+        retentionRate: 0,
+        activityData: [],
+        churnByPlan: []
       },
       plans: {
-        starter: planPerformance.find((p: any) => p.planName?.includes("Starter")) || { subscribers: 0, revenue: 0, avgUser: 0, churnRate: 0, growth: 0 },
-        business: planPerformance.find((p: any) => p.planName?.includes("Business")) || { subscribers: 0, revenue: 0, avgUser: 0, churnRate: 0, growth: 0 },
-        enterprise: planPerformance.find((p: any) => p.planName?.includes("Enterprise")) || { subscribers: 0, revenue: 0, avgUser: 0, churnRate: 0, growth: 0 },
-        revenueData: planPerformance.map((p: any) => ({
-          plan: p.planName,
-          revenue: p.revenue
-        })),
-        subscribersData: planPerformance.map((p: any) => ({
-          plan: p.planName,
-          subscribers: p.subscribers
-        }))
+        starter: { subscribers: 0, revenue: 0, avgUser: 0, churnRate: 0, growth: 0 },
+        business: { subscribers: 0, revenue: 0, avgUser: 0, churnRate: 0, growth: 0 },
+        enterprise: { subscribers: 0, revenue: 0, avgUser: 0, churnRate: 0, growth: 0 },
+        revenueData: [],
+        subscribersData: []
       },
       arpu: {
-        overall: arpu.overallARPU?.value || 0,
-        starter: (arpu.planARPU || []).find((p: any) => p.planName?.includes("Starter"))?.value || 0,
-        business: (arpu.planARPU || []).find((p: any) => p.planName?.includes("Business"))?.value || 0,
-        enterprise: (arpu.planARPU || []).find((p: any) => p.planName?.includes("Enterprise"))?.value || 0,
-        arpuTrend: (arpu.chart || []).map((item: any) => ({
-          month: item.label,
-          overall: item.overallARPU,
-          starter: item.starterARPU,
-          business: item.businessARPU,
-          enterprise: item.enterpriseARPU
-        })),
-        growthFactors: (arpu.growthFactors || []).map((f: any) => ({
-          name: f.name,
-          description: f.description,
-          impact: (f.impact >= 0 ? "+" : "") + "$" + Math.abs(f.impact).toFixed(2)
-        }))
+        overall: 0,
+        starter: 0,
+        business: 0,
+        enterprise: 0,
+        arpuTrend: [],
+        growthFactors: []
       },
       trials: {
-        overallConversion: trials.overallConversion?.value || 0,
-        trialsStarted: trials.trialsStarted?.value || 0,
-        convertedToPaid: trials.convertedToPaid?.value || 0,
-        avgTrialDuration: trials.averageTrialDuration?.value || 14,
-        conversionByPlan: (trials.conversionByPlan && trials.conversionByPlan.length > 0)
-          ? trials.conversionByPlan.map((p: any) => ({
-            plan: p.planName,
-            trials: p.totalTrials,
-            converted: p.convertedCount,
-            rate: p.conversionRate
-          }))
-          : defaultConversionByPlan,
-        topFeature: (trials.conversionInsights || [])[0]?.description || 'N/A',
-        featureUsage: parseInt((trials.conversionInsights || [])[0]?.value) || 0,
-        avgTimeToConvert: parseFloat((trials.conversionInsights || [])[1]?.value) || 0
+        overallConversion: 0,
+        trialsStarted: 0,
+        convertedToPaid: 0,
+        avgTrialDuration: 0,
+        conversionByPlan: [],
+        topFeature: 'N/A',
+        featureUsage: 0,
+        avgTimeToConvert: 0
       }
     };
-  }, [overviewData, mrrBreakdownData, subscriberOverviewData, subscriberActivityData, churnByPlanData, planPerformanceData, arpuData, trialsData]);
+  }, [statsData, mrrStatsData, mrrTrendData, breakdownData]);
 
   const timeRanges = [
     { value: 1, label: 'Last 1 day' },
@@ -413,22 +167,6 @@ const FinancialReport = () => {
               options={timeRanges.map(t => t.label)}
               onChange={(label) => setTimeRange(timeRanges.find(t => t.label === label)?.value || 30)}
             />
-
-            <div className="relative">
-              <button
-                onClick={() => setShowExportMenu(prev => !prev)}
-                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                Export Report
-              </button>
-              {showExportMenu && (
-                <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
-                  <button onClick={handleExport} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                  <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
-                </div>
-              )}
-            </div>
           </div>
         </div>
 
@@ -518,26 +256,26 @@ const FinancialReport = () => {
               <h2 className="text-lg font-semibold mb-2">Monthly Recurring Revenue (MRR)</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Track recurring revenue trends and components</p>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div>
-                  <div className="text-xs text-purple-600 dark:text-purple-400 mb-1">New Sales</div>
-                  <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">${data.mrrArr.newSales.toLocaleString()}</div>
-                  <div className="text-xs text-purple-600 dark:text-purple-400">This month</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white dark:bg-navbarBg border border-border rounded-xl p-6 shadow-sm">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">New Sales</div>
+                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">${data.mrrArr.newSales.toLocaleString()}</div>
+                  <div className="text-xs text-gray-400 mt-1">This month</div>
                 </div>
-                <div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400 mb-1">Upgrades</div>
-                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">${data.mrrArr.upgrades.toLocaleString()}</div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400">This month</div>
+                <div className="bg-white dark:bg-navbarBg border border-border rounded-xl p-6 shadow-sm">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Upgrades</div>
+                  <div className="text-3xl font-bold text-cyan-500 dark:text-cyan-400">${data.mrrArr.upgrades.toLocaleString()}</div>
+                  <div className="text-xs text-gray-400 mt-1">This month</div>
                 </div>
-                <div>
-                  <div className="text-xs text-orange-600 dark:text-orange-400 mb-1">Downgrades</div>
-                  <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">${data.mrrArr.downgrades.toLocaleString()}</div>
-                  <div className="text-xs text-orange-600 dark:text-orange-400">This month</div>
+                <div className="bg-white dark:bg-navbarBg border border-border rounded-xl p-6 shadow-sm">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Downgrades</div>
+                  <div className="text-3xl font-bold text-orange-400 dark:text-orange-300">-${Math.abs(data.mrrArr.downgrades).toLocaleString()}</div>
+                  <div className="text-xs text-gray-400 mt-1">This month</div>
                 </div>
-                <div>
-                  <div className="text-xs text-red-600 dark:text-red-400 mb-1">Churned</div>
-                  <div className="text-2xl font-bold text-red-700 dark:text-red-300">${data.mrrArr.churned.toLocaleString()}</div>
-                  <div className="text-xs text-red-600 dark:text-red-400">This month</div>
+                <div className="bg-white dark:bg-navbarBg border border-border rounded-xl p-6 shadow-sm">
+                  <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Churned</div>
+                  <div className="text-3xl font-bold text-pink-500 dark:text-pink-400">-${Math.abs(data.mrrArr.churned).toLocaleString()}</div>
+                  <div className="text-xs text-gray-400 mt-1">This month</div>
                 </div>
               </div>
 
@@ -565,8 +303,21 @@ const FinancialReport = () => {
                     }}
                     wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
                   />
-                  <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                  <Area type="monotone" dataKey="mrr" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorMRR)" name="MRR" />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    align="center" 
+                    iconType="circle" 
+                    wrapperStyle={{ paddingTop: '20px' }} 
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="mrr" 
+                    stroke="#8b5cf6" 
+                    strokeWidth={2}
+                    fillOpacity={1} 
+                    fill="url(#colorMRR)" 
+                    name="MRR" 
+                  />
                 </AreaChart>
               </ResponsiveContainer>
 
@@ -585,37 +336,42 @@ const FinancialReport = () => {
                     formatter={(value: number | undefined) => value !== undefined ? [`$${Math.abs(value).toLocaleString()}`, undefined] : ['', undefined]}
                     wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
                   />
-                  <Legend />
+                  <Legend 
+                    verticalAlign="bottom" 
+                    align="center" 
+                    iconType="rect"
+                    wrapperStyle={{ paddingTop: '20px' }}
+                  />
                   <ReferenceLine y={0} stroke={isDark ? '#4b5563' : '#9ca3af'} />
-                  <Bar dataKey="newSales" stackId="a" fill="#8b5cf6" name="New Sales" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="upgrades" stackId="a" fill="#3b82f6" name="Upgrades" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="churned" stackId="a" fill="#ef4444" name="Churned" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="downgrades" stackId="a" fill="#f59e0b" name="Downgrades" radius={[0, 0, 4, 4]} />
+                  <Bar dataKey="churned" fill="#ec4899" name="Churn" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="downgrades" fill="#fbbf24" name="Downgrades" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="newSales" fill="#8b5cf6" name="New Sales" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="upgrades" fill="#06b6d4" name="Upgrades" radius={[2, 2, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6 border border-purple-200 dark:border-purple-800">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <div>
-                    <div className="text-sm text-purple-600 dark:text-purple-400">Annual Recurring Revenue</div>
-                    <div className="text-3xl font-bold text-purple-700 dark:text-purple-300">${data.mrrArr.annualRevenue.toLocaleString()}</div>
-                    <div className="text-xs text-purple-600 dark:text-purple-400">Based on current MRR</div>
-                  </div>
-                  <span><TargetIcon className="w-12 h-12 text-purple-500" /></span>
+              <div className="bg-[#f5f3ff] dark:bg-purple-900/20 rounded-xl p-8 border border-purple-100 dark:border-purple-800 flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-purple-600 dark:text-purple-400 mb-1">Annual Recurring Revenue</div>
+                  <div className="text-4xl font-bold text-purple-700 dark:text-purple-300">${data.mrrArr.annualRevenue.toLocaleString()}</div>
+                  <div className="text-xs text-purple-500 dark:text-purple-400 mt-2">Based on current MRR</div>
+                </div>
+                <div className="flex items-center justify-center w-16 h-16 rounded-full border-4 border-purple-400/30">
+                   <div className="w-8 h-8 rounded-full border-4 border-purple-400/50 flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                   </div>
                 </div>
               </div>
 
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6 border border-blue-200 dark:border-blue-800">
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <div>
-                    <div className="text-sm text-blue-600 dark:text-blue-400">Growth Rate</div>
-                    <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{data.mrrArr.growthRate}%</div>
-                    <div className="text-xs text-blue-600 dark:text-blue-400">Month over month</div>
-                  </div>
-                  <span><TrendingUp className="w-12 h-12 text-blue-500" /></span>
+              <div className="bg-[#f0f9ff] dark:bg-cyan-900/20 rounded-xl p-8 border border-cyan-100 dark:border-cyan-800 flex items-center justify-between">
+                <div>
+                  <div className="text-sm text-cyan-600 dark:text-cyan-400 mb-1">Growth Rate</div>
+                  <div className="text-4xl font-bold text-cyan-700 dark:text-cyan-300">{data.mrrArr.growthRate}%</div>
+                  <div className="text-xs text-cyan-500 dark:text-cyan-400 mt-2">Month-over-month</div>
                 </div>
+                <TrendingUp className="w-16 h-16 text-cyan-500 opacity-80" />
               </div>
             </div>
           </div>

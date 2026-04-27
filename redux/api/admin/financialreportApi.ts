@@ -2,73 +2,31 @@ import { baseApi } from "../baseApi";
 
 export const financialreportApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getFinancialOverview: builder.query({
+    getFinancialStats: builder.query({
       query: (params) => ({
-        url: `/financialreport/overview`,
+        url: `/reports-analytics/financial/stats`,
         method: "GET",
         params,
       }),
-      providesTags: ["Activity"], // Using Activity as a general tag or add new ones if needed, but for now mostly queries
+      providesTags: ["Activity"],
     }),
-    getMrrBreakdown: builder.query({
+    getMrrStats: builder.query({
       query: (params) => ({
-        url: `/financialreport/mrr-breakdown`,
-        method: "GET",
-        params,
-      }),
-    }),
-    getSubscriberOverview: builder.query({
-      query: (params) => ({
-        url: `/financialreport/subscriber-overview`,
+        url: `/reports-analytics/financial/mrr-stats`,
         method: "GET",
         params,
       }),
     }),
-    getSubscriberActivity: builder.query({
+    getMrrTrend: builder.query({
       query: (params) => ({
-        url: `/financialreport/subscriber-activity`,
+        url: `/reports-analytics/financial/mrr-trend`,
         method: "GET",
         params,
       }),
     }),
-    getChurnByPlan: builder.query({
+    getFinancialBreakdown: builder.query({
       query: (params) => ({
-        url: `/financialreport/churn-by-plan`,
-        method: "GET",
-        params,
-      }),
-    }),
-    getPlanPerformance: builder.query({
-      query: (params) => ({
-        url: `/financialreport/plan-overview`,
-        method: "GET",
-        params,
-      }),
-    }),
-    getFinancialCharts: builder.query({
-      query: (params) => ({
-        url: `/financialreport/charts`,
-        method: "GET",
-        params,
-      }),
-    }),
-    getArpuAnalytics: builder.query({
-      query: (params) => ({
-        url: `/financialreport/ARPUAnalytics`,
-        method: "GET",
-        params,
-      }),
-    }),
-    getTrialConversion: builder.query({
-      query: (params) => ({
-        url: `/financialreport/trial-conversion`,
-        method: "GET",
-        params,
-      }),
-    }),
-    getFinancialExport: builder.query({
-      query: (params) => ({
-        url: `/financialreport/export`,
+        url: `/reports-analytics/financial/breakdown`,
         method: "GET",
         params,
       }),
@@ -77,14 +35,8 @@ export const financialreportApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetFinancialOverviewQuery,
-  useGetMrrBreakdownQuery,
-  useGetSubscriberOverviewQuery,
-  useGetSubscriberActivityQuery,
-  useGetChurnByPlanQuery,
-  useGetPlanPerformanceQuery,
-  useGetFinancialChartsQuery,
-  useGetArpuAnalyticsQuery,
-  useGetTrialConversionQuery,
-  useLazyGetFinancialExportQuery,
+  useGetFinancialStatsQuery,
+  useGetMrrStatsQuery,
+  useGetMrrTrendQuery,
+  useGetFinancialBreakdownQuery,
 } = financialreportApi;
