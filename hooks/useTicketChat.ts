@@ -72,12 +72,14 @@ export function useTicketChat(
     // Re-emit joinTicket on every (re)connect so the client stays in the
     // room even after network drops or token rotation
     const onConnect = () => {
+      console.log('[Socket] Connected to server. Joining room:', tid);
       setIsConnected(true);
       joinRoom();
     };
 
     // connectionSuccess fires after server-side JWT auth completes
-    const onConnectionSuccess = (_data: { userId: string }) => {
+    const onConnectionSuccess = (data: { userId: string }) => {
+      console.log('[Socket] Auth Success. UserID:', data.userId, 'Joining room:', tid);
       setIsConnected(true);
       joinRoom();
     };
@@ -85,6 +87,7 @@ export function useTicketChat(
     const onDisconnect = () => setIsConnected(false);
 
     const onMessage = (msg: ChatMessage) => {
+      console.log('[Socket] New message received:', msg);
       const targetId = msg.ticketId;
       if (!targetId) return;
 

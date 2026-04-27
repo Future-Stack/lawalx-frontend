@@ -126,7 +126,7 @@ export default function TicketConversationDialog({
   }));
 
   const { messages, sendMessage, isConnected } = useTicketChat(
-    open && ticket ? ticket.id : null,
+    ticket ? ticket.id : null,
     initialMessages
   );
 
