@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import TicketConversationDialog from './TicketConversationDialog';
+import { toast } from 'sonner';
 import {
   Table,
   TableBody,
@@ -20,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-import { useGetAssignedTicketsQuery } from '@/redux/api/supporter/supporterTicketApi';
+import { useGetAssignedTicketsQuery, useResolveTicketMutation } from '@/redux/api/supporter/supporterTicketApi';
 
 type Priority = 'High' | 'Medium' | 'Low' | string;
 type TicketStatus = 'open' | 'In progress' | 'Resolved' | string;
@@ -63,6 +64,7 @@ function buildPageNumbers(current: number, total: number): (number | '...')[] {
 
 export default function SupportTicketTable() {
   const { data: ticketsResponse, isLoading } = useGetAssignedTicketsQuery();
+  const [resolveTicket] = useResolveTicketMutation();
 
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
