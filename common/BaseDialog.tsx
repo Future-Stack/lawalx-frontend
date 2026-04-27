@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import clsx from "clsx";
 
-type DialogSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl";
+type DialogSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl";
 type DialogHeight = "sm" | "md" | "lg" | "xl";
 
 interface BaseDialogProps {
@@ -45,6 +45,8 @@ const widthMap: Record<DialogSize, string> = {
   "3xl": "max-w-3xl",
   "4xl": "max-w-4xl",
   "5xl": "max-w-5xl",
+  "6xl": "max-w-6xl",
+  "7xl": "max-w-7xl",
 };
 
 const heightMap: Record<DialogHeight, string> = {
@@ -70,7 +72,7 @@ const BaseDialog = ({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
         className={clsx(
-          "flex flex-col overflow-hidden z-50",
+          "flex flex-col overflow-hidden z-[1000]",
           heightMap[maxHeight],
           fullWidth ? "w-full max-w-none" : widthMap[maxWidth],
           className

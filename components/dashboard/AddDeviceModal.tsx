@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -93,7 +94,7 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
       setOpen={(val) => { if (!val) onClose(); }}
       title="Add New Device"
       description="Connect your hardware to your account in a few simple steps."
-      maxWidth="3xl"
+      maxWidth="4xl"
       maxHeight="xl"
     >
       <div className="space-y-6 p-2">
@@ -109,7 +110,7 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
               { step: 4, title: "Start Displaying", desc: "Your screen is now connected and ready to go!" }
             ].map((s) => (
               <div key={s.step} className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-qrBackground dark:bg-gray-800 border border-borderGray dark:border-gray-700 text-gray-600 dark:text-gray-400 flex items-center justify-center font-semibold text-sm shrink-0 relative z-10 shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-qrBackground dark:bg-gray-800 border border-borderGray dark:border-gray-700 text-gray-700 dark:text-gray-400 flex items-center justify-center font-semibold text-sm shrink-0 relative z-10 shadow-customShadow">
                   {s.step}
                 </div>
                 <div>
@@ -145,7 +146,7 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
             value={deviceName}
             onChange={e => setDeviceName(e.target.value)}
             placeholder="Enter device name"
-            className="w-full h-12 px-4 border border-borderGray dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-bgBlue transition-all shadow-sm"
+            className="w-full h-12 px-4 border border-borderGray dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue transition-all"
           />
         </div>
 
@@ -158,7 +159,7 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
               </label>
               <button
                 onClick={() => setIsCreateProgramModalOpen(true)}
-                className="bg-bgBlue hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-customShadow cursor-pointer"
+                className="bg-bgBlue hover:bg-blue-600 text-white px-3 py-2 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-customShadow cursor-pointer"
               >
                 <ScreenShare className="w-4 h-4" /> Create New Program
               </button>
@@ -168,10 +169,10 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
               onValueChange={setSelectedScreen}
               disabled={isLoadingPrograms}
             >
-              <SelectTrigger className="w-full h-12 bg-white dark:bg-gray-800 border-borderGray dark:border-gray-700 rounded-xl shadow-sm">
+              <SelectTrigger className="w-full h-12 bg-white dark:bg-gray-800 border-borderGray dark:border-gray-700 rounded-lg">
                 <SelectValue placeholder={isLoadingPrograms ? "Loading programs..." : "Select a Program"} />
               </SelectTrigger>
-              <SelectContent className="z-[2147483647]">
+              <SelectContent className="z-[1100]">
                 {programOptions.map((option) => (
                   <SelectItem key={option.id} value={option.id}>
                     {option.name}
@@ -191,20 +192,19 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
         <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium text-gray-600 dark:text-gray-400 transition-colors shadow-customShadow"
+            className="px-6 py-2.5 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium text-gray-600 dark:text-gray-400 transition-colors shadow-customShadow cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={() => handleAddDevice({ pin, name: deviceName, programId: programId || selectedScreen })}
-            className="px-6 py-2.5 bg-bgBlue text-white rounded-xl font-semibold hover:bg-blue-600 transition-all shadow-customShadow active:scale-[0.98]"
+            className="px-6 py-2.5 bg-bgBlue text-white rounded-xl font-semibold hover:bg-blue-600 transition-all shadow-customShadow active:scale-[0.98] cursor-pointer"
           >
             Add Device
           </button>
         </div>
 
-        {/* Sub-modals */}
-        <CreateScreenModal
+          <CreateScreenModal
           isOpen={isCreateProgramModalOpen}
           onClose={() => setIsCreateProgramModalOpen(false)}
         />

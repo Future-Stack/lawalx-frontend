@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 // Version: 1.0.2 - Shadcn/ui Dropdowns for better layering
 
@@ -77,14 +78,14 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
     }
   };
 
-  const handleMove = (index: number, direction: "up" | "down") => {
-    const newItems = [...items];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= items.length) return;
-    [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
-    setItems(newItems);
-    onChange?.(newItems);
-  };
+  // const handleMove = (index: number, direction: "up" | "down") => {
+  //   const newItems = [...items];
+  //   const targetIndex = direction === "up" ? index - 1 : index + 1;
+  //   if (targetIndex < 0 || targetIndex >= items.length) return;
+  //   [newItems[index], newItems[targetIndex]] = [newItems[targetIndex], newItems[index]];
+  //   setItems(newItems);
+  //   onChange?.(newItems);
+  // };
 
   const formatDuration = (seconds: number) => {
     const s = Number(seconds || 0);
