@@ -7,9 +7,9 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  Eye,
   Pencil,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import {
   Table,
@@ -21,67 +21,52 @@ import {
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import { useGetAllSupportersQuery } from '@/redux/api/admin/support/adminSupporterApi';
+import { usePresence } from '@/hooks/usePresence';
+import type { EmployeeData } from '@/redux/api/admin/support/adminSupporterApi';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-type EmployeeLevel = 'Active' | 'In Active';
-type EmployeeRole =
-  | 'Support Manager'
-  | 'Sales Officer'
-  | 'Cat attendance'
-  | 'System Eng.'
-  | 'Viewer';
-
-interface Employee {
-  id: string;
-  name: string;
-  email: string;
-  role: EmployeeRole;
-  skills: string[];
-  lastActive: string;
-  level: EmployeeLevel;
-  initials: string;
-  avatarBg: string;
+function getInitials(name: string): string {
+  return name
+    .split(/[\s_]+/)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() ?? '')
+    .join('');
 }
 
-// ── Mock data (from Figma screenshot) ─────────────────────────────────────────
-
-const MOCK_EMPLOYEES: Employee[] = [
-  { id: '1', name: 'Dianne Russell', email: 'tanya.hill@example.com', role: 'Support Manager', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '4/4/18', level: 'Active', initials: 'DR', avatarBg: 'bg-pink-400' },
-  { id: '2', name: 'Brooklyn Simmons', email: 'curtis.weaver@example.com', role: 'Sales Officer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '12/4/17', level: 'Active', initials: 'BS', avatarBg: 'bg-orange-400' },
-  { id: '3', name: 'Darlene Robertson', email: 'michelle.rivera@example.com', role: 'Cat attendance', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/31/14', level: 'In Active', initials: 'DR', avatarBg: 'bg-yellow-500' },
-  { id: '4', name: 'Arlene McCoy', email: 'jackson.graham@example.com', role: 'Sales Officer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '3/4/16', level: 'Active', initials: 'AM', avatarBg: 'bg-purple-400' },
-  { id: '5', name: 'Marvin McKinney', email: 'bill.sanders@example.com', role: 'Sales Officer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '5/7/18', level: 'Active', initials: 'MM', avatarBg: 'bg-green-500' },
-  { id: '6', name: 'Jane Cooper', email: 'nathan.roberts@example.com', role: 'System Eng.', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '2/11/12', level: 'Active', initials: 'JC', avatarBg: 'bg-blue-400' },
-  { id: '7', name: 'Theresa Webb', email: 'tim.jennings@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '6/19/14', level: 'In Active', initials: 'TW', avatarBg: 'bg-red-400' },
-  { id: '8', name: 'Darrell Steward', email: 'deanna.curtis@example.com', role: 'Support Manager', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '9/18/16', level: 'Active', initials: 'DS', avatarBg: 'bg-indigo-400' },
-  { id: '9', name: 'Jacob Jones', email: 'willie.jennings@example.com', role: 'Support Manager', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '7/11/19', level: 'Active', initials: 'JJ', avatarBg: 'bg-teal-500' },
-  { id: '10', name: 'Savannah Nguyen', email: 'dolores.chambers@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '8/30/14', level: 'Active', initials: 'SN', avatarBg: 'bg-cyan-500' },
-  { id: '11', name: 'Devon Lane', email: 'debra.holt@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '5/27/15', level: 'Active', initials: 'DL', avatarBg: 'bg-amber-500' },
-  { id: '12', name: 'Robert Fox', email: 'kenzi.lawson@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '5/19/12', level: 'Active', initials: 'RF', avatarBg: 'bg-lime-500' },
-  { id: '13', name: 'Albert Flores', email: 'alma.lawson@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '10/6/13', level: 'Active', initials: 'AF', avatarBg: 'bg-rose-400' },
-  { id: '14', name: 'Kathryn Murphy', email: 'felicia.reid@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/15/12', level: 'In Active', initials: 'KM', avatarBg: 'bg-violet-400' },
-  { id: '15', name: 'Wade Warren', email: 'michael.mitc@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/15/12', level: 'In Active', initials: 'WW', avatarBg: 'bg-emerald-500' },
-  { id: '16', name: 'Kristin Watson', email: 'nevaeh.simmons@example.com', role: 'Viewer', skills: ['Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops', 'Senior Dev Ops'], lastActive: '1/15/12', level: 'In Active', initials: 'KW', avatarBg: 'bg-sky-400' },
+const AVATAR_COLORS = [
+  'bg-pink-400', 'bg-orange-400', 'bg-yellow-500', 'bg-purple-400',
+  'bg-green-500', 'bg-blue-400', 'bg-red-400', 'bg-indigo-400',
+  'bg-teal-500', 'bg-cyan-500', 'bg-amber-500', 'bg-lime-500',
 ];
 
+function avatarColor(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[hash % AVATAR_COLORS.length];
+}
+
+function formatLastActive(dateStr: string | null): string {
+  if (!dateStr) return '—';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
+
+function formatRole(role: string): string {
+  return role
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 const ITEMS_PER_PAGE = 11;
-const TOTAL_COUNT = 500;
-
-// ── Badge style maps ──────────────────────────────────────────────────────────
-
-const ROLE_STYLES: Record<EmployeeRole, string> = {
-  'Support Manager': 'text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-400',
-  'Sales Officer': 'text-cyan-600   bg-cyan-50   border-cyan-200   dark:bg-cyan-900/20   dark:border-cyan-800   dark:text-cyan-400',
-  'Cat attendance': 'text-gray-600   bg-gray-100  border-gray-200   dark:bg-gray-800      dark:border-gray-700   dark:text-gray-400',
-  'System Eng.': 'text-blue-600   bg-blue-50   border-blue-200   dark:bg-blue-900/20   dark:border-blue-800   dark:text-blue-400',
-  'Viewer': 'text-gray-600   bg-gray-100  border-gray-200   dark:bg-gray-800      dark:border-gray-700   dark:text-gray-400',
-};
-
-const LEVEL_STYLES: Record<EmployeeLevel, string> = {
-  'Active': 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400',
-  'In Active': 'text-red-500   bg-red-50   border-red-200   dark:bg-red-900/20   dark:border-red-800   dark:text-red-400',
-};
 
 // ── Pagination helper ─────────────────────────────────────────────────────────
 
@@ -104,31 +89,40 @@ export default function EmployeesTable() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  // ── Data fetching ─────────────────────────────────────────────────────────
+  const { data, isLoading, isError } = useGetAllSupportersQuery();
+  const presenceMap = usePresence(); // real-time socket presence
+
+  const employees: EmployeeData[] = data?.data ?? [];
+
+  // ── Search filter ─────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
-    if (!search.trim()) return MOCK_EMPLOYEES;
+    if (!search.trim()) return employees;
     const q = search.toLowerCase();
-    return MOCK_EMPLOYEES.filter(
+    return employees.filter(
       (e) =>
-        e.name.toLowerCase().includes(q) ||
-        e.email.toLowerCase().includes(q) ||
-        e.role.toLowerCase().includes(q)
+        (e.user.username ?? '').toLowerCase().includes(q) ||
+        (e.user.full_name ?? '').toLowerCase().includes(q) ||
+        e.user.account.email.toLowerCase().includes(q) ||
+        e.supporterRole.some((r) => r.toLowerCase().includes(q)) ||
+        e.skills.some((s) => s.toLowerCase().includes(q))
     );
-  }, [search]);
+  }, [search, employees]);
 
-  const totalPages = Math.max(1, Math.ceil(TOTAL_COUNT / ITEMS_PER_PAGE));
-  const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const end = Math.min(currentPage * ITEMS_PER_PAGE, TOTAL_COUNT);
+  // ── Pagination ────────────────────────────────────────────────────────────
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const start = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
+  const pageNumbers = buildPageNumbers(currentPage, totalPages);
 
+  // ── Selection ─────────────────────────────────────────────────────────────
   const allSelected =
-    filtered.length > 0 && filtered.every((e) => selectedIds.has(e.id));
+    paginated.length > 0 && paginated.every((e) => selectedIds.has(e.id));
 
   const toggleAll = () => {
     const next = new Set(selectedIds);
-    if (allSelected) {
-      filtered.forEach((e) => next.delete(e.id));
-    } else {
-      filtered.forEach((e) => next.add(e.id));
-    }
+    if (allSelected) paginated.forEach((e) => next.delete(e.id));
+    else paginated.forEach((e) => next.add(e.id));
     setSelectedIds(next);
   };
 
@@ -138,11 +132,20 @@ export default function EmployeesTable() {
     setSelectedIds(next);
   };
 
-  const pageNumbers = buildPageNumbers(currentPage, totalPages);
+  // ── Status helpers ────────────────────────────────────────────────────────
+  // Socket presence overrides API value in real-time
+  const isOnline = (emp: EmployeeData): boolean =>
+    presenceMap[emp.userId] ?? emp.user.isOnline;
 
+  const lastActive = (emp: EmployeeData): string => {
+    if (isOnline(emp)) return 'Online';
+    return formatLastActive(emp.user.lastOnlineAt);
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
-      {/* ── Top bar: title + search + filter ─────────────────────────── */}
+      {/* ── Top bar ────────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-base font-semibold text-gray-900 dark:text-white whitespace-nowrap">
           Support Employees List
@@ -154,7 +157,7 @@ export default function EmployeesTable() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search Project..."
+              placeholder="Search by name, email, role…"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -173,7 +176,7 @@ export default function EmployeesTable() {
         </div>
       </div>
 
-      {/* ── shadcn Table ──────────────────────────────────────────────── */}
+      {/* ── Table ──────────────────────────────────────────────────────── */}
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-800/60">
@@ -185,28 +188,52 @@ export default function EmployeesTable() {
                 className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
               />
             </TableHead>
-            {['File Name', 'Email', 'Role', 'Skills', 'Last Active', 'Level', 'Action'].map(
-              (col) => (
-                <TableHead
-                  key={col}
-                  className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
-                >
-                  {col}
-                </TableHead>
-              )
-            )}
+            {['Name', 'Email', 'Role', 'Skills', 'Last Active', 'Level', 'Action'].map((col) => (
+              <TableHead
+                key={col}
+                className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+              >
+                {col}
+              </TableHead>
+            ))}
           </TableRow>
         </TableHeader>
 
         <TableBody>
-          {filtered.length === 0 ? (
+          {/* Loading state */}
+          {isLoading && (
+            <TableRow>
+              <TableCell colSpan={8} className="py-14 text-center">
+                <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" />
+              </TableCell>
+            </TableRow>
+          )}
+
+          {/* Error state */}
+          {isError && !isLoading && (
+            <TableRow>
+              <TableCell colSpan={8} className="py-14 text-center text-sm text-red-400">
+                Failed to load supporters. Please try again.
+              </TableCell>
+            </TableRow>
+          )}
+
+          {/* Empty state */}
+          {!isLoading && !isError && paginated.length === 0 && (
             <TableRow>
               <TableCell colSpan={8} className="py-14 text-center text-sm text-gray-400 dark:text-gray-500">
                 No employees found.
               </TableCell>
             </TableRow>
-          ) : (
-            filtered.map((emp) => (
+          )}
+
+          {/* Data rows */}
+          {!isLoading && !isError && paginated.map((emp) => {
+            const displayName = emp.user.full_name || emp.user.username;
+            const initials = getInitials(displayName);
+            const online = isOnline(emp);
+
+            return (
               <TableRow
                 key={emp.id}
                 className={cn(
@@ -219,24 +246,41 @@ export default function EmployeesTable() {
                   <Checkbox
                     checked={selectedIds.has(emp.id)}
                     onCheckedChange={() => toggleOne(emp.id)}
-                    aria-label={`Select ${emp.name}`}
+                    aria-label={`Select ${displayName}`}
                     className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                   />
                 </TableCell>
 
-                {/* File Name (avatar + name) */}
+                {/* Name + Avatar */}
                 <TableCell className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        'w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0',
-                        emp.avatarBg
+                    <div className="relative flex-shrink-0">
+                      {emp.user.image_url ? (
+                        <img
+                          src={emp.user.image_url}
+                          alt={displayName}
+                          className="w-9 h-9 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div
+                          className={cn(
+                            'w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold',
+                            avatarColor(emp.id)
+                          )}
+                        >
+                          {initials}
+                        </div>
                       )}
-                    >
-                      {emp.initials}
+                      {/* Online indicator dot */}
+                      <span
+                        className={cn(
+                          'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-900',
+                          online ? 'bg-green-500' : 'bg-gray-400'
+                        )}
+                      />
                     </div>
                     <span className="text-sm font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                      {emp.name}
+                      {displayName}
                     </span>
                   </div>
                 </TableCell>
@@ -244,23 +288,25 @@ export default function EmployeesTable() {
                 {/* Email */}
                 <TableCell className="px-4 py-3">
                   <span className="text-sm text-gray-500 dark:text-gray-400">
-                    {emp.email}
+                    {emp.user.account.email}
                   </span>
                 </TableCell>
 
                 {/* Role badge */}
                 <TableCell className="px-4 py-3">
-                  <span
-                    className={cn(
-                      'inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border whitespace-nowrap',
-                      ROLE_STYLES[emp.role]
-                    )}
-                  >
-                    {emp.role}
-                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {emp.supporterRole.map((role) => (
+                      <span
+                        key={role}
+                        className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border whitespace-nowrap text-purple-600 bg-purple-50 border-purple-200 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-400"
+                      >
+                        {formatRole(role)}
+                      </span>
+                    ))}
+                  </div>
                 </TableCell>
 
-                {/* Skills — 2 × 2 grid */}
+                {/* Skills — 2-column grid */}
                 <TableCell className="px-4 py-3">
                   <div className="grid grid-cols-2 gap-1 w-fit">
                     {emp.skills.slice(0, 4).map((skill, i) => (
@@ -277,7 +323,7 @@ export default function EmployeesTable() {
                 {/* Last Active */}
                 <TableCell className="px-4 py-3">
                   <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                    {emp.lastActive}
+                    {lastActive(emp)}
                   </span>
                 </TableCell>
 
@@ -286,14 +332,16 @@ export default function EmployeesTable() {
                   <span
                     className={cn(
                       'inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border whitespace-nowrap',
-                      LEVEL_STYLES[emp.level]
+                      online
+                        ? 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400'
+                        : 'text-red-500 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400'
                     )}
                   >
-                    {emp.level}
+                    {online ? 'Active' : 'In Active'}
                   </span>
                 </TableCell>
 
-                {/* Action icons */}
+                {/* Action — static for now */}
                 <TableCell className="px-4 py-3">
                   <div className="flex items-center gap-0.5">
                     <button
@@ -311,17 +359,21 @@ export default function EmployeesTable() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))
-          )}
+            );
+          })}
         </TableBody>
       </Table>
 
       {/* ── Pagination ────────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700">
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Showing {start} to {end} of{' '}
-          <span className="font-semibold text-blue-600 dark:text-blue-400">{TOTAL_COUNT}</span>{' '}
-          Files
+          Showing{' '}
+          <span className="font-semibold text-gray-700 dark:text-gray-300">
+            {filtered.length === 0 ? 0 : start + 1}–{Math.min(start + ITEMS_PER_PAGE, filtered.length)}
+          </span>{' '}
+          of{' '}
+          <span className="font-semibold text-blue-600 dark:text-blue-400">{filtered.length}</span>{' '}
+          supporters
         </p>
 
         <div className="flex items-center gap-1 flex-wrap">

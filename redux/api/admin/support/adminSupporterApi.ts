@@ -38,6 +38,9 @@ export interface SupporterUser {
   id: string;
   full_name?: string | null;
   username: string;
+  image_url?: string | null;
+  isOnline: boolean;
+  lastOnlineAt: string | null;
   role: string;
   account: {
     email: string;
