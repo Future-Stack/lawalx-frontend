@@ -1,17 +1,21 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Paperclip, Send, X, FileIcon } from 'lucide-react';
+import { Paperclip, Send, X, FileIcon, CheckCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { useTicketChat } from '@/hooks/useTicketChat';
 import { useAppSelector } from '@/redux/store/hook';
 import { selectCurrentUser } from '@/redux/features/auth/authSlice';
-import { useGetAssignedTicketDetailsQuery } from '@/redux/api/supporter/supporterTicketApi';
+import {
+  useGetAssignedTicketDetailsQuery,
+  useResolveTicketMutation,
+} from '@/redux/api/supporter/supporterTicketApi';
 import { useUploadSupportFileMutation } from '@/redux/api/users/support/supportApi';
 import type { ChatAttachment, ChatMessage } from '@/types/chat';
 import { toast } from 'sonner';
@@ -23,6 +27,7 @@ interface Ticket {
   ticketId: string;
   clientName: string;
   issueType: string;
+  status: string;
 }
 
 interface TicketConversationDialogProps {
@@ -99,6 +104,18 @@ export default function TicketConversationDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentUser = useAppSelector(selectCurrentUser);
   const [uploadSupportFile] = useUploadSupportFileMutation();
+  const [resolveTicket, { isLoading: isResolving }] = useResolveTicketMutation();
+
+  const handleResolve = async () => {
+    if (!ticket?.id) return;
+    try {
+      await resolveTicket(ticket.id).unwrap();
+      toast.success('Ticket marked as resolved');
+      onOpenChange(false);
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to resolve ticket');
+    }
+  };
 
   const { currentData: ticketDetails } = useGetAssignedTicketDetailsQuery(
     ticket?.id || '',
@@ -203,23 +220,35 @@ export default function TicketConversationDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full sm:max-w-xl lg:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl">
-        {/* Header */}
-        <div className="px-5 sm:px-6 pt-5 pb-4 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-          <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight">
-            Support Ticket Query
-          </DialogTitle>
-          <div className="flex items-center gap-1.5">
-            <span
-              className={cn(
-                'inline-block w-2 h-2 rounded-full',
-                isConnected ? 'bg-green-500' : 'bg-gray-400 dark:bg-gray-600'
-              )}
-            />
-            <span className="text-xs text-gray-400 dark:text-gray-500">
-              {isConnected ? 'Live' : 'Connecting...'}
-            </span>
+        <DialogHeader className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 flex flex-row items-center justify-between">
+          <div className="flex items-center gap-3 flex-wrap">
+            <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight">
+              Support Ticket Query
+            </DialogTitle>
+            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-50 dark:bg-gray-800 rounded-full border border-gray-100 dark:border-gray-700">
+              <span
+                className={cn(
+                  'inline-block w-1.5 h-1.5 rounded-full',
+                  isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-gray-600'
+                )}
+              />
+              <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                {isConnected ? 'Live' : 'Offline'}
+              </span>
+            </div>
+            {ticket?.status !== 'Resolved' && (
+              <button
+                type="button"
+                onClick={handleResolve}
+                disabled={isResolving}
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50 whitespace-nowrap ml-1"
+              >
+                <CheckCircle className="w-3.5 h-3.5" />
+                {isResolving ? 'Resolving...' : 'Resolve'}
+              </button>
+            )}
           </div>
-        </div>
+        </DialogHeader>
 
         {/* Inner conversation card */}
         <div className="mx-4 sm:mx-6 my-4 sm:my-5 rounded-xl overflow-hidden flex flex-col">
