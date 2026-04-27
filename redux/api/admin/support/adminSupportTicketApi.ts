@@ -115,6 +115,50 @@ export interface UpdateTicketDto {
   supporterId?: string;
 }
 
+// ── Admin ticket detail types ────────────────────────────────────────────────
+
+export interface AdminTicketMessage {
+  id: string;
+  text: string;
+  attachments: { fileUrl: string; fileName: string }[];
+  senderId: string;
+  createdAt: string;
+}
+
+export interface AdminTicketDetailAssignment {
+  id: string;
+  assignedAt: string;
+  user: {
+    username: string;
+    full_name: string | null;
+    image_url: string | null;
+    role: string;
+  };
+}
+
+export interface AdminTicketDetailData {
+  id: string;
+  subject: string;
+  description: string;
+  status: string;
+  customId: string;
+  issueType: string[];
+  file: string[];
+  createdAt: string;
+  updatedAt: string;
+  userId?: string;
+  user?: { id?: string; username: string; image_url?: string | null };
+  messages: AdminTicketMessage[];
+  assignments: AdminTicketDetailAssignment[];
+}
+
+export interface AdminTicketDetailResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: AdminTicketDetailData;
+}
+
 export interface TicketStatsData {
   total: number;
   open: number;
@@ -163,6 +207,13 @@ export const adminSupportTicketApi = baseApi.injectEndpoints({
       }),
       providesTags: ['AdminSupportTicket'],
     }),
+    getAdminTicketDetails: builder.query<AdminTicketDetailResponse, string>({
+      query: (id) => ({
+        url: `/admin/support/ticket/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'AdminSupportTicket', id }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -173,4 +224,5 @@ export const {
   useAssignSupportTicketMutation,
   useUpdateSupportTicketMutation,
   useGetTicketStatisticsQuery,
+  useGetAdminTicketDetailsQuery,
 } = adminSupportTicketApi;

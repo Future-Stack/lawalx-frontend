@@ -1,6 +1,17 @@
 import { baseApi } from '../../baseApi';
 import { TicketResponse, TicketsResponse } from './support.types';
 
+export interface UploadSupportFileResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: {
+    tempFileId: string;
+    fileUrl: string;
+    fileName: string;
+  };
+}
+
 export const supportApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createSupportTicket: builder.mutation<TicketResponse, FormData>({
@@ -25,6 +36,13 @@ export const supportApi = baseApi.injectEndpoints({
       }),
       providesTags: (result, error, id) => [{ type: 'SupportTicket', id }],
     }),
+    uploadSupportFile: builder.mutation<UploadSupportFileResponse, FormData>({
+      query: (formData) => ({
+        url: '/support/upload-support-file',
+        method: 'POST',
+        body: formData,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -33,4 +51,5 @@ export const {
   useCreateSupportTicketMutation,
   useGetMyTicketsQuery,
   useGetTicketDetailsQuery,
+  useUploadSupportFileMutation,
 } = supportApi;
