@@ -56,7 +56,6 @@ const AddDeviceDialog = ({ open, setOpen }: AddDeviceDialogProps) => {
         <div className="border-t border-border" />
 
         <div className="border-b border-border pb-6 mt-5 space-y-6">
-          {/* Select Devices */}
           <div>
             <label className="block text-base font-semibold text-headings mb-3">
               Select Devices
