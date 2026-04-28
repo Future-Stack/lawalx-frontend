@@ -51,9 +51,9 @@ interface Schedule {
 }
 
 // Form state interface – matches Schedule but without id/active
-interface ScheduleForm extends Omit<Schedule, "id" | "active"> {
-  lowerThirdId?: string | null;
-}
+// interface ScheduleForm extends Omit<Schedule, "id" | "active"> {
+//   lowerThirdId?: string | null;
+// }
 
 export type FontSize = "Small" | "Medium" | "Large";
 export type AnimationType = "Left_to_Light" | "Right_to_Left" | "Fade" | "None";

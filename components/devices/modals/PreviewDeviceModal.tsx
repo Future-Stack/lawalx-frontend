@@ -6,6 +6,7 @@ import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.a
 import DeviceLocation from "@/components/common/DeviceLocation";
 
 import { TimelineItem } from "@/redux/api/users/devices/devices.type";
+import Image from "next/image";
 
 interface Props {
   isOpen: boolean;
@@ -295,11 +296,14 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                 style={mediaFilter}
               >
                 {currentItem?.file?.type === 'IMAGE' ? (
-                  <img
-                    src={mediaUrl}
-                    alt={currentItem?.file?.originalName}
-                    className="w-full h-full object-contain"
-                  />
+                  mediaUrl ? (
+                    <Image
+                      src={mediaUrl}
+                      alt={currentItem?.file?.originalName || "Device Media"}
+                      fill
+                      className="object-contain"
+                    />
+                  ) : null
                 ) : currentItem?.file?.type === 'AUDIO' ? (
                   <div className="flex flex-col items-center gap-4 text-white">
                     <Volume2 className="w-16 h-16 text-bgBlue animate-pulse" />

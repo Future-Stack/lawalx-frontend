@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../../baseApi";
 import { SuccessResponse } from "../content/content.type";
 import { GetSchedulesResponse, GetSingleScheduleResponse, LowerThirdPayload } from "./schedules.type";
