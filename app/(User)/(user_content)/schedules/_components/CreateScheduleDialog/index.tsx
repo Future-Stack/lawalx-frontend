@@ -12,7 +12,7 @@ import Step4ScheduleSettings from "./Step4ScheduleSettings";
 import { ContentItem } from "@/types/content";
 import { FileText, Settings, TvMinimal, Video, X } from "lucide-react";
 import { useCreateScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
-import { StoreMorningPromo, ContentType, RecurrenceType, DayOfWeek } from "@/redux/api/users/schedules/schedules.type";
+import { StoreMorningPromo, ContentType, DayOfWeek } from "@/redux/api/users/schedules/schedules.type";
 import dayjs from "dayjs";
 
 interface CreateScheduleDialogProps {
@@ -163,7 +163,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             deviceIds: step3Data.selectedScreens.filter(isUUID),
             fileIds: selectedFiles.length > 0 ? selectedFiles : undefined,
             status: "playing",
-            lowerThirdId: createdLowerThirdId && isUUID(createdLowerThirdId) ? createdLowerThirdId : undefined,
+            lowerThirdIds: createdLowerThirdId && isUUID(createdLowerThirdId) ? [createdLowerThirdId] : undefined,
         };
 
         console.log("=== SUBMITTING SCHEDULE PAYLOAD ===");

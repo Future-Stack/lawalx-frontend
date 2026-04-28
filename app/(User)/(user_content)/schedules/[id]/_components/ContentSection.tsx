@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Info, X, FilePlay, AudioLines } from "lucide-react";
 import BaseSelect from "@/common/BaseSelect";
 import { ContentItem } from "@/types/content";
 import { useDeleteFileMutation } from "@/redux/api/users/content/content.api";
 import { toast } from "sonner";
+import Image from "next/image";
 
 interface ContentSectionProps {
     contentType: string;
@@ -29,7 +31,7 @@ const ContentSection: React.FC<ContentSectionProps> = ({
         { label: "Select a Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
         { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
         { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-gray-500" /> },
-        { label: "Lower Third", value: "lower-third", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
+        { label: "Text Section", value: "lower-third", icon: <FilePlay className="w-5 h-5 text-gray-500" /> },
     ];
     const selectedContentType = contentTypeOptions.some((opt) => opt.value === contentType)
         ? contentType
@@ -97,8 +99,10 @@ const ContentSection: React.FC<ContentSectionProps> = ({
                                             <div className="w-full h-full flex flex-col items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-500">
                                                 <AudioLines className="w-6 h-6 border-none" />
                                             </div>
+                                        ) : item.thumbnail ? (
+                                            <Image src={item.thumbnail} alt={item.title} width={56} height={48} className="w-full h-full object-cover" />
                                         ) : (
-                                            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                                            <div className="w-full h-full bg-gray-200 dark:bg-gray-800" />
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">

@@ -33,7 +33,7 @@ export interface StoreMorningPromo {
   deviceIds: string[];
 
   fileIds?: string[];
-  lowerThirdId?: string;
+  lowerThirdIds?: string[];
 
   status: StatusType;
 }
