@@ -334,12 +334,12 @@ const FinancialReport = () => {
           growth: item.growth || 0
         })),
         revenueData: (planRevenueData?.data?.points || []).map((item: any) => ({
-          plan: item.label,
-          revenue: item.value
+          plan: (item.planName || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+          revenue: item.value || 0
         })),
         subscribersData: (planSubscribersData?.data?.points || []).map((item: any) => ({
-          plan: item.label,
-          subscribers: item.value
+          plan: (item.planName || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+          subscribers: item.value || 0
         }))
       },
       arpu: {
@@ -851,87 +851,90 @@ const FinancialReport = () => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="h-[400px]">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-semibold text-gray-500">Monthly Revenue</h3>
-                  </div>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.plans.revenueData} margin={{ bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-100 dark:stroke-gray-800" />
-                      <XAxis 
-                        dataKey="plan" 
-                        className="fill-gray-500 dark:fill-gray-400" 
-                        tick={{ fontSize: 12 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis 
-                        className="fill-gray-500 dark:fill-gray-400" 
-                        tick={{ fontSize: 12 }}
-                        axisLine={false}
-                        tickLine={false}
-                        tickFormatter={(value) => `$${value}`}
-                      />
-                      <Tooltip
-                        cursor={{ fill: '#f3f4f6', opacity: 0.4 }}
-                        contentStyle={{
-                          backgroundColor: 'var(--tooltip-bg)',
-                          border: 'none',
-                          borderRadius: '0.75rem',
-                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                        }}
-                        wrapperClassName="dark:[--tooltip-bg:#1f2937] [--tooltip-bg:#ffffff]"
-                      />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        align="center" 
-                        iconType="rect" 
-                        wrapperStyle={{ paddingTop: '30px' }}
-                      />
-                      <Bar dataKey="revenue" fill="#8B5CF6" name="Monthly Revenue" radius={[6, 6, 0, 0]} barSize={60} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                {/* Revenue by Plan Chart */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4">Total Revenue by Plan</h3>
+                  {data.plans.revenueData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={data.plans.revenueData} margin={{ bottom: 20, left: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-100 dark:stroke-gray-800" />
+                        <XAxis
+                          dataKey="plan"
+                          className="fill-gray-500 dark:fill-gray-400"
+                          tick={{ fontSize: 12 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          className="fill-gray-500 dark:fill-gray-400"
+                          tick={{ fontSize: 12 }}
+                          axisLine={false}
+                          tickLine={false}
+                          tickFormatter={(v) => `$${v}`}
+                        />
+                        <Tooltip
+                          cursor={{ fill: 'rgba(139,92,246,0.08)' }}
+                          formatter={(v: any) => [`$${Number(v).toFixed(2)}`, 'Revenue']}
+                          contentStyle={{
+                            backgroundColor: 'var(--tooltip-bg)',
+                            border: 'none',
+                            borderRadius: '0.75rem',
+                            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                          }}
+                          wrapperClassName="dark:[--tooltip-bg:#1f2937] [--tooltip-bg:#ffffff]"
+                        />
+                        <Legend verticalAlign="bottom" align="center" iconType="rect" wrapperStyle={{ paddingTop: '20px' }} />
+                        <Bar dataKey="revenue" fill="#8B5CF6" name="Total Revenue" radius={[6, 6, 0, 0]} maxBarSize={80} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[320px] text-gray-400 dark:text-gray-500 text-sm">
+                      No revenue data available for the selected period.
+                    </div>
+                  )}
                 </div>
 
-                <div className="h-[400px]">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-sm font-semibold text-gray-500">Subscribers</h3>
-                  </div>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={data.plans.subscribersData} margin={{ bottom: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-100 dark:stroke-gray-800" />
-                      <XAxis 
-                        dataKey="plan" 
-                        className="fill-gray-500 dark:fill-gray-400" 
-                        tick={{ fontSize: 12 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <YAxis 
-                        className="fill-gray-500 dark:fill-gray-400" 
-                        tick={{ fontSize: 12 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <Tooltip
-                        cursor={{ fill: '#f3f4f6', opacity: 0.4 }}
-                        contentStyle={{
-                          backgroundColor: 'var(--tooltip-bg)',
-                          border: 'none',
-                          borderRadius: '0.75rem',
-                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-                        }}
-                        wrapperClassName="dark:[--tooltip-bg:#1f2937] [--tooltip-bg:#ffffff]"
-                      />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        align="center" 
-                        iconType="rect" 
-                        wrapperStyle={{ paddingTop: '30px' }}
-                      />
-                      <Bar dataKey="subscribers" fill="#06B6D4" name="Subscribers" radius={[6, 6, 0, 0]} barSize={60} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                {/* Subscribers by Plan Chart */}
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-4">Active Subscribers by Plan</h3>
+                  {data.plans.subscribersData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart data={data.plans.subscribersData} margin={{ bottom: 20, left: 10 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-100 dark:stroke-gray-800" />
+                        <XAxis
+                          dataKey="plan"
+                          className="fill-gray-500 dark:fill-gray-400"
+                          tick={{ fontSize: 12 }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          className="fill-gray-500 dark:fill-gray-400"
+                          tick={{ fontSize: 12 }}
+                          axisLine={false}
+                          tickLine={false}
+                          allowDecimals={false}
+                        />
+                        <Tooltip
+                          cursor={{ fill: 'rgba(6,182,212,0.08)' }}
+                          formatter={(v: any) => [v, 'Subscribers']}
+                          contentStyle={{
+                            backgroundColor: 'var(--tooltip-bg)',
+                            border: 'none',
+                            borderRadius: '0.75rem',
+                            boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
+                          }}
+                          wrapperClassName="dark:[--tooltip-bg:#1f2937] [--tooltip-bg:#ffffff]"
+                        />
+                        <Legend verticalAlign="bottom" align="center" iconType="rect" wrapperStyle={{ paddingTop: '20px' }} />
+                        <Bar dataKey="subscribers" fill="#06B6D4" name="Subscribers" radius={[6, 6, 0, 0]} maxBarSize={80} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-[320px] text-gray-400 dark:text-gray-500 text-sm">
+                      No subscriber data available for the selected period.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
