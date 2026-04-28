@@ -78,7 +78,7 @@ export default function SystemHealth() {
             </div>
 
             {/* Metric Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 {/* Overall Health */}
                 <div className="bg-navbarBg rounded-lg p-5 shadow-sm border border-border">
                     <div className="flex items-center justify-between mb-3">
@@ -90,14 +90,14 @@ export default function SystemHealth() {
                 </div>
 
                 {/* System Uptime */}
-                <div className="bg-navbarBg rounded-lg p-5 shadow-sm border border-border">
+                {/* <div className="bg-navbarBg rounded-lg p-5 shadow-sm border border-border">
                     <div className="flex items-center justify-between mb-3">
                         <span className="text-xs font-medium text-gray-600 dark:text-gray-400">System Uptime</span>
                         <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                     </div>
                     <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">99.8%</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">Last 30 days average</div>
-                </div>
+                </div> */}
 
                 {/* Response Time */}
                 <div className="bg-navbarBg rounded-lg p-5 shadow-sm border border-border">
@@ -189,13 +189,13 @@ export default function SystemHealth() {
 
                 {/* Tabs */}
                 <div className="bg-navbarBg rounded-full border border-border p-1.5 mb-6 inline-flex gap-2 overflow-x-auto max-w-full">
-                    {(['Performance', 'Server Status', 'Uptime Tracking', 'Error Logs'] as const).map((tab) => (
+                    {(['Performance', 'Server Status', 'Error Logs'] as const).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             className={`px-4 py-2 text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 shadow-customShadow ${activeTab === tab
-                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
-                                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400'
+                                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                         >
                             {tab}
@@ -301,8 +301,8 @@ export default function SystemHealth() {
                                             <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{server.location}</td>
                                             <td className="py-3 px-4">
                                                 <span className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full w-fit ${server.status === 'Healthy'
-                                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                                                        : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                                    : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                                                     }`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${server.status === 'Healthy' ? 'bg-green-500' : 'bg-orange-500'}`}></span>
                                                     {server.status}
@@ -333,8 +333,8 @@ export default function SystemHealth() {
                                             <td className="py-3 px-4 text-sm text-gray-900 dark:text-white font-medium">{server.uptime}</td>
                                             <td className="py-3 px-4">
                                                 <span className={`text-xs px-2 py-1 rounded-full ${server.load === 'Normal'
-                                                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                                        : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                                    : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                                                     }`}>
                                                     {server.load}
                                                 </span>
@@ -343,89 +343,6 @@ export default function SystemHealth() {
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
-                    )}
-
-                    {/* Uptime Tracking Tab */}
-                    {activeTab === 'Uptime Tracking' && (
-                        <div className="space-y-6">
-                            <div>
-                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Service Uptime (Last 24 Hours)</h4>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Real-time availability tracking for all critical services. Uptime percentage indicates the proportion of time each service was operational.</p>
-
-                                {/* Legend */}
-                                <div className="flex flex-wrap items-center gap-4 mb-4 text-xs">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 bg-blue-500 rounded-sm"></div>
-                                        <span className="text-gray-600 dark:text-gray-400">API Service</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
-                                        <span className="text-gray-600 dark:text-gray-400">CDN Service</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 bg-red-500 rounded-sm"></div>
-                                        <span className="text-gray-600 dark:text-gray-400">Database Service</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-3 h-3 bg-yellow-500 rounded-sm"></div>
-                                        <span className="text-gray-600 dark:text-gray-400">Storage Service</span>
-                                    </div>
-                                </div>
-
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <LineChart data={serviceUptimeData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" vertical={false} />
-                                        <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#9CA3AF' }} stroke="#E5E7EB" tickLine={false} />
-                                        <YAxis domain={[99, 100]} tick={{ fontSize: 10, fill: '#9CA3AF' }} stroke="#E5E7EB" tickLine={false} />
-                                        <Tooltip contentStyle={{ fontSize: '11px', borderRadius: '6px', border: '1px solid #E5E7EB' }} />
-                                        <Line type="monotone" dataKey="api" stroke="#3B82F6" strokeWidth={2} dot={{ r: 3 }} />
-                                        <Line type="monotone" dataKey="cdn" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
-                                        <Line type="monotone" dataKey="database" stroke="#EF4444" strokeWidth={2} dot={{ r: 3 }} />
-                                        <Line type="monotone" dataKey="storage" stroke="#F59E0B" strokeWidth={2} dot={{ r: 3 }} />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </div>
-
-                            {/* Service Uptime Cards */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                                <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <div className="flex items-center justify-center gap-2 mb-2">
-                                        <TrendingUp className="w-4 h-4 text-blue-500" />
-                                        <span className="text-xs text-gray-600 dark:text-gray-400">API Uptime</span>
-                                    </div>
-                                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">99.9%</div>
-                                    <div className="text-xs text-blue-600 dark:text-blue-400">Last 24h</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Blue line on chart</div>
-                                </div>
-                                <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <div className="flex items-center justify-center gap-2 mb-2">
-                                        <TrendingUp className="w-4 h-4 text-green-500" />
-                                        <span className="text-xs text-gray-600 dark:text-gray-400">CDN Uptime</span>
-                                    </div>
-                                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">99.8%</div>
-                                    <div className="text-xs text-green-600 dark:text-green-400">Last 24h</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Green line on chart</div>
-                                </div>
-                                <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <div className="flex items-center justify-center gap-2 mb-2">
-                                        <TrendingUp className="w-4 h-4 text-red-500" />
-                                        <span className="text-xs text-gray-600 dark:text-gray-400">Storage Uptime</span>
-                                    </div>
-                                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">99.7%</div>
-                                    <div className="text-xs text-red-600 dark:text-red-400">Last 24h</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Yellow line on chart</div>
-                                </div>
-                                <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                                    <div className="flex items-center justify-center gap-2 mb-2">
-                                        <TrendingUp className="w-4 h-4 text-yellow-500" />
-                                        <span className="text-xs text-gray-600 dark:text-gray-400">Database Uptime</span>
-                                    </div>
-                                    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">99.9%</div>
-                                    <div className="text-xs text-yellow-600 dark:text-yellow-400">Last 24h</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Red line on chart</div>
-                                </div>
-                            </div>
                         </div>
                     )}
 
@@ -454,8 +371,8 @@ export default function SystemHealth() {
                                                     <td className="py-3 px-4 text-xs text-gray-600 dark:text-gray-400">{log.timestamp}</td>
                                                     <td className="py-3 px-4">
                                                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${log.level === 'ERROR'
-                                                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                                                                : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
+                                                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                                            : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                                                             }`}>
                                                             {log.level}
                                                         </span>
