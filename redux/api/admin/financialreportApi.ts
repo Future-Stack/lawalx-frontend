@@ -2,73 +2,108 @@ import { baseApi } from "../baseApi";
 
 export const financialreportApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getFinancialOverview: builder.query({
+    getFinancialStats: builder.query({
       query: (params) => ({
-        url: `/financialreport/overview`,
+        url: `/reports-analytics/financial/stats`,
         method: "GET",
         params,
       }),
-      providesTags: ["Activity"], // Using Activity as a general tag or add new ones if needed, but for now mostly queries
+      providesTags: ["Activity"],
     }),
-    getMrrBreakdown: builder.query({
+    getMrrStats: builder.query({
       query: (params) => ({
-        url: `/financialreport/mrr-breakdown`,
-        method: "GET",
-        params,
-      }),
-    }),
-    getSubscriberOverview: builder.query({
-      query: (params) => ({
-        url: `/financialreport/subscriber-overview`,
+        url: `/reports-analytics/financial/mrr-stats`,
         method: "GET",
         params,
       }),
     }),
-    getSubscriberActivity: builder.query({
+    getMrrTrend: builder.query({
       query: (params) => ({
-        url: `/financialreport/subscriber-activity`,
+        url: `/reports-analytics/financial/mrr-trend`,
         method: "GET",
         params,
       }),
     }),
-    getChurnByPlan: builder.query({
+    getFinancialBreakdown: builder.query({
       query: (params) => ({
-        url: `/financialreport/churn-by-plan`,
+        url: `/reports-analytics/financial/breakdown`,
         method: "GET",
         params,
       }),
     }),
-    getPlanPerformance: builder.query({
+    getChurnStats: builder.query({
       query: (params) => ({
-        url: `/financialreport/plan-overview`,
+        url: `/reports-analytics/financial/churn/stats`,
         method: "GET",
         params,
       }),
     }),
-    getFinancialCharts: builder.query({
+    getChurnTrend: builder.query({
       query: (params) => ({
-        url: `/financialreport/charts`,
+        url: `/reports-analytics/financial/churn/trend`,
         method: "GET",
         params,
       }),
     }),
-    getArpuAnalytics: builder.query({
+    getChurnRateByPlan: builder.query({
       query: (params) => ({
-        url: `/financialreport/ARPUAnalytics`,
+        url: `/reports-analytics/financial/churn/rate-by-plan`,
         method: "GET",
         params,
       }),
     }),
-    getTrialConversion: builder.query({
+    getPlanStats: builder.query({
       query: (params) => ({
-        url: `/financialreport/trial-conversion`,
+        url: `/reports-analytics/financial/plans/stats`,
         method: "GET",
         params,
       }),
     }),
-    getFinancialExport: builder.query({
+    getPlanRevenue: builder.query({
       query: (params) => ({
-        url: `/financialreport/export`,
+        url: `/reports-analytics/financial/plans/revenue`,
+        method: "GET",
+        params,
+      }),
+    }),
+    getPlanSubscribers: builder.query({
+      query: (params) => ({
+        url: `/reports-analytics/financial/plans/subscribers`,
+        method: "GET",
+        params,
+      }),
+    }),
+    getTrialStats: builder.query({
+      query: (params) => ({
+        url: `/reports-analytics/financial/trail/stats`,
+        method: "GET",
+        params,
+      }),
+    }),
+    getTrialConvertByPlan: builder.query({
+      query: (params) => ({
+        url: `/reports-analytics/financial/trail/convert-by-plan`,
+        method: "GET",
+        params,
+      }),
+    }),
+    getArpuStats: builder.query({
+      query: (params) => ({
+        url: `/reports-analytics/financial/arpu/stats`,
+        method: "GET",
+        params,
+      }),
+    }),
+    getArpuTrend: builder.query({
+      query: (params) => ({
+        url: `/reports-analytics/financial/arpu/trend`,
+        method: "GET",
+        params,
+      }),
+    }),
+    getExportFinancialReport: builder.query({
+      query: (params) => ({
+        url: `/reports-analytics/financial/export-financial-report`,
         method: "GET",
         params,
       }),
@@ -77,14 +112,20 @@ export const financialreportApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetFinancialOverviewQuery,
-  useGetMrrBreakdownQuery,
-  useGetSubscriberOverviewQuery,
-  useGetSubscriberActivityQuery,
-  useGetChurnByPlanQuery,
-  useGetPlanPerformanceQuery,
-  useGetFinancialChartsQuery,
-  useGetArpuAnalyticsQuery,
-  useGetTrialConversionQuery,
-  useLazyGetFinancialExportQuery,
+  useGetFinancialStatsQuery,
+  useGetMrrStatsQuery,
+  useGetMrrTrendQuery,
+  useGetFinancialBreakdownQuery,
+  useGetChurnStatsQuery,
+  useGetChurnTrendQuery,
+  useGetChurnRateByPlanQuery,
+  useGetPlanStatsQuery,
+  useGetPlanRevenueQuery,
+  useGetPlanSubscribersQuery,
+  useGetTrialStatsQuery,
+  useGetTrialConvertByPlanQuery,
+  useGetArpuStatsQuery,
+  useGetArpuTrendQuery,
+  useGetExportFinancialReportQuery,
+  useLazyGetExportFinancialReportQuery,
 } = financialreportApi;
