@@ -32,6 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import DeviceStatusBadge from "../common/DeviceStatusBadge";
 
 interface CreateScreenModalProps {
   isOpen: boolean;
@@ -470,31 +471,7 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-gray-900 dark:text-white truncate">{device.name}</span>
-                            {device.status === "ONLINE" ? (
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-xs font-semibold">
-                                <span className="w-2 h-2 rounded-full bg-[#10B981]" />
-                                Online
-                              </div>
-                            ) : device.status === "OFFLINE" ? (
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-xs font-semibold">
-                                <WifiOff className="w-3.5 h-3.5" />
-                                Offline
-                              </div>
-                            ) : device.status === "PAIRED" ? (
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
-                                <span className="w-2 h-2 rounded-full bg-blue-500" />
-                                Paired
-                              </div>
-                            ) : device.status === "WAITING" ? (
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-xs font-semibold">
-                                <span className="w-2 h-2 rounded-full bg-orange-500" />
-                                Waiting
-                              </div>
-                            ) : (
-                              <div className="inline-flex items-center px-2.5 py-1 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] text-[#737373] text-xs font-semibold">
-                                {device.status}
-                              </div>
-                            )}
+                            <DeviceStatusBadge status={device.status} />
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{device.deviceSerial}</div>
                         </div>

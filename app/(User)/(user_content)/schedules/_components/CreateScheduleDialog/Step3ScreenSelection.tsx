@@ -14,6 +14,7 @@ interface Step3Props {
     onChange: (data: { selectedScreens: string[] }) => void;
 }
 import DeviceLocation from "@/components/common/DeviceLocation";
+import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 
 const Step3ScreenSelection: React.FC<Step3Props> = ({ data, onChange }) => {
     const { data: devicesData, isLoading } = useGetMyDevicesDataQuery();
@@ -96,31 +97,7 @@ const Step3ScreenSelection: React.FC<Step3Props> = ({ data, onChange }) => {
                                     <Label htmlFor={device.id} className="font-semibold text-headings cursor-pointer truncate max-w-[150px] md:max-w-none">
                                         {device.name}
                                     </Label>
-                                    {device.status === "ONLINE" ? (
-                                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] md:text-xs font-bold whitespace-nowrap">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                            Online
-                                        </div>
-                                    ) : device.status === "OFFLINE" ? (
-                                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-[10px] md:text-xs font-bold whitespace-nowrap">
-                                            <WifiOff className="w-3 h-3" />
-                                            Offline
-                                        </div>
-                                    ) : device.status === "PAIRED" ? (
-                                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-[10px] md:text-xs font-bold whitespace-nowrap">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                            Paired
-                                        </div>
-                                    ) : device.status === "WAITING" ? (
-                                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-100 text-amber-600 text-[10px] md:text-xs font-bold whitespace-nowrap">
-                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                            Waiting
-                                        </div>
-                                    ) : (
-                                        <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-50 border border-gray-100 text-gray-600 text-[10px] md:text-xs font-bold">
-                                            {device.status}
-                                        </div>
-                                    )}
+                                    <DeviceStatusBadge status={device.status} />
                                 </div>
                                 <p className="text-sm text-muted truncate">
                                     {device.location && (
