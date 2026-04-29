@@ -46,6 +46,14 @@ export const bannerApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: any) => response.data,
     }),
+    getBannerCount: builder.query({
+      query: () => ({
+        url: "/banners/count",
+        method: "GET",
+      }),
+      providesTags: ["Banner"],
+      transformResponse: (response: any) => response.data,
+    }),
     getBannerById: builder.query({
       query: (id: string) => ({
         url: `/banners/${id}`,
@@ -84,6 +92,7 @@ export const {
   useGetAllBannersAdminQuery,
   useGetActiveBannersQuery,
   useGetBannerByIdQuery,
+  useGetBannerCountQuery,
   useCreateBannerMutation,
   useUpdateBannerMutation,
   useDeleteBannerMutation,

@@ -4,7 +4,7 @@ export const dashboardApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getDashboardOverview: builder.query({
       query: (filter: string) => ({
-        url: `/dashboard/overview/filter?filter=${filter}`,
+        url: `/dashboard/overview?filter=${filter}`,
         method: "GET",
       }),
     }),
@@ -20,27 +20,27 @@ export const dashboardApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
-    getRealTimeMetrics: builder.query({
-      query: () => ({
-        url: "/dashboard/real-time-metrics",
-        method: "GET",
-      }),
-    }),
-    getRecentSupportTickets: builder.query({
-      query: ({ limit, filter }: { limit: number; filter: string }) => ({
-        url: `/dashboard/recent-support-tickets?limit=${limit}&filter=${filter}`,
-        method: "GET",
-      }),
-    }),
     getContentUsageBreakdown: builder.query({
       query: (filter: string) => ({
         url: `/dashboard/content-usage-breakdown?filter=${filter}`,
         method: "GET",
       }),
     }),
-    getPaymentBreakdown: builder.query({
+    getDunningEffectiveness: builder.query({
       query: (filter: string) => ({
-        url: `/dashboard/payment-breakdown?filter=${filter}`,
+        url: `/dashboard/dunning-effectiveness?filter=${filter}`,
+        method: "GET",
+      }),
+    }),
+    getCriticalActivity: builder.query({
+      query: (filter: string) => ({
+        url: `/dashboard/critical-activity?filter=${filter}`,
+        method: "GET",
+      }),
+    }),
+    getRecentSupportTickets: builder.query({
+      query: ({ limit, filter }: { limit: number; filter: string }) => ({
+        url: `/dashboard/recent-support-tickets?limit=${limit}&filter=${filter}`,
         method: "GET",
       }),
     }),
@@ -57,10 +57,10 @@ export const {
   useGetDashboardOverviewQuery,
   useGetSubscriptionDistributionQuery,
   useGetActivityTrendQuery,
-  useGetRealTimeMetricsQuery,
-  useGetRecentSupportTicketsQuery,
   useGetContentUsageBreakdownQuery,
-  useGetPaymentBreakdownQuery,
+  useGetDunningEffectivenessQuery,
+  useGetCriticalActivityQuery,
+  useGetRecentSupportTicketsQuery,
   useGetDashboardExportQuery,
   useLazyGetDashboardExportQuery,
 } = dashboardApi;
