@@ -7,6 +7,7 @@ import Dropdown from '@/components/shared/Dropdown';
 
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   useGetBillingOverviewQuery,
   useGetTransactionReportQuery,
@@ -153,6 +154,7 @@ const generateBillingData = (range: number) => {
 };
 
 const BillingDashboard = () => {
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('transactions');
   const { theme: currentTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -160,7 +162,11 @@ const BillingDashboard = () => {
 
   React.useEffect(() => {
     setMounted(true);
-  }, []);
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const isDark = mounted && (resolvedTheme === 'dark' || currentTheme === 'dark');
 

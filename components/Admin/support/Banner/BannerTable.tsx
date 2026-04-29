@@ -1,15 +1,10 @@
 'use client';
 
-import { Search, ChevronDown, Calendar, MoreVertical, TrendingUp, Loader2 } from 'lucide-react';
+import { Search, Calendar, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import {
     Select,
     SelectContent,
@@ -22,7 +17,7 @@ import DeleteConfirmationModal from '@/components/Admin/modals/DeleteConfirmatio
 import BannerPreview from './BannerPreview';
 import { BannerFormData } from './BannerForm';
 import { Edit, Trash2 } from 'lucide-react';
-import { useDeleteBannerMutation, useGetAllBannersAdminQuery } from '@/redux/api/admin/bannerApi';
+import { useDeleteBannerMutation, useGetAllBannersAdminQuery, useGetBannerCountQuery } from '@/redux/api/admin/bannerApi';
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 
@@ -69,6 +64,7 @@ const ITEMS_PER_PAGE = 10;
 
 export default function BannerTable() {
     const { data: banners = [], isLoading, isError } = useGetAllBannersAdminQuery({});
+    const { data: countData } = useGetBannerCountQuery({});
     const [deleteBanner] = useDeleteBannerMutation();
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -117,55 +113,62 @@ export default function BannerTable() {
     };
 
     // Convert table row data to BannerFormData for preview (Mock conversion)
-    const getPreviewData = (banner: any): BannerFormData => ({
-        bannerType: banner.type || 'Upload',
-        title: banner.title || 'null',
-        description: banner.description || 'null',
-        image: banner.mediaUrl || null,
-        primaryButtonLabel: banner.primaryButtonLabel || 'null',
-        primaryButtonLink: banner.primaryButtonUrl || '#',
-        enableSecondaryButton: banner.secondaryButtonEnabled || false,
-        secondaryButtonLabel: banner.secondaryButtonLabel || '',
-        secondaryButtonLink: banner.secondaryButtonUrl || '',
-        startDate: banner.startDate || 'null',
-        endDate: banner.endDate || 'null',
-        targetUserType: banner.targetUserType || 'All Users',
-        customCSS: banner.customCss || '',
-        primaryButtonIcon: banner.primaryButtonIcon || '',
-        secondaryButtonIcon: banner.secondaryButtonIcon || '',
-        status: banner.status || 'null',
-    });
+    const getPreviewData = (banner: any): BannerFormData => {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', '') || '';
+        return {
+            bannerType: banner.type || 'Upload',
+            title: banner.title || 'null',
+            description: banner.description || 'null',
+            image: banner.mediaUrl ? (banner.mediaUrl.startsWith('http') ? banner.mediaUrl : `${baseUrl}/${banner.mediaUrl}`) : null,
+            primaryButtonLabel: banner.primaryButtonLabel || 'null',
+            primaryButtonLink: banner.primaryButtonUrl || '#',
+            enableSecondaryButton: banner.secondaryButtonEnabled || false,
+            secondaryButtonLabel: banner.secondaryButtonLabel || '',
+            secondaryButtonLink: banner.secondaryButtonUrl || '',
+            startDate: banner.startDate || 'null',
+            endDate: banner.endDate || 'null',
+            targetUserType: banner.targetUserType || 'All Users',
+            customCSS: banner.customCss || '',
+            primaryButtonIcon: banner.primaryButtonIcon || '',
+            secondaryButtonIcon: banner.secondaryButtonIcon || '',
+            status: banner.status || 'null',
+        };
+    };
 
     return (
         <>
+            <div className="flex items-center mb-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800">
+                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">Total Banners: {countData?.count || 0}</span>
+                </div>
+            </div>
             <div className="bg-navbarBg rounded-xl shadow-sm border border-border overflow-hidden">
                 {/* Filter Header */}
-                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4">
-                    <div className="flex-1 relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-                        <input
-                            type="text"
-                            placeholder="Search banners by title, description..."
-                            className="w-full pl-10 pr-4 py-4 border border-border bg-navbarBg rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger className="w-full sm:w-[150px] border-border bg-navbarBg text-gray-700 dark:text-gray-300">
-                            <div className="flex items-center gap-2">
-                                {/* <span className="text-gray-500">Status:</span> */}
-                                <SelectValue placeholder="All" />
-                            </div>
-                        </SelectTrigger>
-                        <SelectContent className="bg-navbarBg border-border">
-                            <SelectItem value="All">All Status</SelectItem>
-                            <SelectItem value="Active">Active</SelectItem>
-                            <SelectItem value="Draft">Draft</SelectItem>
-                            <SelectItem value="Paused">Paused</SelectItem>
-                            <SelectItem value="Ended">Ended</SelectItem>
-                        </SelectContent>
-                    </Select>
+                <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4 items-center">
+                        <div className="flex-1 relative w-full">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+                            <input
+                                type="text"
+                                placeholder="Search banners by title, description..."
+                                className="w-full pl-10 pr-4 py-4 border border-border bg-navbarBg rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
+                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                            <SelectTrigger className="w-full sm:w-[150px] border-border bg-navbarBg text-gray-700 dark:text-gray-300">
+                                <div className="flex items-center gap-2">
+                                    <SelectValue placeholder="All" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-navbarBg border-border">
+                                <SelectItem value="All">All Status</SelectItem>
+                                <SelectItem value="Active">Active</SelectItem>
+                                <SelectItem value="Draft">Draft</SelectItem>
+                                <SelectItem value="Paused">Paused</SelectItem>
+                                <SelectItem value="Ended">Ended</SelectItem>
+                            </SelectContent>
+                        </Select>
                 </div>
 
                 {/* Table */}
@@ -175,8 +178,6 @@ export default function BannerTable() {
                             <tr>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title & Description</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Views/Clicks</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">CTR</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Period</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                                 <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
@@ -185,7 +186,7 @@ export default function BannerTable() {
                         <tbody className="bg-navbarBg divide-y divide-border">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-8 text-center">
+                                    <td colSpan={5} className="px-6 py-8 text-center">
                                         <Loader2 className="w-8 h-8 animate-spin mx-auto text-bgBlue" />
                                     </td>
                                 </tr>
@@ -206,25 +207,11 @@ export default function BannerTable() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                                {banner.views || 0}
-                                                {banner.clicks !== '-' && <span className="text-gray-400 dark:text-gray-500 mx-1">/</span>}
-                                                {banner.clicks !== '-' && (banner.clicks || 0)}
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm text-gray-900 dark:text-white font-medium bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full border border-green-100 dark:border-green-800">
-                                                    {banner.ctr || '0%'} <TrendingUp className="w-3 h-3 inline ml-1" />
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                                 <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                                                 <div>
                                                     <div className="font-medium text-gray-900 dark:text-white">
-                                                        {banner.startDate ? new Date(banner.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'null'} 
+                                                        {banner.startDate ? new Date(banner.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'null'}
                                                         <span className="text-gray-400 mx-1">-</span>
                                                         {banner.endDate ? new Date(banner.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'null'}
                                                     </div>
@@ -247,36 +234,26 @@ export default function BannerTable() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                            <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1">
-                                                            <MoreVertical className="w-5 h-5" />
-                                                        </button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end" className="bg-navbarBg border-border">
-                                                        <DropdownMenuItem className="cursor-pointer" asChild>
-                                                            <Link href={`/admin/support/banner/${banner.id}`} className="flex items-center w-full">
-                                                                <Edit className="w-4 h-4 mr-2" />
-                                                                Edit
-                                                            </Link>
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem
-                                                            className="text-red-600 cursor-pointer focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/10"
-                                                            onClick={(e) => handleDeleteClick(e, banner.id)}
-                                                        >
-                                                            <Trash2 className="w-4 h-4 mr-2" />
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
+                                            <div className="flex justify-end items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                                <Link href={`/admin/support/banner/${banner.id}`}>
+                                                    <button className="cursor-pointer text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Edit">
+                                                        <Edit className="w-4 h-4" />
+                                                    </button>
+                                                </Link>
+                                                <button
+                                                    className="cursor-pointer text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                    title="Delete"
+                                                    onClick={(e) => handleDeleteClick(e, banner.id)}
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                         {isError ? "Error loading banners." : "No banners found matching your filters."}
                                     </td>
                                 </tr>
