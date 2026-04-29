@@ -1,9 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Monitor, Smartphone, ExternalLink, ArrowRight, Download, Info, Star, Heart, Check, X, Zap, Bell, Mail } from 'lucide-react';
+import { 
+  Monitor, Smartphone, ExternalLink, ArrowRight, ArrowLeft, ArrowUp, ArrowDown, ChevronRight, ChevronLeft, 
+  Plus, Minus, Check, X, Search, Settings, User, Mail, Bell, Calendar, Clock, Home, Info, HelpCircle, 
+  Star, Heart, ThumbsUp, ThumbsDown, Eye, EyeOff, Lock, Unlock, Trash, Edit, Link, Download, Upload, 
+  Share, Copy, Play, Pause, Square, Circle, Zap, Gift, ShoppingBag, ShoppingCart, CreditCard, 
+  DollarSign, Percent, Tag, Bookmark, Menu, Filter, Grid, List, LogOut, LogIn, RefreshCw
+} from 'lucide-react';
 import { BannerFormData } from './BannerForm';
 import Image from 'next/image';
+
+import { toast } from 'sonner';
 
 interface BannerPreviewProps {
   data: BannerFormData;
@@ -13,11 +21,24 @@ export default function BannerPreview({ data }: BannerPreviewProps) {
   const [viewMode, setViewMode] = useState<'web' | 'mobile'>('web');
 
   const IconMap: any = {
-    ArrowRight, Download, Info, Star, Heart, Check, X, Zap, Bell, Mail
+    ArrowRight, ArrowLeft, ArrowUp, ArrowDown, ChevronRight, ChevronLeft, 
+    Plus, Minus, Check, X, Search, Settings, User, Mail, Bell, Calendar, Clock, Home, Info, HelpCircle, 
+    Star, Heart, ThumbsUp, ThumbsDown, Eye, EyeOff, Lock, Unlock, Trash, Edit, 
+    ExternalLink, Link, Download, Upload, Share, Copy, Play, Pause, Square, Circle, 
+    Zap, Gift, ShoppingBag, ShoppingCart, CreditCard, DollarSign, Percent, Tag, Bookmark, 
+    Menu, Filter, Grid, List, LogOut, LogIn, RefreshCw
   };
 
   const PrimaryIcon = (data.primaryButtonIcon && data.primaryButtonIcon !== 'none') ? IconMap[data.primaryButtonIcon] : ArrowRight;
   const SecondaryIcon = (data.secondaryButtonIcon && data.secondaryButtonIcon !== 'none') ? IconMap[data.secondaryButtonIcon] : null;
+
+  const handleButtonClick = (url?: string) => {
+    if (url && url !== '#' && url.trim() !== '') {
+      window.open(url, '_blank');
+    } else {
+      toast.error('No valid link configured for this button');
+    }
+  };
 
   return (
     <div className="bg-navbarBg rounded-xl shadow-sm border border-border h-full flex flex-col">
@@ -71,13 +92,19 @@ export default function BannerPreview({ data }: BannerPreviewProps) {
                 </p>
 
                 <div className={`banner-buttons flex gap-3 ${viewMode === 'mobile' ? 'justify-center flex-col' : 'flex-row'}`}>
-                  <button className="primary-btn px-6 py-2.5 bg-white text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-customShadow">
+                  <button 
+                    onClick={() => handleButtonClick(data.primaryButtonLink)}
+                    className="primary-btn px-6 py-2.5 bg-white text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-customShadow cursor-pointer"
+                  >
                     {data.primaryButtonLabel || 'Get Started'}
                     {data.primaryButtonLabel && PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
                   </button>
 
                   {data.enableSecondaryButton && (
-                    <button className="secondary-btn px-6 py-2.5 bg-blue-800/30 text-white border border-blue-400/30 rounded-lg font-medium hover:bg-blue-800/50 transition-colors backdrop-blur-sm flex items-center justify-center gap-2 shadow-customShadow">
+                    <button 
+                      onClick={() => handleButtonClick(data.secondaryButtonLink)}
+                      className="secondary-btn px-6 py-2.5 bg-blue-800/30 text-white border border-blue-400/30 rounded-lg font-medium hover:bg-blue-800/50 transition-colors backdrop-blur-sm flex items-center justify-center gap-2 shadow-customShadow cursor-pointer"
+                    >
                       {data.secondaryButtonLabel || 'Learn More'}
                       {SecondaryIcon && <SecondaryIcon className="w-4 h-4" />}
                     </button>

@@ -31,7 +31,12 @@ export interface BannerFormData {
 }
 
 const AVAILABLE_ICONS = [
-    'ArrowRight', 'Download', 'Info', 'Star', 'Heart', 'Check', 'X', 'Zap', 'Bell', 'Mail'
+    'ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'ChevronRight', 'ChevronLeft', 
+    'Plus', 'Minus', 'Check', 'X', 'Search', 'Settings', 'User', 'Mail', 'Bell', 'Calendar', 'Clock', 'Home', 'Info', 'HelpCircle', 
+    'Star', 'Heart', 'ThumbsUp', 'ThumbsDown', 'Eye', 'EyeOff', 'Lock', 'Unlock', 'Trash', 'Edit', 
+    'ExternalLink', 'Link', 'Download', 'Upload', 'Share', 'Copy', 'Play', 'Pause', 'Square', 'Circle', 
+    'Zap', 'Gift', 'ShoppingBag', 'ShoppingCart', 'CreditCard', 'DollarSign', 'Percent', 'Tag', 'Bookmark', 
+    'Menu', 'Filter', 'Grid', 'List', 'LogOut', 'LogIn', 'RefreshCw'
 ];
 
 interface BannerFormProps {
@@ -49,10 +54,13 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            handleChange('file', file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                handleChange('image', reader.result as string);
+                onChange({ 
+                    ...data, 
+                    file: file, 
+                    image: reader.result as string 
+                });
             };
             reader.readAsDataURL(file);
         }
@@ -163,10 +171,10 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
                             <SelectTrigger className="w-full bg-navbarBg border-border">
                                 <SelectValue placeholder="No Icon" />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-navbarBg border-border max-h-[250px] overflow-y-auto">
                                 <SelectItem value="none">No Icon</SelectItem>
                                 {AVAILABLE_ICONS.map((icon) => (
-                                    <SelectItem key={icon} value={icon}>{icon}</SelectItem>
+                                    <SelectItem key={icon} value={icon} className="cursor-pointer">{icon}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -204,6 +212,21 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
                             className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                             placeholder="Learn More"
                         />
+                        {/* Icon Picker for Secondary Button */}
+                        <div className="mb-3">
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Button Icon (Optional)</label>
+                            <Select value={data.secondaryButtonIcon} onValueChange={(val) => handleChange('secondaryButtonIcon', val)}>
+                                <SelectTrigger className="w-full bg-navbarBg border-border">
+                                    <SelectValue placeholder="No Icon" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-navbarBg border-border max-h-[250px] overflow-y-auto">
+                                    <SelectItem value="none">No Icon</SelectItem>
+                                    {AVAILABLE_ICONS.map((icon) => (
+                                        <SelectItem key={icon} value={icon} className="cursor-pointer">{icon}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                         <div className="relative">
                             <input
                                 type="text"

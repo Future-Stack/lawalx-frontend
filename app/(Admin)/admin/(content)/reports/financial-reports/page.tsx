@@ -6,6 +6,7 @@ import { useTheme } from 'next-themes';
 import { Users, DollarSign, Percent, TrendingUp, TrendingDown, UserPlus, ChevronDown, Download, Target, Zap, Home, TargetIcon, ChevronRight, HomeIcon, FileSpreadsheet } from 'lucide-react';
 import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import {
   useGetFinancialStatsQuery,
   useGetMrrStatsQuery,
@@ -29,15 +30,19 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
-
 const FinancialReport = () => {
   const { theme, resolvedTheme } = useTheme();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('mrr');
   const [mounted, setMounted] = useState(false);
 
   React.useEffect(() => {
     setMounted(true);
-  }, []);
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   const isDark = mounted && (resolvedTheme === 'dark' || theme === 'dark');
 
@@ -99,7 +104,7 @@ const FinancialReport = () => {
         doc.setTextColor(50, 50, 50);
         doc.setFontSize(14);
         doc.text('1. Executive Summary', 14, currentY);
-        
+
         const summaryStats = [
           ['Metric', 'Value', 'Growth %', 'Status'],
           ['MRR', `$${reportData.stats.mrr.value.toLocaleString()}`, `${reportData.stats.mrr.growth}%`, reportData.stats.mrr.growth >= 0 ? 'GROWING' : 'ATTENTION'],
@@ -224,7 +229,7 @@ const FinancialReport = () => {
       } else {
         // EXCEL EXPORT
         const wb = XLSX.utils.book_new();
-        
+
         // 1. Summary Stats
         const summaryData = [
           ['Financial Summary Report'],
@@ -353,14 +358,14 @@ const FinancialReport = () => {
         arpuTrend: (() => {
           const overallPoints = arpuTrendData?.data?.overall || [];
           const planData = arpuTrendData?.data?.byPlan || [];
-          
+
           // Create a map of labels to combined data
           const combinedData: Record<string, any> = {};
-          
+
           overallPoints.forEach((p: any) => {
             combinedData[p.label] = { label: p.label, overall: p.value };
           });
-          
+
           planData.forEach((plan: any) => {
             plan.points.forEach((p: any) => {
               if (!combinedData[p.label]) {
@@ -369,7 +374,7 @@ const FinancialReport = () => {
               combinedData[p.label][plan.planName.toLowerCase()] = p.value;
             });
           });
-          
+
           return Object.values(combinedData);
         })(),
         growthFactors: [
@@ -441,24 +446,24 @@ const FinancialReport = () => {
             />
 
             <div className="relative">
-              <button 
+              <button
                 onClick={() => setShowExportMenu(!showExportMenu)}
                 className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer bg-navbarBg"
               >
                 <Download className="w-4 h-4" /> Export Financial Report
               </button>
-              
+
               {showExportMenu && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)}></div>
                   <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 min-w-[160px] overflow-hidden">
-                    <button 
+                    <button
                       onClick={() => { handleExport('pdf'); setShowExportMenu(false); }}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
                     >
                       📄 Download PDF
                     </button>
-                    <button 
+                    <button
                       onClick={() => { handleExport('excel'); setShowExportMenu(false); }}
                       className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
                     >
@@ -604,20 +609,20 @@ const FinancialReport = () => {
                     }}
                     wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
                   />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    align="center" 
-                    iconType="circle" 
-                    wrapperStyle={{ paddingTop: '20px' }} 
+                  <Legend
+                    verticalAlign="bottom"
+                    align="center"
+                    iconType="circle"
+                    wrapperStyle={{ paddingTop: '20px' }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="mrr" 
-                    stroke="#8b5cf6" 
+                  <Area
+                    type="monotone"
+                    dataKey="mrr"
+                    stroke="#8b5cf6"
                     strokeWidth={2}
-                    fillOpacity={1} 
-                    fill="url(#colorMRR)" 
-                    name="MRR" 
+                    fillOpacity={1}
+                    fill="url(#colorMRR)"
+                    name="MRR"
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -637,9 +642,9 @@ const FinancialReport = () => {
                     formatter={(value: number | undefined) => value !== undefined ? [`$${Math.abs(value).toLocaleString()}`, undefined] : ['', undefined]}
                     wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
                   />
-                  <Legend 
-                    verticalAlign="bottom" 
-                    align="center" 
+                  <Legend
+                    verticalAlign="bottom"
+                    align="center"
                     iconType="rect"
                     wrapperStyle={{ paddingTop: '20px' }}
                   />
@@ -660,9 +665,9 @@ const FinancialReport = () => {
                   <div className="text-xs text-purple-500 dark:text-purple-400 mt-2">Based on current MRR</div>
                 </div>
                 <div className="flex items-center justify-center w-16 h-16 rounded-full border-4 border-purple-400/30">
-                   <div className="w-8 h-8 rounded-full border-4 border-purple-400/50 flex items-center justify-center">
-                      <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                   </div>
+                  <div className="w-8 h-8 rounded-full border-4 border-purple-400/50 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-purple-500"></div>
+                  </div>
                 </div>
               </div>
 
@@ -684,7 +689,7 @@ const FinancialReport = () => {
             <div className="bg-navbarBg border border-border rounded-xl p-6">
               <h2 className="text-lg font-semibold mb-2">Subscriber Activity & Churn Analysis</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Monitor subscription lifecycle and retention</p>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                 <div className='flex items-center justify-between border border-border rounded-xl p-6'>
                   <div className="flex flex-col gap-1">
@@ -728,15 +733,15 @@ const FinancialReport = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.churn.activityData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-100 dark:stroke-gray-800" />
-                    <XAxis 
-                      dataKey="label" 
-                      className="fill-gray-500 dark:fill-gray-400" 
+                    <XAxis
+                      dataKey="label"
+                      className="fill-gray-500 dark:fill-gray-400"
                       tick={{ fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
                     />
-                    <YAxis 
-                      className="fill-gray-500 dark:fill-gray-400" 
+                    <YAxis
+                      className="fill-gray-500 dark:fill-gray-400"
                       tick={{ fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
@@ -751,10 +756,10 @@ const FinancialReport = () => {
                       }}
                       wrapperClassName="dark:[--tooltip-bg:#1f2937] [--tooltip-bg:#ffffff]"
                     />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      align="center" 
-                      iconType="rect" 
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="rect"
                       wrapperStyle={{ paddingTop: '30px' }}
                     />
                     <Bar dataKey="cancellations" fill="#ef4444" name="Cancellations" radius={[4, 4, 0, 0]} barSize={40} />
@@ -777,9 +782,8 @@ const FinancialReport = () => {
                       </div>
                       <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
                         <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            idx === 0 ? 'bg-orange-500' : idx === 1 ? 'bg-blue-500' : 'bg-green-500'
-                          }`}
+                          className={`h-full rounded-full transition-all duration-500 ${idx === 0 ? 'bg-orange-500' : idx === 1 ? 'bg-blue-500' : 'bg-green-500'
+                            }`}
                           style={{ width: `${plan.rate}%` }}
                         ></div>
                       </div>
@@ -805,20 +809,18 @@ const FinancialReport = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
                 {data.plans.allPlans.length > 0 ? (
                   data.plans.allPlans.map((plan: any, idx: number) => (
-                    <div 
-                      key={idx} 
-                      className={`rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg ${
-                        plan.name?.toLowerCase().includes('starter') ? 'border-orange-400' : 
-                        plan.name?.toLowerCase().includes('business') ? 'border-cyan-400' : 
-                        'border-purple-400'
-                      }`}
+                    <div
+                      key={idx}
+                      className={`rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg ${plan.name?.toLowerCase().includes('starter') ? 'border-orange-400' :
+                          plan.name?.toLowerCase().includes('business') ? 'border-cyan-400' :
+                            'border-purple-400'
+                        }`}
                     >
                       <div className="flex flex-col gap-1 mb-4">
-                        <div className={`text-sm font-semibold ${
-                          plan.name?.toLowerCase().includes('starter') ? 'text-orange-500' : 
-                          plan.name?.toLowerCase().includes('business') ? 'text-cyan-500' : 
-                          'text-purple-500'
-                        }`}>{plan.name}</div>
+                        <div className={`text-sm font-semibold ${plan.name?.toLowerCase().includes('starter') ? 'text-orange-500' :
+                            plan.name?.toLowerCase().includes('business') ? 'text-cyan-500' :
+                              'text-purple-500'
+                          }`}>{plan.name}</div>
                         <div className="text-4xl font-bold text-gray-900 dark:text-gray-100">{plan.subscribers}</div>
                         <div className="text-xs text-gray-400">subscribers</div>
                       </div>
@@ -961,7 +963,7 @@ const FinancialReport = () => {
                   <div className="text-4xl font-bold text-purple-700 dark:text-purple-300 mb-1">${data.arpu.overall}</div>
                   <div className="text-xs text-purple-500 dark:text-purple-400">Per month</div>
                 </div>
-                
+
                 {data.arpu.byPlan.map((plan: any, idx: number) => (
                   <div key={idx} className="rounded-2xl p-6 border border-border">
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">{plan.name} ARPU</div>
@@ -977,15 +979,15 @@ const FinancialReport = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={data.arpu.arpuTrend} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-gray-100 dark:stroke-gray-800" />
-                    <XAxis 
-                      dataKey="label" 
-                      className="fill-gray-500 dark:fill-gray-400" 
+                    <XAxis
+                      dataKey="label"
+                      className="fill-gray-500 dark:fill-gray-400"
                       tick={{ fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
                     />
-                    <YAxis 
-                      className="fill-gray-500 dark:fill-gray-400" 
+                    <YAxis
+                      className="fill-gray-500 dark:fill-gray-400"
                       tick={{ fontSize: 12 }}
                       axisLine={false}
                       tickLine={false}
@@ -999,10 +1001,10 @@ const FinancialReport = () => {
                       }}
                       wrapperClassName="dark:[--tooltip-bg:#1f2937] [--tooltip-bg:#ffffff]"
                     />
-                    <Legend 
-                      verticalAlign="bottom" 
-                      align="center" 
-                      iconType="circle" 
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="circle"
                       wrapperStyle={{ paddingTop: '30px' }}
                     />
                     <Line type="monotone" dataKey="business" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, strokeWidth: 2, fill: '#fff' }} activeDot={{ r: 6 }} name="Business" />

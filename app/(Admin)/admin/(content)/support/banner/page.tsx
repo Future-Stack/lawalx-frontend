@@ -10,7 +10,7 @@ export default function BannerPage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 pb-8 border-b border-border">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-6">
             <Link href="/admin/dashboard">
@@ -44,7 +44,7 @@ export default function BannerPage() {
       </div>
 
       {/* Stats Cards */}
-      <BannerStats />
+      {/* <BannerStats /> */}
 
       {/* Banner Table */}
       <BannerTable />
