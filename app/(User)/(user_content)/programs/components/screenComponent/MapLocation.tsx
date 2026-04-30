@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { ZoomIn, ZoomOut, Monitor, MapPin } from "lucide-react";
 import L from "leaflet";
@@ -87,6 +87,7 @@ interface MapLocationProps {
 
 const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
   const [isMounted, setIsMounted] = React.useState(false);
+  const [timezone, setTimezone] = React.useState<string>("Loading...");
 
   React.useEffect(() => {
     if (typeof window !== "undefined") {
@@ -101,6 +102,48 @@ const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
     setIsMounted(true);
   }, []);
 
+  // Fetch timezone based on current location
+  useEffect(() => {
+    const fetchTimezone = async (lat: number, lng: number) => {
+      try {
+        const response = await fetch(
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+        );
+        const data = await response.json();
+
+        // The BigDataCloud API provides timezone in the informative section
+        const tzInfo = data.localityInfo?.informative?.find((i: any) =>
+          i.description === 'time zone' || (i.name && i.name.includes('/'))
+        );
+
+        if (tzInfo) {
+          setTimezone(tzInfo.name);
+        } else {
+          // Fallback
+          setTimezone("UTC");
+        }
+      } catch (error) {
+        console.error("Failed to fetch timezone:", error);
+        setTimezone("Asia/Dhaka"); // Default fallback
+      }
+    };
+
+    // Determine location for timezone
+    let locationLat: number;
+    let locationLng: number;
+
+    if (devices.length > 0 && devices[0].location) {
+      locationLat = devices[0].location.lat;
+      locationLng = devices[0].location.lng;
+    } else {
+      // Default to Dhaka, Bangladesh
+      locationLat = 23.8103;
+      locationLng = 90.4125;
+    }
+
+    fetchTimezone(locationLat, locationLng);
+  }, [devices]);
+
   if (!isMounted) {
     return (
       <div className="relative">
@@ -109,7 +152,7 @@ const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
           <div className="flex justify-between items-center">
             <h2 className="text-base text-muted">Map</h2>
             <h2 className="text-base text-muted">
-              Time Zone: <span className="text-headings font-semibold">Asia/Dhaka</span>
+              Time Zone: <span className="text-headings font-semibold">Loading...</span>
             </h2>
           </div>
         </div>
@@ -134,7 +177,7 @@ const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
         <div className="flex justify-between items-center">
           <h2 className="text-base text-muted">Map</h2>
           <h2 className="text-base text-muted">
-            Time Zone: <span className="text-headings font-semibold">Asia/Dhaka</span>
+            Time Zone: <span className="text-headings font-semibold">{timezone}</span>
           </h2>
         </div>
       </div>
