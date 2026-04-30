@@ -110,13 +110,15 @@ export default function SupportTickets2Page() {
   return (
     <div className="min-h-screen space-y-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-        <Link href="/admin/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-          <HomeIcon className="w-4 h-4" />
+      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-6">
+        <Link href="/admin/dashboard">
+          <HomeIcon className="w-4 h-4 cursor-pointer hover:text-bgBlue" />
         </Link>
-        <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-blue-600 dark:text-blue-400 font-medium">Support</span>
-      </nav>
+        <ChevronRight className="w-4 h-4" />
+        <span>Customer Supports</span>
+        <ChevronRight className="w-4 h-4" />
+        <span className="text-bgBlue font-medium">Support Tickets</span>
+      </div>
 
       {/* Page header */}
       <div className="flex items-start justify-between gap-4">
@@ -132,7 +134,7 @@ export default function SupportTickets2Page() {
         <div className="relative">
           <button
             onClick={() => setShowExportMenu(prev => !prev)}
-            className="px-4 py-2 shadow-customShadow cursor-pointer bg-white dark:bg-gray-800 text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+            className="px-4 py-2 shadow-customShadow cursor-pointer bg-navbarBg text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors"
           >
             <CloudDownload className="w-4 h-4" />
             <span className="hidden lg:block">Export Report</span>
@@ -144,8 +146,8 @@ export default function SupportTickets2Page() {
                 onClick={() => setShowExportMenu(false)}
               />
               <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 min-w-[140px]">
-                <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+                <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 rounded-t-lg cursor-pointer">📄 PDF</button>
+                <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 rounded-b-lg cursor-pointer">📊 Excel</button>
               </div>
             </>
           )}

@@ -113,6 +113,14 @@ export const supporterTicketApi = baseApi.injectEndpoints({
         'SupporterTicketStats'
       ],
     }),
+    updateSupporterProfile: builder.mutation<any, FormData>({
+      query: (formData) => ({
+        url: '/supporter/support/update-profile',
+        method: 'PATCH',
+        body: formData,
+      }),
+      invalidatesTags: ['User'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -122,4 +130,5 @@ export const {
   useGetSupporterStatsQuery,
   useGetAssignedTicketDetailsQuery,
   useResolveTicketMutation,
+  useUpdateSupporterProfileMutation,
 } = supporterTicketApi;
