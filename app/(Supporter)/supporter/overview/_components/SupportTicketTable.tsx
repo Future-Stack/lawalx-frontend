@@ -33,6 +33,7 @@ export interface SupporterTableTicket {
   priority: Priority;
   issueType: string;
   status: TicketStatus;
+  description: string;
   raw?: any;
 }
 
@@ -86,6 +87,7 @@ export default function SupportTicketTable() {
       priority: t.priority as Priority,
       issueType: t.issueType?.[0]?.replace('_', ' ') || 'Support Request',
       status: (t.status === 'InProgress' ? 'In progress' : t.status === 'Open' ? 'open' : t.status) as TicketStatus,
+      description: t.description || '',
       raw: t,
     }));
   }, [ticketsResponse]);
@@ -171,7 +173,7 @@ export default function SupportTicketTable() {
         <Table>
           <TableHeader>
             <TableRow className="border-0 bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-800/60">
-              {['Ticket ID', 'Client Name', 'Priority', 'Issue Type', 'Status', 'Action'].map(
+              {['Ticket ID', 'Client Name', 'Priority', 'Issue Type', 'Status', 'Description', 'Action'].map(
                 (col) => (
                   <TableHead
                     key={col}
@@ -250,6 +252,13 @@ export default function SupportTicketTable() {
                       )}
                     >
                       {ticket.status}
+                    </span>
+                  </TableCell>
+                  
+                  {/* Description */}
+                  <TableCell className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-[200px]">
+                    <span className="truncate block">
+                      {ticket.description}
                     </span>
                   </TableCell>
 

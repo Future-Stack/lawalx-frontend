@@ -347,6 +347,9 @@ export default function TicketsTable() {
                 Assigned To
               </TableHead>
               <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Description
+              </TableHead>
+              <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Action
               </TableHead>
             </TableRow>
@@ -456,6 +459,13 @@ export default function TicketsTable() {
                         + Assign Supporter
                       </button>
                     )}
+                  </TableCell>
+                  
+                  {/* Description */}
+                  <TableCell className="px-4 py-3 max-w-[200px]">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 truncate block">
+                      {ticket.description}
+                    </span>
                   </TableCell>
 
                   {/* Action */}
