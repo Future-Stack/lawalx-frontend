@@ -618,8 +618,10 @@ body {
 
   /* Hide scrollbar for IE, Edge and Firefox */
   .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
   }
 }
 
@@ -775,7 +777,7 @@ body {
 
 .help-header-bg {
   position: relative;
-  min-height: 220px;
+  min-height: 260px;
   height: auto;
   width: 100%;
   /* border-radius: 0.75rem; Tailwind rounded-xl */

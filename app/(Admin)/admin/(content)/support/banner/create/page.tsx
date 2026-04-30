@@ -92,7 +92,7 @@ export default function CreateBannerPage() {
         secondaryButtonLink: '',
         startDate: '',
         endDate: '',
-        targetUserType: 'All Users',
+        targetUserType: 'ALL_USERS',
         customCSS: DEFAULT_CSS_TEMPLATE,
         primaryButtonIcon: '',
         secondaryButtonIcon: '',

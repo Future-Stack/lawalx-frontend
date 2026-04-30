@@ -21,7 +21,7 @@ import { ThemeProvider } from '@/components/Admin/layout/ThemeProvider';
 import Navbar from '@/components/Admin/layout/AdminNavbar';
 import Sidebar from '@/components/Admin/layout/AdminSidebar';
 import { useState, useEffect } from 'react';
-import Wrapper from '@/components/layout/Wrapper';
+import AdminWrapper from '@/components/layout/AdminWrapper';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Sidebar isCollapsed={isCollapsed} />
 
           <main className={`pt-16 transition-all duration-300 ${isCollapsed ? 'ml-16' : 'ml-64'}`}>
-            <Wrapper>{children}</Wrapper>
+            <AdminWrapper fullWidth={isCollapsed}>{children}</AdminWrapper>
           </main>
         </div>
       </ProtectedRoute>
