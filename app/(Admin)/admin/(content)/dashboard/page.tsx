@@ -91,43 +91,43 @@ const DashboardHeader: React.FC<{ onExport: () => void; onExportExcel: () => voi
 
   return (
     <div className="border-b border-border pb-6">
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Monitor system performance and manage client operations</p>
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="relative">
-          <button
-            onClick={() => setShowExportMenu(prev => !prev)}
-            className="cursor-pointer text-nowrap px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1.5 transition-colors"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <span className='hidden lg:block'>Export Overview Report</span>
-          </button>
-          {showExportMenu && (
-            <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[160px]">
-              <button onClick={() => { onExport(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-              <button onClick={() => { onExportExcel(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
-            </div>
-          )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Monitor system performance and manage client operations</p>
         </div>
-        {/* <button className="text-nowrap px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 bg-navbarBg border border-red-200 dark:border-red-900/50 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1.5 transition-colors">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(prev => !prev)}
+              className="cursor-pointer text-nowrap px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1.5 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span className='hidden lg:block'>Export Overview Report</span>
+            </button>
+            {showExportMenu && (
+              <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[160px]">
+                <button onClick={() => { onExport(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
+                <button onClick={() => { onExportExcel(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+              </div>
+            )}
+          </div>
+          {/* <button className="text-nowrap px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 bg-navbarBg border border-red-200 dark:border-red-900/50 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1.5 transition-colors">
           <AlertCircle className="w-3.5 h-3.5" />
           <span className='hidden lg:block'>View Critical Alerts</span>
         </button> */}
-        <button
-          onClick={onAddClientClick}
-          className="cursor-pointer text-nowrap px-3 py-2 text-xs font-medium text-white bg-bgBlue rounded-md shadow-customShadow hover:bg-blue-500 dark:hover:bg-blue-500 flex items-center gap-1.5 transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span className="hidden lg:block">Add New Client</span>
-        </button>
+          <button
+            onClick={onAddClientClick}
+            className="cursor-pointer text-nowrap px-3 py-2 text-xs font-medium text-white bg-bgBlue rounded-md shadow-customShadow hover:bg-blue-500 dark:hover:bg-blue-500 flex items-center gap-1.5 transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden lg:block">Add New Client</span>
+          </button>
+        </div>
       </div>
     </div>
-  </div>
   );
 };
 
@@ -530,8 +530,8 @@ const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (id:
         ) : (
           <>
             {tickets.map((ticket: any, idx: number) => (
-              <div 
-                key={idx} 
+              <div
+                key={idx}
                 onClick={() => onTicketClick(ticket.id)}
                 className="flex-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all group cursor-pointer flex flex-col justify-center"
               >
@@ -642,7 +642,7 @@ const Dashboard: React.FC = () => {
         doc.setTextColor(50, 50, 50);
         doc.setFontSize(14);
         doc.text('1. Key Metrics Summary', 14, currentY);
-        
+
         const summaryStats = [
           ['Metric', 'Value', 'Growth %'],
           ['Total Users', (reportData.overview.totalUsers.value || 0).toLocaleString(), `${reportData.overview.totalUsers.growth || 0}%`],
@@ -790,13 +790,17 @@ const Dashboard: React.FC = () => {
       } else {
         // EXCEL EXPORT
         const wb = XLSX.utils.book_new();
-        
-        // 1. Overview
-        const overviewData = [
+
+        // 1. Excel Export Details
+        const exportDetailsData = [
           ['Dashboard Overview Report'],
           ['Period', timeRangeLabel],
           ['Generated At', new Date().toLocaleString()],
-          [],
+        ];
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(exportDetailsData), 'Excel Export Details');
+
+        // 2. Overview
+        const overviewMetricsData = [
           ['Metric', 'Value', 'Growth %'],
           ['Total Users', reportData.overview.totalUsers.value || 0, reportData.overview.totalUsers.growth || 0],
           ['Active Subscriptions', reportData.overview.activeSubscriptions.value || 0, reportData.overview.activeSubscriptions.growth || 0],
@@ -804,24 +808,24 @@ const Dashboard: React.FC = () => {
           ['Active Devices', reportData.overview.activeDevices.value || 0, reportData.overview.activeDevices.growth || 0],
           ['Open Support Tickets', reportData.overview.openSupportTickets.value || 0, reportData.overview.openSupportTickets.growth || 0],
         ];
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(overviewData), 'Overview');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(overviewMetricsData), 'Overview');
 
-        // 2. Subscription Distribution
+        // 3. Subscription Distribution
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.subscriptionDistribution.plans), 'Subscriptions');
 
-        // 3. Activity Trend
+        // 4. Activity Trend
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.activityTrend.data), 'Activity Trend');
 
-        // 4. Content Usage
+        // 5. Content Usage
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.contentUsageBreakdown.byType), 'Content Usage');
 
-        // 5. Payments
+        // 6. Payments
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.paymentBreakdown.breakdown), 'Payments');
 
-        // 6. Support Tickets
+        // 7. Support Tickets
         XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData.recentSupportTickets.tickets), 'Support Tickets');
 
-        // 7. Critical Activities
+        // 8. Critical Activities
         const wsActivities = XLSX.utils.json_to_sheet(reportData.criticalActivity.map((a: any) => ({
           User: a.user?.name,
           Action: a.action,
@@ -899,50 +903,6 @@ const Dashboard: React.FC = () => {
             isPositive={(stats?.openSupportTickets?.growth || 0) >= 0}
             isLoading={isOverviewLoading}
           />
-          {/* <MetricCard
-            icon={<Shield className="w-4 h-4" />}
-            title="System Uptime"
-            value={`${stats?.systemUptime || 0}%`}
-            change={`${stats?.uptimeGrowth || 0}%`}
-            isPositive={(stats?.uptimeGrowth || 0) >= 0}
-            isLoading={isOverviewLoading}
-          /> */}
-        </div>
-
-        {/* Metrics Grid - Row 2 */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
-          {/* <MetricCard
-            icon={<Webhook className="w-4 h-4" />}
-            title="Avg API Response Time"
-            value={`${stats?.avgApiResponseTime || 0}ms`}
-            change={`${stats?.apiResponseGrowth || 0}%`}
-            isPositive={(stats?.apiResponseGrowth || 0) >= 0}
-            isLoading={isOverviewLoading}
-          /> */}
-          {/* <MetricCard
-            icon={<TvMinimal className="w-4 h-4" />}
-            title="Active Devices"
-            value={stats?.activeDevices?.toLocaleString() || '0'}
-            change={`${stats?.deviceGrowth || 0}%`}
-            isPositive={(stats?.deviceGrowth || 0) >= 0}
-            isLoading={isOverviewLoading}
-          /> */}
-          {/* <MetricCard
-            icon={<FileVideo className="w-4 h-4" />}
-            title="Total Content Items"
-            value={stats?.totalContentItems?.toLocaleString() || '0'}
-            change={`${stats?.contentGrowth || 0}%`}
-            isPositive={(stats?.contentGrowth || 0) >= 0}
-            isLoading={isOverviewLoading}
-          /> */}
-          {/* <MetricCard
-            icon={<Headphones className="w-4 h-4" />}
-            title="Open Support Tickets"
-            value={stats?.openSupportTickets || 0}
-            change={`${stats?.ticketGrowth || 0}%`}
-            isPositive={(stats?.ticketGrowth || 0) >= 0}
-            isLoading={isOverviewLoading}
-          /> */}
         </div>
 
         {/* Charts Row */}

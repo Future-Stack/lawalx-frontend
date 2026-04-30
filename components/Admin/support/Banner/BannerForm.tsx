@@ -31,11 +31,11 @@ export interface BannerFormData {
 }
 
 const AVAILABLE_ICONS = [
-    'ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'ChevronRight', 'ChevronLeft', 
-    'Plus', 'Minus', 'Check', 'X', 'Search', 'Settings', 'User', 'Mail', 'Bell', 'Calendar', 'Clock', 'Home', 'Info', 'HelpCircle', 
-    'Star', 'Heart', 'ThumbsUp', 'ThumbsDown', 'Eye', 'EyeOff', 'Lock', 'Unlock', 'Trash', 'Edit', 
-    'ExternalLink', 'Link', 'Download', 'Upload', 'Share', 'Copy', 'Play', 'Pause', 'Square', 'Circle', 
-    'Zap', 'Gift', 'ShoppingBag', 'ShoppingCart', 'CreditCard', 'DollarSign', 'Percent', 'Tag', 'Bookmark', 
+    'ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'ChevronRight', 'ChevronLeft',
+    'Plus', 'Minus', 'Check', 'X', 'Search', 'Settings', 'User', 'Mail', 'Bell', 'Calendar', 'Clock', 'Home', 'Info', 'HelpCircle',
+    'Star', 'Heart', 'ThumbsUp', 'ThumbsDown', 'Eye', 'EyeOff', 'Lock', 'Unlock', 'Trash', 'Edit',
+    'ExternalLink', 'Link', 'Download', 'Upload', 'Share', 'Copy', 'Play', 'Pause', 'Square', 'Circle',
+    'Zap', 'Gift', 'ShoppingBag', 'ShoppingCart', 'CreditCard', 'DollarSign', 'Percent', 'Tag', 'Bookmark',
     'Menu', 'Filter', 'Grid', 'List', 'LogOut', 'LogIn', 'RefreshCw'
 ];
 
@@ -56,10 +56,10 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                onChange({ 
-                    ...data, 
-                    file: file, 
-                    image: reader.result as string 
+                onChange({
+                    ...data,
+                    file: file,
+                    image: reader.result as string
                 });
             };
             reader.readAsDataURL(file);
@@ -244,29 +244,29 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
-                    <div className="relative group">
-                        <input
-                            type="date"
-                            value={data.startDate}
-                            onChange={(e) => handleChange('startDate', e.target.value)}
-                            onClick={(e) => (e.target as any).showPicker?.()}
-                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
-                        />
-                        <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none group-hover:text-bgBlue transition-colors" />
-                    </div>
+                        <div className="relative group">
+                            <input
+                                type="date"
+                                value={data.startDate}
+                                onChange={(e) => handleChange('startDate', e.target.value)}
+                                onClick={(e) => (e.target as any).showPicker?.()}
+                                className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
+                            />
+                            <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none group-hover:text-bgBlue transition-colors" />
+                        </div>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
-                    <div className="relative group">
-                        <input
-                            type="date"
-                            value={data.endDate}
-                            onChange={(e) => handleChange('endDate', e.target.value)}
-                            onClick={(e) => (e.target as any).showPicker?.()}
-                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
-                        />
-                        <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none group-hover:text-bgBlue transition-colors" />
-                    </div>
+                        <div className="relative group">
+                            <input
+                                type="date"
+                                value={data.endDate}
+                                onChange={(e) => handleChange('endDate', e.target.value)}
+                                onClick={(e) => (e.target as any).showPicker?.()}
+                                className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
+                            />
+                            <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none group-hover:text-bgBlue transition-colors" />
+                        </div>
                     </div>
                 </div>
 
@@ -276,10 +276,12 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
                         <SelectTrigger className="w-full bg-navbarBg border-border">
                             <SelectValue placeholder="Select target users" />
                         </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="All Users">All Users</SelectItem>
-                            <SelectItem value="New Users">New Users</SelectItem>
-                            <SelectItem value="Premium Users">Premium Users</SelectItem>
+                        <SelectContent className="bg-navbarBg border-border">
+                            <SelectItem value="--">--</SelectItem>
+                            <SelectItem value="ALL_USERS">All Users</SelectItem>
+                            <SelectItem value="STARTER">Starter</SelectItem>
+                            <SelectItem value="BUSINESS">Business</SelectItem>
+                            <SelectItem value="FREE_TRIAL">Free Trial</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
