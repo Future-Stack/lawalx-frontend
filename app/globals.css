@@ -777,7 +777,7 @@ body {
 
 .help-header-bg {
   position: relative;
-  min-height: 220px;
+  min-height: 260px;
   height: auto;
   width: 100%;
   /* border-radius: 0.75rem; Tailwind rounded-xl */

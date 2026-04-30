@@ -62,7 +62,7 @@ const MetricCard: React.FC<MetricCardProps> = ({ icon, title, value, change, isP
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center gap-2">
             <div className="text-gray-500 dark:text-gray-400 p-2 rounded-full border border-border">{icon}</div>
-            <span className="text-xs font-medium text-gray-600 dark:text-gray-400">{title}</span>
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</span>
           </div>
         </div>
         <div className="space-y-0.5">
@@ -93,7 +93,7 @@ const DashboardHeader: React.FC<{ onExport: () => void; onExportExcel: () => voi
     <div className="border-b border-border pb-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Monitor system performance and manage client operations</p>
         </div>
         <div className="flex items-center gap-2">
@@ -217,7 +217,7 @@ const SubscriptionDistribution: React.FC<{ dateRange: DateRange }> = ({ dateRang
     <div className="bg-navbarBg rounded-xl p-5 shadow-sm border border-border h-full">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="text-xs font-semibold text-gray-900 dark:text-white">Subscription Plan Distribution</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Subscription Plan Distribution</h3>
           <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Active subscribers by tier</p>
         </div>
         <MoreVertical className="w-4 h-4 text-gray-300 dark:text-gray-600 cursor-pointer" />
@@ -297,7 +297,7 @@ const PlatformActivityTrend: React.FC<{ dateRange: DateRange }> = ({ dateRange }
     <div className="bg-navbarBg rounded-xl p-5 shadow-sm border border-border h-full">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-xs font-semibold text-gray-900 dark:text-white">Platform Activity Trend</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Platform Activity Trend</h3>
           <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Daily active users and task progress</p>
         </div>
         <MoreVertical className="w-4 h-4 text-gray-300 dark:text-gray-600 cursor-pointer" />
@@ -416,7 +416,7 @@ const ContentUsageBreakdown: React.FC<{ title: string; subtitle: string; type: '
     <div className="bg-navbarBg rounded-xl p-5 shadow-sm border border-border">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h3 className="text-xs font-semibold text-gray-900 dark:text-white">{title}</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
           <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>
         </div>
         <MoreVertical className="w-4 h-4 text-gray-300 dark:text-gray-600 cursor-pointer" />
@@ -466,7 +466,7 @@ const RecentCriticalActivity: React.FC<{ dateRange: DateRange }> = ({ dateRange 
     <div className="bg-navbarBg rounded-xl p-5 shadow-sm border border-border flex flex-col h-full min-h-[500px]">
       <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
         <div>
-          <h3 className="text-xs font-semibold text-gray-900 dark:text-white">Recent Critical Activity</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Critical Activity</h3>
           <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Security and system events</p>
         </div>
         <Link href="/admin/dashboard/recent-crititcal-activity">
@@ -482,15 +482,15 @@ const RecentCriticalActivity: React.FC<{ dateRange: DateRange }> = ({ dateRange 
         ) : (
           <>
             {activities.map((activity: any, idx: number) => (
-              <div key={idx} className="flex-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all flex flex-col justify-center">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-bold text-gray-900 dark:text-white">{activity.user?.name || 'Unknown'}</span>
-                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 uppercase tracking-tight`}>
+              <div key={idx} className="flex-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col justify-center">
+                <div className="flex items-center justify-start gap-4">
+                  <span className="text-base font-bold text-gray-900 dark:text-white">{activity.user?.name || 'Unknown'}</span>
+                  <span className={`px-1.5 py-0.5 rounded-xl text-[9px] bg-gray-200 dark:bg-gray-50/30 text-gray-800 dark:text-gray-200 uppercase tracking-tight`}>
                     {activity.label}
                   </span>
                 </div>
-                <p className="text-[11px] text-gray-600 dark:text-gray-400 line-clamp-2 mb-1 leading-relaxed">{activity.action}</p>
-                <div className="flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500 mt-auto">
+                <p className="text-[12px] text-gray-600 dark:text-gray-400 line-clamp-2 mb-1 leading-relaxed">{activity.action}</p>
+                <div className="flex items-center gap-1 text-[12px] text-gray-400 dark:text-gray-500 mt-auto">
                   <Clock className="w-3 h-3" />
                   <span>{new Date(activity.timestamp).toLocaleString()}</span>
                 </div>
@@ -514,7 +514,7 @@ const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (id:
     <div className="bg-navbarBg rounded-xl p-5 shadow-sm border border-border flex flex-col h-full min-h-[500px]">
       <div className="flex items-center justify-between mb-4 border-b border-border pb-4">
         <div>
-          <h3 className="text-xs font-semibold text-gray-900 dark:text-white">Recent Support Tickets</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Support Tickets</h3>
           <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">User inquiries and reports</p>
         </div>
         <Link href="/admin/support/support-tickets">
@@ -533,23 +533,28 @@ const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (id:
               <div
                 key={idx}
                 onClick={() => onTicketClick(ticket.id)}
-                className="flex-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-transparent hover:border-gray-200 dark:hover:border-gray-700 transition-all group cursor-pointer flex flex-col justify-center"
+                className="flex-1 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all group cursor-pointer flex flex-col justify-center"
               >
-                <div className="flex items-center justify-between mb-1.5">
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-bold text-gray-900 dark:text-white">{ticket.ticketId}</span>
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{ticket.ticketId}</span>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2.5 overflow-hidden">
+                      <span className="text-base font-bold text-gray-900 dark:text-white truncate leading-snug">{ticket.subject}</span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
+                          ticket.priority === 'High' 
+                            ? 'bg-orange-50 text-orange-600 border-orange-100 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900/50' 
+                            : ticket.priority === 'Medium'
+                            ? 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50'
+                            : 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/50'
+                        }`}>
+                          {ticket.priority}
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-50 text-gray-500 border border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                          {ticket.status}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed">{ticket.subject}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 ml-4">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${ticket.priority === 'High' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : ticket.priority === 'Medium' ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
-                      {ticket.priority}
-                    </span>
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-                      {ticket.status}
-                    </span>
                   </div>
                 </div>
               </div>
