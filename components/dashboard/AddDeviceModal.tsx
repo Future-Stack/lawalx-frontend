@@ -11,6 +11,7 @@ const QrScanner = dynamic(() => import("@/components/common/QrScanner"), {
 import AddDevicePinInput from "./AddDevicePinInput";
 import CreateScreenModal from "./CreateScreenModal";
 import BaseDialog from "@/common/BaseDialog";
+import DeviceLocation from "@/components/common/DeviceLocation";
 
 import {
   Select,
@@ -35,6 +36,8 @@ interface AddDeviceModalProps {
 function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgram }: AddDeviceModalProps) {
   const [pin, setPin] = useState("");
   const [deviceName, setDeviceName] = useState("");
+  const [deviceLocation, setDeviceLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [deviceLocationLabel, setDeviceLocationLabel] = useState("");
 
   const [addDevice] = useAddDeviceMutation();
   const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
@@ -49,12 +52,50 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
 
   // Automatically set device name when PIN fetching is successful
   useEffect(() => {
-    if (cleanedPin.length === 8 && devicePinWiseData?.success && devicePinWiseData?.data?.name) {
-      setDeviceName(devicePinWiseData.data.name);
+    if (cleanedPin.length === 8 && devicePinWiseData?.success) {
+      if (devicePinWiseData.data?.name) {
+        setDeviceName(devicePinWiseData.data.name);
+      }
+      if (devicePinWiseData.data?.location) {
+        const { lat, lng } = devicePinWiseData.data.location;
+        setDeviceLocation({ lat, lng });
+      }
     } else if (cleanedPin.length < 8) {
       setDeviceName("");
+      setDeviceLocation(null);
+      setDeviceLocationLabel("");
     }
   }, [devicePinWiseData, cleanedPin]);
+
+  useEffect(() => {
+    if (!deviceLocation) {
+      setDeviceLocationLabel("");
+      return;
+    }
+
+    const fetchLocationName = async () => {
+      const { lat, lng } = deviceLocation;
+      const cacheKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`
+        );
+        const data = await response.json();
+        if (data?.address) {
+          const city = data.address.city || data.address.town || data.address.village || data.address.suburb || data.address.county || "";
+          const country = data.address.country || "";
+          const formatted = city && country ? `${city}, ${country}` : data.display_name?.split(",").slice(0, 2).join(", ") || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          setDeviceLocationLabel(formatted);
+        } else {
+          setDeviceLocationLabel(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        }
+      } catch (error) {
+        setDeviceLocationLabel(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+      }
+    };
+
+    fetchLocationName();
+  }, [deviceLocation]);
 
   const [selectedScreen, setSelectedScreen] = useState("all-programs");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -72,11 +113,19 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
     }
     try {
       const cleanedProgramId = programId === "all-programs" ? undefined : programId;
-      const res = await addDevice({ pin, name, programId: cleanedProgramId }).unwrap();
+      const devicePayload = {
+        pin,
+        name,
+        programId: cleanedProgramId,
+        location: deviceLocation || { lat: 0, lng: 0 },
+      };
+      const res = await addDevice(devicePayload).unwrap();
 
       if (res.success) {
         setPin("");
         setDeviceName("");
+        setDeviceLocation(null);
+        setDeviceLocationLabel("");
         setSelectedScreen("all-programs");
         onClose();
         if (onSuccess) onSuccess();
@@ -104,10 +153,11 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
 
           <div className="space-y-6 relative">
             {[
-              { step: 1, title: "Open Tape App", desc: "Open Tape app on your Smart TV or browser." },
-              { step: 2, title: "Set Up the Device", desc: "Set Up your device providing a name, Location and Storage limit." },
-              { step: 3, title: "Enter the PIN", desc: "A pairing screen will appear—enter the PIN or scan the QR code." },
-              { step: 4, title: "Start Displaying", desc: "Your screen is now connected and ready to go!" }
+              { step: 1, title: "Open Tape App", desc: "Open Tape app on your device" },
+              { step: 2, title: "Set Up the Device", desc: "Set Up your device providing name and location" },
+              { step: 3, title: "Enter the PIN", desc: "Enter the PIN or scan QR code. Add device" },
+              { step: 4, title: "Create Program", desc: "Create a program and add content" },
+              { step: 5, title: "Start Displaying", desc: "Publish program and your screen is ready to go" }
             ].map((s) => (
               <div key={s.step} className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-qrBackground dark:bg-gray-800 border border-borderGray dark:border-gray-700 text-gray-700 dark:text-gray-400 flex items-center justify-center font-semibold text-sm shrink-0 relative z-10 shadow-customShadow">
@@ -148,6 +198,24 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
             placeholder="Enter device name"
             className="w-full h-12 px-4 border border-borderGray dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue transition-all"
           />
+        </div>
+        {/* Device Location */}
+        <div className="space-y-3">
+          <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            Device Location
+          </label>
+          <input
+            type="text"
+            value={deviceLocationLabel || "Location will appear after entering a valid PIN."}
+            readOnly
+            className="w-full h-12 px-4 border border-borderGray dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:outline-none"
+          />
+          {/* {deviceLocation && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-500 dark:text-gray-400">
+              <div>Latitude: {deviceLocation.lat.toFixed(6)}</div>
+              <div>Longitude: {deviceLocation.lng.toFixed(6)}</div>
+            </div>
+          )} */}
         </div>
 
         {/* Select Program Section */}
@@ -208,6 +276,7 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
           isOpen={isCreateProgramModalOpen}
           onClose={() => setIsCreateProgramModalOpen(false)}
         />
+
 
         {isScannerOpen && (
           <QrScanner
