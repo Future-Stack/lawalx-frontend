@@ -5,11 +5,12 @@ import { useState, useMemo, useEffect } from "react";
 import {
   X, FileText, Video, Monitor, CircleCheckBigIcon,
   Search, ChevronLeft, ChevronRight, Loader2, Plus,
-  AudioLines, Image as ImageIcon, WifiOff
+  AudioLines, Image as ImageIcon,
+  Trash2
 } from "lucide-react";
 import Dropdown from "@/common/Dropdown";
 import Image from "next/image";
-import { useGetAllContentDataQuery } from "@/redux/api/users/content/content.api";
+import { useDeleteFileMutation, useDeleteFolderMutation, useGetAllContentDataQuery } from "@/redux/api/users/content/content.api";
 import { transformFile, transformFolder } from "@/lib/content-utils";
 import folderIcon from "@/public/icons/folder.svg";
 import { useCreateProgramMutation } from "@/redux/api/users/programs/programs.api";
@@ -44,16 +45,15 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
   const { data: allContentData, isLoading: isContentLoading } = useGetAllContentDataQuery(undefined);
   const { data: devicesData, isLoading: isDevicesLoading } = useGetMyDevicesDataQuery(undefined);
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
-
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
-
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedType, setSelectedType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isMounted, setIsMounted] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(false);
-
+  const [deleteContent] = useDeleteFileMutation();
+  const [deleteFolder] = useDeleteFolderMutation();
   const [programData, setProgramData] = useState<{
     name: string;
     description: string;
@@ -189,6 +189,22 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
   const renderContentItem = (item: any, depth = 0) => {
     const isSelected = programData.content_ids.includes(item.id);
     const isExpanded = expandedFolders.has(item.id);
+    console.log("item delete", item.id);
+    
+    const deleteFile = async (id:any) => {
+        try {
+          const res = item.type === "folder"
+            ? await deleteFolder(id).unwrap()
+            : await deleteContent({ id }).unwrap();
+          console.log(res);
+          
+          if (res.success) {
+            toast.success(res.message || "File deleted successfully");
+          }
+        } catch (error: any) {
+          toast.error(error?.data?.message || "Failed to delete file");
+        }
+      };
 
     return (
       <div key={item.id} className="space-y-2">
@@ -249,6 +265,10 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
               {item.type === "folder" ? `${item.fileCount || 0} items` : `${item.size} ${item.duration ? `• ${item.duration}` : ""}`}
             </p>
           </div>
+          <button  onClick={(e) => {
+              e.stopPropagation();
+            deleteFile(item.id);
+  }} className="hover:bg-red-100 p-2 rounded-lg cursor-pointer"><Trash2 className="w-5 h-5 text-red-500"/></button>
         </div>
 
         {item.type === "folder" && isExpanded && item.children && (
