@@ -225,10 +225,10 @@ export default function TicketDetailsDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 pb-5 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 pb-5 pt-4 border-t border-border">
           <Button
             variant="outline"
-            className="flex items-center gap-2 h-9 w-full sm:w-auto"
+            className="flex items-center gap-2 h-9 w-full sm:w-auto bg-navbarBg border-border text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={onClose}
           >
             <ArrowLeft className="w-4 h-4" />
@@ -237,7 +237,7 @@ export default function TicketDetailsDialog({
           <div className="flex items-center gap-2 flex-wrap">
             <Button 
               variant="outline" 
-              className="h-9 flex-1 sm:flex-none"
+              className="h-9 flex-1 sm:flex-none bg-navbarBg border-border text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               onClick={handleResolve}
               disabled={isResolving || ticket.status === 'Resolved'}
             >

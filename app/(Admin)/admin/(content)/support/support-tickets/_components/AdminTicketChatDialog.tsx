@@ -334,7 +334,7 @@ export default function AdminTicketChatDialog({
             {ticket?.status !== 'Resolved' && (
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50 whitespace-nowrap ml-1"
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors disabled:opacity-50 whitespace-nowrap ml-1"
                 onClick={handleResolve}
                 disabled={isResolving}
               >
@@ -346,7 +346,7 @@ export default function AdminTicketChatDialog({
         </DialogHeader>
 
         {/* Ticket meta */}
-        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-x-6 gap-y-1">
+        <div className="px-6 py-3 bg-gray-50 dark:bg-gray-800/60 border-b border-border flex flex-wrap items-center gap-x-6 gap-y-1">
           <p className="text-xs text-gray-500 dark:text-gray-400">
             Ticket:{' '}
             <span className="font-semibold text-gray-700 dark:text-gray-200">
@@ -398,7 +398,7 @@ export default function AdminTicketChatDialog({
         </div>
 
         {/* Input */}
-        <div className="px-6 pb-5 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-3">
+        <div className="px-6 pb-5 pt-3 border-t border-border space-y-3">
           {/* Pending attachments */}
           {pendingAttachments.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -461,7 +461,11 @@ export default function AdminTicketChatDialog({
 
           {/* Footer buttons */}
           <div className="flex items-center justify-between gap-3">
-            <Button variant="outline" className="h-9" onClick={onClose}>
+            <Button 
+              variant="outline" 
+              className="h-9 bg-navbarBg border-border text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800" 
+              onClick={onClose}
+            >
               Cancel
             </Button>
             <Button

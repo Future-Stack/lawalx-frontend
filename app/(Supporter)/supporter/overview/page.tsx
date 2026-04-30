@@ -1,15 +1,21 @@
-import { HomeIcon, ChevronRight } from 'lucide-react';
+'use client';
+
+import { HomeIcon } from 'lucide-react';
 import Link from 'next/link';
 import SupporterStatsGrid from './_components/SupporterStatsGrid';
 import SupportTicketTable from './_components/SupportTicketTable';
+import { useGetUserProfileQuery } from '@/redux/api/users/userProfileApi';
 
 export default function SupporterOverviewPage() {
+  const { data: profileData } = useGetUserProfileQuery();
+  const userName = profileData?.data?.full_name || profileData?.data?.username || 'Supporter';
+
   return (
     <div className="min-h-screen space-y-6">
       {/* Welcome header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-          Sofia Martin{' '}
+          {userName}{' '}
           <span role="img" aria-label="wave">
             👋
           </span>

@@ -12,7 +12,8 @@ import {
 import { toast } from "sonner";
 import { useTicketChat } from "@/hooks/useTicketChat";
 import { useAppSelector } from "@/redux/store/hook";
-import { selectCurrentUser } from "@/redux/features/auth/authSlice";
+import { selectCurrentToken, selectCurrentUser } from "@/redux/features/auth/authSlice";
+import { getSocket } from "@/lib/socket";
 import type { ChatAttachment } from "@/types/chat";
 
 // Refactored Components
@@ -39,6 +40,7 @@ function isImageUrl(url: string) {
 const Support = () => {
   const { data: ticketsResponse, isLoading } = useGetMyTicketsQuery();
   const [createSupportTicket] = useCreateSupportTicketMutation();
+  const token = useAppSelector(selectCurrentToken);
   const currentUser = useAppSelector(selectCurrentUser);
 
   const tickets = ticketsResponse?.data || [];
@@ -105,7 +107,13 @@ const Support = () => {
       }
 
       const res = await createSupportTicket(formData).unwrap();
-      if (res.success) {
+      if (res.success && token) {
+        const socket = getSocket(token);
+        socket.emit("sendMessage", {
+          ticketId: res.data.id,
+          text: data.message,
+        });
+
         setIsModalOpen(false);
         setSelectedTicket(res.data);
         setShowChatOnMobile(true);
