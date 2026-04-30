@@ -465,7 +465,7 @@ export default function AdminTicketChatDialog({
               Cancel
             </Button>
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-5 flex items-center gap-2"
+              className="bg-[#0FA6FF] hover:bg-[#0FA6FF] text-white h-9 px-5 flex items-center gap-2"
               onClick={handleSend}
               disabled={!canSend || isUploading}
             >

@@ -245,7 +245,7 @@ export default function TicketDetailsDialog({
               {ticket.status === 'Resolved' ? 'Already Resolved' : 'Mark as resolved'}
             </Button>
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white h-9 flex-1 sm:flex-none"
+              className="bg-[#0FA6FF] hover:bg-[#0FA6FF] text-white h-9 flex-1 sm:flex-none"
               onClick={() => setChatOpen(true)}
             >
               Reply to Customer

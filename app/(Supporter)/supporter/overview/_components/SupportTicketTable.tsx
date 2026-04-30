@@ -136,7 +136,7 @@ export default function SupportTicketTable() {
           >
             <SelectTrigger className="h-8 text-xs px-3 gap-1.5 border-gray-200 dark:border-gray-700 rounded-lg flex-1 sm:flex-none sm:min-w-[110px]">
               <SelectValue placeholder="Priority" />
-              <ChevronDown className="w-3 h-3 opacity-60 flex-shrink-0" />
+              {/* <ChevronDown className="w-3 h-3 opacity-60 flex-shrink-0" /> */}
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Priority</SelectItem>
@@ -156,7 +156,7 @@ export default function SupportTicketTable() {
           >
             <SelectTrigger className="h-8 text-xs px-3 gap-1.5 border-gray-200 dark:border-gray-700 rounded-lg flex-1 sm:flex-none sm:min-w-[110px]">
               <SelectValue placeholder="All Status" />
-              <ChevronDown className="w-3 h-3 opacity-60 flex-shrink-0" />
+              {/* <ChevronDown className="w-3 h-3 opacity-60 flex-shrink-0" /> */}
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Status</SelectItem>
@@ -254,7 +254,7 @@ export default function SupportTicketTable() {
                       {ticket.status}
                     </span>
                   </TableCell>
-                  
+
                   {/* Description */}
                   <TableCell className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-[200px]">
                     <span className="truncate block">

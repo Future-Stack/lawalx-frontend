@@ -67,7 +67,7 @@ export default function ChangePasswordForm() {
           <div className="relative">
             <Input
               type={showPasswords.old ? 'text' : 'password'}
-              placeholder="••••••••••••"
+              placeholder="••••••"
               required
               value={formData.oldPassword}
               onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
@@ -91,7 +91,7 @@ export default function ChangePasswordForm() {
           <div className="relative">
             <Input
               type={showPasswords.new ? 'text' : 'password'}
-              placeholder="••••••••••••"
+              placeholder="••••••"
               required
               value={formData.newPassword}
               onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
@@ -115,7 +115,7 @@ export default function ChangePasswordForm() {
           <div className="relative">
             <Input
               type={showPasswords.confirm ? 'text' : 'password'}
-              placeholder="••••••••••••"
+              placeholder="••••••"
               required
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
