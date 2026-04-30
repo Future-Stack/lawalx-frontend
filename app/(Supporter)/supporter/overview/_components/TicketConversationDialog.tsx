@@ -81,7 +81,7 @@ function AttachmentPreview({ att, isOwn }: { att: ChatAttachment; isOwn: boolean
       rel="noreferrer"
       className={cn(
         'flex items-center gap-1 text-xs underline truncate max-w-[180px] mt-1',
-        isOwn ? 'text-indigo-100' : 'text-blue-600 dark:text-blue-400'
+        isOwn ? 'text-indigo-500' : 'text-blue-600 dark:text-blue-400'
       )}
     >
       <FileIcon className="w-3 h-3 flex-shrink-0" />
@@ -135,11 +135,12 @@ export default function TicketConversationDialog({
     id: m.id,
     ticketId: ticket?.id ?? '',
     text: m.text,
-    senderId: m.senderId,
-    senderName: senderLookup[m.senderId]?.name ?? m.senderName,
-    senderRole: senderLookup[m.senderId]?.role ?? m.senderRole,
+    senderId: m.sender?.id,
+    senderName: m.sender?.full_name || m.sender?.username || senderLookup[m.sender?.id]?.name,
+    senderRole: m.sender?.role || senderLookup[m.sender?.id]?.role,
     createdAt: m.createdAt,
     attachments: m.attachments ?? [],
+    sender: m.sender,
   }));
 
   const { messages, sendMessage, isConnected } = useTicketChat(

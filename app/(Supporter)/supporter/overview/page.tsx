@@ -23,16 +23,16 @@ export default function SupporterOverviewPage() {
       <nav className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
         <Link
           href="/supporter/overview"
-          className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          className="text-[#0FA6FF] hover:text-[#0FA6FF] dark:hover:text-[#0FA6FF] transition-colors flex items-center gap-1"
         >
-          <HomeIcon className="w-4 h-4" />
+          <HomeIcon className="w-4 h-4" /> Home
         </Link>
-        <ChevronRight className="w-3.5 h-3.5" />
+        {/* <ChevronRight className="w-3.5 h-3.5" />
         <span>Customer Supports</span>
         <ChevronRight className="w-3.5 h-3.5" />
         <span className="text-blue-600 dark:text-blue-400 font-medium">
           Enterprise Requests
-        </span>
+        </span> */}
       </nav>
 
       {/* Stat cards */}
