@@ -175,7 +175,7 @@ export default function UserDashboardNavbar() {
 
   return (
     <header className="bg-navbarBg border-b border-border sticky top-0 z-50 transition-colors">
-      <div className="px-5 sm:px-8 py-2 sm:py-4 flex items-center justify-between ">
+      <div className="px-8 md:px-12 lg:px-16 py-2 sm:py-4 flex items-center justify-between ">
         {/* Left section - Logo & Desktop Navigation */}
         <div className="flex items-center gap-4 lg:gap-8 flex-1">
           {/* Logo */}
@@ -190,7 +190,7 @@ export default function UserDashboardNavbar() {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="hidden xl:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-4">
             {navItems.map((item) => (
               <Link
                 key={item.href}
