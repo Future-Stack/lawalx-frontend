@@ -25,18 +25,50 @@ interface LeafletMapModalProps {
     lng: number;
     label: string;
     device: any;
+    onLocationSelect?: (lat: number, lng: number) => void;
 }
 
-const LeafletMapModal: React.FC<LeafletMapModalProps> = ({ isOpen, onClose, lat, lng, device }) => {
+const LeafletMapModal: React.FC<LeafletMapModalProps> = ({ isOpen, onClose, lat, lng, device, onLocationSelect }) => {
     const [isMounted, setIsMounted] = useState(false);
     const [timezone, setTimezone] = useState<string>("Loading...");
+    const [currentLat, setCurrentLat] = useState(lat);
+    const [currentLng, setCurrentLng] = useState(lng);
+    const [searchQuery, setSearchQuery] = useState("");
 
     useEffect(() => {
         setIsMounted(true);
     }, []);
 
     useEffect(() => {
-        if (isOpen && lat && lng) {
+        setCurrentLat(lat);
+        setCurrentLng(lng);
+    }, [lat, lng]);
+
+    const handleSearch = async () => {
+        if (!searchQuery.trim()) return;
+
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`
+            );
+            const data = await response.json();
+            if (data && data.length > 0) {
+                const result = data[0];
+                const newLat = parseFloat(result.lat);
+                const newLng = parseFloat(result.lon);
+                setCurrentLat(newLat);
+                setCurrentLng(newLng);
+            } else {
+                alert("Location not found. Please try a different search term.");
+            }
+        } catch (error) {
+            console.error("Search error:", error);
+            alert("Failed to search location. Please try again.");
+        }
+    };
+
+    useEffect(() => {
+        if (isOpen && currentLat && currentLng) {
             // First check if metadata already has timezone
             const metadataTz = device?.original?.metadata?.timezone;
             if (metadataTz) {
@@ -47,7 +79,7 @@ const LeafletMapModal: React.FC<LeafletMapModalProps> = ({ isOpen, onClose, lat,
             const fetchTimezone = async () => {
                 try {
                     const response = await fetch(
-                        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+                        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${currentLat}&longitude=${currentLng}&localityLanguage=en`
                     );
                     const data = await response.json();
                     
@@ -69,7 +101,7 @@ const LeafletMapModal: React.FC<LeafletMapModalProps> = ({ isOpen, onClose, lat,
             };
             fetchTimezone();
         }
-    }, [isOpen, lat, lng, device]);
+    }, [isOpen, currentLat, currentLng, device]);
 
     if (!isMounted) return null;
 
@@ -95,12 +127,31 @@ const LeafletMapModal: React.FC<LeafletMapModalProps> = ({ isOpen, onClose, lat,
                     </div>
                 </div>
 
+                {/* Search Input */}
+                <div className="flex gap-2 mb-4 px-1">
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                        placeholder="Search for a location..."
+                        className="flex-1 h-10 px-3 border border-borderGray dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue"
+                    />
+                    <button
+                        onClick={handleSearch}
+                        className="px-4 py-2 bg-bgBlue text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer shadow-customShadow"
+                    >
+                        Search
+                    </button>
+                </div>
+
                 {/* Map Container Wrapper */}
                 <div className="flex-1 relative rounded-[24px] overflow-hidden border border-[#D4D4D4] dark:border-gray-800 shadow-inner bg-gray-50 dark:bg-gray-900/20">
                     <LeafletMapInner
-                        lat={lat}
-                        lng={lng}
+                        lat={currentLat}
+                        lng={currentLng}
                         device={device}
+                        onLocationSelect={onLocationSelect}
                     />
                 </div>
             </div>
