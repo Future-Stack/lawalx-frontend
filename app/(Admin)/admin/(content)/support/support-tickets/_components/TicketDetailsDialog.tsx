@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Building2, Calendar, Clock, HelpCircle, ArrowLeft } from 'lucide-react';
+import { Building2, Calendar, Clock, HelpCircle, ArrowLeft, Paperclip, FileIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,8 +10,16 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { Ticket, TicketStatus, TicketPriority } from '@/redux/api/admin/support/adminSupportTicketApi';
+import { 
+  useResolveTicketByAdminMutation,
+  useGetAdminTicketDetailsQuery,
+  type Ticket, 
+  type TicketStatus, 
+  type TicketPriority 
+} from '@/redux/api/admin/support/adminSupportTicketApi';
 import AdminTicketChatDialog from './AdminTicketChatDialog';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 interface TicketDetailsDialogProps {
   ticket: Ticket | null;
@@ -44,13 +52,41 @@ const priorityStyles: Record<TicketPriority, string> = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function TicketDetailsDialog({
-  ticket,
+  ticket: initialTicket,
   open,
   onClose,
 }: TicketDetailsDialogProps) {
   const [chatOpen, setChatOpen] = useState(false);
+  const [resolveTicket, { isLoading: isResolving }] = useResolveTicketByAdminMutation();
+
+  // Fetch the latest ticket details to ensure dynamic updates
+  const { data: ticketDetails } = useGetAdminTicketDetailsQuery(initialTicket?.id ?? '', {
+    skip: !initialTicket?.id || !open,
+  });
+
+  // Use fetched data status if available
+  const currentStatus = ticketDetails?.data?.status || initialTicket?.status;
+  
+  // Reconstruct ticket object with fresh status
+  const ticket = initialTicket ? {
+    ...initialTicket,
+    status: (currentStatus as TicketStatus) || initialTicket.status,
+  } : null;
 
   if (!ticket) return null;
+
+  const handleResolve = async () => {
+    try {
+      const res = await resolveTicket(ticket.id).unwrap();
+      if (res.success) {
+        toast.success(res.message || 'Ticket marked as resolved');
+      } else {
+        toast.error(res.message || 'Failed to resolve ticket');
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Something went wrong');
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -157,6 +193,35 @@ export default function TicketDetailsDialog({
               </p>
             </div>
           </div>
+
+          {/* Attachments (Files uploaded during ticket creation) */}
+          {ticketDetails?.data?.file && ticketDetails.data.file.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-800 dark:text-gray-200">
+                  Initial Attachments
+                </span>
+                <Paperclip className="w-3.5 h-3.5 text-gray-400" />
+              </div>
+              <div className="flex flex-wrap gap-3">
+                {ticketDetails.data.file.map((url, i) => {
+                  const fileName = url.split('/').pop() || `Attachment-${i+1}`;
+                  return (
+                    <a
+                      key={i}
+                      href={url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <FileIcon className="w-4 h-4" />
+                      <span className="max-w-[200px] truncate">{fileName}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -170,11 +235,17 @@ export default function TicketDetailsDialog({
             Back to Ticket list
           </Button>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="outline" className="h-9 flex-1 sm:flex-none">
-              Mark as resolved
+            <Button 
+              variant="outline" 
+              className="h-9 flex-1 sm:flex-none"
+              onClick={handleResolve}
+              disabled={isResolving || ticket.status === 'Resolved'}
+            >
+              {isResolving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              {ticket.status === 'Resolved' ? 'Already Resolved' : 'Mark as resolved'}
             </Button>
             <Button
-              className="bg-blue-600 hover:bg-blue-700 text-white h-9 flex-1 sm:flex-none"
+              className="bg-[#0FA6FF] hover:bg-[#0FA6FF] text-white h-9 flex-1 sm:flex-none"
               onClick={() => setChatOpen(true)}
             >
               Reply to Customer

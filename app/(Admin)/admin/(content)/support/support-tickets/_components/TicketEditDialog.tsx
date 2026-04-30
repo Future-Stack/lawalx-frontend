@@ -10,6 +10,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useGetAllSupportersQuery } from '@/redux/api/admin/support/adminSupporterApi';
 import { useUpdateSupportTicketMutation } from '@/redux/api/admin/support/adminSupportTicketApi';
@@ -72,8 +80,7 @@ export default function TicketEditDialog({
         status,
         adminNote,
       };
-      const isAlreadyAssigned = !!(ticket?.assignedToId || ticket?.assignedTo?.name);
-      if (!isAlreadyAssigned && assignedTo && assignedTo !== 'none') {
+      if (assignedTo && assignedTo !== 'none') {
         payload.supporterId = assignedTo;
       }
 
@@ -137,19 +144,17 @@ export default function TicketEditDialog({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Priority
             </label>
-            <div className="relative">
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="w-full h-10 pl-3 pr-10 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer appearance-none shadow-sm"
-              >
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-                <option value="Normal">Normal</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-            </div>
+            <Select value={priority} onValueChange={setPriority}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Priority" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="High">High</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Low">Low</SelectItem>
+                <SelectItem value="Normal">Normal</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Status */}
@@ -157,42 +162,37 @@ export default function TicketEditDialog({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Status
             </label>
-            <div className="relative">
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className="w-full h-10 pl-3 pr-10 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer appearance-none shadow-sm"
-              >
-                <option value="Open">Opened</option>
-                <option value="Resolved">Resolved</option>
-                <option value="InProgress">In Progress</option>
-                <option value="Closed">Closed</option>
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-            </div>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Open">Opened</SelectItem>
+                <SelectItem value="Resolved">Resolved</SelectItem>
+                <SelectItem value="InProgress">In Progress</SelectItem>
+                <SelectItem value="Closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Assign to */}
           <div className="space-y-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Assign to {isAlreadyAssigned && <span className="text-[10px] text-blue-500 font-normal ml-1">(Already Assigned)</span>}
+              Assign to
             </label>
-            <div className="relative">
-              <select
-                value={assignedTo}
-                onChange={(e) => setAssignedTo(e.target.value)}
-                disabled={isAlreadyAssigned}
-                className="w-full h-10 pl-3 pr-10 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-md focus:outline-none text-gray-700 dark:text-gray-300 cursor-pointer appearance-none shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="none">No Change / Unassigned</option>
+            <Select value={assignedTo} onValueChange={setAssignedTo}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select Supporter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Change / Unassigned</SelectItem>
                 {supportersResponse?.data?.map((supporter: any) => (
-                  <option key={supporter.id} value={supporter.id}>
+                  <SelectItem key={supporter.id} value={supporter.id}>
                     {supporter.user?.username || 'Unknown'}
-                  </option>
+                  </SelectItem>
                 ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
-            </div>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Admin Note */}
@@ -203,12 +203,12 @@ export default function TicketEditDialog({
               </label>
               <HelpCircle className="w-3.5 h-3.5 text-gray-400" />
             </div>
-            <textarea
+            <Textarea
               value={adminNote}
               onChange={(e) => setAdminNote(e.target.value)}
-              placeholder="Customer reported this issue after the v2.4.0 deployment. live verified their account is active and they're on the Enterprise plan. The issue seems to be"
+              placeholder="Customer reported this issue after the v2.4.0 deployment..."
               rows={4}
-              className="w-full px-3 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 dark:text-gray-300 placeholder-gray-400"
+              className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 text-gray-700 dark:text-gray-300 placeholder-gray-400"
             />
           </div>
 
@@ -221,10 +221,11 @@ export default function TicketEditDialog({
               </span>
             </div>
             {showDescription && (
-              <textarea
+              <Textarea
                 defaultValue={ticket.description}
                 rows={5}
-                className="w-full px-3 py-2.5 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-600 dark:text-gray-400"
+                readOnly
+                className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 text-gray-600 dark:text-gray-400"
               />
             )}
           </div>
@@ -241,7 +242,7 @@ export default function TicketEditDialog({
             Cancel
           </Button>
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-5"
+            className="bg-[#0FA6FF] hover:bg-[#0FA6FF] text-white h-9 px-5"
             onClick={handleSave}
             disabled={isUpdating}
           >

@@ -9,6 +9,7 @@ export interface ChatMessageSender {
   username: string;
   full_name: string | null;
   image_url: string | null;
+  role?: string;
 }
 
 export interface ChatMessage {

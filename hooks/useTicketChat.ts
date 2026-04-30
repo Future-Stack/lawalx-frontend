@@ -62,29 +62,36 @@ export function useTicketChat(
   }, [ticketId, initialMessagesString]);
 
   useEffect(() => {
+    console.log('[useTicketChat] Effect triggered. ticketId:', ticketId, 'hasToken:', !!token);
     if (!token || !ticketId) return;
 
     const socket = getSocket(token);
     const tid = ticketId; // stable capture for closures below
 
-    const joinRoom = () => socket.emit('joinTicket', { ticketId: tid });
+    const joinRoom = () => {
+      console.log('[useTicketChat] Emitting joinTicket for:', tid);
+      socket.emit('joinTicket', { ticketId: tid });
+    };
 
     // Re-emit joinTicket on every (re)connect so the client stays in the
     // room even after network drops or token rotation
     const onConnect = () => {
-      console.log('[Socket] Connected to server. Joining room:', tid);
+      console.log('[useTicketChat] Socket connected. Joining room:', tid);
       setIsConnected(true);
       joinRoom();
     };
 
     // connectionSuccess fires after server-side JWT auth completes
-    const onConnectionSuccess = (data: { userId: string }) => {
-      console.log('[Socket] Auth Success. UserID:', data.userId, 'Joining room:', tid);
+    const onConnectionSuccess = (data: { userId: string; role?: string }) => {
+      console.log('[useTicketChat] Auth Success Event. UserID:', data.userId, 'Role:', data.role, 'Room:', tid);
       setIsConnected(true);
       joinRoom();
     };
 
-    const onDisconnect = () => setIsConnected(false);
+    const onDisconnect = (reason: string) => {
+      console.warn('[useTicketChat] Socket disconnected. Reason:', reason, 'tid:', tid);
+      setIsConnected(false);
+    };
 
     const onMessage = (msg: ChatMessage) => {
       console.log('[Socket] New message received:', msg);
@@ -138,8 +145,9 @@ export function useTicketChat(
 
     // Socket.IO connection error (network, CORS, auth rejection)
     const onConnectError = (err: Error) => {
-      console.error('[Socket] connect_error:', err.message);
+      console.error('[useTicketChat] Connection Error (CORS/Auth/Network):', err.message);
       setIsConnected(false);
+      toast.error(`Socket connection failed: ${err.message}`);
     };
 
     socket.on('connect', onConnect);
@@ -152,11 +160,11 @@ export function useTicketChat(
 
     // Singleton socket already connected (e.g. switching ticket) — join immediately
     if (socket.connected) {
-      console.log('[Socket] already connected, joining room:', tid);
+      console.log('[useTicketChat] Socket already connected globally. Joining room:', tid);
       joinRoom();
       setIsConnected(true);
     } else {
-      console.log('[Socket] waiting for connection, ticketId:', tid);
+      console.log('[useTicketChat] Socket not connected yet. Waiting for connect/connectionSuccess events... tid:', tid);
     }
 
     return () => {
