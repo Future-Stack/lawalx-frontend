@@ -3,6 +3,10 @@ export interface AddDevicePin {
     pin: string;
     name?: string;
     programId?: string;
+    location: {
+    lat: number;
+    lng: number
+  }
 }
 
 export type TimelineFile = {
