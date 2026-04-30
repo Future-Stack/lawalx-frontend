@@ -277,6 +277,7 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
           onClose={() => setIsCreateProgramModalOpen(false)}
         />
 
+
         {isScannerOpen && (
           <QrScanner
             isOpen={isScannerOpen}
