@@ -349,16 +349,30 @@ export default function UserDashboardNavbar() {
 
           {/* Always Visible: Dark Mode Toggle */}
           <button
-            onClick={toggleTheme}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-300 cursor-pointer group"
+            onClick={(e) => {
+              const x = e.clientX;
+              const y = e.clientY;
+              document.documentElement.style.setProperty('--x', `${x}px`);
+              document.documentElement.style.setProperty('--y', `${y}px`);
+
+              if (!(document as any).startViewTransition) {
+                toggleTheme();
+                return;
+              }
+              (document as any).startViewTransition(() => {
+                toggleTheme();
+              });
+            }}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-300 relative h-9 w-9 flex items-center justify-center overflow-hidden group"
             aria-label="Toggle dark mode"
           >
             {!mounted ? (
               <Moon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            ) : theme === "dark" ? (
-              <Sun className="w-5 h-5 text-yellow-500 rotate-0 scale-100 transition-all duration-500 group-hover:rotate-12" />
             ) : (
-              <Moon className="w-5 h-5 text-gray-600 rotate-0 scale-100 transition-all duration-500 group-hover:-rotate-12" />
+              <>
+                <Sun className={`w-5 h-5 text-yellow-500 absolute transition-all duration-500 ease-in-out ${theme === 'dark' ? 'translate-y-0 opacity-100 rotate-0' : 'translate-y-10 opacity-0 -rotate-90'}`} />
+                <Moon className={`w-5 h-5 text-gray-600 dark:text-gray-400 absolute transition-all duration-500 ease-in-out ${theme !== 'dark' ? 'translate-y-0 opacity-100 rotate-0' : '-translate-y-10 opacity-0 rotate-90'}`} />
+              </>
             )}
           </button>
 

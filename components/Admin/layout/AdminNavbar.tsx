@@ -186,15 +186,25 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
 
           {/* Theme Toggle */}
           <button
-            onClick={() => setIsDark(!isDark)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            onClick={(e) => {
+              const x = e.clientX;
+              const y = e.clientY;
+              document.documentElement.style.setProperty('--x', `${x}px`);
+              document.documentElement.style.setProperty('--y', `${y}px`);
+
+              if (!(document as any).startViewTransition) {
+                setIsDark(!isDark);
+                return;
+              }
+              (document as any).startViewTransition(() => {
+                setIsDark(!isDark);
+              });
+            }}
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-300 relative h-9 w-9 flex items-center justify-center overflow-hidden"
             aria-label="Toggle dark mode"
           >
-            {isDark ? (
-              <Sun className="w-5 h-5 text-yellow-500" />
-            ) : (
-              <Moon className="w-5 h-5 text-gray-900" />
-            )}
+            <Sun className={`w-5 h-5 text-yellow-500 absolute transition-all duration-500 ease-in-out ${isDark ? 'translate-y-0 opacity-100 rotate-0' : 'translate-y-10 opacity-0 -rotate-90'}`} />
+            <Moon className={`w-5 h-5 text-gray-900 dark:text-gray-100 absolute transition-all duration-500 ease-in-out ${!isDark ? 'translate-y-0 opacity-100 rotate-0' : '-translate-y-10 opacity-0 rotate-90'}`} />
           </button>
 
           <div className="hidden xs:flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-gray-700">
