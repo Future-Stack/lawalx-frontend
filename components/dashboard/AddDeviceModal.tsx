@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { ScreenShare } from "lucide-react";
+import { ScreenShare, LocateFixed } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const QrScanner = dynamic(() => import("@/components/common/QrScanner"), {
@@ -11,7 +11,7 @@ const QrScanner = dynamic(() => import("@/components/common/QrScanner"), {
 import AddDevicePinInput from "./AddDevicePinInput";
 import CreateScreenModal from "./CreateScreenModal";
 import BaseDialog from "@/common/BaseDialog";
-import DeviceLocation from "@/components/common/DeviceLocation";
+import LeafletMapModal from "@/components/shared/modals/LeafletMapModal";
 
 import {
   Select,
@@ -73,8 +73,11 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
       return;
     }
 
+    // Set coordinates immediately
+    const { lat, lng } = deviceLocation;
+    setDeviceLocationLabel(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+
     const fetchLocationName = async () => {
-      const { lat, lng } = deviceLocation;
       const cacheKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
       try {
         const response = await fetch(
@@ -86,11 +89,10 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
           const country = data.address.country || "";
           const formatted = city && country ? `${city}, ${country}` : data.display_name?.split(",").slice(0, 2).join(", ") || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
           setDeviceLocationLabel(formatted);
-        } else {
-          setDeviceLocationLabel(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
         }
       } catch (error) {
-        setDeviceLocationLabel(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+        // Keep the coordinates if geocoding fails
+        console.error("Geocoding error:", error);
       }
     };
 
@@ -100,6 +102,8 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
   const [selectedScreen, setSelectedScreen] = useState("all-programs");
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isCreateProgramModalOpen, setIsCreateProgramModalOpen] = useState(false);
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; label: string; device: any }>({ lat: 0, lng: 0, label: '', device: null });
 
   const programOptions = useMemo(() => {
     const fetched = programsData?.data?.map(p => ({ id: p.id, name: p.name })) || [];
@@ -204,18 +208,28 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
           <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">
             Device Location
           </label>
-          <input
-            type="text"
-            value={deviceLocationLabel || "Location will appear after entering a valid PIN."}
-            readOnly
-            className="w-full h-12 px-4 border border-borderGray dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:outline-none"
-          />
-          {/* {deviceLocation && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-500 dark:text-gray-400">
-              <div>Latitude: {deviceLocation.lat.toFixed(6)}</div>
-              <div>Longitude: {deviceLocation.lng.toFixed(6)}</div>
-            </div>
-          )} */}
+          <div className="relative group">
+            <input
+              type="text"
+              value={
+                deviceLocation && deviceLocation.lat !== 0 && deviceLocation.lng !== 0
+                  ? deviceLocationLabel
+                  : "N/A"
+              }
+              readOnly
+              onClick={() => {
+                setSelectedLocation({
+                  lat: deviceLocation?.lat || 0,
+                  lng: deviceLocation?.lng || 0,
+                  label: deviceLocationLabel || "Device Location",
+                  device: null
+                });
+                setIsMapModalOpen(true);
+              }}
+              className="w-full h-12 px-4 pr-10 border border-borderGray dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue cursor-pointer transition-all group-hover:text-bgBlue"
+            />
+            <LocateFixed className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#737373] dark:text-gray-400 pointer-events-none group-hover:text-bgBlue transition-colors" />
+          </div>
         </div>
 
         {/* Select Program Section */}
@@ -299,6 +313,20 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
             }}
           />
         )}
+
+        {/* Location Selection Modal */}
+        <LeafletMapModal
+          isOpen={isMapModalOpen}
+          onClose={() => setIsMapModalOpen(false)}
+          lat={selectedLocation.lat}
+          lng={selectedLocation.lng}
+          label={selectedLocation.label}
+          device={selectedLocation.device}
+          onLocationSelect={(lat, lng) => {
+            setDeviceLocation({ lat, lng });
+            setIsMapModalOpen(false);
+          }}
+        />
       </div>
     </BaseDialog>
   );

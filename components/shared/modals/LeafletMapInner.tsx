@@ -2,32 +2,66 @@
 
 import React from 'react';
 import { X, ZoomIn, ZoomOut, MapPin, Monitor } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import "leaflet/dist/leaflet.css";
 
 
 
-// Custom Zoom Controls Component
-const ZoomControls = () => {
+// Map Click Handler Component
+const MapClickHandler = ({ onLocationSelect }: { onLocationSelect?: (lat: number, lng: number) => void }) => {
+    useMapEvents({
+        click: (e) => {
+            if (onLocationSelect) {
+                onLocationSelect(e.latlng.lat, e.latlng.lng);
+            }
+        },
+    });
+    return null;
+};
+
+// Map Center Updater Component
+const MapCenterUpdater = ({ lat, lng }: { lat: number; lng: number }) => {
     const map = useMap();
+
+    React.useEffect(() => {
+        if (map && lat && lng) {
+            map.setView([lat, lng], map.getZoom());
+        }
+    }, [map, lat, lng]);
+
+    return null;
+};
+
+// Custom Zoom Controls
+const ZoomControls: React.FC = () => {
+    const map = useMap();
+
+    if (!map) return null;
+
     return (
-        <div className="absolute top-6 left-6 z-[1000] flex flex-col gap-3">
+        <div className="absolute top-4 left-4 z-[1000] flex flex-col gap-2 pointer-events-none">
             <button
-                onClick={() => map.zoomIn()}
-                className="w-11 h-11 bg-white dark:bg-gray-800 rounded-full shadow-xl flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer border border-gray-200 dark:border-gray-700 active:scale-95 translate-x-0"
-                title="Zoom In"
+                onClick={() => {
+                    const currentZoom = map.getZoom();
+                    map.setZoom(currentZoom + 1);
+                }}
+                className="w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors pointer-events-auto"
+                aria-label="Zoom in"
                 type="button"
             >
-                <ZoomIn className="w-5 h-5 text-[#171717] dark:text-white" />
+                <ZoomIn className="w-5 h-5 text-gray-700" />
             </button>
             <button
-                onClick={() => map.zoomOut()}
-                className="w-11 h-11 bg-white dark:bg-gray-800 rounded-full shadow-xl flex items-center justify-center hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer border border-gray-200 dark:border-gray-700 active:scale-95 translate-x-0"
-                title="Zoom Out"
+                onClick={() => {
+                    const currentZoom = map.getZoom();
+                    map.setZoom(currentZoom - 1);
+                }}
+                className="w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors pointer-events-auto"
+                aria-label="Zoom out"
                 type="button"
             >
-                <ZoomOut className="w-5 h-5 text-[#171717] dark:text-white" />
+                <ZoomOut className="w-5 h-5 text-gray-700" />
             </button>
         </div>
     );
@@ -37,9 +71,10 @@ interface Props {
     lat: number;
     lng: number;
     device: any;
+    onLocationSelect?: (lat: number, lng: number) => void;
 }
 
-const LeafletMapInner: React.FC<Props> = ({ lat, lng, device }) => {
+const LeafletMapInner: React.FC<Props> = ({ lat, lng, device, onLocationSelect }) => {
     React.useEffect(() => {
         if (typeof window !== 'undefined') {
             // @ts-ignore - _getIconUrl is an internal Leaflet property
@@ -81,6 +116,8 @@ const LeafletMapInner: React.FC<Props> = ({ lat, lng, device }) => {
         <MapContainer
             center={position}
             zoom={13}
+            minZoom={3}
+            maxZoom={18}
             zoomControl={false}
             style={{ height: "100%", width: "100%", zIndex: 0 }}
             className="z-0"
@@ -90,7 +127,9 @@ const LeafletMapInner: React.FC<Props> = ({ lat, lng, device }) => {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             />
 
+            <MapCenterUpdater lat={lat} lng={lng} />
             <ZoomControls />
+            <MapClickHandler onLocationSelect={onLocationSelect} />
 
             <Marker position={position} icon={customIcon}>
                 <Popup className="custom-popup">
