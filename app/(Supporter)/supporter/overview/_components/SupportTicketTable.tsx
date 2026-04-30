@@ -258,10 +258,7 @@ export default function SupportTicketTable() {
                     <button
                       onClick={() => openConversation(ticket)}
                       className={cn(
-                        'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap cursor-pointer',
-                        idx === 0
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'border border-[#4881FF] text-[#4881FF] hover:bg-[#4881FF]/20'
+                        'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap cursor-pointer border border-[#4881FF] text-[#4881FF] hover:bg-[#4881FF]/20'
                       )}
                     >
                       Open

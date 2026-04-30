@@ -213,15 +213,16 @@ export default function AdminTicketChatDialog({
   }
 
   // Build initial messages from REST response
-  const initialMessages = (ticketDetails?.data?.messages ?? []).map((m) => ({
+  const initialMessages = (ticketDetails?.data?.messages ?? []).map((m: any) => ({
     id: m.id,
     ticketId: ticket?.id ?? '',
     text: m.text,
-    senderId: m.senderId,
-    senderName: senderLookup[m.senderId]?.name,
-    senderRole: senderLookup[m.senderId]?.role,
+    senderId: m.sender?.id,
+    senderName: m.sender?.full_name || m.sender?.username || senderLookup[m.sender?.id]?.name,
+    senderRole: m.sender?.role || senderLookup[m.sender?.id]?.role,
     createdAt: m.createdAt,
     attachments: m.attachments ?? [],
+    sender: m.sender,
   }));
 
   const { messages, sendMessage, isConnected } = useTicketChat(

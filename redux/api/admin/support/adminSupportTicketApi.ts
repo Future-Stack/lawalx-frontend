@@ -121,7 +121,13 @@ export interface AdminTicketMessage {
   id: string;
   text: string;
   attachments: { fileUrl: string; fileName: string }[];
-  senderId: string;
+  sender?: {
+    id: string;
+    username: string;
+    full_name: string | null;
+    image_url: string | null;
+    role: string;
+  };
   createdAt: string;
 }
 

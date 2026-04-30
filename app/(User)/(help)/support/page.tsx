@@ -56,13 +56,16 @@ const Support = () => {
 
   // Map raw API messages → ChatMessage (adds ticketId + senderName fields)
   const rawMessages = selectedTicketDetails?.data?.messages ?? [];
-  const initialMessages = rawMessages.map((m) => ({
+  const initialMessages = rawMessages.map((m: any) => ({
     id: m.id,
     ticketId: selectedTicket?.id ?? '',
     text: m.text,
-    senderId: m.senderId,
+    senderId: m.sender?.id,
+    senderName: m.sender?.full_name || m.sender?.username,
+    senderRole: m.sender?.role,
     createdAt: m.createdAt,
     attachments: m.attachments ?? [],
+    sender: m.sender,
   }));
   const { messages, sendMessage, isConnected } = useTicketChat(selectedTicket?.id ?? null, initialMessages);
 
