@@ -249,9 +249,9 @@ export default function TicketsTable() {
 
   return (
     <>
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-navbarBg border border-border rounded-xl shadow-sm overflow-hidden">
         {/* ── Filters bar ────────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-b border-border">
           <h2 className="text-base font-semibold text-gray-900 dark:text-white whitespace-nowrap">
             Support Tickets
           </h2>
@@ -268,7 +268,7 @@ export default function TicketsTable() {
                   setSearch(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-400"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-400"
               />
             </div>
 
@@ -316,7 +316,7 @@ export default function TicketsTable() {
         {/* ── shadcn Table ─────────────────────────────────────────────── */}
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800">
+            <TableRow className="bg-navbarBg hover:bg-navbarBg">
               <TableHead className="w-10 px-4">
                 <Checkbox
                   checked={allSelected}
@@ -349,7 +349,7 @@ export default function TicketsTable() {
               <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Description
               </TableHead>
-              <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+              <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-border">
                 Action
               </TableHead>
             </TableRow>
@@ -376,7 +376,7 @@ export default function TicketsTable() {
                 <TableRow
                   key={ticket.id}
                   className={cn(
-                    'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors',
+                    'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-border',
                     selectedIds.has(ticket.id) && 'bg-blue-50/50 dark:bg-blue-900/10'
                   )}
                 >
@@ -494,7 +494,7 @@ export default function TicketsTable() {
         </Table>
 
         {/* ── Pagination ─────────────────────────────────────────────────── */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-t border-border">
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Showing {start} to {end} of{' '}
             <span className="font-semibold text-blue-600 dark:text-blue-400">{TOTAL_COUNT}</span>{' '}
@@ -505,7 +505,7 @@ export default function TicketsTable() {
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Prev</span>
@@ -527,7 +527,7 @@ export default function TicketsTable() {
                     'min-w-[36px] px-2.5 py-1.5 text-sm rounded-lg border transition-colors',
                     currentPage === p
                       ? 'bg-blue-600 text-white border-blue-600 font-semibold'
-                      : 'text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+                      : 'text-gray-600 dark:text-gray-300 border-border hover:bg-gray-50 dark:hover:bg-gray-800'
                   )}
                 >
                   {p}
@@ -538,7 +538,7 @@ export default function TicketsTable() {
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <span>Next</span>
               <ChevronRight className="w-4 h-4" />

@@ -6,16 +6,15 @@ export default function SupporterEmployeesPage() {
   return (
     <div className="min-h-screen space-y-6">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-        <Link
-          href="/admin/dashboard"
-          className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        >
-          <HomeIcon className="w-4 h-4" />
+      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-6">
+        <Link href="/admin/dashboard">
+          <HomeIcon className="w-4 h-4 cursor-pointer hover:text-bgBlue" />
         </Link>
-        <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-blue-600 dark:text-blue-400 font-medium">Support</span>
-      </nav>
+        <ChevronRight className="w-4 h-4" />
+        <span>Customer Supports</span>
+        <ChevronRight className="w-4 h-4" />
+        <span className="text-bgBlue font-medium">Supporter Employees</span>
+      </div>
 
       {/* Page header */}
       <div>

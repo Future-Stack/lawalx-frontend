@@ -220,8 +220,8 @@ export default function TicketConversationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full sm:max-w-xl lg:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl">
-        <DialogHeader className="p-4 sm:p-6 border-b border-gray-100 dark:border-gray-800 flex flex-row items-center justify-between">
+      <DialogContent className="w-full sm:max-w-xl lg:max-w-2xl p-0 gap-0 overflow-hidden rounded-2xl bg-navbarBg border-border">
+        <DialogHeader className="p-4 sm:p-6 border-b border-border flex flex-row items-center justify-between">
           <div className="flex items-center gap-3 flex-wrap">
             <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white leading-tight">
               Support Ticket Query
@@ -242,7 +242,7 @@ export default function TicketConversationDialog({
                 type="button"
                 onClick={handleResolve}
                 disabled={isResolving}
-                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50 whitespace-nowrap ml-1"
+                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors disabled:opacity-50 whitespace-nowrap ml-1"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
                 {isResolving ? 'Resolving...' : 'Resolve'}
@@ -254,7 +254,7 @@ export default function TicketConversationDialog({
         {/* Inner conversation card */}
         <div className="mx-4 sm:mx-6 my-4 sm:my-5 rounded-xl overflow-hidden flex flex-col">
           {/* Ticket meta header */}
-          <div className="flex items-start justify-between gap-4 px-4 sm:px-5 py-3.5 bg-[#F7F9FA] dark:bg-gray-900">
+          <div className="flex items-start justify-between gap-4 px-4 sm:px-5 py-3.5 bg-gray-50 dark:bg-gray-800/60 border border-border rounded-t-xl">
             <div className="min-w-0">
               <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-2">
                 Conversation
@@ -279,7 +279,7 @@ export default function TicketConversationDialog({
           </div>
 
           {/* Messages */}
-          <div className="px-4 sm:px-5 py-4 space-y-4 dark:bg-gray-950 min-h-[220px] max-h-[260px] sm:max-h-[300px] overflow-y-auto">
+          <div className="px-4 sm:px-5 py-4 space-y-4 bg-white dark:bg-gray-950 border-x border-border min-h-[220px] max-h-[260px] sm:max-h-[300px] overflow-y-auto">
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-xs italic">
                 {isConnected ? 'No messages yet. Start the conversation!' : 'Connecting to chat...'}
@@ -375,7 +375,7 @@ export default function TicketConversationDialog({
               </div>
             )}
 
-            <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-900">
+            <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-gray-900">
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}

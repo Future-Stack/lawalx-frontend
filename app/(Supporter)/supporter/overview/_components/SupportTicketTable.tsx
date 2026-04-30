@@ -117,9 +117,9 @@ export default function SupportTicketTable() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-navbarBg border border-border rounded-xl shadow-sm overflow-hidden">
       {/* Table header bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-4 border-b border-border">
         <h2 className="text-base font-semibold text-gray-900 dark:text-white whitespace-nowrap">
           Support Ticket Query
         </h2>
@@ -134,7 +134,7 @@ export default function SupportTicketTable() {
               handleFilterChange();
             }}
           >
-            <SelectTrigger className="h-8 text-xs px-3 gap-1.5 border-gray-200 dark:border-gray-700 rounded-lg flex-1 sm:flex-none sm:min-w-[110px]">
+            <SelectTrigger className="h-8 text-xs px-3 gap-1.5 border-border rounded-lg flex-1 sm:flex-none sm:min-w-[110px] bg-navbarBg">
               <SelectValue placeholder="Priority" />
               {/* <ChevronDown className="w-3 h-3 opacity-60 flex-shrink-0" /> */}
             </SelectTrigger>
@@ -154,7 +154,7 @@ export default function SupportTicketTable() {
               handleFilterChange();
             }}
           >
-            <SelectTrigger className="h-8 text-xs px-3 gap-1.5 border-gray-200 dark:border-gray-700 rounded-lg flex-1 sm:flex-none sm:min-w-[110px]">
+            <SelectTrigger className="h-8 text-xs px-3 gap-1.5 border-border rounded-lg flex-1 sm:flex-none sm:min-w-[110px] bg-navbarBg">
               <SelectValue placeholder="All Status" />
               {/* <ChevronDown className="w-3 h-3 opacity-60 flex-shrink-0" /> */}
             </SelectTrigger>
@@ -172,12 +172,12 @@ export default function SupportTicketTable() {
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="border-0 bg-gray-50 dark:bg-gray-800/60 hover:bg-gray-50 dark:hover:bg-gray-800/60">
+            <TableRow className="border-0 bg-navbarBg hover:bg-navbarBg">
               {['Ticket ID', 'Client Name', 'Priority', 'Issue Type', 'Status', 'Description', 'Action'].map(
                 (col) => (
                   <TableHead
                     key={col}
-                    className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap"
+                    className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap border-b border-border"
                   >
                     {col}
                   </TableHead>
@@ -210,10 +210,10 @@ export default function SupportTicketTable() {
                 <TableRow
                   key={ticket.id}
                   className={cn(
-                    'border-0 transition-colors',
+                    'border-0 transition-colors border-b border-border',
                     idx % 2 === 1
-                      ? 'bg-[#F7F9FA] dark:bg-gray-800/40 hover:bg-[#eef0f2] dark:hover:bg-gray-800/60'
-                      : 'bg-white dark:bg-gray-900 hover:bg-[#F7F9FA] dark:hover:bg-gray-800/30'
+                      ? 'bg-gray-50 dark:bg-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/60'
+                      : 'bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/30'
                   )}
                 >
                   {/* Ticket ID */}
@@ -281,7 +281,7 @@ export default function SupportTicketTable() {
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-4 border-t border-gray-200 dark:border-gray-700">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-4 border-t border-border">
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Showing {start} to {end} of{' '}
           <span className="font-semibold text-blue-600 dark:text-blue-400">
@@ -295,7 +295,7 @@ export default function SupportTicketTable() {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Prev
@@ -317,7 +317,7 @@ export default function SupportTicketTable() {
                   'w-8 h-8 rounded-lg text-sm font-medium transition-colors cursor-pointer',
                   currentPage === p
                     ? 'bg-blue-600 text-white'
-                    : 'border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    : 'border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                 )}
               >
                 {p}
@@ -329,7 +329,7 @@ export default function SupportTicketTable() {
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Next
             <ChevronRight className="w-3.5 h-3.5" />

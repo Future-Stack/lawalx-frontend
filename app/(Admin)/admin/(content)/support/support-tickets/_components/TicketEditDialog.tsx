@@ -38,7 +38,7 @@ export default function TicketEditDialog({
 }: TicketEditDialogProps) {
   const [updateTicket, { isLoading: isUpdating }] = useUpdateSupportTicketMutation();
   const { data: supportersResponse, isLoading: isLoadingSupporters } = useGetAllSupportersQuery();
-
+  
   const [priority, setPriority] = useState<string>('High');
   const [status, setStatus] = useState<string>('Open');
   const [assignedTo, setAssignedTo] = useState<string>('none');
@@ -187,7 +187,7 @@ export default function TicketEditDialog({
               <SelectContent>
                 <SelectItem value="none">No Change / Unassigned</SelectItem>
                 {supportersResponse?.data?.map((supporter: any) => (
-                  <SelectItem key={supporter.id} value={supporter.id}>
+                  <SelectItem key={supporter.user.id} value={supporter.user.id}>
                     {supporter.user?.username || 'Unknown'}
                   </SelectItem>
                 ))}
