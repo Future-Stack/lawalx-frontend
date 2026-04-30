@@ -30,7 +30,7 @@ import Breadcrumb from "@/common/BreadCrumb";
 import ResolvedLocation from "@/common/ResolvedLocation";
 import { useGetSingleProgramDataQuery, useUpdateSingleProgramMutation } from "@/redux/api/users/programs/programs.api";
 import { toast } from "sonner";
-import { Device, Timeline } from "@/redux/api/users/programs/programs.type";
+import { Device, Timeline, WorkoutStatus } from "@/redux/api/users/programs/programs.type";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Loader2 } from "lucide-react";
@@ -65,6 +65,7 @@ const ScreenCardDetails = () => {
   const [isPaused, setIsPaused] = useState(false);
   const [remainingTime, setRemainingTime] = useState(0);
   const [lastTimerTick, setLastTimerTick] = useState(0);
+  const [localActive, setLocalActive] = useState(false);
 
   // Audio Controls
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -102,8 +103,19 @@ const ScreenCardDetails = () => {
       }
       setName(program.name || "");
       setDescription(program.description || "");
+      setLocalActive(program.status?.toUpperCase() === "PUBLISH");
     }
   }, [program]);
+
+  useEffect(() => {
+    if (!localActive) {
+      setIsPaused(true);
+      audioRef.current?.pause();
+    } else {
+      setIsPaused(false);
+      audioRef.current?.play().catch(() => {});
+    }
+  }, [localActive]);
 
   // Stable callback — must be declared before any early returns (Rules of Hooks)
   // Won't change on unrelated re-renders, preventing Plyr from re-initializing
@@ -245,6 +257,35 @@ const ScreenCardDetails = () => {
     setIsAddExistingOpen(false);
   };
 
+  const handlePowerClick = (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+  
+      if (isUpdating) return;
+  
+      const nextState = !localActive;
+      const targetStatus = nextState ? WorkoutStatus.PUBLISH : WorkoutStatus.DRAFT;
+  
+      console.log("Power button clicked. Next status:", targetStatus);
+  
+      // Immediate UI feedback
+      setLocalActive(nextState);
+  
+      // Update server state
+      updateProgram({
+        id: program.id,
+        data: { status: targetStatus }
+      }).unwrap()
+        .then(() => {
+          console.log("Program status updated successfully to:", targetStatus);
+        })
+        .catch((err) => {
+          console.error("Failed to update program status", err);
+          // Revert local state on failure
+          setLocalActive(!nextState);
+        });
+    };
+
   return (
     <div className="min-h-screen">
       <div className="mb-6">
@@ -355,7 +396,7 @@ const ScreenCardDetails = () => {
                         key={previewUrl}
                         src={previewUrl || ""}
                         poster={undefined}
-                        autoPlay={true}
+                        autoPlay={localActive}
                         fillParent={true}
                         rounded="rounded-lg"
                         onEnded={handleVideoEnded}
@@ -370,7 +411,7 @@ const ScreenCardDetails = () => {
                         ref={audioRef}
                         key={previewUrl}
                         src={previewUrl}
-                        autoPlay={!isPaused}
+                        autoPlay={localActive}
                         onPlay={() => setIsPaused(false)}
                         onPause={() => setIsPaused(true)}
                         onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
@@ -506,8 +547,31 @@ const ScreenCardDetails = () => {
                 </h3>
               </div>
 
-              <p className="text-sm sm:text-base text-muted mt-2">
+              <p className="flex justify-between items-center text-sm sm:text-base text-muted mt-2">
                 Playing: {program.description}
+
+                {/* Power Button */}
+                <button
+                  type="button"
+                  onClick={handlePowerClick}
+                  disabled={isUpdating}
+                  aria-label={localActive ? "Turn Off Program" : "Turn On Program"}
+                  className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
+                              py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
+                              ${localActive
+                      ? "bg-bgBlue hover:bg-blue-500"
+                      : "bg-bgRed hover:bg-red-600"
+                    }`}
+                  title={localActive ? "Turn Off" : "Turn On"}
+                >
+                  {isUpdating ? (
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
+                  ) : localActive ? (
+                    <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
+                  ) : (
+                    <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                  )}
+                </button>
               </p>
             </div>
 
