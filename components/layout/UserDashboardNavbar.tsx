@@ -86,8 +86,10 @@ export default function UserDashboardNavbar() {
   } = useNavbarActions();
 
   // Dark Mode Setup
-  const { theme, setTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+
+  const isDarkTheme = mounted ? resolvedTheme === "dark" : theme === "dark";
 
   useEffect(() => {
     setMounted(true);
@@ -363,15 +365,15 @@ export default function UserDashboardNavbar() {
                 toggleTheme();
               });
             }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-300 relative h-9 w-9 flex items-center justify-center overflow-hidden group"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-300 relative h-9 w-9 flex items-center justify-center overflow-hidden group cursor-pointer"
             aria-label="Toggle dark mode"
           >
             {!mounted ? (
               <Moon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             ) : (
               <>
-                <Sun className={`w-5 h-5 text-yellow-500 absolute transition-all duration-500 ease-in-out ${theme === 'dark' ? 'translate-y-0 opacity-100 rotate-0' : 'translate-y-10 opacity-0 -rotate-90'}`} />
-                <Moon className={`w-5 h-5 text-gray-600 dark:text-gray-400 absolute transition-all duration-500 ease-in-out ${theme !== 'dark' ? 'translate-y-0 opacity-100 rotate-0' : '-translate-y-10 opacity-0 rotate-90'}`} />
+                <Sun className={`w-5 h-5 text-yellow-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${isDarkTheme ? 'opacity-100 scale-100 rotate-0 group-hover:opacity-0 group-hover:scale-75 group-hover:-rotate-90' : 'opacity-0 scale-75 rotate-90 group-hover:opacity-100 group-hover:scale-100 group-hover:rotate-0'}`} />
+                <Moon className={`w-5 h-5 text-gray-600 dark:text-gray-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${!isDarkTheme ? 'opacity-100 scale-100 rotate-0 group-hover:opacity-0 group-hover:scale-75 group-hover:-rotate-90' : 'opacity-0 scale-75 rotate-90 group-hover:opacity-100 group-hover:scale-100 group-hover:rotate-0'}`} />
               </>
             )}
           </button>
