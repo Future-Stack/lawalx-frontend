@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useGetSingleScheduleDataQuery, useUpdateScheduleMutation, useDeleteScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
 import { ScheduleTarget } from "@/redux/api/users/schedules/schedules.type";
@@ -102,13 +103,13 @@ export default function ScheduleDetailPage() {
   const { id } = useParams();
   const router = useRouter();
 
-  const { data, isLoading, isError, refetch } = useGetSingleScheduleDataQuery(
+  const { data, isLoading, isError, isFetching, refetch } = useGetSingleScheduleDataQuery(
     { id: id as string },
     { skip: !id || id === "new" }
   );
 
   const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
-  const [deleteSchedule, { isLoading: isDeleting }] = useDeleteScheduleMutation();
+  const [deleteSchedule] = useDeleteScheduleMutation();
   const [deleteDevice] = useDeleteDeviceMutation();
 
   const { data: allDevicesData } = useGetMyDevicesDataQuery(undefined);
@@ -124,6 +125,16 @@ export default function ScheduleDetailPage() {
 
   // Shared state for the currently playing content item
   const [playingIndex, setPlayingIndex] = useState(0);
+
+  // Play/Pause power state (mirrors programs page)
+  const [localActive, setLocalActive] = useState(false);
+
+  // Sync localActive from API data when schedule loads (but don't override while user is actively toggling or fetching new data)
+  useEffect(() => {
+    if (schedule && !isUpdating && !isFetching) {
+      setLocalActive(schedule.status?.toLowerCase() === "playing" || schedule.status?.toLowerCase() === "publish");
+    }
+  }, [schedule, isUpdating, isFetching]);
 
   // Local editable state initialized from API data
   const [localName, setLocalName] = useState<string | null>(null);
@@ -362,6 +373,21 @@ export default function ScheduleDetailPage() {
   const videoUrl = content[0]?.type === "video" ? content[0].video || content[0].thumbnail : "";
   const thumbnailUrl = content[0]?.thumbnail ?? "";
 
+  const handlePowerClick = async () => {
+    if (isNew) return;
+    const nextActive = !localActive;
+    setLocalActive(nextActive);
+    try {
+      await updateSchedule({
+        id: id as string,
+        data: { ...getPayload(), status: nextActive ? "playing" : "stopped" },
+      }).unwrap();
+    } catch (err: any) {
+      setLocalActive(!nextActive); // revert on failure
+      toast.error(err?.data?.message || err?.error || "Failed to update schedule status");
+    }
+  };
+
   const handleSave = async () => {
     if (isNew) {
       toast.info("Create logic not yet hooked to this page");
@@ -377,10 +403,11 @@ export default function ScheduleDetailPage() {
     }
   };
 
-  if (isLoading && !isNew) {
+  // Only show the global loading spinner on initial load (when data is missing)
+  if (isLoading && !data && !isNew) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bgBlue"></div>
+      <div className="flex items-center justify-center h-[50vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-bgBlue"></div>
       </div>
     );
   }
@@ -515,6 +542,9 @@ export default function ScheduleDetailPage() {
           playingIndex={playingIndex}
           setPlayingIndex={setPlayingIndex}
           lowerThird={schedule?.lowerThird}
+          localActive={localActive}
+          onPowerClick={handlePowerClick}
+          isUpdating={isUpdating}
         />
       </div>
 

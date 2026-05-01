@@ -59,8 +59,8 @@ const HelpCenterHeader: React.FC<HelpCenterHeaderProps> = ({
                        <Image
                          src="/userDashboard/img3.webp"
                          alt="Dashboard Header"
-                         height={190}
-                         width={190}
+                         height={250}
+                         width={250}
                          style={{ transform: "scale(1.05)" }}
                        />
                      </div>
