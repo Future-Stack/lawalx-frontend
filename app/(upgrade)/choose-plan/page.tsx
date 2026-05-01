@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
-import { Crown, Loader2, ArrowLeft } from "lucide-react";
+import { Crown, Loader2, Monitor, Database, Video, LayoutTemplate, ArrowLeft } from "lucide-react";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { useGetProfileQuery } from "@/redux/api/users/settings/personalApi";
 import { useCreatePaymentMutation } from "@/redux/api/subscription/subscription.api";
@@ -9,159 +10,75 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/redux/store/hook";
 import { selectCurrentEmail } from "@/redux/features/auth/authSlice";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const plans = [
   {
-    title: "Trial",
-    price: "$0",
-    duration: "/14 days",
-    description: "Perfect for testing and evaluation",
-    features: [
-      "2 Devices",
-      "1 GB Storage",
-      "Basic Content Upload",
-      "Email Support",
-      "Screen Splitting",
-    ],
-    unavailable: [
-      "Content Creation Tools",
-      "Priority Support",
-      "Advanced Analytics",
-      "API Access",
-      "White-label Options",
-    ],
-    buttonText: "Current Plan",
-    buttonStyle: "border",
-    recommended: false,
-    metadata: {
-      deviceLimit: 2,
-      storageGB: 1,
-      uploadFileLimit: 50,
-      durationDays: 14,
-      amount: 0,
-    }
+    title: "Basic",
+    description: "For trying out this platform",
+    monthlyPrice: 29999,
+    yearlyPrice: Math.round(29999 * 12 * 0.85),
+    buttonColor: "bg-[#111827] text-white hover:bg-slate-800 shadow-customShadow",
+    borderColor: "border-border",
+    cardStyle: "bg-white",
   },
   {
-    title: "Basic",
-    price: "$29",
-    duration: "/month",
-    billed: "Billed annually: ($348/year)",
-    description: "Great for small businesses and startups",
-    features: [
-      "5 Devices",
-      "10 GB Storage",
-      "Basic Content Upload",
-      "Email Support",
-      "Screen Splitting",
-      "Content Creation Tools",
-      "Priority Support",
-      "Advanced Analytics",
-      "API Access",
-      "White-label Options",
-    ],
-    buttonText: "Choose Basic",
-    buttonStyle: "white",
-    recommended: false,
-    metadata: {
-      deviceLimit: 5,
-      storageGB: 10,
-      uploadFileLimit: 500,
-      monthlyAmount: 29,
-      yearlyAmount: 348,
-    }
+    title: "Business",
+    description: "Perfect for growing businesses with advanced needs",
+    monthlyPrice: 49999,
+    yearlyPrice: Math.round(49999 * 12 * 0.85),
+    buttonColor: "bg-bgBlue text-white hover:opacity-90 shadow-customShadow",
+    borderColor: "border-border",
+    cardStyle: "bg-white",
   },
   {
     title: "Premium",
-    price: "$49",
-    duration: "/month",
-    billed: "Billed annually: ($588/year)",
     description: "Perfect for growing businesses with advanced needs",
-    features: [
-      "20 Devices",
-      "50 GB Storage",
-      "Advanced Content Upload",
-      "Priority Support",
-      "Screen Splitting",
-      "Content Creation Tools",
-      "Advanced Analytics",
-      { text: "Content AI", badge: "ai" },
-      { text: "White-label Options", badge: "border" },
-      "Custom Branding",
-    ],
-    buttonText: "Upgrade to Premium",
-    buttonStyle: "black",
-    recommended: true,
-    metadata: {
-      deviceLimit: 20,
-      storageGB: 50,
-      uploadFileLimit: 2000,
-      monthlyAmount: 49,
-      yearlyAmount: 588,
-    },
-    badge: "Recommended",
-  },
-  {
-    title: "Enterprise",
-    price: "Custom",
-    billed: "Billed annually: ($2388/year)",
-    description: "Custom pricing for large organizations",
-    features: [
-      "Unlimited Devices",
-      "Custom Storage",
-      "Advanced Content Upload",
-      "Dedicated Support",
-      "Screen Splitting",
-      "Content Creation Tools",
-      "Advanced Analytics",
-      "API Access",
-      "White-label Options",
-      "Custom Integrations",
-    ],
-    buttonText: "Contact Sales",
-    buttonStyle: "white",
-    recommended: false,
-    metadata: {
-      deviceLimit: 1000, // Unlimited
-      storageGB: 1000,   // Custom
-      uploadFileLimit: 10000,
-      monthlyAmount: 199, // Custom placeholder
-      yearlyAmount: 2388,
-    },
-    badge: "Custom",
-    badgeColor: "purple",
+    monthlyPrice: 59999,
+    yearlyPrice: Math.round(59999 * 12 * 0.85),
+    buttonColor: "bg-[#7F56D9] text-white hover:opacity-90 shadow-customShadow",
+    borderColor: "border-[#7F56D9] border-2",
+    cardStyle: "bg-white",
+    highlight: true,
   },
 ];
 
 export default function ChoosePlanPage() {
   const router = useRouter();
   const [isAnnual, setIsAnnual] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedPlanTitle, setSelectedPlanTitle] = useState<string | null>(null);
 
+  const [selectedSize, setSelectedSize] = useState("40 inch");
   const { data: userData } = useGetUserProfileQuery();
   const { data: profileData } = useGetProfileQuery();
   const authEmail = useAppSelector(selectCurrentEmail);
   const [createPayment, { isLoading: isCreatingPayment }] = useCreatePaymentMutation();
 
-  const handleChoosePlan = async (plan: any) => {
-    if (plan.title === "Trial") return;
+  const handleChoosePlan = async (plan: typeof plans[number]) => {
     if (!userData?.data && !profileData?.data) {
       toast.error("Please login to continue");
       return;
     }
 
-    setSelectedPlan(plan);
+    setSelectedPlanTitle(plan.title);
 
     try {
       const user = profileData?.data || userData?.data;
       const payload = {
         email: authEmail || user?.email || user?.username,
-        amount: isAnnual ? plan.metadata.yearlyAmount : plan.metadata.monthlyAmount,
+        amount: isAnnual ? plan.yearlyPrice : plan.monthlyPrice,
         transactionId: `TXN-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
         planName: plan.title,
         billingCycle: isAnnual ? "YEARLY" : "MONTHLY",
-        deviceLimit: plan.metadata.deviceLimit,
-        storageGB: plan.metadata.storageGB,
-        uploadFileLimit: plan.metadata.uploadFileLimit,
+        deviceLimit: 20,
+        storageGB: 10,
+        uploadFileLimit: 20,
         durationDays: isAnnual ? 365 : 30,
         subscription: true,
         userId: user.id || user._id,
@@ -176,183 +93,217 @@ export default function ChoosePlanPage() {
       }
     } catch (error: any) {
       toast.error(error?.data?.message || "Something went wrong. Please try again.");
-      setSelectedPlan(null);
+      setSelectedPlanTitle(null);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
-      <div className="bg-gray-50 rounded-2xl max-w-6xl w-full p-8 relative">
-        {/* Dashboard Navigation Button */}
-        <div className="absolute top-4 left-4 sm:left-8">
+    <div className="min-h-screen px-4 py-10 sm:px-6 lg:px-10">
+      <div className="mx-auto w-full max-w-7xl">
+        <div className="mb-8">
           <button
             onClick={() => router.push("/dashboard")}
-            className="flex items-center gap-2 px-4 py-2 bg-bgBlue border border-gray-200 rounded-lg shadow-customShadow text-sm font-semibold text-white hover:bg-blue-600 transition-all cursor-pointer"
+            className="flex items-center gap-2 text-[#737373] hover:text-bgBlue transition-all group cursor-pointer"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Dashboard
-          </button>
-        </div>
-
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Crown className="w-12 h-12 text-blue-500 mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Choose Your Plan
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Scale your digital signage network with the right plan for your
-            business.
-          </p>
-
-          {/* Trial Badge */}
-          <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-600 px-4 py-2 rounded-lg text-sm mb-6">
-            <Crown className="w-4 h-4" />
-            Trial: 12 days left
-          </div>
-        </div>
-
-        {/* Toggle */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <span
-            onClick={() => setIsAnnual(false)}
-            className={`text-sm transition-colors ${!isAnnual ? "text-blue-600 font-bold" : "text-gray-400"
-              }`}
-          >
-            Monthly
-          </span>
-          <button
-            onClick={() => setIsAnnual(!isAnnual)}
-            className={`relative w-12 h-6 rounded-full transition-colors flex items-center p-1 cursor-pointer ${isAnnual ? "bg-blue-500" : "bg-gray-300"
-              }`}
-          >
-            <div
-              className={`w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${isAnnual ? "translate-x-6" : "translate-x-0"
-                }`}
-            ></div>
-          </button>
-          <span
-            onClick={() => setIsAnnual(true)}
-            className={`text-sm transition-colors ${isAnnual ? "text-blue-600 font-bold" : "text-gray-400"
-              }`}
-          >
-            Annual
-          </span>
-        </div>
-
-        {/* Plan Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {plans.map((plan, idx) => (
-            <div
-              key={idx}
-              className={`bg-white border-2 rounded-xl p-6 relative transition-all duration-300 ${selectedPlan?.title === plan.title
-                ? "border-blue-600 shadow-lg scale-[1.02]"
-                : plan.recommended
-                  ? "border-blue-500 shadow-sm"
-                  : "border-gray-200"
-                }`}
-            >
-              {plan.badge && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span
-                    className={`${plan.badgeColor === "purple"
-                      ? "bg-purple-600"
-                      : "bg-blue-500"
-                      } text-white text-xs px-3 py-1 rounded-full font-medium`}
-                  >
-                    {plan.badge}
-                  </span>
-                </div>
-              )}
-
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {plan.title}
-              </h3>
-
-              <div className="mb-1">
-                <span className="text-4xl font-bold text-gray-900">
-                  {plan.price}
-                </span>
-                {plan.duration && (
-                  <span className="text-gray-600 text-sm">{plan.duration}</span>
-                )}
-              </div>
-
-              {plan.billed && (
-                <p className="text-xs text-gray-500 mb-1">{plan.billed}</p>
-              )}
-
-              {plan.description && (
-                <p className="text-sm text-gray-600 mb-6">
-                  {plan.description}
-                </p>
-              )}
-
-              <button
-                onClick={() => handleChoosePlan(plan)}
-                disabled={isCreatingPayment || plan.title === "Trial"}
-                className={`w-full py-2.5 rounded-lg font-medium mb-6 text-sm flex items-center justify-center gap-2 transition-all ${selectedPlan?.title === plan.title
-                  ? "bg-blue-600 text-white border-blue-600 cursor-default"
-                  : plan.buttonStyle === "black"
-                    ? "bg-gray-900 text-white hover:bg-gray-800 cursor-pointer shadow-sm hover:shadow-md"
-                    : plan.buttonStyle === "border"
-                      ? "border-2 border-gray-900 text-gray-900 cursor-default opacity-70"
-                      : "border-2 border-gray-200 text-gray-900 hover:border-gray-300 cursor-pointer hover:bg-gray-50"
-                  } ${isCreatingPayment && selectedPlan?.title === plan.title ? "opacity-90 cursor-not-allowed" : ""}`}
-              >
-                {isCreatingPayment && selectedPlan?.title === plan.title && (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                )}
-                {plan.title === "Trial" ? "Current Plan" :
-                  isCreatingPayment && selectedPlan?.title === plan.title ? "Processing..." : plan.buttonText}
-              </button>
-
-              <ul className="space-y-2.5 text-sm">
-                {plan.features.map((feature, i) => {
-                  const isObject = typeof feature === "object";
-                  const featureText = isObject ? feature.text : feature;
-                  const badge = isObject ? feature.badge : null;
-
-                  return (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2.5 text-gray-700"
-                    >
-                      <span
-                        className={`mt-0.5 ${badge === "ai" ? "text-blue-500" : "text-green-500"
-                          }`}
-                      >
-                        ✓
-                      </span>
-                      <span className="flex items-center gap-1.5 flex-wrap">
-                        {badge === "ai" && (
-                          <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded font-medium">
-                            AI
-                          </span>
-                        )}
-                        {badge === "border" ? (
-                          <span className="border border-blue-400 text-blue-600 text-xs px-2 py-0.5 rounded">
-                            {featureText}
-                          </span>
-                        ) : (
-                          <span>{featureText}</span>
-                        )}
-                      </span>
-                    </li>
-                  );
-                })}
-                {plan.unavailable?.map((f, i) => (
-                  <li
-                    key={i}
-                    className="flex items-start gap-2.5 text-gray-300"
-                  >
-                    <span className="mt-0.5">✗</span>
-                    <span>{f}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-white shadow-sm transition-all group-hover:bg-blue-50 group-hover:border-bgBlue/30">
+              <ArrowLeft className="w-5 h-5 transition-colors group-hover:text-bgBlue" />
             </div>
-          ))}
+            <span className="font-medium text-[16px] transition-colors">Back to Dashboard</span>
+          </button>
+        </div>
+
+        <div className="">
+          <div className="" />
+          <div className="relative z-10 text-center mx-auto max-w-3xl mb-12">
+            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center">
+              <Crown className="h-8 w-8 text-[#0EA5E9]" />
+            </div>
+            <h1 className="text-[40px] font-bold leading-tight text-[#171717]" style={{ fontFamily: "Inter" }}>
+              Choose Your Plan
+            </h1>
+            <p className="mt-4 text-[16px] leading-[24px] text-[#737373]" style={{ fontFamily: "Inter" }}>
+              Scale your digital signage network with the right plan for your business.
+            </p>
+          </div>
+
+          <div className="relative z-10 mb-10 flex items-center justify-center gap-4">
+            <span className={`text-[16px] font-medium leading-[24px] ${!isAnnual ? "text-[#171717]" : "text-[#737373]"}`}>
+              Monthly
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsAnnual(!isAnnual)}
+              className={`relative h-[24px] w-[44px] rounded-full p-1 transition-colors duration-300 ${isAnnual ? "bg-[#22C55E]" : "bg-[#D4D4D4]"} cursor-pointer focus:outline-none`}
+              aria-label="Toggle billing cycle"
+            >
+              <span className={`block h-[16px] w-[16px] rounded-full bg-white shadow transition-all duration-300 ${isAnnual ? "translate-x-[20px]" : "translate-x-0"}`} />
+            </button>
+            <span className={`text-[16px] font-medium leading-[24px] ${isAnnual ? "text-[#171717]" : "text-[#737373]"}`}>
+              Annual<span className="text-[#22C55E] ml-1">(15% off)</span>
+            </span>
+          </div>
+
+          <div className="grid gap-8 xl:grid-cols-3 justify-items-center">
+            {plans.map((plan) => {
+              const value = isAnnual
+                ? plan.yearlyPrice.toLocaleString("en-NG")
+                : plan.monthlyPrice.toLocaleString("en-NG");
+              const label = isAnnual ? "/year" : "/month";
+              const selected = selectedPlanTitle === plan.title;
+
+              return (
+                <div
+                  key={plan.title}
+                  className={`relative flex w-full flex-col overflow-hidden rounded-[16px] border bg-white transition-all duration-300 ${plan.borderColor} ${selected ? "ring-2 ring-slate-900" : ""}`}>
+                  
+                  {/* Header Section */}
+                  <div className="p-6">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-4">
+                        <h2 className="font-inter text-[18px] font-semibold leading-normal text-[#171717]">{plan.title}</h2>
+                        {plan.highlight && (
+                          <div className="rounded-full bg-[#7F56D9] px-3 py-1 text-[11px] font-semibold text-white">
+                            Most Popular
+                          </div>
+                        )}
+                      </div>
+                      <p className="font-inter text-[14px] font-normal leading-[20px] text-[#737373]">{plan.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-border" />
+
+                  {/* Pricing & Selection Section */}
+                  <div className="p-6 space-y-6">
+                    <Select value={selectedSize} onValueChange={setSelectedSize}>
+                      <SelectTrigger className="flex w-full items-center justify-between rounded-[12px] border border-border bg-white px-5 py-[14px] h-auto text-sm font-medium text-[#404040] transition hover:bg-slate-50 focus:ring-0 outline-none">
+                        <SelectValue placeholder="Select size" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="30 inch">30 inch</SelectItem>
+                        <SelectItem value="40 inch">40 inch</SelectItem>
+                        <SelectItem value="others">others</SelectItem>
+                      </SelectContent>
+                    </Select>
+
+                    <div className="flex w-full items-baseline justify-center gap-1 rounded-[8px] bg-[#F0FAFF] px-4 py-4">
+                      <span className="font-inter text-[24px] font-semibold leading-normal text-[#171717]">₦{value}</span>
+                      <span className="font-inter text-[14px] font-normal leading-[20px] text-[#737373]">{label}</span>
+                    </div>
+                  </div>
+
+                  {/* Features Section */}
+                  <div className="px-6 pb-6 space-y-5">
+                    <div className="grid grid-cols-2 gap-4 pt-5">
+                      <div className="flex items-center gap-2">
+                        <Monitor className="h-5 w-5 text-[#404040]" />
+                        <div>
+                          <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Devices</p>
+                          <p className="font-inter text-[14px] font-semibold leading-[20px] text-[#171717]">20</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Database className="h-5 w-5 text-[#404040]" />
+                        <div>
+                          <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Storage</p>
+                          <p className="font-inter text-[14px] font-semibold leading-[20px] text-[#171717]">10 GB</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 border-y border-border py-5">
+                      <div className="flex items-center gap-2">
+                        <Video className="h-5 w-5 text-[#404040]" />
+                        <div>
+                          <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Upload Limits</p>
+                          <p className="font-inter text-[14px] font-semibold leading-[20px] text-[#171717]">Max 20 Files</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <LayoutTemplate className="h-5 w-5 text-[#404040]" />
+                        <div>
+                          <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Templates</p>
+                          <p className="font-inter text-[14px] font-semibold leading-[20px] text-[#171717]">1</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Section */}
+                  <div className="mt-auto p-6">
+                    <button
+                      type="button"
+                      onClick={() => handleChoosePlan(plan)}
+                      disabled={isCreatingPayment}
+                      className={`flex w-full cursor-pointer flex-col items-center justify-center gap-[6px] rounded-[10px] px-4 py-3 text-sm font-semibold transition-all active:scale-[0.98] ${plan.buttonColor}`}
+                    >
+                      {isCreatingPayment && selectedPlanTitle === plan.title ? (
+                        <span className="inline-flex items-center justify-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Processing...
+                        </span>
+                      ) : (
+                        "Get Started"
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Custom Section with specific high-fidelity styling */}
+          <div className="relative z-10 mt-12 overflow-hidden rounded-[24px] border border-border p-6 shadow-sm flex flex-col lg:flex-row items-center gap-10 justify-between add-bg-img !bg-white">
+            <div className="relative z-10 flex flex-col items-start gap-6 lg:w-1/2">
+              <div>
+                <h2 className="font-inter text-[18px] font-semibold leading-normal text-[#171717]">Custom</h2>
+                <p className="mt-2 font-inter text-[14px] font-normal leading-[20px] text-[#737373]">
+                  Custom solutions for large organizations that requires flexible limits and Enterprise-level scalability and support.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => router.push("/request-custom-plan")}
+                className="inline-flex items-center justify-center rounded-[10px] bg-bgBlue px-6 py-3 text-[16px] font-bold text-white shadow-customShadow transition-all hover:opacity-90 active:scale-[0.98] cursor-pointer"
+              >
+                Request Custom Plan
+              </button>
+            </div>
+            
+            <div className="relative z-10 w-full lg:w-1/2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+                {/* Row 1 */}
+                <div className="flex items-center gap-3 pb-5 border-b border-border">
+                  <Monitor className="h-5 w-5 text-[#404040]" />
+                  <div>
+                    <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Devices</p>
+                    <p className="font-inter text-[14px] font-semibold leading-[20px] text-bgBlue">Custom</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 pb-5 border-b border-border">
+                  <Database className="h-5 w-5 text-[#404040]" />
+                  <div>
+                    <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Storage</p>
+                    <p className="font-inter text-[14px] font-semibold leading-[20px] text-bgBlue">Custom</p>
+                  </div>
+                </div>
+                {/* Row 2 */}
+                <div className="flex items-center gap-3 pt-5 border-b border-border sm:border-b-0 pb-5 sm:pb-0">
+                  <Video className="h-5 w-5 text-[#404040]" />
+                  <div>
+                    <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Upload Limits</p>
+                    <p className="font-inter text-[14px] font-semibold leading-[20px] text-bgBlue">Custom</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 pt-5">
+                  <LayoutTemplate className="h-5 w-5 text-[#404040]" />
+                  <div>
+                    <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Templates</p>
+                    <p className="font-inter text-[14px] font-semibold leading-[20px] text-bgBlue">Custom</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
