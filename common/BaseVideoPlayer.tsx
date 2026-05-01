@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 
 const Plyr = dynamic(() => import("plyr-react"), { ssr: false });
 
-// ─── localStorage helpers ──────────────────────────────────────
+// ─── localStorage helpers 
 const VOLUME_KEY = "plyr_volume";
 
 function getSavedVolume(): number | null {
@@ -48,7 +48,7 @@ const BaseVideoPlayer = ({
   src,
   poster,
   autoPlay = false,
-  muted = true,
+  muted = false,
   rounded = "rounded-xl",
   mediaType = "video",
   onEnded,
@@ -168,45 +168,19 @@ const BaseVideoPlayer = ({
     if (!player || !ready) return;
 
     if (autoPlay) {
-      if (hasStartedRef.current) {
-        // If already started once, just call play directly for smooth resume
-        player.play();
-        return;
+      const playPromise = player.play();
+
+      if (playPromise && typeof playPromise.then === "function") {
+        playPromise.catch((error: any) => {
+          if (error.name === "NotAllowedError" && !hasStartedRef.current) {
+            // If blocked, try muted autoplay as fallback for the first time
+            hasStartedRef.current = true;
+            player.muted = true;
+            player.play().catch(() => console.warn("Playback blocked even when muted"));
+          }
+        });
       }
-
-      // Initial Autoplay Sequence: toggle mute so browser allows autoplay
       hasStartedRef.current = true;
-      player.muted  = true;
-      player.volume = 0;
-
-      const playTimer = setTimeout(() => {
-        const p = playerRef.current?.plyr as any;
-        if (!p) return;
-
-        const playPromise = p.play();
-
-        // Step 2: after play() resolves, restore real volume
-        const restoreVolume = () => {
-          const savedVol = getSavedVolume();
-          const vol = savedVol ?? 1; // default to full volume if nothing saved
-          setTimeout(() => {
-            const p2 = playerRef.current?.plyr as any;
-            if (!p2) return;
-            p2.volume = vol;
-            p2.muted  = false; // unmute so user hears audio
-          }, 80); // small extra delay after play() settles
-        };
-
-        if (playPromise && typeof playPromise.then === "function") {
-          playPromise.then(restoreVolume).catch(() => {
-            console.warn("Autoplay blocked by browser");
-          });
-        } else {
-          restoreVolume();
-        }
-      }, 50);
-
-      return () => clearTimeout(playTimer);
     } else {
       player.pause();
     }
@@ -247,11 +221,11 @@ const BaseVideoPlayer = ({
 
   // ── Memoized options ───────────────────────────────────────
   const plyrOptions = useMemo(() => ({
-    autoplay: autoPlay,
-    muted: muted || autoPlay,
+    autoplay: false,
+    muted: muted,
     controls: ["play", "progress", "current-time", "duration", "mute", "volume", "settings", "fullscreen"],
     storage: { enabled: false },
-  }), [autoPlay, muted]);
+  }), [muted]);
 
   return (
     <div
