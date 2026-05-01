@@ -71,7 +71,7 @@ function DialogContent({
             data-slot="dialog-close"
             className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5 hover:bg-gray-100 dark:hover:bg-gray-800 p-1 md:p-2 rounded-full cursor-pointer hover:text-red-500 group duration-300 ease-in-out"
           >
-            <XIcon className="w-5 h-5 md:w-8 md:h-8 text-muted dark:text-gray-300 cursor-pointer group-hover:text-red-500" />
+            <XIcon className="w-5 h-5 md:w-8 md:h-8 text-muted dark:text-gray-300 cursor-pointer group-hover:text-red-500 transition-transform duration-300 group-hover:rotate-90" />
             <span className="sr-only">Close</span>
           </DialogPrimitive.Close>
         )}
