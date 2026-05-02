@@ -65,7 +65,10 @@ function buildPageNumbers(current: number, total: number): (number | '...')[] {
 }
 
 export default function SupportTicketTable() {
-  const { data: ticketsResponse, isLoading } = useGetAssignedTicketsQuery();
+  const { data: ticketsResponse, isLoading } = useGetAssignedTicketsQuery(undefined, {
+    pollingInterval: 3000, 
+    refetchOnFocus: true, 
+  });
   const [resolveTicket] = useResolveTicketMutation();
 
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
