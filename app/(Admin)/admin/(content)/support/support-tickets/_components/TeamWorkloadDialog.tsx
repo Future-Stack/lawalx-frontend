@@ -169,7 +169,7 @@ export default function TeamWorkloadDialog({
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      className="flex-1 h-9 text-xs flex items-center gap-1.5"
+                      className="flex-1 h-9 text-xs flex items-center gap-1.5 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       <User className="w-3.5 h-3.5" />
                       View Profile

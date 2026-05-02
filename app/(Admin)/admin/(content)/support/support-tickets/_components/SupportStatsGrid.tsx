@@ -1,6 +1,6 @@
 "use client"
 import React from 'react';
-import { Ticket, UserCheck, UserX, CheckCircle2 } from 'lucide-react';
+import { Ticket, UserCheck, UserX, CheckCircle2, TicketX } from 'lucide-react';
 import SupportStatCard from './SupportStatCard';
 import { useGetTicketStatisticsQuery } from '@/redux/api/admin/support/adminSupportTicketApi';
 
@@ -10,26 +10,26 @@ export default function SupportStatsGrid() {
 
   const stats = [
     {
-      icon: <Ticket className="w-6 h-6 text-green-600 dark:text-green-400" />,
-      iconBg: 'bg-green-100 dark:bg-green-900/30',
+      icon: <Ticket className="w-6 h-6 text-white" />,
+      iconBg: 'bg-[#069576]',
       title: 'Opened Tickets',
       value: statsData.open,
     },
     {
-      icon: <UserCheck className="w-6 h-6 text-purple-600 dark:text-purple-400" />,
-      iconBg: 'bg-purple-100 dark:bg-purple-900/30',
+      icon: <UserCheck className="w-6 h-6 text-white" />,
+      iconBg: 'bg-[#756CF5]',
       title: 'Assigned Ticket',
       value: statsData.assigned,
     },
     {
-      icon: <UserX className="w-6 h-6 text-blue-600 dark:text-blue-400" />,
-      iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+      icon: <TicketX className="w-6 h-6 text-white" />,
+      iconBg: 'bg-[#0FA6FF]',
       title: 'Unassigned Ticket',
       value: statsData.unassigned,
     },
     {
-      icon: <CheckCircle2 className="w-6 h-6 text-orange-600 dark:text-orange-400" />,
-      iconBg: 'bg-orange-100 dark:bg-orange-900/30',
+      icon: <CheckCircle2 className="w-6 h-6 text-white" />,
+      iconBg: 'bg-[#DA4352]',
       title: 'Solved Ticket',
       value: statsData.solved,
     },
