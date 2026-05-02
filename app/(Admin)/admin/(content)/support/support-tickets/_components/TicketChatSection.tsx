@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useTicketChat } from '@/hooks/useTicketChat';
 import { useAppSelector } from '@/redux/store/hook';
 import { selectCurrentUser } from '@/redux/features/auth/authSlice';
-import { 
+import {
   useGetAdminTicketDetailsQuery,
   useResolveTicketByAdminMutation,
 } from '@/redux/api/admin/support/adminSupportTicketApi';
@@ -286,7 +286,7 @@ export default function TicketChatSection({
             </span>
           </div>
         </div>
-        
+
         {showResolveButton && ticket?.status !== 'Resolved' && (
           <button
             type="button"
@@ -301,7 +301,7 @@ export default function TicketChatSection({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 px-6 py-4 space-y-4 overflow-y-auto min-h-[300px] max-h-[450px] custom-scrollbar">
+      <div className="flex-1 px-6 py-4 space-y-4 overflow-y-auto max-h-[250px] custom-scrollbar">
         {isLoadingDetails ? (
           <div className="flex items-center justify-center h-32">
             <p className="text-xs text-gray-400">Loading conversation...</p>
@@ -332,7 +332,7 @@ export default function TicketChatSection({
       </div>
 
       {/* Input */}
-      <div className="px-6 pb-5 pt-3 border-t border-border space-y-3">
+      <div className="px-2 pb-2 pt-2 border-t border-border space-y-3">
         {pendingAttachments.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {pendingAttachments.map((att, i) => (
@@ -353,7 +353,7 @@ export default function TicketChatSection({
             onChange={(e) => setText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Write your reply..."
-            rows={3}
+            rows={1}
             className="w-full px-4 pt-3.5 pb-1 text-sm text-gray-700 dark:text-gray-300 placeholder:text-gray-400 dark:placeholder:text-gray-500 bg-white dark:bg-gray-900 border-none outline-none resize-none"
           />
           <div className="flex items-center justify-between px-4 pb-3 bg-white dark:bg-gray-900">

@@ -10,12 +10,12 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { 
+import {
   useResolveTicketByAdminMutation,
   useGetAdminTicketDetailsQuery,
-  type Ticket, 
-  type TicketStatus, 
-  type TicketPriority 
+  type Ticket,
+  type TicketStatus,
+  type TicketPriority
 } from '@/redux/api/admin/support/adminSupportTicketApi';
 import TicketChatSection from './TicketChatSection';
 import AdminTicketChatDialog from './AdminTicketChatDialog';
@@ -67,7 +67,7 @@ export default function TicketDetailsDialog({
 
   // Use fetched data status if available
   const currentStatus = ticketDetails?.data?.status || initialTicket?.status;
-  
+
   // Reconstruct ticket object with fresh status
   const ticket = initialTicket ? {
     ...initialTicket,
@@ -100,7 +100,7 @@ export default function TicketDetailsDialog({
         </DialogHeader>
 
         {/* Body */}
-        <div className="px-6 py-6 space-y-8 overflow-y-auto max-h-[calc(90vh-80px)] custom-scrollbar">
+        <div className="px-6 py-6 space-y-3 overflow-y-auto max-h-[calc(90vh-80px)] custom-scrollbar">
           {/* Top row: left ticket info + right assigned */}
           <div className="flex flex-col sm:flex-row gap-5 sm:gap-8">
             {/* Left: ticket meta */}
@@ -182,7 +182,7 @@ export default function TicketDetailsDialog({
 
           {/* Issue description */}
           <div>
-            <div className="flex items-center gap-1.5 mb-2">
+            <div className="flex items-center gap-1.5 mb-1">
               <span className="text-xs font-bold uppercase tracking-widest text-gray-800 dark:text-gray-200">
                 Issue Description
               </span>
@@ -198,7 +198,7 @@ export default function TicketDetailsDialog({
           {/* Attachments (Files uploaded during ticket creation) */}
           {ticketDetails?.data?.file && ticketDetails.data.file.length > 0 && (
             <div>
-              <div className="flex items-center gap-1.5 mb-2">
+              <div className="flex items-center gap-1.5 mb-1">
                 <span className="text-xs font-bold uppercase tracking-widest text-gray-800 dark:text-gray-200">
                   Initial Attachments
                 </span>
@@ -206,7 +206,7 @@ export default function TicketDetailsDialog({
               </div>
               <div className="flex flex-wrap gap-3">
                 {ticketDetails.data.file.map((url, i) => {
-                  const fileName = url.split('/').pop() || `Attachment-${i+1}`;
+                  const fileName = url.split('/').pop() || `Attachment-${i + 1}`;
                   return (
                     <a
                       key={i}
@@ -224,11 +224,11 @@ export default function TicketDetailsDialog({
             </div>
           )}
           {/* Chat Section */}
-          <div className="pt-4">
-            <TicketChatSection 
-              ticket={ticket} 
+          <div className="pt-1">
+            <TicketChatSection
+              ticket={ticket}
               onClose={() => onClose()}
-              showResolveButton={false} 
+              showResolveButton={false}
             />
           </div>
         </div>
@@ -244,8 +244,8 @@ export default function TicketDetailsDialog({
             Back to Ticket list
           </Button>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="h-9 flex-1 sm:flex-none bg-navbarBg border-border text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
               onClick={handleResolve}
               disabled={isResolving || ticket.status === 'Resolved'}
