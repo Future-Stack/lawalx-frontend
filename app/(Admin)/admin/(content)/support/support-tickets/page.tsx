@@ -35,17 +35,21 @@ export default function SupportTickets2Page() {
       doc.text(`Exported At: ${new Date().toLocaleString()}`, 14, 30);
 
       // Define table columns
-      const tableColumn = ["Index", "Ticket ID", "Subject", "Priority", "Status", "User", "Created At"];
+      const tableColumn = ["Index", "Ticket ID", "Subject", "Issue Type", "Priority", "Status", "Assigned To", "Created At"];
       const tableRows: any[] = [];
 
       tickets.forEach((ticket: any, index: number) => {
+        const assignedNames = ticket.assignments?.map((a: any) => a.user?.full_name || a.user?.username).join(', ') || 'Unassigned';
+        const issueTypes = ticket.issueType?.join(', ') || 'N/A';
+        
         const ticketData = [
           index + 1,
           ticket.customId || ticket.id || 'N/A',
           ticket.subject || 'N/A',
+          issueTypes,
           ticket.priority || 'N/A',
           ticket.status || 'N/A',
-          ticket.user?.username || ticket.user?.account?.email || 'N/A',
+          assignedNames,
           new Date(ticket.createdAt).toLocaleDateString()
         ];
         tableRows.push(ticketData);
@@ -57,8 +61,18 @@ export default function SupportTickets2Page() {
         body: tableRows,
         startY: 40,
         theme: 'striped',
-        headStyles: { fillColor: [59, 130, 246] }, // Blue-500
-        styles: { fontSize: 8 }
+        headStyles: { fillColor: [59, 130, 246], fontSize: 7 }, // Blue-500
+        styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
+        columnStyles: {
+          0: { cellWidth: 10 }, // Index
+          1: { cellWidth: 25 }, // Ticket ID
+          2: { cellWidth: 40 }, // Subject
+          3: { cellWidth: 25 }, // Issue Type
+          4: { cellWidth: 15 }, // Priority
+          5: { cellWidth: 15 }, // Status
+          6: { cellWidth: 30 }, // Assigned To
+          7: { cellWidth: 20 }, // Created At
+        }
       });
 
       // Save PDF
@@ -84,16 +98,26 @@ export default function SupportTickets2Page() {
       const tickets = exportData.data || [];
       const wb = XLSX.utils.book_new();
       const wsData: any[] = [
-        ["Index", "Ticket ID", "Subject", "Priority", "Status", "User", "Created At"],
-        ...tickets.map((ticket: any, index: number) => [
-          index + 1,
-          ticket.customId || ticket.id || 'N/A',
-          ticket.subject || 'N/A',
-          ticket.priority || 'N/A',
-          ticket.status || 'N/A',
-          ticket.user?.username || ticket.user?.account?.email || 'N/A',
-          new Date(ticket.createdAt).toLocaleDateString()
-        ])
+        ["Index", "Ticket ID", "Subject", "Description", "Issue Type", "Priority", "Status", "User Email", "Assigned To", "Admin Note", "Created At", "Last Updated"],
+        ...tickets.map((ticket: any, index: number) => {
+          const assignedNames = ticket.assignments?.map((a: any) => a.user?.full_name || a.user?.username).join(', ') || 'Unassigned';
+          const issueTypes = ticket.issueType?.join(', ') || 'N/A';
+          
+          return [
+            index + 1,
+            ticket.customId || ticket.id || 'N/A',
+            ticket.subject || 'N/A',
+            ticket.description || 'N/A',
+            issueTypes,
+            ticket.priority || 'N/A',
+            ticket.status || 'N/A',
+            ticket.user?.account?.email || 'N/A',
+            assignedNames,
+            ticket.adminNote || 'N/A',
+            new Date(ticket.createdAt).toLocaleString(),
+            new Date(ticket.updatedAt).toLocaleString()
+          ];
+        })
       ];
       const ws = XLSX.utils.aoa_to_sheet(wsData);
       XLSX.utils.book_append_sheet(wb, ws, 'Tickets');
