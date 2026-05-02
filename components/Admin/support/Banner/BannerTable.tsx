@@ -23,7 +23,6 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const normalizeValue = (val: string) => {
     if (!val) return 'null';
-    if (val === 'UPLOAD') return 'Promotion';
     return val.split('_').map((word: string) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
 };
 
@@ -46,15 +45,14 @@ const getStatusColor = (status: string) => {
 const getTypeColor = (type: string) => {
     const t = normalizeValue(type);
     switch (t) {
-        case 'Promotion':
         case 'Upload':
             return 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-100 dark:border-purple-800';
         case 'Announcement':
-            return 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700';
+            return 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-800';
+        case 'Promotion':
+            return 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-100 dark:border-orange-800';
         case 'Warning':
             return 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-100 dark:border-yellow-800';
-        case 'Published':
-            return 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-100 dark:border-blue-800';
         default:
             return 'bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-100 dark:border-gray-700';
     }
