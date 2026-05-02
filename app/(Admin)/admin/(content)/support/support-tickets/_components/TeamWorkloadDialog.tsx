@@ -83,7 +83,7 @@ export default function TeamWorkloadDialog({
         </DialogHeader>
 
         {/* Scrollable body */}
-        <div className="px-6 py-5 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="px-6 py-5 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)] custom-scrollbar">
           {/* Stats cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
