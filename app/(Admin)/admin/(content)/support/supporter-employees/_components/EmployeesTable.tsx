@@ -293,7 +293,7 @@ export default function EmployeesTable() {
                     {emp.skills.slice(0, 4).map((skill, i) => (
                       <span
                         key={i}
-                        className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-border rounded whitespace-nowrap"
+                        className="inline-flex items-center px-2 py-0.5 text-[12px] font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-border rounded whitespace-nowrap"
                       >
                         {skill}
                       </span>
