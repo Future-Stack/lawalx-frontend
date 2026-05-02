@@ -26,24 +26,30 @@ export interface FAQData {
     status: 'Draft' | 'Published';
 }
 
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+
+const CATEGORIES = [
+    { label: 'Device Management', value: 'DEVICEMANAGEMENT' },
+    { label: 'Content & Playlists', value: 'CONTENT_PLAYLIST' },
+    { label: 'Schedule', value: 'SCHEDULE' },
+    { label: 'Billing & Subscriptions', value: 'BILLANDSUBCRIPTION' },
+    { label: 'Subscription', value: 'SUBCRIPTION' }
+];
+
 interface CreateFAQModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: (data: FAQData) => void;
     initialData?: FAQData | null;
+    isSaving?: boolean;
 }
 
-const CATEGORIES = [
-    'Device Management',
-    'Content & Playlists',
-    'Schedule',
-    'Billing & Subscriptions'
-];
-
-export default function CreateFAQModal({ isOpen, onClose, onSave, initialData }: CreateFAQModalProps) {
+export default function CreateFAQModal({ isOpen, onClose, onSave, initialData, isSaving }: CreateFAQModalProps) {
     const [title, setTitle] = useState('');
     const [answer, setAnswer] = useState('');
     const [category, setCategory] = useState('');
+    const [clickedButton, setClickedButton] = useState<'save' | 'publish' | null>(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -56,10 +62,12 @@ export default function CreateFAQModal({ isOpen, onClose, onSave, initialData }:
                 setAnswer('');
                 setCategory('');
             }
+            setClickedButton(null);
         }
     }, [isOpen, initialData]);
 
     const handleSave = (publish: boolean) => {
+        setClickedButton(publish ? 'publish' : 'save');
         onSave({
             id: initialData?.id,
             question: title,
@@ -67,7 +75,6 @@ export default function CreateFAQModal({ isOpen, onClose, onSave, initialData }:
             category,
             status: publish ? 'Published' : 'Draft'
         });
-        onClose();
     };
 
     return (
@@ -118,13 +125,12 @@ export default function CreateFAQModal({ isOpen, onClose, onSave, initialData }:
                         </label>
                         <Select value={category} onValueChange={setCategory}>
                             <SelectTrigger className="w-full h-12 rounded-xl bg-navbarBg dark:bg-inputBg border-border focus:ring-2 focus:ring-bgBlue/30 transition-all text-headings">
-                                <SelectValue placeholder="Subscription" />
+                                <SelectValue placeholder="Select Category" />
                             </SelectTrigger>
                             <SelectContent className="z-[2147483647]">
                                 {CATEGORIES.map((cat) => (
-                                    <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                                    <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                                 ))}
-                                <SelectItem value="Subscription">Subscription</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -141,15 +147,19 @@ export default function CreateFAQModal({ isOpen, onClose, onSave, initialData }:
                         <div className="flex items-center gap-3">
                             <Button
                                 variant="outline"
-                                className="rounded-xl h-12 px-8 font-bold border-border text-headings hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-bgBlue dark:hover:text-bgBlue shadow-sm transition-all cursor-pointer"
+                                disabled={isSaving}
+                                className="rounded-xl h-12 px-8 font-bold border-border text-headings hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-bgBlue dark:hover:text-bgBlue shadow-sm transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 onClick={() => handleSave(false)}
                             >
+                                {isSaving && clickedButton === 'save' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                 Save
                             </Button>
                             <Button
-                                className="rounded-xl h-12 px-8 font-bold bg-bgBlue hover:bg-blue-600 text-white shadow-customShadow transition-all cursor-pointer"
+                                disabled={isSaving}
+                                className="rounded-xl h-12 px-8 font-bold bg-bgBlue hover:bg-blue-600 text-white shadow-customShadow transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 onClick={() => handleSave(true)}
                             >
+                                {isSaving && clickedButton === 'publish' ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                 Publish
                             </Button>
                         </div>

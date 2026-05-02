@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import type { Ticket } from '@/redux/api/admin/support/adminSupportTicketApi';
 import type { Employee } from '@/redux/api/admin/support/adminSupporterApi';
 import { useGetAllSupportersQuery } from '@/redux/api/admin/support/adminSupporterApi';
+import SupporterProfileDialog from './SupporterProfileDialog';
 
 // Removed MOCK_EMPLOYEES
 
@@ -35,6 +36,7 @@ export default function TeamWorkloadDialog({
   onAssign,
 }: TeamWorkloadDialogProps) {
   const [showAvailableOnly, setShowAvailableOnly] = useState(false);
+  const [profileSupporterId, setProfileSupporterId] = useState<string | null>(null);
 
   const { data: supportersResponse, isLoading } = useGetAllSupportersQuery({
     filterFullWorkload: showAvailableOnly ? true : undefined,
@@ -51,6 +53,7 @@ export default function TeamWorkloadDialog({
       const status = activeTickets >= 4 ? 'Busy' : 'Available';
 
       return {
+        supporterId: t.id,
         id: t.userId,
         name,
         role,
@@ -80,7 +83,7 @@ export default function TeamWorkloadDialog({
         </DialogHeader>
 
         {/* Scrollable body */}
-        <div className="px-6 py-5 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)]">
+        <div className="px-6 py-5 space-y-4 overflow-y-auto max-h-[calc(90vh-80px)] custom-scrollbar">
           {/* Stats cards */}
           <div className="grid grid-cols-2 gap-3">
             <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4">
@@ -169,7 +172,8 @@ export default function TeamWorkloadDialog({
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      className="flex-1 h-9 text-xs flex items-center gap-1.5"
+                      className="flex-1 h-9 text-xs flex items-center gap-1.5 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      onClick={() => setProfileSupporterId(employee.supporterId)}
                     >
                       <User className="w-3.5 h-3.5" />
                       View Profile
@@ -193,6 +197,11 @@ export default function TeamWorkloadDialog({
           </div>
         </div>
       </DialogContent>
+      <SupporterProfileDialog
+        supporterId={profileSupporterId}
+        open={profileSupporterId !== null}
+        onClose={() => setProfileSupporterId(null)}
+      />
     </Dialog>
   );
 }

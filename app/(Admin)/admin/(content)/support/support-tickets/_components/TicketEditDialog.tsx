@@ -68,7 +68,7 @@ export default function TicketEditDialog({
   useEffect(() => {
     if (ticket?.assignedTo?.name && supportersResponse?.data && assignedTo === 'none') {
       const found = supportersResponse.data.find((s: any) => s.user?.username === ticket.assignedTo!.name);
-      if (found) setAssignedTo(found.id);
+      if (found) setAssignedTo(found.user.id);
     }
   }, [supportersResponse, ticket, assignedTo]);
 
@@ -235,7 +235,7 @@ export default function TicketEditDialog({
         <div className="flex items-center justify-between gap-3 px-6 pb-5 pt-4 border-t border-gray-200 dark:border-gray-700">
           <Button
             variant="outline"
-            className="flex items-center gap-2 h-9"
+            className="flex items-center gap-2 h-9 hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={onClose}
           >
             <ArrowLeft className="w-4 h-4" />

@@ -93,7 +93,7 @@ const DashboardHeader: React.FC<{ onExport: () => void; onExportExcel: () => voi
     <div className="border-b border-border pb-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Monitor system performance and manage client operations</p>
         </div>
         <div className="flex items-center gap-2">
@@ -541,13 +541,12 @@ const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (id:
                     <div className="flex items-center gap-2.5 overflow-hidden">
                       <span className="text-base font-bold text-gray-900 dark:text-white truncate leading-snug">{ticket.subject}</span>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${
-                          ticket.priority === 'High' 
-                            ? 'bg-orange-50 text-orange-600 border-orange-100 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900/50' 
-                            : ticket.priority === 'Medium'
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold border ${ticket.priority === 'High'
+                          ? 'bg-orange-50 text-orange-600 border-orange-100 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-900/50'
+                          : ticket.priority === 'Medium'
                             ? 'bg-amber-50 text-amber-600 border-amber-100 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50'
                             : 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/50'
-                        }`}>
+                          }`}>
                           {ticket.priority}
                         </span>
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-50 text-gray-500 border border-gray-100 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
@@ -882,6 +881,7 @@ const Dashboard: React.FC = () => {
             value={stats?.activeSubscriptions?.value?.toLocaleString() || '0'}
             change={`${stats?.activeSubscriptions?.growth || 0}%`}
             isPositive={(stats?.activeSubscriptions?.growth || 0) >= 0}
+            subtitle='Core revenue health'
             isLoading={isOverviewLoading}
           />
           <MetricCard
@@ -890,6 +890,7 @@ const Dashboard: React.FC = () => {
             value={`$${stats?.monthlyRecurringRevenue?.value?.toLocaleString() || '0'}`}
             change={`${stats?.monthlyRecurringRevenue?.growth || 0}%`}
             isPositive={(stats?.monthlyRecurringRevenue?.growth || 0) >= 0}
+            subtitle={`ARR: $${stats?.monthlyRecurringRevenue?.arr?.toLocaleString() || '0'}`}
             isLoading={isOverviewLoading}
           />
           <MetricCard
@@ -898,6 +899,7 @@ const Dashboard: React.FC = () => {
             value={stats?.activeDevices?.value?.toLocaleString() || '0'}
             change={`${stats?.activeDevices?.growth || 0}%`}
             isPositive={(stats?.activeDevices?.growth || 0) >= 0}
+            subtitle='Info Goes Here'
             isLoading={isOverviewLoading}
           />
           <MetricCard
@@ -906,6 +908,7 @@ const Dashboard: React.FC = () => {
             value={stats?.openSupportTickets?.value || 0}
             change={`${stats?.openSupportTickets?.growth || 0}%`}
             isPositive={(stats?.openSupportTickets?.growth || 0) >= 0}
+            subtitle='Info Goes Here'
             isLoading={isOverviewLoading}
           />
         </div>

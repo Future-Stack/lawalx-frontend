@@ -80,7 +80,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <button
           onClick={onSendMessage}
           disabled={(!newMessage.trim() && pendingAttachments.length === 0) || isUploading || !isConnected}
-          className="px-5 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 flex-shrink-0"
+          className="px-5 py-2.5 bg-gray-900 dark:bg-gray-700 text-white rounded-lg cursor-pointer hover:bg-gray-800 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 flex-shrink-0"
         >
           <span className="hidden sm:inline">Send</span>
           <Send className="w-4 h-4" />

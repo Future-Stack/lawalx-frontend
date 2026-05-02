@@ -34,7 +34,8 @@ export default function EditEmployeeDialog({
     skills: [] as string[],
   });
 
-  const [activeDropdown, setActiveDropdown] = useState<'role' | 'skills' | null>(null);
+  const [activeDropdown, setActiveDropdown] = useState<'role' | null>(null);
+  const [skillInput, setSkillInput] = useState('');
   const dropdownRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -84,17 +85,31 @@ export default function EditEmployeeDialog({
   };
 
   const toggleSkill = (skill: string) => {
-    setFormData(prev => {
-      const isSelected = prev.skills.includes(skill);
-      const nextSkills = isSelected 
-        ? prev.skills.filter(s => s !== skill)
-        : [...prev.skills, skill];
-      return { ...prev, skills: nextSkills };
-    });
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter(s => s !== skill)
+    }));
+  };
+
+  const addSkill = () => {
+    const trimmed = skillInput.trim();
+    if (trimmed && !formData.skills.includes(trimmed)) {
+      setFormData(prev => ({
+        ...prev,
+        skills: [...prev.skills, trimmed]
+      }));
+      setSkillInput('');
+    }
+  };
+
+  const handleSkillKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addSkill();
+    }
   };
 
   const roles = Object.values(SupporterRole);
-  const availableSkills = ['Cloud Computing', 'Networking', 'Frontend', 'Backend', 'DevOps', 'UI/UX', 'Support Management', 'Customer Service'];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -114,7 +129,7 @@ export default function EditEmployeeDialog({
           </button>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6" ref={dropdownRef}>
+        <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6 overflow-y-auto max-h-[calc(90vh-100px)] custom-scrollbar" ref={dropdownRef}>
           {/* Name Field */}
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -172,47 +187,45 @@ export default function EditEmployeeDialog({
             )}
           </div>
 
-          {/* Skills Field - Multi Select Custom Dropdown */}
-          <div className="space-y-2 relative">
+          <div className="space-y-3">
             <Label className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Skills
             </Label>
-            <div
-              onClick={() => setActiveDropdown(activeDropdown === 'skills' ? null : 'skills')}
-              className="w-full min-h-[48px] px-3 py-2 flex flex-wrap gap-2 items-center justify-between bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus-within:ring-2 focus-within:ring-blue-500 cursor-pointer transition-all"
-            >
-              <div className="flex flex-wrap gap-1.5">
-                {formData.skills.length > 0 ? (
-                  formData.skills.map(skill => (
-                    <span key={skill} className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg text-xs font-medium border border-green-100 dark:border-green-800">
-                      {skill}
-                      <X className="w-3 h-3 hover:text-green-800 cursor-pointer" onClick={(e) => { e.stopPropagation(); toggleSkill(skill); }} />
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-sm text-gray-400 ml-1">Select skills</span>
-                )}
-              </div>
-              <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform flex-shrink-0", activeDropdown === 'skills' && "rotate-180")} />
+            <div className="flex gap-2">
+              <Input
+                placeholder="Type a skill and press Enter"
+                value={skillInput}
+                onChange={(e) => setSkillInput(e.target.value)}
+                onKeyDown={handleSkillKeyDown}
+                className="h-12 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl focus:ring-blue-500"
+              />
+              <Button 
+                type="button" 
+                onClick={addSkill}
+                className="h-12 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700 rounded-xl px-4"
+              >
+                Add
+              </Button>
             </div>
-
-            {activeDropdown === 'skills' && (
-              <div className="absolute top-[calc(100%+4px)] left-0 w-full z-[100] bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-xl max-h-64 overflow-y-auto py-2 animate-in fade-in zoom-in-95 duration-150">
-                {availableSkills.map((skill) => (
-                  <button
-                    key={skill}
-                    type="button"
-                    onClick={() => toggleSkill(skill)}
-                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between"
-                  >
-                    <span className={cn(formData.skills.includes(skill) ? "text-green-600 font-medium" : "text-gray-700 dark:text-gray-300")}>
-                      {skill}
-                    </span>
-                    {formData.skills.includes(skill) && <Check className="w-4 h-4 text-green-600" />}
-                  </button>
-                ))}
-              </div>
-            )}
+            
+            <div className="flex flex-wrap gap-2 min-h-[40px] p-3 bg-gray-50/50 dark:bg-gray-800/30 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
+              {formData.skills.length > 0 ? (
+                formData.skills.map(skill => (
+                  <span key={skill} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-lg text-xs font-medium border border-green-100 dark:border-green-800 animate-in fade-in zoom-in duration-200">
+                    {skill}
+                    <button 
+                      type="button"
+                      onClick={() => toggleSkill(skill)}
+                      className="hover:text-green-800 transition-colors"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))
+              ) : (
+                <span className="text-sm text-gray-400 italic">No skills added yet</span>
+              )}
+            </div>
           </div>
 
           {/* Footer Actions */}

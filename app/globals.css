@@ -656,7 +656,38 @@ body {
     scrollbar-width: none;
     /* Firefox */
   }
-}
+
+  /* Custom Premium Scrollbar */
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary-action) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    height: 6px; /* Thin horizontal scrollbar */
+    width: 6px;  /* Thin vertical scrollbar */
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--primary-action);
+    border-radius: 10px;
+    transition: background 0.3s ease;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #0088CC;
+  }
+  }
+
 
 @layer base {
   * {

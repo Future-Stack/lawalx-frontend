@@ -19,7 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useGetAllSupportersQuery, useDeleteSupporterHardMutation } from '@/redux/api/admin/support/adminSupporterApi';
 import { usePresence } from '@/hooks/usePresence';
@@ -89,8 +88,7 @@ function buildPageNumbers(current: number, total: number): (number | '...')[] {
 export default function EmployeesTable() {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  
+
   // Edit state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeData | null>(null);
@@ -122,23 +120,6 @@ export default function EmployeesTable() {
   const paginated = filtered.slice(start, start + ITEMS_PER_PAGE);
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
 
-  // ── Selection ─────────────────────────────────────────────────────────────
-  const allSelected =
-    paginated.length > 0 && paginated.every((e) => selectedIds.has(e.id));
-
-  const toggleAll = () => {
-    const next = new Set(selectedIds);
-    if (allSelected) paginated.forEach((e) => next.delete(e.id));
-    else paginated.forEach((e) => next.add(e.id));
-    setSelectedIds(next);
-  };
-
-  const toggleOne = (id: string) => {
-    const next = new Set(selectedIds);
-    next.has(id) ? next.delete(id) : next.add(id);
-    setSelectedIds(next);
-  };
-
   // ── Status helpers ────────────────────────────────────────────────────────
   // Socket presence overrides API value in real-time
   const isOnline = (emp: EmployeeData): boolean =>
@@ -151,7 +132,7 @@ export default function EmployeesTable() {
 
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Are you sure you want to permanently delete ${name}? This action cannot be undone.`)) return;
-    
+
     try {
       await deleteEmployee(id).unwrap();
       toast.success('Employee deleted successfully');
@@ -198,14 +179,6 @@ export default function EmployeesTable() {
       <Table>
         <TableHeader>
           <TableRow className="bg-navbarBg hover:bg-navbarBg">
-            <TableHead className="w-10 px-4">
-              <Checkbox
-                checked={allSelected}
-                onCheckedChange={toggleAll}
-                aria-label="Select all"
-                className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-              />
-            </TableHead>
             {['Name', 'Email', 'Role', 'Skills', 'Last Active', 'Level', 'Action'].map((col) => (
               <TableHead
                 key={col}
@@ -221,7 +194,7 @@ export default function EmployeesTable() {
           {/* Loading state */}
           {isLoading && (
             <TableRow>
-              <TableCell colSpan={8} className="py-14 text-center">
+              <TableCell colSpan={7} className="py-14 text-center">
                 <Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" />
               </TableCell>
             </TableRow>
@@ -230,7 +203,7 @@ export default function EmployeesTable() {
           {/* Error state */}
           {isError && !isLoading && (
             <TableRow>
-              <TableCell colSpan={8} className="py-14 text-center text-sm text-red-400">
+              <TableCell colSpan={7} className="py-14 text-center text-sm text-red-400">
                 Failed to load supporters. Please try again.
               </TableCell>
             </TableRow>
@@ -239,7 +212,7 @@ export default function EmployeesTable() {
           {/* Empty state */}
           {!isLoading && !isError && paginated.length === 0 && (
             <TableRow>
-              <TableCell colSpan={8} className="py-14 text-center text-sm text-gray-400 dark:text-gray-500">
+              <TableCell colSpan={7} className="py-14 text-center text-sm text-gray-400 dark:text-gray-500">
                 No employees found.
               </TableCell>
             </TableRow>
@@ -255,19 +228,9 @@ export default function EmployeesTable() {
               <TableRow
                 key={emp.id}
                 className={cn(
-                  'hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors border-b border-border',
-                  selectedIds.has(emp.id) && 'bg-blue-50/40 dark:bg-blue-900/10'
+                  'hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors border-b border-border'
                 )}
               >
-                {/* Checkbox */}
-                <TableCell className="px-4 py-3">
-                  <Checkbox
-                    checked={selectedIds.has(emp.id)}
-                    onCheckedChange={() => toggleOne(emp.id)}
-                    aria-label={`Select ${displayName}`}
-                    className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                  />
-                </TableCell>
 
                 {/* Name + Avatar */}
                 <TableCell className="px-4 py-3">
@@ -327,10 +290,10 @@ export default function EmployeesTable() {
                 {/* Skills — 2-column grid */}
                 <TableCell className="px-4 py-3">
                   <div className="grid grid-cols-2 gap-1 w-fit">
-                    {emp.skills.slice(0, 4).map((skill, i) => (
+                    {emp.skills.map((skill, i) => (
                       <span
                         key={i}
-                        className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-border rounded whitespace-nowrap"
+                        className="inline-flex items-center px-2 py-0.5 text-[12px] font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-border rounded whitespace-nowrap"
                       >
                         {skill}
                       </span>
@@ -444,7 +407,7 @@ export default function EmployeesTable() {
         </div>
       </div>
 
-      <EditEmployeeDialog 
+      <EditEmployeeDialog
         employee={selectedEmployee}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
