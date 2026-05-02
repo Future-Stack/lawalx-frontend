@@ -111,6 +111,9 @@ export default function TicketsTable() {
     userName: search || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
     priority: priorityFilter === 'all' ? undefined : priorityFilter,
+  }, {
+    pollingInterval: 3000,
+    refetchOnFocus: true,  
   });
 
 

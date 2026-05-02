@@ -17,6 +17,7 @@ export enum SupporterRole {
 
 export interface Employee {
   id: string;
+  supporterId: string;
   name: string;
   role: string;
   initials: string;
@@ -127,6 +128,13 @@ export const adminSupporterApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['AdminEmployee', 'AdminSupporter'],
     }),
+    getEmployeeById: builder.query<{ statusCode: number; success: boolean; message: string; data: EmployeeData }, string>({
+      query: (id) => ({
+        url: `/admin/support/employee/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, id) => [{ type: 'AdminSupporter', id }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -138,4 +146,5 @@ export const {
   useUpdateSupporterMutation,
   useDeleteSupporterHardMutation,
   useUpdateEmployeeMutation,
+  useGetEmployeeByIdQuery,
 } = adminSupporterApi;
