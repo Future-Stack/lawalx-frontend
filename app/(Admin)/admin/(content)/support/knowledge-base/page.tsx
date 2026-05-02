@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Search, Eye, Plus, MoreVertical, FileText, User, HelpCircle, AlertTriangle, Users, Play, Edit, Trash2, Home, ChevronRight, Video, ChevronDown, Check, HomeIcon, UserCheck, VideoIcon, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -510,13 +511,13 @@ export default function KnowledgeBase() {
                     <table className="w-full">
                         <thead className="bg-[#FFFFFF] dark:bg-gray-800/50 border-b border-border">
                             <tr>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 w-1/2">
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 w-[40%] min-w-[250px]">
                                     {activeTab === 'FAQs' ? 'Question' : 'Title'}
                                 </th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Views</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Status</th>
-                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Category</th>
-                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400">Actions</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 w-[15%] min-w-[100px]">Views</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 w-[15%] min-w-[120px]">Status</th>
+                                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 w-[15%] min-w-[140px]">Category</th>
+                                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 w-[15%] min-w-[120px]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -528,17 +529,47 @@ export default function KnowledgeBase() {
                                 >
                                     <td className="px-6 py-4">
                                         <div className="flex items-start gap-3">
-                                            {/* Thumbnail placeholder for video */}
+                                            {/* Thumbnail for video */}
                                             {activeTab === 'Video Tutorial' && (
                                                 <div
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setVideoToPlay({ isOpen: true, url: item.videoLink || item.uploadVideo });
                                                     }}
-                                                    className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0 flex items-center justify-center cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors group/play"
+                                                    className="w-16 h-10 rounded-lg bg-black flex-shrink-0 relative flex items-center justify-center cursor-pointer overflow-hidden group/play border border-border"
                                                 >
-                                                    <Play className="w-5 h-5 text-gray-500 group-hover/play:text-bgBlue transition-colors fill-current opacity-0 group-hover/play:opacity-100 absolute" />
-                                                    <VideoIcon className="w-5 h-5 text-gray-400 group-hover/play:opacity-0 transition-opacity" />
+                                                    {(() => {
+                                                        const rawUrl = item.videoLink || item.uploadVideo;
+                                                        const videoUrl = getVideoUrl(rawUrl);
+
+                                                        if (rawUrl.includes('youtube.com') || rawUrl.includes('youtu.be')) {
+                                                            let videoId = '';
+                                                            if (rawUrl.includes('v=')) videoId = rawUrl.split('v=')[1]?.split('&')[0];
+                                                            else if (rawUrl.includes('youtu.be/')) videoId = rawUrl.split('youtu.be/')[1]?.split('?')[0];
+
+                                                            return (
+                                                                <Image
+                                                                    src={`https://img.youtube.com/vi/${videoId}/default.jpg`}
+                                                                    alt={item.title}
+                                                                    fill
+                                                                    className="object-cover group-hover/play:scale-110 transition-transform"
+                                                                    unoptimized
+                                                                />
+                                                            );
+                                                        }
+
+                                                        return (
+                                                            <video
+                                                                src={`${videoUrl}#t=0.1`}
+                                                                className="w-full h-full object-cover group-hover/play:scale-110 transition-transform"
+                                                                preload="metadata"
+                                                                muted
+                                                            />
+                                                        );
+                                                    })()}
+                                                    <div className="absolute inset-0 bg-black/20 group-hover/play:bg-black/40 transition-colors flex items-center justify-center">
+                                                        <Play className="w-4 h-4 text-white fill-current" />
+                                                    </div>
                                                 </div>
                                             )}
                                             <div className="max-w-xl">

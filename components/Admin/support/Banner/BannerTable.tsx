@@ -136,37 +136,37 @@ export default function BannerTable() {
     return (
         <>
             <div className="flex items-center mb-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800">
-                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">Total Banners: {countData?.count || 0}</span>
+                <div className="">
+                    <span className="text-sm font-semibold text-gray-600 dark:text-gray-400">Total Banners: {countData?.count || 0}</span>
                 </div>
             </div>
             <div className="bg-navbarBg rounded-xl shadow-sm border border-border overflow-hidden">
                 {/* Filter Header */}
                 <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row gap-4 items-center">
-                        <div className="flex-1 relative w-full">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
-                            <input
-                                type="text"
-                                placeholder="Search banners by title, description..."
-                                className="w-full pl-10 pr-4 py-4 border border-border bg-navbarBg rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="w-full sm:w-[150px] border-border bg-navbarBg text-gray-700 dark:text-gray-300">
-                                <div className="flex items-center gap-2">
-                                    <SelectValue placeholder="All" />
-                                </div>
-                            </SelectTrigger>
-                            <SelectContent className="bg-navbarBg border-border">
-                                <SelectItem value="All">All Status</SelectItem>
-                                <SelectItem value="Active">Active</SelectItem>
-                                <SelectItem value="Draft">Draft</SelectItem>
-                                <SelectItem value="Paused">Paused</SelectItem>
-                                <SelectItem value="Ended">Ended</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="flex-1 relative w-full">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
+                        <input
+                            type="text"
+                            placeholder="Search banners by title, description..."
+                            className="w-full pl-10 pr-4 py-4 border border-border bg-navbarBg rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="w-full sm:w-[150px] border-border bg-navbarBg text-gray-700 dark:text-gray-300">
+                            <div className="flex items-center gap-2">
+                                <SelectValue placeholder="All" />
+                            </div>
+                        </SelectTrigger>
+                        <SelectContent className="bg-navbarBg border-border">
+                            <SelectItem value="All">All Status</SelectItem>
+                            <SelectItem value="Active">Active</SelectItem>
+                            <SelectItem value="Draft">Draft</SelectItem>
+                            <SelectItem value="Paused">Paused</SelectItem>
+                            <SelectItem value="Ended">Ended</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
 
                 {/* Table */}
