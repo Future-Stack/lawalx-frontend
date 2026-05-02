@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Calendar, Loader2 } from 'lucide-react';
+import { Search, Calendar, Loader2, Eye, Edit, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -16,7 +16,6 @@ import Link from 'next/link';
 import DeleteConfirmationModal from '@/components/Admin/modals/DeleteConfirmationModal';
 import BannerPreview from './BannerPreview';
 import { BannerFormData } from './BannerForm';
-import { Edit, Trash2 } from 'lucide-react';
 import { useDeleteBannerMutation, useGetAllBannersAdminQuery, useGetBannerCountQuery } from '@/redux/api/admin/bannerApi';
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -171,14 +170,14 @@ export default function BannerTable() {
 
                 {/* Table */}
                 <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full table-fixed min-w-[800px]">
                         <thead className="bg-navbarBg border-b border-border">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title & Description</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Period</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[35%]">Title & Description</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Type</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Period</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Status</th>
+                                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="bg-navbarBg divide-y divide-border">
@@ -233,6 +232,13 @@ export default function BannerTable() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             <div className="flex justify-end items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                                <button
+                                                    onClick={() => setSelectedBanner(banner)}
+                                                    className="cursor-pointer text-gray-400 dark:text-gray-500 hover:text-bgBlue dark:hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                    title="View Preview"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
                                                 <Link href={`/admin/support/banner/${banner.id}`}>
                                                     <button className="cursor-pointer text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Edit">
                                                         <Edit className="w-4 h-4" />
