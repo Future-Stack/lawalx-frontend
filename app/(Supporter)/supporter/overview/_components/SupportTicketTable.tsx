@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import StickyScrollContainer from '@/components/shared/StickyScrollContainer';
 
 import { useGetAssignedTicketsQuery, useResolveTicketMutation } from '@/redux/api/supporter/supporterTicketApi';
 
@@ -169,8 +170,8 @@ export default function SupportTicketTable() {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <Table>
+      <StickyScrollContainer className="bg-navbarBg">
+        <Table wrapperClassName="overflow-visible">
           <TableHeader>
             <TableRow className="border-0 bg-navbarBg hover:bg-navbarBg">
               {['Ticket ID', 'Client Name', 'Priority', 'Issue Type', 'Status', 'Description', 'Action'].map(
@@ -278,7 +279,7 @@ export default function SupportTicketTable() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </StickyScrollContainer>
 
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-4 border-t border-border">

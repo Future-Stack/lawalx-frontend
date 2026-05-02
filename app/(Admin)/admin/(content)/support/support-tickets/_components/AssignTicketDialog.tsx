@@ -153,7 +153,7 @@ export default function AssignTicketDialog({
         <div className="flex items-center justify-between gap-3 px-6 pb-5 pt-4 border-t border-gray-200 dark:border-gray-700">
           <Button
             variant="outline"
-            className="flex items-center gap-2 h-9"
+            className="flex items-center gap-2 h-9 hover:bg-gray-100 dark:hover:bg-gray-800"
             onClick={onBack}
           >
             <ArrowLeft className="w-4 h-4" />
