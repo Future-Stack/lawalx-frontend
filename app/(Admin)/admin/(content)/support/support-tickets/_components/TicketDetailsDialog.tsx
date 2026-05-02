@@ -17,6 +17,7 @@ import {
   type TicketStatus, 
   type TicketPriority 
 } from '@/redux/api/admin/support/adminSupportTicketApi';
+import TicketChatSection from './TicketChatSection';
 import AdminTicketChatDialog from './AdminTicketChatDialog';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
@@ -90,7 +91,7 @@ export default function TicketDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="p-0 gap-0 sm:max-w-2xl focus:outline-none">
+      <DialogContent className="p-0 gap-0 sm:max-w-3xl focus:outline-none overflow-hidden rounded-2xl border-none shadow-2xl">
         {/* Header */}
         <DialogHeader className="px-6 pt-5 pb-4 border-b border-gray-200 dark:border-gray-700 sm:text-left">
           <DialogTitle className="text-base font-semibold text-gray-900 dark:text-white">
@@ -99,7 +100,7 @@ export default function TicketDetailsDialog({
         </DialogHeader>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-5">
+        <div className="px-6 py-6 space-y-8 overflow-y-auto max-h-[calc(90vh-80px)] custom-scrollbar">
           {/* Top row: left ticket info + right assigned */}
           <div className="flex flex-col sm:flex-row gap-5 sm:gap-8">
             {/* Left: ticket meta */}
@@ -187,7 +188,7 @@ export default function TicketDetailsDialog({
               </span>
               <HelpCircle className="w-3.5 h-3.5 text-gray-400" />
             </div>
-            <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 max-h-44 overflow-y-auto">
+            <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 max-h-44 overflow-y-auto custom-scrollbar">
               <p className="text-sm text-blue-600 dark:text-blue-400 leading-relaxed whitespace-pre-line">
                 {ticket.description}
               </p>
@@ -222,6 +223,14 @@ export default function TicketDetailsDialog({
               </div>
             </div>
           )}
+          {/* Chat Section */}
+          <div className="pt-4">
+            <TicketChatSection 
+              ticket={ticket} 
+              onClose={() => onClose()}
+              showResolveButton={false} 
+            />
+          </div>
         </div>
 
         {/* Footer */}
@@ -244,21 +253,9 @@ export default function TicketDetailsDialog({
               {isResolving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               {ticket.status === 'Resolved' ? 'Already Resolved' : 'Mark as resolved'}
             </Button>
-            <Button
-              className="bg-[#0FA6FF] hover:bg-[#0FA6FF] text-white h-9 flex-1 sm:flex-none"
-              onClick={() => setChatOpen(true)}
-            >
-              Reply to Customer
-            </Button>
           </div>
         </div>
       </DialogContent>
-
-      <AdminTicketChatDialog
-        ticket={ticket}
-        open={chatOpen}
-        onClose={() => setChatOpen(false)}
-      />
     </Dialog>
   );
 }

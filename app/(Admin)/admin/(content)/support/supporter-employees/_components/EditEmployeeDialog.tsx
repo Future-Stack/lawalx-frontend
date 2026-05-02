@@ -129,7 +129,7 @@ export default function EditEmployeeDialog({
           </button>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6" ref={dropdownRef}>
+        <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6 overflow-y-auto max-h-[calc(90vh-100px)] custom-scrollbar" ref={dropdownRef}>
           {/* Name Field */}
           <div className="space-y-2">
             <Label htmlFor="name" className="text-sm font-medium text-gray-700 dark:text-gray-300">
