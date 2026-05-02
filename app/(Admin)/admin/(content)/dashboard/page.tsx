@@ -93,7 +93,7 @@ const DashboardHeader: React.FC<{ onExport: () => void; onExportExcel: () => voi
     <div className="border-b border-border pb-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Monitor system performance and manage client operations</p>
         </div>
         <div className="flex items-center gap-2">

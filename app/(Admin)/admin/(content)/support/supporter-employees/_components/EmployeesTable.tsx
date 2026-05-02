@@ -290,7 +290,7 @@ export default function EmployeesTable() {
                 {/* Skills — 2-column grid */}
                 <TableCell className="px-4 py-3">
                   <div className="grid grid-cols-2 gap-1 w-fit">
-                    {emp.skills.slice(0, 4).map((skill, i) => (
+                    {emp.skills.map((skill, i) => (
                       <span
                         key={i}
                         className="inline-flex items-center px-2 py-0.5 text-[12px] font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-border rounded whitespace-nowrap"
