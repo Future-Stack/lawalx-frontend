@@ -279,7 +279,7 @@ export default function TicketConversationDialog({
           </div>
 
           {/* Messages */}
-          <div className="px-4 sm:px-5 py-4 space-y-4 bg-white dark:bg-gray-950 border-x border-border min-h-[220px] max-h-[260px] sm:max-h-[300px] overflow-y-auto">
+          <div className="px-4 sm:px-5 py-4 custom-scrollbar space-y-4 bg-white dark:bg-gray-950 border-x border-border min-h-[220px] max-h-[260px] sm:max-h-[300px] overflow-y-auto">
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-xs italic">
                 {isConnected ? 'No messages yet. Start the conversation!' : 'Connecting to chat...'}

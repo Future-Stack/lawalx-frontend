@@ -49,7 +49,7 @@ export default function SupporterProfileDialog({
           </button>
         </DialogHeader>
 
-        <div className="px-6 py-6 space-y-6">
+        <div className="px-6 py-6 space-y-6 overflow-y-auto max-h-[calc(90vh-100px)] custom-scrollbar">
           {isLoading ? (
             <div className="space-y-6">
               <div className="flex items-center gap-4">
