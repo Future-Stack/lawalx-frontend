@@ -33,12 +33,6 @@ export default function SupporterOverviewPage() {
         >
           <HomeIcon className="w-4 h-4" /> Home
         </Link>
-        {/* <ChevronRight className="w-3.5 h-3.5" />
-        <span>Customer Supports</span>
-        <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-blue-600 dark:text-blue-400 font-medium">
-          Enterprise Requests
-        </span> */}
       </nav>
 
       {/* Stat cards */}
