@@ -407,7 +407,7 @@ export default function TicketConversationDialog({
                   onClick={handleSend}
                   disabled={!canSend || isUploading}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-1.5 bg-[#1C73E0] hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm',
+                    'flex items-center gap-2 px-4 py-1.5 bg-[#1C73E0] cursor-pointer hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm',
                     (!canSend || isUploading) && 'opacity-60 cursor-not-allowed'
                   )}
                 >

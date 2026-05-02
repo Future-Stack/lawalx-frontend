@@ -2,7 +2,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { Search, Eye, Pencil, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Select,
   SelectContent,
@@ -19,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import StickyScrollContainer from '@/components/shared/StickyScrollContainer';
 import { toast } from 'sonner';
 import { useGetAllSupportTicketsQuery, useAssignSupportTicketMutation, useUpdateSupportTicketMutation } from '@/redux/api/admin/support/adminSupportTicketApi';
 import TicketDetailsDialog from './TicketDetailsDialog';
@@ -102,7 +102,6 @@ export default function TicketsTable() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<TicketPriority | 'all'>('all');
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [currentPage, setCurrentPage] = useState(1);
 
   const [assignSupportTicket] = useAssignSupportTicketMutation();
@@ -133,7 +132,7 @@ export default function TicketsTable() {
 
       const firstAssignment = t.assignments?.length > 0 ? t.assignments[0] : null;
       const assignedTo = firstAssignment?.user ? {
-        id: firstAssignment.supporterId || undefined,
+        id: firstAssignment.user.id || firstAssignment.supporterId || undefined,
         name: firstAssignment.user.username || 'Supporter',
         initials: (firstAssignment.user.username || 'S').substring(0, 2).toUpperCase(),
         role: firstAssignment.user.role || 'Support',
@@ -152,7 +151,7 @@ export default function TicketsTable() {
         lastUpdated: new Date(t.updatedAt).toLocaleDateString(),
         priority: priorityMap[t.priority] || 'Normal',
         assignedTo,
-        assignedToId: firstAssignment?.supporterId || undefined,
+        assignedToId: firstAssignment?.user?.id || undefined,
         description: t.description,
         createdAt: new Date(t.createdAt).toLocaleDateString(),
         updatedAt: new Date(t.updatedAt).toLocaleDateString(),
@@ -226,25 +225,6 @@ export default function TicketsTable() {
   const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const end = Math.min(currentPage * ITEMS_PER_PAGE, TOTAL_COUNT);
 
-  const allSelected =
-    filtered.length > 0 && filtered.every((t) => selectedIds.has(t.id));
-
-  const toggleAll = () => {
-    const next = new Set(selectedIds);
-    if (allSelected) {
-      filtered.forEach((t) => next.delete(t.id));
-    } else {
-      filtered.forEach((t) => next.add(t.id));
-    }
-    setSelectedIds(next);
-  };
-
-  const toggleOne = (id: string) => {
-    const next = new Set(selectedIds);
-    next.has(id) ? next.delete(id) : next.add(id);
-    setSelectedIds(next);
-  };
-
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
 
   return (
@@ -314,17 +294,10 @@ export default function TicketsTable() {
         </div>
 
         {/* ── shadcn Table ─────────────────────────────────────────────── */}
-        <Table>
+        <StickyScrollContainer className="bg-navbarBg">
+          <Table wrapperClassName="overflow-visible">
           <TableHeader>
             <TableRow className="bg-navbarBg hover:bg-navbarBg">
-              <TableHead className="w-10 px-4">
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={toggleAll}
-                  aria-label="Select all"
-                  className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-              </TableHead>
               <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Ticket ID
               </TableHead>
@@ -358,14 +331,14 @@ export default function TicketsTable() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-12 text-center text-sm text-gray-400">
+                <TableCell colSpan={8} className="py-12 text-center text-sm text-gray-400">
                   Loading tickets...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={9}
+                  colSpan={8}
                   className="py-12 text-center text-sm text-gray-400 dark:text-gray-500"
                 >
                   No tickets found.
@@ -376,19 +349,9 @@ export default function TicketsTable() {
                 <TableRow
                   key={ticket.id}
                   className={cn(
-                    'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-border',
-                    selectedIds.has(ticket.id) && 'bg-blue-50/50 dark:bg-blue-900/10'
+                    'hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors border-b border-border'
                   )}
                 >
-                  {/* Checkbox */}
-                  <TableCell className="px-4 py-3">
-                    <Checkbox
-                      checked={selectedIds.has(ticket.id)}
-                      onCheckedChange={() => toggleOne(ticket.id)}
-                      aria-label={`Select ${ticket.ticketId}`}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                    />
-                  </TableCell>
 
                   {/* Ticket ID */}
                   <TableCell className="px-4 py-3">
@@ -492,6 +455,7 @@ export default function TicketsTable() {
             )}
           </TableBody>
         </Table>
+      </StickyScrollContainer>
 
         {/* ── Pagination ─────────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-t border-border">
