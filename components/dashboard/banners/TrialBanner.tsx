@@ -1,7 +1,15 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import * as Icons from "lucide-react";
+import { ArrowUpRight, LucideIcon } from "lucide-react";
+import { Banner } from "@/redux/api/users/userBanner/userBanner.type";
 
-const TrialBanner = () => {
+interface TrialBannerProps {
+    banner?: Banner;
+}
+
+const TrialBanner = ({ banner }: TrialBannerProps) => {
+    const PrimaryIcon = banner?.primaryButtonIcon ? (Icons as unknown as Record<string, LucideIcon>)[banner.primaryButtonIcon] : ArrowUpRight;
+
     return (
         <div
             className="mb-6 flex flex-col md:flex-row items-center justify-between p-6 rounded-xl border gap-4"
@@ -28,7 +36,7 @@ const TrialBanner = () => {
                             lineHeight: 'normal'
                         }}
                     >
-                        Trial ends in 12 days!
+                        {banner?.title || "Trial ends in 12 days!"}
                     </h3>
                     <p
                         style={{
@@ -39,11 +47,11 @@ const TrialBanner = () => {
                             lineHeight: '24px'
                         }}
                     >
-                        Upgrade to Premium for more features.
+                        {banner?.description || "Upgrade to Premium for more features."}
                     </p>
                 </div>
             </div>
-            <Link href="/choose-plan" className="w-full md:w-auto">
+            <Link href={banner?.primaryButtonUrl || "/choose-plan"} className="w-full md:w-auto">
                 <button
                     className="w-full md:w-auto text-white transition-colors flex items-center justify-center cursor-pointer"
                     style={{
@@ -58,7 +66,7 @@ const TrialBanner = () => {
                         fontWeight: 500,
                     }}
                 >
-                    Upgrade <ArrowUpRight className="w-4 h-4" />
+                    {banner?.primaryButtonLabel || "Upgrade"} {PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
                 </button>
             </Link>
         </div>

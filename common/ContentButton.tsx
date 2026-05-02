@@ -5,7 +5,7 @@ import { LucideIcon } from "lucide-react";
 
 interface ContentButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   title?: string;
-  icon?: LucideIcon; // optional icon component
+  icon?: LucideIcon;
   bgColor?: string;
   hoverColor?: string;
 }
