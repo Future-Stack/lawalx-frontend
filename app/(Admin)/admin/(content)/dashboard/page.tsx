@@ -310,7 +310,7 @@ const PlatformActivityTrend: React.FC<{ dateRange: DateRange }> = ({ dateRange }
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 bg-purple-500 rounded-sm"></div>
-          <span className="text-gray-600 dark:text-gray-400">Total Screens</span>
+          <span className="text-gray-600 dark:text-gray-400">Total Programs</span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 bg-cyan-400 rounded-sm"></div>
