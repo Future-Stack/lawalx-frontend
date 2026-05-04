@@ -5,6 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, LogOut, UserCog } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { useAppDispatch } from '@/redux/store/hook';
+import { logout } from '@/redux/features/auth/authSlice';
 
 interface SupporterSidebarProps {
   isCollapsed: boolean;
@@ -18,6 +20,12 @@ const navItems = [
 export default function SupporterSidebar({ isCollapsed }: SupporterSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.push('/supporter/login');
+  };
 
   const isActive = (href: string) => pathname === href;
 
@@ -85,7 +93,7 @@ export default function SupporterSidebar({ isCollapsed }: SupporterSidebarProps)
         {/* Logout */}
         <div className="px-3 pb-4">
           <button
-            onClick={() => router.push('/supporter/login')}
+            onClick={handleLogout}
             className={cn(
               'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all',
               isCollapsed && 'justify-center'

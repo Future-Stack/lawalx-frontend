@@ -121,9 +121,15 @@ export default function EmployeesTable() {
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
 
   // ── Status helpers ────────────────────────────────────────────────────────
-  // Socket presence overrides API value in real-time
-  const isOnline = (emp: EmployeeData): boolean =>
-    presenceMap[emp.userId] ?? emp.user.isOnline;
+  // Socket presence strictly overrides API value to prevent flipping
+  const isOnline = (emp: EmployeeData): boolean => {
+    // If the socket has ever sent us a status, trust only that
+    const socketStatus = presenceMap[emp.userId];
+    if (typeof socketStatus === 'boolean') return socketStatus;
+    
+    // Otherwise fallback to API (initial load)
+    return !!emp.user.isOnline;
+  };
 
   const lastActive = (emp: EmployeeData): string => {
     if (isOnline(emp)) return 'Online';
@@ -223,6 +229,7 @@ export default function EmployeesTable() {
             const displayName = emp.user.full_name || emp.user.username;
             const initials = getInitials(displayName);
             const online = isOnline(emp);
+            
 
             return (
               <TableRow
@@ -238,7 +245,7 @@ export default function EmployeesTable() {
                     <div className="relative flex-shrink-0">
                       {emp.user.image_url ? (
                         <img
-                          src={emp.user.image_url}
+                          src={(process.env.NEXT_PUBLIC_BASE_URL || '').replace('/api/v1', '') + emp.user.image_url}
                           alt={displayName}
                           className="w-9 h-9 rounded-full object-cover"
                         />
