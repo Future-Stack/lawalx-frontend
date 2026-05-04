@@ -6,6 +6,9 @@ import SupporterSidebar from '@/components/Supporter/layout/SupporterSidebar';
 import SupporterNavbar from '@/components/Supporter/layout/SupporterNavbar';
 import { usePathname } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { getSocket, disconnectSocket } from '@/lib/socket';
+import { useAppSelector } from '@/redux/store/hook';
+import { selectCurrentToken } from '@/redux/features/auth/authSlice';
 
 export default function SupporterLayout({
   children,
@@ -14,8 +17,22 @@ export default function SupporterLayout({
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
+  const token = useAppSelector(selectCurrentToken);
 
   const isLoginPage = pathname === '/supporter/login';
+
+  // Global socket connection for presence tracking
+  useEffect(() => {
+    if (token && !isLoginPage) {
+      console.log('[SupporterLayout] Initializing global socket for presence');
+      getSocket(token);
+    }
+
+    return () => {
+      console.log('[SupporterLayout] Disconnecting socket on unmount/logout');
+      disconnectSocket();
+    };
+  }, [token, isLoginPage]);
 
   useEffect(() => {
     const handleResize = () => {
