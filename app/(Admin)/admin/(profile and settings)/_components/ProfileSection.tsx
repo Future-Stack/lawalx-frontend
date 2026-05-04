@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 const getFullImageUrl = (path: string | null | undefined) => {
     if (!path) return '/images/profile-settings.png';
     if (path.startsWith('http')) return path;
-    
+
     // Derive base domain from NEXT_PUBLIC_BASE_URL
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', '');
     return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;

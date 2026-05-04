@@ -21,6 +21,7 @@ export interface Company {
   name: string;
   iconBg: string;
   iconText: string;
+  imageUrl?: string | null;
 }
 
 export interface Assignee {
@@ -40,6 +41,7 @@ export interface Ticket {
   priority: TicketPriority;
   assignedTo: Assignee | null;
   assignedToId?: string;
+  assignedToImage?: string;
   description: string;
   createdAt: string;
   updatedAt: string;
