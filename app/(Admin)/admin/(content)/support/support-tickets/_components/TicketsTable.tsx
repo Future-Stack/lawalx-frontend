@@ -147,7 +147,8 @@ export default function TicketsTable() {
         company: {
           name: t.user?.username || 'Unknown',
           iconBg: 'bg-blue-500',
-          iconText: t.user?.username?.charAt(0)?.toUpperCase() || 'U'
+          iconText: t.user?.username?.charAt(0)?.toUpperCase() || 'U',
+          imageUrl: t.user?.image_url
         },
         subject: t.subject,
         status: statusMap[t.status] || 'Opened',
@@ -155,6 +156,7 @@ export default function TicketsTable() {
         priority: priorityMap[t.priority] || 'Normal',
         assignedTo,
         assignedToId: firstAssignment?.user?.id || undefined,
+        assignedToImage: firstAssignment?.user?.image_url || undefined,
         description: t.description,
         createdAt: new Date(t.createdAt).toLocaleDateString(),
         updatedAt: new Date(t.updatedAt).toLocaleDateString(),
@@ -368,11 +370,19 @@ export default function TicketsTable() {
                     <div className="flex items-center gap-2.5">
                       <div
                         className={cn(
-                          'w-7 h-7 rounded-md flex items-center justify-center text-white text-xs font-semibold flex-shrink-0',
-                          ticket.company.iconBg
+                          'w-7 h-7 rounded-md flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 overflow-hidden',
+                          !ticket.company.imageUrl && ticket.company.iconBg
                         )}
                       >
-                        {ticket.company.iconText}
+                        {ticket.company.imageUrl ? (
+                          <img
+                            src={ticket.company.imageUrl}
+                            alt={ticket.company.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          ticket.company.iconText
+                        )}
                       </div>
                       <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
                         {ticket.company.name}
@@ -406,25 +416,35 @@ export default function TicketsTable() {
 
                   {/* Assigned To */}
                   <TableCell className="px-4 py-3">
-                    {ticket.assignedTo ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
-                          <span className="text-[10px] font-semibold text-gray-600 dark:text-gray-300">
-                            {ticket.assignedTo.initials}
+                    <div className="flex items-center gap-2">
+                      {ticket.assignedTo ? (
+                        <>
+                          <div className="w-7 h-7 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center border border-border">
+                            {ticket.assignedToImage ? (
+                              <img
+                                src={(process.env.NEXT_PUBLIC_BASE_URL || '').replace('/api/v1', '') + ticket.assignedToImage}
+                                alt={ticket.assignedTo.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400">
+                                {ticket.assignedTo.initials || ticket.assignedTo.name.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-sm text-gray-700 dark:text-gray-300 font-medium truncate max-w-[110px]">
+                            {ticket.assignedTo.name}
                           </span>
-                        </div>
-                        <span className="text-sm text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                          {ticket.assignedTo.name}
-                        </span>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => handleOpenWorkload(ticket)}
-                        className="text-xs text-blue-600 dark:text-blue-400 font-medium border border-blue-200 dark:border-blue-800 rounded-md px-2.5 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors whitespace-nowrap"
-                      >
-                        + Assign Supporter
-                      </button>
-                    )}
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleOpenWorkload(ticket)}
+                          className="text-xs text-blue-600 dark:text-blue-400 font-medium border border-blue-200 dark:border-blue-800 rounded-md px-2.5 py-1 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors whitespace-nowrap"
+                        >
+                          + Assign Supporter
+                        </button>
+                      )}
+                    </div>
                   </TableCell>
                   
                   {/* Description */}

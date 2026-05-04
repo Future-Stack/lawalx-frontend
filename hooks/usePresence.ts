@@ -25,10 +25,14 @@ export function usePresence(): Record<string, boolean> {
     const socket = getSocket(token);
 
     const onPresence = (data: PresenceEvent) => {
-      setPresenceMap((prev) => ({
-        ...prev,
-        [data.userId]: data.isActive,
-      }));
+      setPresenceMap((prev) => {
+        if (prev[data.userId] === data.isActive) return prev;
+        
+        return {
+          ...prev,
+          [data.userId]: data.isActive,
+        };
+      });
     };
 
     socket.on('presence_update', onPresence);
