@@ -5,6 +5,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useTheme } from '@/components/Admin/layout/ThemeProvider';
+import { useGetUserProfileQuery } from '@/redux/api/users/userProfileApi';
+
+const getFullImageUrl = (path: string | null | undefined) => {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', '');
+  return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
+};
 
 interface SupporterNavbarProps {
   isCollapsed: boolean;
@@ -17,6 +25,18 @@ export default function SupporterNavbar({
 }: SupporterNavbarProps) {
   const { isDark, setIsDark } = useTheme();
   const [notifOpen, setNotifOpen] = useState(false);
+  const { data: profileData } = useGetUserProfileQuery();
+
+  const profile = profileData?.data;
+  const imageUrl = getFullImageUrl(profile?.image_url);
+  const initials = profile?.full_name
+    ? profile.full_name
+        .split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : profile?.username?.substring(0, 2).toUpperCase() || 'AC';
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 bg-navbarBg border-b border-border z-30">
@@ -51,6 +71,7 @@ export default function SupporterNavbar({
               width={22}
               height={22}
               className="w-5 h-5"
+              unoptimized
             />
           </button>
         </div>
@@ -122,9 +143,21 @@ export default function SupporterNavbar({
 
           {/* Avatar */}
           <div className="flex items-center pl-2 sm:pl-3 border-l border-gray-200 dark:border-gray-700">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-purple-600 flex items-center justify-center text-white text-sm font-semibold select-none flex-shrink-0">
-              AC
-            </div>
+            <Link
+              href="/supporter/settings"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-semibold select-none flex-shrink-0 overflow-hidden relative border border-border"
+            >
+              {imageUrl ? (
+                <Image
+                  src={imageUrl}
+                  alt="Profile"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                initials
+              )}
+            </Link>
           </div>
         </div>
       </div>
