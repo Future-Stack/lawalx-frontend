@@ -15,9 +15,10 @@ import { toast } from 'sonner';
 
 interface BannerPreviewProps {
   data: BannerFormData;
+  mode?: 'custom' | 'prebuilt';
 }
 
-export default function BannerPreview({ data }: BannerPreviewProps) {
+export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewProps) {
   const [viewMode, setViewMode] = useState<'web' | 'mobile'>('web');
 
   const IconMap: any = {
@@ -32,12 +33,14 @@ export default function BannerPreview({ data }: BannerPreviewProps) {
   const PrimaryIcon = (data.primaryButtonIcon && data.primaryButtonIcon !== 'none') ? IconMap[data.primaryButtonIcon] : ArrowRight;
   const SecondaryIcon = (data.secondaryButtonIcon && data.secondaryButtonIcon !== 'none') ? IconMap[data.secondaryButtonIcon] : null;
 
-  const handleButtonClick = (url?: string) => {
-    if (url && url !== '#' && url.trim() !== '') {
-      window.open(url, '_blank');
-    } else {
-      toast.error('No valid link configured for this button');
-    }
+  const backgroundStyle = data.isGradient
+    ? `linear-gradient(${data.gradientDirection || 'to right'}, ${data.gradientColor1 || '#005C97'}, ${data.gradientColor2 || '#363795'})`
+    : (data.bgColor || '#005C97');
+
+  const imageStyles = {
+    height: data.imageHeight || 180,
+    width: data.imageWidth || 180,
+    transform: "scale(1.25)"
   };
 
   return (
@@ -73,86 +76,135 @@ export default function BannerPreview({ data }: BannerPreviewProps) {
           className={`transition-all duration-300 ease-in-out ${viewMode === 'mobile' ? 'w-[375px]' : 'w-full max-w-4xl'
             }`}
         >
-          {/* The Banner Itself */}
-          <div className="banner-container rounded-xl overflow-hidden shadow-lg relative bg-gradient-to-r from-[#005C97] to-[#363795] text-white p-8 group">
-            {/* Custom CSS injection */}
-            {data.customCSS && (
-              <style>
-                {data.customCSS}
-              </style>
-            )}
+          {mode === 'custom' ? (
+            /* CUSTOM MODE */
+            <div 
+              className="banner-container rounded-xl overflow-hidden shadow-lg relative text-white group p-8"
+              style={{ background: backgroundStyle }}
+            >
+              {/* Custom CSS injection */}
+              {data.customCSS && (
+                <style>
+                  {data.customCSS}
+                </style>
+              )}
 
-            <div className={`flex ${viewMode === 'mobile' ? 'flex-col text-center' : 'items-center justify-between'}`}>
-              <div className={`banner-text-content ${viewMode === 'mobile' ? 'mb-6' : 'max-w-[60%]'}`}>
-                <h3 className={`banner-title font-bold mb-2 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>
-                  {data.title || 'Your Banner Title'}
-                </h3>
-                <p className={`banner-desc text-blue-100 mb-6 ${viewMode === 'mobile' ? 'text-sm' : 'text-base'}`}>
-                  {data.description || 'Your banner description goes here.'}
-                </p>
+              <div className={`flex ${viewMode === 'mobile' ? 'flex-col text-center' : (data.mediaPosition === 'left' ? 'flex-row-reverse items-center justify-between' : 'items-center justify-between')}`}>
+                <div className={`banner-text-content ${viewMode === 'mobile' ? 'mb-6' : 'max-w-[60%]'}`}>
+                  <h3 className={`banner-title font-bold mb-2 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>
+                    {data.title || 'Your Banner Title'}
+                  </h3>
+                  <p className={`banner-desc text-blue-100 mb-6 ${viewMode === 'mobile' ? 'text-sm' : 'text-base'}`}>
+                    {data.description || 'Your banner description goes here.'}
+                  </p>
 
-                <div className={`banner-buttons flex gap-3 ${viewMode === 'mobile' ? 'justify-center flex-col' : 'flex-row'}`}>
-                  <button 
-                    onClick={() => handleButtonClick(data.primaryButtonLink)}
-                    className="primary-btn px-6 py-2.5 bg-white text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-customShadow cursor-pointer"
-                  >
-                    {data.primaryButtonLabel || 'Get Started'}
-                    {data.primaryButtonLabel && PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
-                  </button>
-
-                  {data.enableSecondaryButton && (
+                  <div className={`banner-buttons flex gap-3 ${viewMode === 'mobile' ? 'justify-center flex-col' : 'flex-row'}`}>
                     <button 
-                      onClick={() => handleButtonClick(data.secondaryButtonLink)}
-                      className="secondary-btn px-6 py-2.5 bg-blue-800/30 text-white border border-blue-400/30 rounded-lg font-medium hover:bg-blue-800/50 transition-colors backdrop-blur-sm flex items-center justify-center gap-2 shadow-customShadow cursor-pointer"
+                      className="primary-btn px-6 py-2.5 bg-white text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-customShadow cursor-pointer"
                     >
-                      {data.secondaryButtonLabel || 'Learn More'}
-                      {SecondaryIcon && <SecondaryIcon className="w-4 h-4" />}
+                      {data.primaryButtonLabel || 'Get Started'}
+                      {data.primaryButtonLabel && PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
                     </button>
-                  )}
+
+                    {data.enableSecondaryButton && (
+                      <button 
+                        className="secondary-btn px-6 py-2.5 bg-blue-800/30 text-white border border-blue-400/30 rounded-lg font-medium hover:bg-blue-800/50 transition-colors backdrop-blur-sm flex items-center justify-center gap-2 shadow-customShadow cursor-pointer"
+                      >
+                        {data.secondaryButtonLabel || 'Learn More'}
+                        {SecondaryIcon && <SecondaryIcon className="w-4 h-4" />}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Image Container */}
+                <div className={`banner-image-container ${viewMode === 'mobile' ? 'mt-4 hidden' : ''}`}>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-full transform scale-150"></div>
+
+                    {data.image ? (
+                      <div className={`${data.mediaPosition === 'left' ? 'md:ml-2 lg:ml-4 xl:ml-10' : 'md:mr-2 lg:mr-4 xl:mr-10'} md:block hidden`}>
+                        {(data.image.startsWith('data:video/') || data.image.match(/\.(mp4|webm|ogg)$/i) || data.file?.type.startsWith('video/')) ? (
+                          <video
+                            src={data.image}
+                            className="object-contain"
+                            style={imageStyles}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                          />
+                        ) : (
+                          <img
+                            src={data.image}
+                            alt="Banner Preview"
+                            style={imageStyles}
+                            className="object-contain"
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <div className="md:mr-2 lg:mr-4 xl:mr-10 md:block hidden">
+                        <Image
+                          src="/userDashboard/img3.webp"
+                          alt="Default Banner Preview"
+                          height={180}
+                          width={180}
+                          style={{ transform: "scale(1.25)" }}
+                          className="object-contain"
+                        />
+                      </div>
+                    )}
+
+                    {/* Floating Elements */}
+                    <div className="absolute top-0 right-0 w-8 h-8 bg-blue-400 rounded-full blur-md opacity-60 animate-pulse"></div>
+                    <div className="absolute bottom-4 left-4 w-6 h-6 bg-purple-400 rounded-full blur-md opacity-60 animate-bounce"></div>
+                  </div>
                 </div>
               </div>
 
-              {/* Image Placeholder */}
-              <div className={`banner-image-container ${viewMode === 'mobile' ? 'mt-4 hidden' : ''}`}>
-                {/* Circle decorative background */}
-                <div className="relative">
-                  <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-full transform scale-150"></div>
-
-                  {data.image ? (
-                    <div className="md:mr-2 lg:mr-4 xl:mr-10 md:block hidden">
-                      <Image
-                        src={data.image}
-                        alt="Banner Preview Image"
-                        height={180}
-                        width={180}
-                        style={{ transform: "scale(1.25)" }}
-                        className="object-contain"
-                      />
-                    </div>
-                  ) : (
-                    <div className="md:mr-2 lg:mr-4 xl:mr-10 md:block hidden">
-                      <Image
-                        src="/userDashboard/img3.webp"
-                        alt="Default Banner Preview"
-                        height={180}
-                        width={180}
-                        style={{ transform: "scale(1.25)" }}
-                        className="object-contain"
-                      />
-                    </div>
-                  )}
-
-                  {/* Floating Elements (Visual Flair) */}
-                  <div className="absolute top-0 right-0 w-8 h-8 bg-blue-400 rounded-full blur-md opacity-60 animate-pulse"></div>
-                  <div className="absolute bottom-4 left-4 w-6 h-6 bg-purple-400 rounded-full blur-md opacity-60 animate-bounce"></div>
-                </div>
-              </div>
+              {/* Decorative Elements */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
             </div>
-
-            {/* Decorative Elements */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
-          </div>
+          ) : (
+            /* PREBUILT MODE */
+            <a 
+              href={data.primaryButtonLink || '#'} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-95 transition-opacity block group/prebuilt relative rounded-xl shadow-lg border border-border max-h-[180px] md:max-h-[260px]"
+              onClick={(e) => {
+                if (!data.primaryButtonLink) e.preventDefault();
+              }}
+            >
+              {data.image ? (
+                <>
+                  {data.image.startsWith('data:video/') || data.image.match(/\.(mp4|webm|ogg)$/i) || data.file?.type.startsWith('video/') ? (
+                    <video
+                      src={data.image}
+                      className="w-full h-full object-contain"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={data.image}
+                      alt="Full Banner"
+                      className="w-full h-full object-contain"
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="w-full aspect-[21/9] md:aspect-[4/1] flex flex-col items-center justify-center text-gray-400">
+                  <Upload className="w-12 h-12 mb-2 opacity-20" />
+                  <p className="text-sm font-medium">Upload a banner image</p>
+                </div>
+              )}
+            </a>
+          )}
         </div>
       </div>
     </div>

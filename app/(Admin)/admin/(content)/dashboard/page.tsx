@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Calendar, Users, MousePointer, Clock, CheckSquare, FileText, Headphones, RefreshCw, AlertCircle, MoreVertical, ChevronDown, Plus, Crown, DollarSign, Shield, Webhook, TvMinimal, FileVideo } from 'lucide-react';
+import { Calendar, Users, MousePointer, Clock, CheckSquare, FileText, Headphones, RefreshCw, AlertCircle, ChevronDown, Plus, Crown, DollarSign, Shield, Webhook, TvMinimal, FileVideo } from 'lucide-react';
 import AddUserModal from '@/components/Admin/usermanagement/AddUserModal';
 import {
   useGetDashboardOverviewQuery,
@@ -213,6 +213,25 @@ const SubscriptionDistribution: React.FC<{ dateRange: DateRange }> = ({ dateRang
 
   const total = useMemo(() => data.reduce((sum: number, item: any) => sum + item.value, 0), [data]);
 
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white dark:bg-gray-800 p-2.5 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg">
+          <p className="text-[11px] font-bold text-gray-900 dark:text-white mb-1.5 border-b border-gray-100 dark:border-gray-700 pb-1">
+            {payload[0].name}
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: payload[0].payload.color }}></div>
+            <p className="text-[10px] text-gray-600 dark:text-gray-400">
+              Subscribers: <span className="font-semibold text-gray-900 dark:text-white">{payload[0].value}</span>
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="bg-navbarBg rounded-xl p-5 shadow-sm border border-border h-full">
       <div className="flex items-start justify-between mb-3">
@@ -220,7 +239,6 @@ const SubscriptionDistribution: React.FC<{ dateRange: DateRange }> = ({ dateRang
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Subscription Plan Distribution</h3>
           <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Active subscribers by tier</p>
         </div>
-        <MoreVertical className="w-4 h-4 text-gray-300 dark:text-gray-600 cursor-pointer" />
       </div>
 
       {isLoading ? (
@@ -241,6 +259,7 @@ const SubscriptionDistribution: React.FC<{ dateRange: DateRange }> = ({ dateRang
                     outerRadius={75}
                     paddingAngle={3}
                     dataKey="value"
+                    nameKey="name"
                     startAngle={90}
                     endAngle={-270}
                   >
@@ -248,9 +267,15 @@ const SubscriptionDistribution: React.FC<{ dateRange: DateRange }> = ({ dateRang
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
+                  <Tooltip 
+                    content={<CustomTooltip />} 
+                    position={{ y: -20 }} 
+                    allowEscapeViewBox={{ x: true, y: true }} 
+                    wrapperStyle={{ zIndex: 1000 }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900 dark:text-white">{total}</div>
                   <div className="text-[10px] text-gray-500 dark:text-gray-400">Total</div>
@@ -300,7 +325,6 @@ const PlatformActivityTrend: React.FC<{ dateRange: DateRange }> = ({ dateRange }
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Platform Activity Trend</h3>
           <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Daily active users and task progress</p>
         </div>
-        <MoreVertical className="w-4 h-4 text-gray-300 dark:text-gray-600 cursor-pointer" />
       </div>
 
       <div className="flex items-center justify-end gap-4 mb-3 text-[10px]">
@@ -352,8 +376,14 @@ const PlatformActivityTrend: React.FC<{ dateRange: DateRange }> = ({ dateRange }
               tickLine={false}
             />
             <Tooltip
-              contentStyle={{ fontSize: '11px', borderRadius: '6px', border: '1px solid #E5E7EB', backgroundColor: '#fff' }}
-              labelStyle={{ color: '#374151' }}
+              contentStyle={{
+                fontSize: '11px',
+                borderRadius: '8px',
+                border: '1px solid #E5E7EB',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              }}
+              labelStyle={{ color: '#374151', fontWeight: 'bold', marginBottom: '4px' }}
             />
             <Area
               type="monotone"
@@ -419,7 +449,6 @@ const ContentUsageBreakdown: React.FC<{ title: string; subtitle: string; type: '
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">{title}</h3>
           <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</p>
         </div>
-        <MoreVertical className="w-4 h-4 text-gray-300 dark:text-gray-600 cursor-pointer" />
       </div>
 
       {isLoading ? (
@@ -442,7 +471,14 @@ const ContentUsageBreakdown: React.FC<{ title: string; subtitle: string; type: '
               tickLine={false}
             />
             <Tooltip
-              contentStyle={{ fontSize: '11px', borderRadius: '6px', border: '1px solid #E5E7EB' }}
+              contentStyle={{
+                fontSize: '11px',
+                borderRadius: '8px',
+                border: '1px solid #E5E7EB',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+              }}
+              labelStyle={{ color: '#374151', fontWeight: 'bold', marginBottom: '4px' }}
             />
             <Bar dataKey={keys[0]} fill={colors[0]} radius={[3, 3, 0, 0]} barSize={type === 'uploaded' ? 40 : 30} />
             {type === 'uploaded' && <Bar dataKey={keys[1]} fill={colors[1]} radius={[3, 3, 0, 0]} barSize={40} />}

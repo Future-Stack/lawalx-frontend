@@ -2,7 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ChevronRight, Code, Home, HomeIcon, LayoutTemplate, Loader2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Settings, Home, HomeIcon, LayoutTemplate, Loader2, Calendar, Upload, Image } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import BannerForm, { BannerFormData } from '@/components/Admin/support/Banner/BannerForm';
 import BannerPreview from '@/components/Admin/support/Banner/BannerPreview';
 import { useParams, useRouter } from 'next/navigation';
@@ -82,7 +89,7 @@ export default function EditBannerPage() {
     const { data: banner, isLoading: isFetching } = useGetBannerByIdQuery(id as string, { skip: !id });
     const [updateBanner, { isLoading: isUpdating }] = useUpdateBannerMutation();
 
-    const [activeTab, setActiveTab] = useState<'prebuilt' | 'custom'>('prebuilt');
+    const [activeTab, setActiveTab] = useState<'custom' | 'prebuilt'>('custom');
     const [formData, setFormData] = useState<BannerFormData>({
         bannerType: 'Upload',
         title: '',
@@ -100,6 +107,15 @@ export default function EditBannerPage() {
         primaryButtonIcon: '',
         secondaryButtonIcon: '',
         status: 'Draft',
+        // New design fields
+        imageWidth: 180,
+        imageHeight: 180,
+        isGradient: true,
+        bgColor: '#005C97',
+        gradientColor1: '#005C97',
+        gradientColor2: '#363795',
+        gradientDirection: 'to right',
+        placeholderImage: null,
     });
 
     const formatValue = (val: string) => {
@@ -127,9 +143,50 @@ export default function EditBannerPage() {
                 primaryButtonIcon: banner.primaryButtonIcon || '',
                 secondaryButtonIcon: banner.secondaryButtonIcon || '',
                 status: banner.status ? formatValue(banner.status) : 'Draft',
+                // New design fields (with defaults for now)
+                imageWidth: banner.imageWidth || 180,
+                imageHeight: banner.imageHeight || 180,
+                isGradient: banner.isGradient !== undefined ? banner.isGradient : true,
+                bgColor: banner.bgColor || '#005C97',
+                gradientColor1: banner.gradientColor1 || '#005C97',
+                gradientColor2: banner.gradientColor2 || '#363795',
+                gradientDirection: banner.gradientDirection || 'to right',
+                placeholderImage: banner.placeholderMediaUrl ? (banner.placeholderMediaUrl.startsWith('http') ? banner.placeholderMediaUrl : `${baseUrl}/${banner.placeholderMediaUrl}`) : null,
             });
         }
     }, [banner]);
+
+    const handleTabChange = (newTab: 'custom' | 'prebuilt') => {
+        if (newTab === activeTab) return;
+
+        // Reset fields when switching modes
+        if (newTab === 'prebuilt') {
+            setFormData(prev => ({
+                ...prev,
+                title: '',
+                description: '',
+                primaryButtonLabel: '',
+                primaryButtonLink: '',
+                enableSecondaryButton: false,
+                secondaryButtonLabel: '',
+                secondaryButtonLink: '',
+                customCSS: DEFAULT_CSS_TEMPLATE,
+                image: null,
+                file: null,
+                isGradient: true,
+                bgColor: '#005C97',
+                // Keep dates and metadata as they are global
+            }));
+        } else {
+            // Switching to custom
+            setFormData(prev => ({
+                ...prev,
+                image: null,
+                file: null,
+            }));
+        }
+        setActiveTab(newTab);
+    };
 
     const handleSave = async (overrideStatus?: string) => {
         try {
@@ -153,6 +210,20 @@ export default function EditBannerPage() {
             data.append('endDate', formData.endDate ? new Date(formData.endDate).toISOString() : '');
             data.append('targetUserType', formData.targetUserType.toUpperCase().replace(' ', '_'));
             data.append('customCss', formData.customCSS || '');
+
+            // Design fields
+            data.append('imageWidth', String(formData.imageWidth || 180));
+            data.append('imageHeight', String(formData.imageHeight || 180));
+            data.append('isGradient', String(formData.isGradient));
+            data.append('bgColor', formData.bgColor || '#005C97');
+            data.append('gradientColor1', formData.gradientColor1 || '#005C97');
+            data.append('gradientColor2', formData.gradientColor2 || '#363795');
+            data.append('gradientDirection', formData.gradientDirection || 'to right');
+            data.append('mediaPosition', formData.mediaPosition || 'right');
+
+            if (formData.placeholderFile) {
+                data.append('placeholderMedia', formData.placeholderFile);
+            }
 
             await updateBanner({ id: id as string, data }).unwrap();
             toast.success('Banner updated successfully');
@@ -186,22 +257,6 @@ export default function EditBannerPage() {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    {/* <button 
-                        onClick={() => handleSave('DRAFT')}
-                        disabled={isUpdating}
-                        className="px-4 py-2 border border-border bg-navbarBg rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-customShadow cursor-pointer disabled:opacity-50"
-                    >
-                        {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Draft'}
-                    </button> */}
-                    <button 
-                        onClick={() => handleSave()}
-                        disabled={isUpdating}
-                        className="px-4 py-2 bg-bgBlue hover:bg-bgBlue/80 dark:bg-bgBlue dark:hover:bg-bgBlue/80 text-white rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer disabled:opacity-50"
-                    >
-                        {isUpdating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
-                    </button>
-                </div>
             </div>
 
             {/* Main Content */}
@@ -214,52 +269,50 @@ export default function EditBannerPage() {
                     {/* Tab Switcher */}
                     <div className="rounded-full border border-border p-1 inline-flex mb-6 shrink-0 w-max bg-navbarBg gap-2">
                         <button
-                            onClick={() => setActiveTab('prebuilt')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${activeTab === 'prebuilt'
-                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-customShadow'
-                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                }`}
-                        >
-                            <LayoutTemplate className="w-4 h-4" />
-                            Prebuilt Form
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('custom')}
+                            onClick={() => handleTabChange('custom')}
                             className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${activeTab === 'custom'
                                 ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-customShadow'
                                 : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
                                 }`}
                         >
-                            <Code className="w-4 h-4" />
-                            Custom Code
+                            <LayoutTemplate className="w-4 h-4" />
+                            Custom Banner
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('prebuilt')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors cursor-pointer ${activeTab === 'prebuilt'
+                                ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-customShadow'
+                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                }`}
+                        >
+                            <Image className="w-4 h-4" />
+                            Prebuild Banner
                         </button>
                     </div>
 
                     {/* Form and Preview Split */}
                     <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
                         {/* Left Side: Form */}
-                        <div className="lg:col-span-5 h-full overflow-hidden">
-                            {activeTab === 'prebuilt' ? (
-                                <BannerForm data={formData} onChange={setFormData} />
-                            ) : (
-                                <div className="bg-navbarBg rounded-xl shadow-sm border border-border p-6 h-full flex flex-col">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Custom CSS</h3>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                        Add custom CSS to style your banner. Use classes like <code>.banner-container</code>, <code>.banner-title</code>, <code>.banner-desc</code>, <code>.primary-btn</code>, <code>.secondary-btn</code>.
-                                    </p>
-                                    <textarea
-                                        className="flex-1 w-full p-4 bg-navbarBg text-blue-400 font-mono text-sm rounded-lg focus:outline-none resize-none border border-border scrollbar-hide"
-                                        placeholder=".banner-title { color: #ff0000; }"
-                                        value={formData.customCSS}
-                                        onChange={(e) => setFormData({ ...formData, customCSS: e.target.value })}
-                                    />
-                                </div>
-                            )}
+                        <div className="lg:col-span-5 h-full flex flex-col min-h-0">
+                            <div className="flex-1 overflow-y-auto mb-6">
+                                <BannerForm data={formData} onChange={setFormData} mode={activeTab} />
+                            </div>
+
+                            {/* Save Button below the form */}
+                            <div className="shrink-0 p-4 flex items-center justify-end">
+                                <button
+                                    onClick={() => handleSave()}
+                                    disabled={isUpdating}
+                                    className="w-full md:w-auto px-8 py-2.5 bg-bgBlue hover:bg-bgBlue/80 text-white rounded-lg font-semibold transition-all shadow-customShadow cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update and Save Changes'}
+                                </button>
+                            </div>
                         </div>
 
                         {/* Right Side: Preview */}
                         <div className="lg:col-span-7 h-full overflow-hidden">
-                            <BannerPreview data={formData} />
+                            <BannerPreview data={formData} mode={activeTab} />
                         </div>
                     </div>
                 </div>

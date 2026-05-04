@@ -28,6 +28,17 @@ export interface BannerFormData {
     primaryButtonIcon?: string;
     secondaryButtonIcon?: string;
     status: string;
+    // New design fields
+    imageWidth?: number;
+    imageHeight?: number;
+    isGradient?: boolean;
+    bgColor?: string;
+    gradientColor1?: string;
+    gradientColor2?: string;
+    gradientDirection?: string;
+    placeholderImage?: string | null;
+    placeholderFile?: File | null;
+    mediaPosition?: 'left' | 'right';
 }
 
 const AVAILABLE_ICONS = [
@@ -42,9 +53,10 @@ const AVAILABLE_ICONS = [
 interface BannerFormProps {
     data: BannerFormData;
     onChange: (data: BannerFormData) => void;
+    mode: 'custom' | 'prebuilt';
 }
 
-export default function BannerForm({ data, onChange }: BannerFormProps) {
+export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const handleChange = (field: keyof BannerFormData, value: any) => {
@@ -72,219 +84,449 @@ export default function BannerForm({ data, onChange }: BannerFormProps) {
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Configure your banner content and appearance</p>
 
             <div className="space-y-6">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banner Type</label>
-                    <Select value={data.bannerType} onValueChange={(val) => handleChange('bannerType', val)}>
-                        <SelectTrigger className="w-full bg-navbarBg border-border">
-                            <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Upload">Upload</SelectItem>
-                            <SelectItem value="Announcement">Announcement</SelectItem>
-                            <SelectItem value="Promotion">Promotion</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                    <Select value={data.status} onValueChange={(val) => handleChange('status', val)}>
-                        <SelectTrigger className="w-full bg-navbarBg border-border">
-                            <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="Active">Active</SelectItem>
-                            <SelectItem value="Draft">Draft</SelectItem>
-                            <SelectItem value="Paused">Paused</SelectItem>
-                            <SelectItem value="Ended">Ended</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-
-                {/* Title */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
-                    <input
-                        type="text"
-                        value={data.title}
-                        onChange={(e) => handleChange('title', e.target.value)}
-                        className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                        placeholder="Download Our Mobile App"
-                    />
-                </div>
-
-                {/* Description */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                    <textarea
-                        value={data.description}
-                        onChange={(e) => handleChange('description', e.target.value)}
-                        rows={4}
-                        className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                        placeholder="Check out our new advanced analytics dashboard"
-                    />
-                </div>
-
-                {/* Upload Video/Image */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Upload Video/Image</label>
-                    <div
-                        className="border-2 border-dashed border-bgBlue bg-navbarBg rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            className="hidden"
-                            accept="image/*"
-                            onChange={handleImageUpload}
-                        />
-                        {data.image ? (
-                            <img src={data.image} alt="Preview" className="max-h-32 mb-3 rounded" />
-                        ) : (
-                            <div className="w-10 h-10 bg-navbarBg rounded-lg shadow-sm flex items-center justify-center mb-3 border border-border">
-                                <Upload className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-                            </div>
-                        )}
-                        <p className="text-sm font-medium text-blue-500 dark:text-blue-400 mb-1">
-                            Click to Upload <span className="text-gray-500 dark:text-gray-400 font-normal">or drag and drop</span>
-                        </p>
-                        <p className="text-xs text-gray-400 dark:text-gray-500">SVG, PNG, or JPG (Max 800 x 800px)</p>
-                    </div>
-                </div>
-
-                {/* Primary Button */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Primary Button Label</label>
-                    <input
-                        type="text"
-                        value={data.primaryButtonLabel}
-                        onChange={(e) => handleChange('primaryButtonLabel', e.target.value)}
-                        className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                        placeholder="Get Started"
-                    />
-
-                    {/* Icon Picker for Primary Button */}
-                    <div className="mb-3">
-                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Button Icon (Optional)</label>
-                        <Select value={data.primaryButtonIcon} onValueChange={(val) => handleChange('primaryButtonIcon', val)}>
+                {/* 1. Global Metadata (Type, Status, Target) - Always Shown */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banner Type</label>
+                        <Select value={data.bannerType} onValueChange={(val) => handleChange('bannerType', val)}>
                             <SelectTrigger className="w-full bg-navbarBg border-border">
-                                <SelectValue placeholder="No Icon" />
+                                <SelectValue placeholder="Select type" />
                             </SelectTrigger>
-                            <SelectContent className="bg-navbarBg border-border max-h-[250px] overflow-y-auto">
-                                <SelectItem value="none">No Icon</SelectItem>
-                                {AVAILABLE_ICONS.map((icon) => (
-                                    <SelectItem key={icon} value={icon} className="cursor-pointer">{icon}</SelectItem>
-                                ))}
+                            <SelectContent className="bg-navbarBg border-border">
+                                <SelectItem value="Upload">Upload</SelectItem>
+                                <SelectItem value="Announcement">Announcement</SelectItem>
+                                <SelectItem value="Promotion">Promotion</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="relative">
-                        <input
-                            type="text"
-                            value={data.primaryButtonLink}
-                            onChange={(e) => handleChange('primaryButtonLink', e.target.value)}
-                            className="w-full px-4 pr-10 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                            placeholder="https://example.com"
-                        />
-                        <HelpCircle className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
-                    </div>
-                </div>
 
-                {/* Secondary Button Toggle */}
-                <div className="flex items-center gap-2">
-                    <div
-                        className={`w-10 h-6 rounded-full p-1 cursor-pointer transition-colors ${data.enableSecondaryButton ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}`}
-                        onClick={() => handleChange('enableSecondaryButton', !data.enableSecondaryButton)}
-                    >
-                        <div className={`w-4 h-4 bg-white rounded-full transition-transform ${data.enableSecondaryButton ? 'translate-x-4' : 'translate-x-0'}`} />
-                    </div>
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Enable Secondary Button</span>
-                </div>
-
-                {data.enableSecondaryButton && (
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Secondary Button Label</label>
-                        <input
-                            type="text"
-                            value={data.secondaryButtonLabel}
-                            onChange={(e) => handleChange('secondaryButtonLabel', e.target.value)}
-                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                            placeholder="Learn More"
-                        />
-                        {/* Icon Picker for Secondary Button */}
-                        <div className="mb-3">
-                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Button Icon (Optional)</label>
-                            <Select value={data.secondaryButtonIcon} onValueChange={(val) => handleChange('secondaryButtonIcon', val)}>
-                                <SelectTrigger className="w-full bg-navbarBg border-border">
-                                    <SelectValue placeholder="No Icon" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-navbarBg border-border max-h-[250px] overflow-y-auto">
-                                    <SelectItem value="none">No Icon</SelectItem>
-                                    {AVAILABLE_ICONS.map((icon) => (
-                                        <SelectItem key={icon} value={icon} className="cursor-pointer">{icon}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="relative">
-                            <input
-                                type="text"
-                                value={data.secondaryButtonLink}
-                                onChange={(e) => handleChange('secondaryButtonLink', e.target.value)}
-                                className="w-full px-4 pr-10 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                                placeholder="https://example.com/learn"
-                            />
-                            <HelpCircle className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4" />
-                        </div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                        <Select value={data.status} onValueChange={(val) => handleChange('status', val)}>
+                            <SelectTrigger className="w-full bg-navbarBg border-border">
+                                <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-navbarBg border-border">
+                                <SelectItem value="Active">Active</SelectItem>
+                                <SelectItem value="Draft">Draft</SelectItem>
+                                <SelectItem value="Paused">Paused</SelectItem>
+                                <SelectItem value="Ended">Ended</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Targeted User</label>
+                        <Select value={data.targetUserType} onValueChange={(val) => handleChange('targetUserType', val)}>
+                            <SelectTrigger className="w-full bg-navbarBg border-border">
+                                <SelectValue placeholder="Select target users" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-navbarBg border-border">
+                                <SelectItem value="ALL_USERS">All Users</SelectItem>
+                                <SelectItem value="STARTER">Starter</SelectItem>
+                                <SelectItem value="BUSINESS">Business</SelectItem>
+                                <SelectItem value="FREE_TRIAL">Free Trial</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                {mode === 'custom' ? (
+                    <>
+                        {/* 2. Content (Title, Description) */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
+                                <input
+                                    type="text"
+                                    value={data.title}
+                                    onChange={(e) => handleChange('title', e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                    placeholder="Download Our Mobile App"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                                <textarea
+                                    value={data.description}
+                                    onChange={(e) => handleChange('description', e.target.value)}
+                                    rows={3}
+                                    className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                                    placeholder="Check out our new advanced analytics dashboard"
+                                />
+                            </div>
+                        </div>
+
+                        {/* 3. Background Style */}
+                        <div className="space-y-4 p-4 border border-border rounded-xl bg-gray-50/50 dark:bg-gray-800/30">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-semibold text-gray-700 dark:text-gray-300">Background Style</label>
+                                <div className="flex bg-navbarBg border border-border rounded-lg p-1 gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleChange('isGradient', false)}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!data.isGradient ? 'bg-bgBlue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                    >
+                                        Solid
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleChange('isGradient', true)}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${data.isGradient ? 'bg-bgBlue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                    >
+                                        Gradient
+                                    </button>
+                                </div>
+                            </div>
+
+                            {!data.isGradient ? (
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Background Color</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="color"
+                                            value={data.bgColor || '#005C97'}
+                                            onChange={(e) => handleChange('bgColor', e.target.value)}
+                                            className="w-10 h-10 p-1 bg-navbarBg border border-border rounded-lg cursor-pointer"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={data.bgColor || '#005C97'}
+                                            onChange={(e) => handleChange('bgColor', e.target.value)}
+                                            className="flex-1 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white"
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Color 1</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    value={data.gradientColor1 || '#005C97'}
+                                                    onChange={(e) => handleChange('gradientColor1', e.target.value)}
+                                                    className="w-8 h-8 p-1 bg-navbarBg border border-border rounded-lg cursor-pointer"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={data.gradientColor1 || '#005C97'}
+                                                    onChange={(e) => handleChange('gradientColor1', e.target.value)}
+                                                    className="flex-1 px-2 py-1 bg-navbarBg border border-border rounded-lg text-xs"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Color 2</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="color"
+                                                    value={data.gradientColor2 || '#363795'}
+                                                    onChange={(e) => handleChange('gradientColor2', e.target.value)}
+                                                    className="w-8 h-8 p-1 bg-navbarBg border border-border rounded-lg cursor-pointer"
+                                                />
+                                                <input
+                                                    type="text"
+                                                    value={data.gradientColor2 || '#363795'}
+                                                    onChange={(e) => handleChange('gradientColor2', e.target.value)}
+                                                    className="flex-1 px-2 py-1 bg-navbarBg border border-border rounded-lg text-xs"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Direction</label>
+                                        <Select value={data.gradientDirection || 'to right'} onValueChange={(val) => handleChange('gradientDirection', val)}>
+                                            <SelectTrigger className="w-full bg-navbarBg border-border h-9 text-xs">
+                                                <SelectValue placeholder="Select direction" />
+                                            </SelectTrigger>
+                                            <SelectContent className="bg-navbarBg border-border">
+                                                <SelectItem value="to right">Left to Right</SelectItem>
+                                                <SelectItem value="to left">Right to Left</SelectItem>
+                                                <SelectItem value="to bottom">Top to Bottom</SelectItem>
+                                                <SelectItem value="to top">Bottom to Top</SelectItem>
+                                                <SelectItem value="to bottom right">Top Left to Bottom Right</SelectItem>
+                                                <SelectItem value="to bottom left">Top Right to Bottom Left</SelectItem>
+                                                <SelectItem value="to top right">Bottom Left to Top Right</SelectItem>
+                                                <SelectItem value="to top left">Bottom Right to Top Left</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 4. Media Upload & Dimensions */}
+                        <div className="space-y-4">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Banner Media</label>
+                            <div
+                                className="border-2 border-dashed border-bgBlue bg-navbarBg rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" onChange={handleImageUpload} />
+                                {data.image ? (
+                                    data.image.startsWith('data:video/') || data.image.match(/\.(mp4|webm|ogg)$/i) || data.file?.type.startsWith('video/') ? (
+                                        <video src={data.image} className="max-h-24 mb-3 rounded" controls />
+                                    ) : (
+                                        <img src={data.image} alt="Preview" className="max-h-24 mb-3 rounded" />
+                                    )
+                                ) : (
+                                    <div className="w-10 h-10 bg-navbarBg rounded-lg shadow-sm flex items-center justify-center mb-3 border border-border">
+                                        <Upload className="w-5 h-5 text-gray-400" />
+                                    </div>
+                                )}
+                                <p className="text-sm font-medium text-blue-500">Click to Upload Media</p>
+                                <p className="text-xs text-gray-400">SVG, PNG, JPG, MP4 or WebM</p>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Width (px)</label>
+                                    <input
+                                        type="number"
+                                        value={data.imageWidth || 180}
+                                        onChange={(e) => handleChange('imageWidth', parseInt(e.target.value))}
+                                        className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Height (px)</label>
+                                    <input
+                                        type="number"
+                                        value={data.imageHeight || 180}
+                                        onChange={(e) => handleChange('imageHeight', parseInt(e.target.value))}
+                                        className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Media Position */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Media Position</label>
+                                <div className="flex p-1 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-border w-max gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => handleChange('mediaPosition', 'left')}
+                                        className={`px-4 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                                            data.mediaPosition === 'left'
+                                                ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-border'
+                                                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                                        }`}
+                                    >
+                                        Left Side
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleChange('mediaPosition', 'right')}
+                                        className={`px-4 py-1.5 rounded-md text-[11px] font-medium transition-all ${
+                                            (data.mediaPosition === 'right' || !data.mediaPosition)
+                                                ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-border'
+                                                : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                                        }`}
+                                    >
+                                        Right Side
+                                    </button>
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-1.5">Choose which side the image/video should appear on</p>
+                            </div>
+                        </div>
+
+                        {/* 5. Buttons */}
+                        <div className="space-y-4">
+                            <div className="p-4 border border-border rounded-xl space-y-4">
+                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Primary Button</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <input
+                                        type="text"
+                                        value={data.primaryButtonLabel}
+                                        onChange={(e) => handleChange('primaryButtonLabel', e.target.value)}
+                                        className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm"
+                                        placeholder="Button Label"
+                                    />
+                                    <Select value={data.primaryButtonIcon} onValueChange={(val) => handleChange('primaryButtonIcon', val)}>
+                                        <SelectTrigger className="w-full bg-navbarBg border-border text-sm h-9">
+                                            <SelectValue placeholder="Icon" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-navbarBg border-border max-h-[200px]">
+                                            <SelectItem value="none">No Icon</SelectItem>
+                                            {AVAILABLE_ICONS.map(icon => <SelectItem key={icon} value={icon}>{icon}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <input
+                                    type="text"
+                                    value={data.primaryButtonLink}
+                                    onChange={(e) => handleChange('primaryButtonLink', e.target.value)}
+                                    className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm"
+                                    placeholder="https://link.com"
+                                />
+                            </div>
+
+                            <div className="p-4 border border-border rounded-xl space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300">Secondary Button</label>
+                                    <div
+                                        className={`w-10 h-5 rounded-full p-1 cursor-pointer transition-colors ${data.enableSecondaryButton ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}`}
+                                        onClick={() => handleChange('enableSecondaryButton', !data.enableSecondaryButton)}
+                                    >
+                                        <div className={`w-3 h-3 bg-white rounded-full transition-transform ${data.enableSecondaryButton ? 'translate-x-5' : 'translate-x-0'}`} />
+                                    </div>
+                                </div>
+                                {data.enableSecondaryButton && (
+                                    <>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <input
+                                                type="text"
+                                                value={data.secondaryButtonLabel}
+                                                onChange={(e) => handleChange('secondaryButtonLabel', e.target.value)}
+                                                className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm"
+                                                placeholder="Button Label"
+                                            />
+                                            <Select value={data.secondaryButtonIcon} onValueChange={(val) => handleChange('secondaryButtonIcon', val)}>
+                                                <SelectTrigger className="w-full bg-navbarBg border-border text-sm h-9">
+                                                    <SelectValue placeholder="Icon" />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-navbarBg border-border max-h-[200px]">
+                                                    <SelectItem value="none">No Icon</SelectItem>
+                                                    {AVAILABLE_ICONS.map(icon => <SelectItem key={icon} value={icon}>{icon}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={data.secondaryButtonLink}
+                                            onChange={(e) => handleChange('secondaryButtonLink', e.target.value)}
+                                            className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm"
+                                            placeholder="https://link.com"
+                                        />
+                                    </>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 6. Scheduling */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+                                <div className="relative group">
+                                    <input
+                                        type="date"
+                                        value={data.startDate}
+                                        onChange={(e) => handleChange('startDate', e.target.value)}
+                                        onClick={(e) => (e.target as any).showPicker?.()}
+                                        className="w-full px-4 py-2 bg-navbarBg border border-border rounded-lg text-sm"
+                                    />
+                                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+                                <div className="relative group">
+                                    <input
+                                        type="date"
+                                        value={data.endDate}
+                                        onChange={(e) => handleChange('endDate', e.target.value)}
+                                        onClick={(e) => (e.target as any).showPicker?.()}
+                                        className="w-full px-4 py-2 bg-navbarBg border border-border rounded-lg text-sm"
+                                    />
+                                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                                </div>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        {/* Prebuilt Mode Specifics */}
+                        <div className="space-y-6">
+                            {/* Upload Banner Placeholder (Now the main banner in prebuilt) */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Upload Banner</label>
+                                <div 
+                                    className="border-2 border-dashed border-bgBlue bg-navbarBg rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
+                                    onClick={() => {
+                                        const input = document.createElement('input');
+                                        input.type = 'file';
+                                        input.accept = 'image/*,video/*';
+                                        input.onchange = (e) => {
+                                            const file = (e.target as any).files?.[0];
+                                            if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                    onChange({ ...data, file: file, image: reader.result as string });
+                                                };
+                                                reader.readAsDataURL(file);
+                                            }
+                                        };
+                                        input.click();
+                                    }}
+                                >
+                                    {data.image ? (
+                                        data.image.startsWith('data:video/') || data.image.match(/\.(mp4|webm|ogg)$/i) || data.file?.type.startsWith('video/') ? (
+                                            <video src={data.image} className="max-h-40 mb-3 rounded shadow-sm" controls />
+                                        ) : (
+                                            <img src={data.image} alt="Banner" className="max-h-40 mb-3 rounded shadow-sm" />
+                                        )
+                                    ) : (
+                                        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3 border border-border">
+                                            <Upload className="w-6 h-6 text-gray-400" />
+                                        </div>
+                                    )}
+                                    <p className="text-sm font-medium text-blue-500">Click to Upload Banner Image/Video</p>
+                                    <div className="mt-2 space-y-1">
+                                        <p className="text-xs text-gray-400">In prebuilt mode, this image will be the entire banner</p>
+                                        <p className="text-[10px] text-bgBlue font-medium">Recommended: 1920x600px (Desktop) or 1080x1080px (Square)</p>
+                                        <p className="text-[10px] text-gray-400 italic">High quality JPG/PNG or MP4 recommended for best view</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Banner Link (Prebuilt) */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banner Link (Redirect URL)</label>
+                                <input
+                                    type="text"
+                                    value={data.primaryButtonLink}
+                                    onChange={(e) => handleChange('primaryButtonLink', e.target.value)}
+                                    className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                                    placeholder="https://example.com/promotion"
+                                />
+                                <p className="text-xs text-gray-400 mt-1.5">Users will be redirected to this URL when clicking the banner</p>
+                            </div>
+
+                            {/* Scheduling (Start Date for Prebuilt) */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+                                    <div className="relative group">
+                                        <input
+                                            type="date"
+                                            value={data.startDate}
+                                            onChange={(e) => handleChange('startDate', e.target.value)}
+                                            onClick={(e) => (e.target as any).showPicker?.()}
+                                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg text-sm"
+                                        />
+                                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+                                    <div className="relative group">
+                                        <input
+                                            type="date"
+                                            value={data.endDate}
+                                            onChange={(e) => handleChange('endDate', e.target.value)}
+                                            onClick={(e) => (e.target as any).showPicker?.()}
+                                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg text-sm"
+                                        />
+                                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 pointer-events-none" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </>
                 )}
-
-                {/* Dates */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
-                        <div className="relative group">
-                            <input
-                                type="date"
-                                value={data.startDate}
-                                onChange={(e) => handleChange('startDate', e.target.value)}
-                                onClick={(e) => (e.target as any).showPicker?.()}
-                                className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
-                            />
-                            <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none group-hover:text-bgBlue transition-colors" />
-                        </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
-                        <div className="relative group">
-                            <input
-                                type="date"
-                                value={data.endDate}
-                                onChange={(e) => handleChange('endDate', e.target.value)}
-                                onClick={(e) => (e.target as any).showPicker?.()}
-                                className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
-                            />
-                            <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-4 h-4 pointer-events-none group-hover:text-bgBlue transition-colors" />
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Target User Type</label>
-                    <Select value={data.targetUserType} onValueChange={(val) => handleChange('targetUserType', val)}>
-                        <SelectTrigger className="w-full bg-navbarBg border-border">
-                            <SelectValue placeholder="Select target users" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-navbarBg border-border">
-                            <SelectItem value="--">--</SelectItem>
-                            <SelectItem value="ALL_USERS">All Users</SelectItem>
-                            <SelectItem value="STARTER">Starter</SelectItem>
-                            <SelectItem value="BUSINESS">Business</SelectItem>
-                            <SelectItem value="FREE_TRIAL">Free Trial</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
             </div>
         </div>
     );
