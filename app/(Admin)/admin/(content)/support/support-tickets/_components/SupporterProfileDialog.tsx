@@ -79,7 +79,7 @@ export default function SupporterProfileDialog({
                 <div className="relative">
                   <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center border border-blue-100 dark:border-blue-800 overflow-hidden">
                     {supporter?.user?.image_url ? (
-                      <img src={supporter.user.image_url} alt="Profile" className="w-full h-full object-cover" />
+                      <img src={(process.env.NEXT_PUBLIC_BASE_URL || '').replace('/api/v1', '') +supporter.user.image_url} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                         {supporter?.user?.username?.charAt(0).toUpperCase()}

@@ -155,30 +155,6 @@ export default function EmployeesTable() {
         <h2 className="text-base font-semibold text-gray-900 dark:text-white whitespace-nowrap">
           Support Employees List
         </h2>
-
-        {/* <div className="flex items-center gap-2 w-full sm:w-auto">
-       
-          <div className="relative flex-1 sm:w-60">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            <input
-              type="text"
-              placeholder="Search by name, email, role…"
-              value={search}
-              onChange={(e) => {
-                setSearch(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full pl-9 pr-3 py-2 text-sm bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-400"
-            />
-          </div>
-
-
-          <button className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 dark:text-gray-300 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0">
-            <SlidersHorizontal className="w-3.5 h-3.5" />
-            Filter By
-            <ChevronDown className="w-3.5 h-3.5" />
-          </button>
-        </div> */}
       </div>
 
       {/* ── Table ──────────────────────────────────────────────────────── */}
