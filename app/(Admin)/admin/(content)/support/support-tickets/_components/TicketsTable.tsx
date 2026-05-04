@@ -350,7 +350,7 @@ export default function TicketsTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((ticket) => (
+              filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE).map((ticket: Ticket) => (
                 <TableRow
                   key={ticket.id}
                   className={cn(
@@ -376,7 +376,7 @@ export default function TicketsTable() {
                       >
                         {ticket.company.imageUrl ? (
                           <img
-                            src={ticket.company.imageUrl}
+                            src={(process.env.NEXT_PUBLIC_BASE_URL || '').replace('/api/v1', '') + ticket.company.imageUrl}
                             alt={ticket.company.name}
                             className="w-full h-full object-cover"
                           />
