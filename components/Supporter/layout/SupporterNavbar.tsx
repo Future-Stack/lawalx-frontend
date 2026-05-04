@@ -153,6 +153,7 @@ export default function SupporterNavbar({
                   alt="Profile"
                   fill
                   className="object-cover"
+                  unoptimized
                 />
               ) : (
                 initials
