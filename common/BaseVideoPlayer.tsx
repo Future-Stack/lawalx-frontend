@@ -42,6 +42,7 @@ interface VideoPlayerProps {
   onPause?: () => void;
   fillParent?: boolean; // New prop to force h-full instead of aspect-ratio padding
   className?: string; // Standard className override
+  onReady?: () => void;
 }
 
 const BaseVideoPlayer = ({
@@ -56,19 +57,24 @@ const BaseVideoPlayer = ({
   onPause,
   fillParent = false,
   className = "",
+  onReady,
 }: VideoPlayerProps) => {
   const playerRef = useRef<APITypes>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [ready, setReady] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
   const hasStartedRef = useRef(false);
 
   // Stable callback refs
   const onEndedRef  = useRef(onEnded);
   const onPlayRef   = useRef(onPlay);
   const onPauseRef  = useRef(onPause);
+  const onReadyRef  = useRef(onReady);
   onEndedRef.current  = onEnded;
   onPlayRef.current   = onPlay;
   onPauseRef.current  = onPause;
+  onReadyRef.current  = onReady;
 
   const autoPlayRef = useRef(autoPlay);
   autoPlayRef.current = autoPlay;
@@ -92,6 +98,7 @@ const BaseVideoPlayer = ({
       // READY — fires on mount AND every src swap
       const handleReady = () => {
         setReady(true);
+        onReadyRef.current?.();
         // Always restore saved volume on ready, regardless of autoPlay.
         // For autoPlay: browser needs muted=true to START playing,
         // but we restore volume right after so user hears audio.
@@ -123,14 +130,34 @@ const BaseVideoPlayer = ({
         setSavedVolume(vol);
       };
 
-      const handlePlaying = () => { setReady(true); onPlayRef.current?.(); };
-      const handlePause   = () => onPauseRef.current?.();
-      const handleEnded   = () => onEndedRef.current?.();
-      const handleCanPlay = () => setReady(true);
+      const handlePlaying = () => { 
+        setReady(true); 
+        setIsPlaying(true);
+        setIsBuffering(false);
+        onPlayRef.current?.(); 
+      };
+      const handlePause   = () => {
+        setIsPlaying(false);
+        setIsBuffering(false);
+        onPauseRef.current?.();
+      };
+      const handleWaiting = () => {
+        if (autoPlayRef.current) setIsBuffering(true);
+      };
+      const handleEnded   = () => {
+        setIsPlaying(false);
+        setIsBuffering(false);
+        onEndedRef.current?.();
+      };
+      const handleCanPlay = () => {
+        setReady(true);
+        setIsBuffering(false);
+      };
 
       player.on("ready",        handleReady);
       player.on("canplay",      handleCanPlay);
       player.on("playing",      handlePlaying);
+      player.on("waiting",      handleWaiting);
       player.on("pause",        handlePause);
       player.on("ended",        handleEnded);
       player.on("volumechange", handleVolumeChange);
@@ -238,12 +265,15 @@ const BaseVideoPlayer = ({
       }}
     >
       <div className={`${(fillParent || mediaType === "video") ? "absolute inset-0" : "relative h-full"} flex items-center justify-center`}>
-        {(!ready || !isMounted) && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-3 transition-opacity duration-300">
-            <Loader2 className="w-8 h-8 animate-spin text-white/50" />
-            <span className="text-[10px] text-white/30 uppercase tracking-widest font-medium">
-              Initializing
-            </span>
+        {(!ready || !isMounted || isBuffering) && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] transition-all duration-300">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-[#0FA6FF]/20 border-t-[#0FA6FF] rounded-full animate-spin" />
+              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-[#0FA6FF]/30 rounded-full animate-pulse" />
+            </div>
+            {/* <span className="mt-4 text-[10px] text-white/50 uppercase tracking-[0.2em] font-semibold animate-pulse">
+              Buffering
+            </span> */}
           </div>
         )}
         <div className={`absolute inset-0 transition-all duration-700 ease-out ${

@@ -35,7 +35,7 @@ const SidebarComponent: React.FC<SidebarComponentProps & { isCollapsed?: boolean
           className
         )}
       >
-        <div className={`py-6 space-y-1 ${isCollapsed ? "px-2" : "px-4"}`}>
+        <div className={`py-8 space-y-1 ${isCollapsed ? "px-2" : "px-4"}`}>
           {items.map((item, index) => (
             <Link
               key={index}

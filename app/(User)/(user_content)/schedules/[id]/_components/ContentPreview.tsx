@@ -134,7 +134,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
               >
                 <Marquee
                   speed={lowerThird.speed || 40}
-                  direction={lowerThird.animation === "Left_to_Light" ? "left" : "right"}
+                  direction={lowerThird.animation === "Right_to_Left" ? "left" : "right"}
                   gradient={false}
                   loop={lowerThird.loop ? 0 : 1}
                 >
@@ -323,7 +323,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
               >
                 <Marquee
                   speed={lowerThird.speed || 40}
-                  direction={lowerThird.animation === "Left_to_Light" ? "left" : "right"}
+                  direction={lowerThird.animation === "Right_to_Left" ? "left" : "right"}
                   gradient={false}
                   loop={lowerThird.loop ? 0 : 1}
                 >

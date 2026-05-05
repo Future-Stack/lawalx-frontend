@@ -1,10 +1,10 @@
 "use client";
 
 import UserDashboardNavbar from "@/components/layout/UserDashboardNavbar";
-import Wrapper from "@/components/layout/Wrapper";
 import SidebarComponent from "@/components/sidebar/SidebarComponent";
 import { FileUp, LayoutTemplate } from 'lucide-react';
 import { useState, useEffect } from "react";
+import Wrapper from "@/components/layout/Wrapper";
 
 const contentSidebarItems = [
     {
@@ -48,12 +48,14 @@ export default function ContentGroupLayout({ children }: { children: React.React
             <UserDashboardNavbar />
 
             <div className="flex">
-                <SidebarComponent items={contentSidebarItems} isCollapsed={isCollapsed} className="top-20 sm:top-24" />
+                {!isMobile && (
+                    <SidebarComponent items={contentSidebarItems} isCollapsed={isCollapsed} className="top-20 sm:top-24" />
+                )}
 
                 <main
-                    className={`flex-1 min-h-screen transition-all duration-300 ${isCollapsed ? 'ml-16 md:ml-20' : 'ml-64'}`}
+                    className={`flex-1 min-h-screen transition-all duration-300 ${isMobile ? 'ml-0' : (isCollapsed ? 'ml-16' : 'ml-64')}`}
                 >
-                    <Wrapper>{children}</Wrapper>
+                    <Wrapper fullWidth={isCollapsed}>{children}</Wrapper>
                 </main>
             </div>
         </div>

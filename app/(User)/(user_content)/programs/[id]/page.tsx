@@ -34,6 +34,7 @@ import { Device, Timeline, WorkoutStatus } from "@/redux/api/users/programs/prog
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 
 dayjs.extend(relativeTime);
 
@@ -69,7 +70,6 @@ const ScreenCardDetails = () => {
 
   // Audio Controls
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isAudioPlaying, setIsAudioPlaying] = useState(true);
   const [audioVolume, setAudioVolume] = useState(1);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
@@ -113,7 +113,7 @@ const ScreenCardDetails = () => {
       audioRef.current?.pause();
     } else {
       setIsPaused(false);
-      audioRef.current?.play().catch(() => {});
+      audioRef.current?.play().catch(() => { });
     }
   }, [localActive]);
 
@@ -205,6 +205,7 @@ const ScreenCardDetails = () => {
 
   const videos = localTimeline.filter((t) => t.file?.type === "VIDEO")?.length || 0;
   const images = localTimeline.filter((t) => t.file?.type === "IMAGE" || t.file?.type === "CONTENT")?.length || 0;
+  const audios = localTimeline.filter((t) => t.file?.type === "AUDIO")?.length || 0;
 
   const getFileUrl = (url: string) => {
     if (!url) return undefined;
@@ -217,14 +218,17 @@ const ScreenCardDetails = () => {
   const previewUrl = getFileUrl(selectedContent?.file?.url || "");
   const currentFileName = selectedContent?.file?.originalName || program.name;
   const lastUpdated = dayjs(program.updated_at).fromNow();
-  const isActive = program.status?.toUpperCase() === "PUBLISH";
-  const assignedContent = `${videos} videos, ${images} content`;
+
+  const contentParts = [];
+  if (videos > 0) contentParts.push(`${videos} video${videos !== 1 ? 's' : ''}`);
+  if (audios > 0) contentParts.push(`${audios} audio`);
+  if (images > 0) contentParts.push(`${images} image${images !== 1 ? 's' : ''}`);
+  const assignedContent = contentParts.length > 0 ? contentParts.join(", ") : "No media assigned";
 
   const handleSave = async () => {
     try {
       const content_ids = localTimeline.map((item) => item.fileId);
       const device_ids = localDevices.map((d) => d.id);
-      const schedule_ids = program.schedules?.map((s) => s.id) || [];
 
       // Construct metaData with duration mapping for the timeline
       const metaData = {
@@ -252,39 +256,35 @@ const ScreenCardDetails = () => {
     }
   };
 
-  const handleAppendExisting = (newFiles: any[]) => {
-    // Logic to append files to localTimeline
-    setIsAddExistingOpen(false);
-  };
 
   const handlePowerClick = (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-  
-      if (isUpdating) return;
-  
-      const nextState = !localActive;
-      const targetStatus = nextState ? WorkoutStatus.PUBLISH : WorkoutStatus.DRAFT;
-  
-      console.log("Power button clicked. Next status:", targetStatus);
-  
-      // Immediate UI feedback
-      setLocalActive(nextState);
-  
-      // Update server state
-      updateProgram({
-        id: program.id,
-        data: { status: targetStatus }
-      }).unwrap()
-        .then(() => {
-          console.log("Program status updated successfully to:", targetStatus);
-        })
-        .catch((err) => {
-          console.error("Failed to update program status", err);
-          // Revert local state on failure
-          setLocalActive(!nextState);
-        });
-    };
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isUpdating) return;
+
+    const nextState = !localActive;
+    const targetStatus = nextState ? WorkoutStatus.PUBLISH : WorkoutStatus.DRAFT;
+
+    console.log("Power button clicked. Next status:", targetStatus);
+
+    // Immediate UI feedback
+    setLocalActive(nextState);
+
+    // Update server state
+    updateProgram({
+      id: program.id,
+      data: { status: targetStatus }
+    }).unwrap()
+      .then(() => {
+        console.log("Program status updated successfully to:", targetStatus);
+      })
+      .catch((err) => {
+        console.error("Failed to update program status", err);
+        // Revert local state on failure
+        setLocalActive(!nextState);
+      });
+  };
 
   return (
     <div className="min-h-screen">
@@ -526,9 +526,10 @@ const ScreenCardDetails = () => {
                   ) : (
                     <div className="relative w-full h-full rounded-lg bg-black overflow-hidden flex items-center justify-center">
                       {previewUrl ? (
-                        <img
+                        <Image
                           src={previewUrl}
                           alt={currentFileName}
+                          fill
                           className="absolute inset-0 w-full h-full object-contain"
                         />
                       ) : (
@@ -622,7 +623,7 @@ const ScreenCardDetails = () => {
                   {/* Expanded Devices List */}
                   {isDevicesExpanded && program.devices && program.devices.length > 0 && (
                     <div className="mt-4 space-y-2 pl-8 sm:pl-9 animate-in slide-in-from-top-2 duration-300">
-                      {program.devices.map((device, idx) => (
+                      {program.devices.map((device) => (
                         <div
                           key={device.id}
                           className="flex items-center justify-between text-sm text-muted py-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-md px-3"
