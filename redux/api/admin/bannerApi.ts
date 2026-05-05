@@ -18,16 +18,16 @@ export interface Banner {
   startDate: string;
   endDate: string;
   targetUserType: string;
-  customCss: string;
-  imageWidth?: number;
-  imageHeight?: number;
-  isGradient?: boolean;
-  bgColor?: string;
-  gradientColor1?: string;
-  gradientColor2?: string;
-  gradientDirection?: string;
+  backgroundStyle?: string;
+  backgroundColor1?: string;
+  backgroundColor2?: string;
+  backgroundDirection?: string;
+  mediaWidth?: number;
+  mediaHeight?: number;
   mediaPosition?: string;
-  imageShape?: string;
+  mediaShape?: string;
+  uploadBanner?: string;
+  bannerLinkRedirectURL?: string;
   placeholderMediaUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -72,17 +72,33 @@ export const bannerApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: "Banner", id }],
       transformResponse: (response: any) => response.data,
     }),
-    createBanner: builder.mutation({
+    createCustomBanner: builder.mutation({
       query: (data: FormData) => ({
-        url: "/banners",
+        url: "/banners/custom",
         method: "POST",
         body: data,
       }),
       invalidatesTags: ["Banner"],
     }),
-    updateBanner: builder.mutation({
+    createPrebuiltBanner: builder.mutation({
+      query: (data: FormData) => ({
+        url: "/banners/prebuilt",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Banner"],
+    }),
+    updateCustomBanner: builder.mutation({
       query: ({ id, data }: { id: string; data: FormData }) => ({
-        url: `/banners/${id}`,
+        url: `/banners/${id}/custom`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: (result, error, { id }) => ["Banner", { type: "Banner", id }],
+    }),
+    updatePrebuiltBanner: builder.mutation({
+      query: ({ id, data }: { id: string; data: FormData }) => ({
+        url: `/banners/${id}/prebuilt`,
         method: "PATCH",
         body: data,
       }),
@@ -103,7 +119,9 @@ export const {
   useGetActiveBannersQuery,
   useGetBannerByIdQuery,
   useGetBannerCountQuery,
-  useCreateBannerMutation,
-  useUpdateBannerMutation,
+  useCreateCustomBannerMutation,
+  useCreatePrebuiltBannerMutation,
+  useUpdateCustomBannerMutation,
+  useUpdatePrebuiltBannerMutation,
   useDeleteBannerMutation,
 } = bannerApi;

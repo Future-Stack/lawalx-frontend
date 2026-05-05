@@ -37,7 +37,7 @@ export default function SettingsTabs() {
 
     return (
         <div className="w-full mb-6 overflow-x-auto scrollbar-hide">
-            <div className="flex items-center gap-2 border border-border rounded-full p-2 bg-navbarBg w-max min-w-full">
+            <div className="rounded-full border border-border p-1 inline-flex mb-6 shrink-0 w-max bg-navbarBg gap-2">
                 {tabs.map((tab) => {
                     const isActive = pathname === tab.href;
                     const Icon = tab.icon;
@@ -45,13 +45,13 @@ export default function SettingsTabs() {
                         <Link
                             key={tab.href}
                             href={tab.href}
-                            className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
                                 isActive
-                                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-500 border border-blue-200 dark:border-blue-800 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 dark:text-gray-400 dark:hover:text-gray-300'
+                                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 shadow-customShadow'
+                                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
                             }`}
                         >
-                            <Icon className={`w-4 h-4 ${isActive ? 'text-blue-500' : ''}`} />
+                            <Icon className="w-4 h-4" />
                             {tab.label}
                         </Link>
                     );
