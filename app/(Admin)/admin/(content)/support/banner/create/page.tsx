@@ -12,78 +12,16 @@ import {
 } from "@/components/ui/select";
 import BannerForm, { BannerFormData } from '@/components/Admin/support/Banner/BannerForm';
 import BannerPreview from '@/components/Admin/support/Banner/BannerPreview';
-import { useCreateBannerMutation } from '@/redux/api/admin/bannerApi';
+import { useCreateCustomBannerMutation, useCreatePrebuiltBannerMutation } from '@/redux/api/admin/bannerApi';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-const DEFAULT_CSS_TEMPLATE = `/* 
-    Available CSS Classes:
-    .banner-container      - Main wrapper
-    .banner-text-content   - Left side content wrapper
-    .banner-title          - Title text
-    .banner-desc           - Description text
-    .banner-buttons        - Button wrapper
-    .primary-btn           - Primary action button
-    .secondary-btn         - Secondary action button
-    .banner-image-container - Right side wrapper
-    .banner-image          - The image itself
-*/
-
-/* Example Styles */
-.banner-container {
-    /* Main Layout */
-    /* display: flex; */
-    /* flex-direction: row; */ /* Use column for mobile-like layout */
-    /* background: linear-gradient(to right, #005C97, #363795); */
-    /* padding: 2rem; */
-}
-
-.banner-text-content {
-    /* Change width of text area */
-    /* max-width: 60%; */
-}
-
-/* Image Positioning */
-.banner-image-container {
-    /* To move image to left: */
-    /* order: -1; */
-    
-    /* To hide image: */
-    /* display: none; */
-}
-
-.banner-title {
-    /* font-size: 2rem; */
-    /* font-weight: bold; */
-    /* color: white; */
-    /* margin-bottom: 0.5rem; */
-}
-
-.banner-desc {
-    /* font-size: 1rem; */
-    /* color: #e0e7ff; */
-    /* margin-bottom: 1.5rem; */
-}
-
-.banner-buttons {
-    /* display: flex; */
-    /* gap: 1rem; */
-}
-
-.primary-btn {
-    /* background-color: white; */
-    /* color: #1e3a8a; */
-}
-
-.secondary-btn {
-    /* background-color: rgba(30, 58, 138, 0.3); */
-    /* border: 1px solid rgba(96, 165, 250, 0.3); */
-}
-`;
 
 export default function CreateBannerPage() {
     const router = useRouter();
-    const [createBanner, { isLoading }] = useCreateBannerMutation();
+    const [createCustomBanner, { isLoading: isCreatingCustom }] = useCreateCustomBannerMutation();
+    const [createPrebuiltBanner, { isLoading: isCreatingPrebuilt }] = useCreatePrebuiltBannerMutation();
+    const isLoading = isCreatingCustom || isCreatingPrebuilt;
 
     const [activeTab, setActiveTab] = useState<'custom' | 'prebuilt'>('custom');
     const [formData, setFormData] = useState<BannerFormData>({
@@ -100,19 +38,17 @@ export default function CreateBannerPage() {
         startDate: '',
         endDate: '',
         targetUserType: 'ALL_USERS',
-        customCSS: DEFAULT_CSS_TEMPLATE,
         primaryButtonIcon: '',
         secondaryButtonIcon: '',
         // New design fields
-        imageWidth: 180,
-        imageHeight: 180,
-        isGradient: true,
-        bgColor: '#005C97',
-        gradientColor1: '#005C97',
-        gradientColor2: '#363795',
-        gradientDirection: 'to right',
+        mediaWidth: 180,
+        mediaHeight: 180,
+        backgroundStyle: 'GRADIENT',
+        backgroundColor1: '#005C97',
+        backgroundColor2: '#363795',
+        backgroundDirection: 'to right',
         placeholderImage: null,
-        imageShape: 'original',
+        mediaShape: 'original',
     });
 
     const handleTabChange = (newTab: 'custom' | 'prebuilt') => {
@@ -122,18 +58,15 @@ export default function CreateBannerPage() {
         if (newTab === 'prebuilt') {
             setFormData(prev => ({
                 ...prev,
-                title: '',
-                description: '',
                 primaryButtonLabel: '',
                 primaryButtonLink: '',
                 enableSecondaryButton: false,
                 secondaryButtonLabel: '',
                 secondaryButtonLink: '',
-                customCSS: DEFAULT_CSS_TEMPLATE,
                 image: null,
                 file: null,
-                isGradient: true,
-                bgColor: '#005C97',
+                backgroundStyle: 'SOLID',
+                backgroundColor1: '#005C97',
                 // Keep dates and metadata as they are global
             }));
         } else {
@@ -152,40 +85,51 @@ export default function CreateBannerPage() {
             const data = new FormData();
             data.append('type', formData.bannerType.toUpperCase());
             data.append('status', overrideStatus || formData.status.toUpperCase());
-            data.append('title', formData.title);
-            data.append('description', formData.description);
-            if (formData.file) {
-                data.append('media', formData.file);
-            }
-            data.append('mediaType', formData.file?.type.startsWith('video') ? 'VIDEO' : 'IMAGE');
-            data.append('primaryButtonLabel', formData.primaryButtonLabel);
-            data.append('primaryButtonUrl', formData.primaryButtonLink);
-            data.append('primaryButtonIcon', formData.primaryButtonIcon || '');
-            data.append('secondaryButtonEnabled', String(formData.enableSecondaryButton));
-            data.append('secondaryButtonLabel', formData.secondaryButtonLabel);
-            data.append('secondaryButtonUrl', formData.secondaryButtonLink);
-            data.append('secondaryButtonIcon', formData.secondaryButtonIcon || '');
             data.append('startDate', formData.startDate ? new Date(formData.startDate).toISOString() : '');
             data.append('endDate', formData.endDate ? new Date(formData.endDate).toISOString() : '');
             data.append('targetUserType', formData.targetUserType.toUpperCase().replace(' ', '_'));
-            data.append('customCss', formData.customCSS || '');
 
-            // Design fields
-            data.append('imageWidth', String(formData.imageWidth || 180));
-            data.append('imageHeight', String(formData.imageHeight || 180));
-            data.append('isGradient', String(formData.isGradient));
-            data.append('bgColor', formData.bgColor || '#005C97');
-            data.append('gradientColor1', formData.gradientColor1 || '#005C97');
-            data.append('gradientColor2', formData.gradientColor2 || '#363795');
-            data.append('gradientDirection', formData.gradientDirection || 'to right');
-            data.append('mediaPosition', formData.mediaPosition || 'right');
-            data.append('imageShape', formData.imageShape || 'original');
+            if (activeTab === 'custom') {
+                data.append('title', formData.title);
+                data.append('description', formData.description);
+                if (formData.file) {
+                    data.append('media', formData.file);
+                }
+                data.append('mediaType', formData.file?.type.startsWith('video') ? 'VIDEO' : 'IMAGE');
+                data.append('primaryButtonLabel', formData.primaryButtonLabel);
+                data.append('primaryButtonUrl', formData.primaryButtonLink);
+                data.append('primaryButtonIcon', formData.primaryButtonIcon || '');
+                data.append('secondaryButtonEnabled', String(formData.enableSecondaryButton));
+                data.append('secondaryButtonLabel', formData.secondaryButtonLabel);
+                data.append('secondaryButtonUrl', formData.secondaryButtonLink);
+                data.append('secondaryButtonIcon', formData.secondaryButtonIcon || '');
+                
+                data.append('backgroundStyle', formData.backgroundStyle || 'GRADIENT');
+                data.append('backgroundColor1', formData.backgroundColor1 || '#005C97');
+                data.append('backgroundColor2', formData.backgroundColor2 || '#363795');
+                data.append('backgroundDirection', formData.backgroundDirection || 'to right');
+                data.append('mediaWidth', String(formData.mediaWidth || 180));
+                data.append('mediaHeight', String(formData.mediaHeight || 180));
+                data.append('mediaPosition', formData.mediaPosition || 'RIGHT');
+                data.append('mediaShape', (formData.mediaShape || 'ORIGINAL').toUpperCase());
 
-            if (formData.placeholderFile) {
-                data.append('placeholderMedia', formData.placeholderFile);
+                if (formData.placeholderFile) {
+                    data.append('placeholderMedia', formData.placeholderFile);
+                }
+
+                await createCustomBanner(data).unwrap();
+            } else {
+                // Prebuilt
+                data.append('title', formData.title || '');
+                data.append('description', formData.description || '');
+                if (formData.uploadBannerFile) {
+                    data.append('uploadBanner', formData.uploadBannerFile);
+                }
+                data.append('bannerLinkRedirectURL', formData.bannerLinkRedirectURL || '');
+                
+                await createPrebuiltBanner(data).unwrap();
             }
 
-            await createBanner(data).unwrap();
             toast.success('Banner created successfully');
             router.push('/admin/support/banner');
         } catch (error: any) {
