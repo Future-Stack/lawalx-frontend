@@ -18,7 +18,7 @@ import BannerPreview from './BannerPreview';
 import { BannerFormData } from './BannerForm';
 import { useDeleteBannerMutation, useGetAllBannersAdminQuery, useGetBannerCountQuery } from '@/redux/api/admin/bannerApi';
 import { toast } from 'sonner';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 const normalizeValue = (val: string) => {
     if (!val) return 'null';
@@ -99,8 +99,8 @@ export default function BannerTable() {
             toast.success("Banner deleted successfully");
             setIsDeleteModalOpen(false);
             setItemToDelete(null);
-        } catch (error) {
-            toast.error("Failed to delete banner");
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Failed to delete banner");
             console.error("Delete error:", error);
         }
     };
@@ -112,11 +112,15 @@ export default function BannerTable() {
     // Convert table row data to BannerFormData for preview (Mock conversion)
     const getPreviewData = (banner: any): BannerFormData => {
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', '') || '';
+        const isPrebuilt = !!banner.uploadBanner || !!banner.bannerLinkRedirectURL;
+
         return {
             bannerType: banner.type || 'Upload',
             title: banner.title || 'null',
             description: banner.description || 'null',
-            image: banner.mediaUrl ? (banner.mediaUrl.startsWith('http') ? banner.mediaUrl : `${baseUrl}/${banner.mediaUrl}`) : null,
+            image: isPrebuilt
+                ? (banner.uploadBanner ? (banner.uploadBanner.startsWith('http') ? banner.uploadBanner : `${baseUrl}/${banner.uploadBanner}`) : null)
+                : (banner.mediaUrl ? (banner.mediaUrl.startsWith('http') ? banner.mediaUrl : `${baseUrl}/${banner.mediaUrl}`) : null),
             primaryButtonLabel: banner.primaryButtonLabel || 'null',
             primaryButtonLink: banner.primaryButtonUrl || '#',
             enableSecondaryButton: banner.secondaryButtonEnabled || false,
@@ -125,19 +129,18 @@ export default function BannerTable() {
             startDate: banner.startDate || 'null',
             endDate: banner.endDate || 'null',
             targetUserType: banner.targetUserType || 'All Users',
-            customCSS: banner.customCss || '',
             primaryButtonIcon: banner.primaryButtonIcon || '',
             secondaryButtonIcon: banner.secondaryButtonIcon || '',
             status: banner.status || 'null',
-            imageWidth: banner.imageWidth || 180,
-            imageHeight: banner.imageHeight || 180,
-            isGradient: banner.isGradient !== undefined ? banner.isGradient : true,
-            bgColor: banner.bgColor || '#005C97',
-            gradientColor1: banner.gradientColor1 || '#005C97',
-            gradientColor2: banner.gradientColor2 || '#363795',
-            gradientDirection: banner.gradientDirection || 'to right',
-            mediaPosition: banner.mediaPosition || 'right',
-            imageShape: banner.imageShape || 'original',
+            mediaWidth: banner.mediaWidth || 180,
+            mediaHeight: banner.mediaHeight || 180,
+            backgroundStyle: banner.backgroundStyle || 'GRADIENT',
+            backgroundColor1: banner.backgroundColor1 || '#005C97',
+            backgroundColor2: banner.backgroundColor2 || '#363795',
+            backgroundDirection: banner.backgroundDirection || 'to right',
+            mediaPosition: banner.mediaPosition as 'LEFT' | 'RIGHT' || 'RIGHT',
+            mediaShape: banner.mediaShape || 'original',
+            bannerLinkRedirectURL: banner.bannerLinkRedirectURL || '',
         };
     };
 
@@ -309,17 +312,20 @@ export default function BannerTable() {
 
             {/* Banner Details Modal */}
             <Dialog open={!!selectedBanner} onOpenChange={(open) => !open && setSelectedBanner(null)}>
-                <DialogContent className="max-w-5xl w-full p-0 bg-navbarBg border-border overflow-hidden rounded-xl">
+                <DialogContent className="!max-w-[65vw] w-full p-0 bg-navbarBg border-border overflow-hidden rounded-xl">
                     <div className="h-[80vh] flex flex-col">
                         <div className="p-6 border-b border-border flex justify-between items-center bg-navbarBg">
                             <div>
-                                <h2 className="text-xl font-bold text-gray-900 dark:text-white">{selectedBanner?.title}</h2>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Banner Details & Preview</p>
+                                <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">{selectedBanner?.title}</DialogTitle>
+                                <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 mt-1">Banner Details & Preview</DialogDescription>
                             </div>
                         </div>
                         <div className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-black/20">
                             {selectedBanner && (
-                                <BannerPreview data={getPreviewData(selectedBanner)} />
+                                <BannerPreview
+                                    data={getPreviewData(selectedBanner)}
+                                    mode={(!!selectedBanner.uploadBanner || !!selectedBanner.bannerLinkRedirectURL) ? 'prebuilt' : 'custom'}
+                                />
                             )}
                         </div>
                         <div className="p-6 border-t border-border bg-navbarBg flex justify-end gap-3">

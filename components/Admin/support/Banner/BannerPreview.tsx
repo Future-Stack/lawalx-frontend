@@ -33,12 +33,12 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
   const PrimaryIcon = (data.primaryButtonIcon && data.primaryButtonIcon !== 'none') ? IconMap[data.primaryButtonIcon] : ArrowRight;
   const SecondaryIcon = (data.secondaryButtonIcon && data.secondaryButtonIcon !== 'none') ? IconMap[data.secondaryButtonIcon] : null;
 
-  const backgroundStyle = data.isGradient
-    ? `linear-gradient(${data.gradientDirection || 'to right'}, ${data.gradientColor1 || '#005C97'}, ${data.gradientColor2 || '#363795'})`
-    : (data.bgColor || '#005C97');
+  const backgroundStyle = data.backgroundStyle === 'GRADIENT'
+    ? `linear-gradient(${data.backgroundDirection || 'to right'}, ${data.backgroundColor1 || '#005C97'}, ${data.backgroundColor2 || '#363795'})`
+    : (data.backgroundColor1 || '#005C97');
 
   const getClipPath = (shape?: string) => {
-    switch (shape) {
+    switch (shape?.toLowerCase()) {
       case 'circle': return 'circle(50% at 50% 50%)';
       case 'star': return 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
       case 'hexagon': return 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
@@ -49,10 +49,10 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
   };
 
   const imageStyles = {
-    height: data.imageHeight || 180,
-    width: data.imageWidth || 180,
+    height: data.mediaHeight || 180,
+    width: data.mediaWidth || 180,
     transform: "scale(1.25)",
-    clipPath: getClipPath(data.imageShape),
+    clipPath: getClipPath(data.mediaShape),
   };
 
   return (
@@ -85,7 +85,7 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
 
         {/* Preview Container */}
         <div
-          className={`transition-all duration-300 ease-in-out ${viewMode === 'mobile' ? 'w-[375px]' : 'w-full max-w-4xl'
+          className={`transition-all duration-300 ease-in-out ${viewMode === 'mobile' ? 'w-[375px]' : 'w-full max-w-full'
             }`}
         >
           {mode === 'custom' ? (
@@ -94,14 +94,8 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
               className="banner-container rounded-xl overflow-hidden shadow-lg relative text-white group p-8"
               style={{ background: backgroundStyle }}
             >
-              {/* Custom CSS injection */}
-              {data.customCSS && (
-                <style>
-                  {data.customCSS}
-                </style>
-              )}
 
-              <div className={`flex ${viewMode === 'mobile' ? 'flex-col text-center' : (data.mediaPosition === 'left' ? 'flex-row-reverse items-center justify-between' : 'items-center justify-between')}`}>
+              <div className={`flex ${viewMode === 'mobile' ? 'flex-col text-center' : (data.mediaPosition === 'LEFT' ? 'flex-row-reverse items-center justify-between' : 'items-center justify-between')}`}>
                 <div className={`banner-text-content ${viewMode === 'mobile' ? 'mb-6' : 'max-w-[60%]'}`}>
                   <h3 className={`banner-title font-bold mb-2 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>
                     {data.title || 'Your Banner Title'}
@@ -135,11 +129,11 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
                     <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-full transform scale-150"></div>
 
                     {data.image ? (
-                      <div className={`${data.mediaPosition === 'left' ? 'md:ml-2 lg:ml-4 xl:ml-10' : 'md:mr-2 lg:mr-4 xl:mr-10'} md:block hidden`}>
+                      <div className={`${data.mediaPosition === 'LEFT' ? 'md:ml-2 lg:ml-4 xl:ml-10' : 'md:mr-2 lg:mr-4 xl:mr-10'} md:block hidden`}>
                         {(data.image.startsWith('data:video/') || data.image.match(/\.(mp4|webm|ogg)$/i) || data.file?.type.startsWith('video/')) ? (
                           <video
                             src={data.image}
-                            className={data.imageShape && data.imageShape !== 'original' ? "object-cover" : "object-contain"}
+                            className={data.mediaShape && data.mediaShape !== 'original' ? "object-cover" : "object-contain"}
                             style={imageStyles}
                             autoPlay
                             loop
@@ -151,7 +145,7 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
                             src={data.image}
                             alt="Banner Preview"
                             style={imageStyles}
-                            className={data.imageShape && data.imageShape !== 'original' ? "object-cover" : "object-contain"}
+                            className={data.mediaShape && data.mediaShape !== 'original' ? "object-cover" : "object-contain"}
                           />
                         )}
                       </div>
@@ -182,12 +176,12 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
           ) : (
             /* PREBUILT MODE */
             <a 
-              href={data.primaryButtonLink || '#'} 
+              href={data.bannerLinkRedirectURL || '#'} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-95 transition-opacity block group/prebuilt relative rounded-xl shadow-lg border border-border max-h-[180px] md:max-h-[260px]"
+              className="w-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-95 transition-opacity block group/prebuilt relative rounded-xl shadow-lg border border-border max-h-[180px] md:max-h-[300px]"
               onClick={(e) => {
-                if (!data.primaryButtonLink) e.preventDefault();
+                if (!data.bannerLinkRedirectURL) e.preventDefault();
               }}
             >
               {data.image ? (

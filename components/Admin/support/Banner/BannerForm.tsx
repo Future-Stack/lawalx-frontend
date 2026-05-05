@@ -24,22 +24,23 @@ export interface BannerFormData {
     startDate: string;
     endDate: string;
     targetUserType: string;
-    customCSS?: string;
     primaryButtonIcon?: string;
     secondaryButtonIcon?: string;
     status: string;
     // New design fields
-    imageWidth?: number;
-    imageHeight?: number;
-    isGradient?: boolean;
-    bgColor?: string;
-    gradientColor1?: string;
-    gradientColor2?: string;
-    gradientDirection?: string;
+    mediaWidth?: number;
+    mediaHeight?: number;
+    backgroundStyle?: 'SOLID' | 'GRADIENT';
+    backgroundColor1?: string;
+    backgroundColor2?: string;
+    backgroundDirection?: string;
     placeholderImage?: string | null;
     placeholderFile?: File | null;
-    mediaPosition?: 'left' | 'right';
-    imageShape?: string;
+    mediaPosition?: 'LEFT' | 'RIGHT';
+    mediaShape?: string;
+    // Prebuilt specific
+    uploadBannerFile?: File | null;
+    bannerLinkRedirectURL?: string;
 }
 
 const AVAILABLE_ICONS = [
@@ -132,32 +133,33 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                     </div>
                 </div>
 
+                {/* 2. Content (Title, Description) - Now for both modes */}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
+                        <input
+                            type="text"
+                            value={data.title}
+                            onChange={(e) => handleChange('title', e.target.value)}
+                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                            placeholder="Download Our Mobile App"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                        <textarea
+                            value={data.description}
+                            onChange={(e) => handleChange('description', e.target.value)}
+                            rows={3}
+                            className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                            placeholder="Check out our new advanced analytics dashboard"
+                        />
+                    </div>
+                </div>
+
                 {mode === 'custom' ? (
                     <>
-                        {/* 2. Content (Title, Description) */}
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
-                                <input
-                                    type="text"
-                                    value={data.title}
-                                    onChange={(e) => handleChange('title', e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                                    placeholder="Download Our Mobile App"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-                                <textarea
-                                    value={data.description}
-                                    onChange={(e) => handleChange('description', e.target.value)}
-                                    rows={3}
-                                    className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                                    placeholder="Check out our new advanced analytics dashboard"
-                                />
-                            </div>
-                        </div>
 
                         {/* 3. Background Style */}
                         <div className="space-y-4 p-4 border border-border rounded-xl bg-gray-50/50 dark:bg-gray-800/30">
@@ -166,35 +168,35 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                 <div className="flex bg-navbarBg border border-border rounded-lg p-1 gap-1">
                                     <button
                                         type="button"
-                                        onClick={() => handleChange('isGradient', false)}
-                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${!data.isGradient ? 'bg-bgBlue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                        onClick={() => handleChange('backgroundStyle', 'SOLID')}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${data.backgroundStyle !== 'GRADIENT' ? 'bg-bgBlue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
                                     >
                                         Solid
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => handleChange('isGradient', true)}
-                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${data.isGradient ? 'bg-bgBlue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
+                                        onClick={() => handleChange('backgroundStyle', 'GRADIENT')}
+                                        className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${data.backgroundStyle === 'GRADIENT' ? 'bg-bgBlue text-white shadow-sm' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}
                                     >
                                         Gradient
                                     </button>
                                 </div>
                             </div>
 
-                            {!data.isGradient ? (
+                            {data.backgroundStyle !== 'GRADIENT' ? (
                                 <div>
                                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Background Color</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="color"
-                                            value={data.bgColor || '#005C97'}
-                                            onChange={(e) => handleChange('bgColor', e.target.value)}
+                                            value={data.backgroundColor1 || '#005C97'}
+                                            onChange={(e) => handleChange('backgroundColor1', e.target.value)}
                                             className="w-10 h-10 p-1 bg-navbarBg border border-border rounded-lg cursor-pointer"
                                         />
                                         <input
                                             type="text"
-                                            value={data.bgColor || '#005C97'}
-                                            onChange={(e) => handleChange('bgColor', e.target.value)}
+                                            value={data.backgroundColor1 || '#005C97'}
+                                            onChange={(e) => handleChange('backgroundColor1', e.target.value)}
                                             className="flex-1 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white"
                                         />
                                     </div>
@@ -207,14 +209,14 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                             <div className="flex gap-2">
                                                 <input
                                                     type="color"
-                                                    value={data.gradientColor1 || '#005C97'}
-                                                    onChange={(e) => handleChange('gradientColor1', e.target.value)}
+                                                    value={data.backgroundColor1 || '#005C97'}
+                                                    onChange={(e) => handleChange('backgroundColor1', e.target.value)}
                                                     className="w-8 h-8 p-1 bg-navbarBg border border-border rounded-lg cursor-pointer"
                                                 />
                                                 <input
                                                     type="text"
-                                                    value={data.gradientColor1 || '#005C97'}
-                                                    onChange={(e) => handleChange('gradientColor1', e.target.value)}
+                                                    value={data.backgroundColor1 || '#005C97'}
+                                                    onChange={(e) => handleChange('backgroundColor1', e.target.value)}
                                                     className="flex-1 px-2 py-1 bg-navbarBg border border-border rounded-lg text-xs"
                                                 />
                                             </div>
@@ -224,14 +226,14 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                             <div className="flex gap-2">
                                                 <input
                                                     type="color"
-                                                    value={data.gradientColor2 || '#363795'}
-                                                    onChange={(e) => handleChange('gradientColor2', e.target.value)}
+                                                    value={data.backgroundColor2 || '#363795'}
+                                                    onChange={(e) => handleChange('backgroundColor2', e.target.value)}
                                                     className="w-8 h-8 p-1 bg-navbarBg border border-border rounded-lg cursor-pointer"
                                                 />
                                                 <input
                                                     type="text"
-                                                    value={data.gradientColor2 || '#363795'}
-                                                    onChange={(e) => handleChange('gradientColor2', e.target.value)}
+                                                    value={data.backgroundColor2 || '#363795'}
+                                                    onChange={(e) => handleChange('backgroundColor2', e.target.value)}
                                                     className="flex-1 px-2 py-1 bg-navbarBg border border-border rounded-lg text-xs"
                                                 />
                                             </div>
@@ -239,7 +241,7 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">Direction</label>
-                                        <Select value={data.gradientDirection || 'to right'} onValueChange={(val) => handleChange('gradientDirection', val)}>
+                                        <Select value={data.backgroundDirection || 'to right'} onValueChange={(val) => handleChange('backgroundDirection', val)}>
                                             <SelectTrigger className="w-full bg-navbarBg border-border h-9 text-xs">
                                                 <SelectValue placeholder="Select direction" />
                                             </SelectTrigger>
@@ -287,8 +289,8 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Width (px)</label>
                                     <input
                                         type="number"
-                                        value={data.imageWidth || 180}
-                                        onChange={(e) => handleChange('imageWidth', parseInt(e.target.value))}
+                                        value={data.mediaWidth || 180}
+                                        onChange={(e) => handleChange('mediaWidth', parseInt(e.target.value))}
                                         className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm"
                                     />
                                 </div>
@@ -296,8 +298,8 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                     <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Height (px)</label>
                                     <input
                                         type="number"
-                                        value={data.imageHeight || 180}
-                                        onChange={(e) => handleChange('imageHeight', parseInt(e.target.value))}
+                                        value={data.mediaHeight || 180}
+                                        onChange={(e) => handleChange('mediaHeight', parseInt(e.target.value))}
                                         className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm"
                                     />
                                 </div>
@@ -309,9 +311,9 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                 <div className="flex p-1 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-border w-max gap-1">
                                     <button
                                         type="button"
-                                        onClick={() => handleChange('mediaPosition', 'left')}
+                                        onClick={() => handleChange('mediaPosition', 'LEFT')}
                                         className={`px-4 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                                            data.mediaPosition === 'left'
+                                            data.mediaPosition === 'LEFT'
                                                 ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-border'
                                                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                                         }`}
@@ -320,9 +322,9 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => handleChange('mediaPosition', 'right')}
+                                        onClick={() => handleChange('mediaPosition', 'RIGHT')}
                                         className={`px-4 py-1.5 rounded-md text-[11px] font-medium transition-all ${
-                                            (data.mediaPosition === 'right' || !data.mediaPosition)
+                                            (data.mediaPosition === 'RIGHT' || !data.mediaPosition)
                                                 ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm border border-border'
                                                 : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                                         }`}
@@ -348,9 +350,9 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                         <button
                                             key={shape.id}
                                             type="button"
-                                            onClick={() => handleChange('imageShape', shape.id)}
+                                            onClick={() => handleChange('mediaShape', shape.id)}
                                             className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${
-                                                (data.imageShape === shape.id || (!data.imageShape && shape.id === 'original'))
+                                                (data.mediaShape?.toLowerCase() === shape.id || (!data.mediaShape && shape.id === 'original'))
                                                     ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 shadow-sm'
                                                     : 'bg-white dark:bg-gray-800/50 border-border text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
                                             }`}
@@ -485,7 +487,7 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                             if (file) {
                                                 const reader = new FileReader();
                                                 reader.onloadend = () => {
-                                                    onChange({ ...data, file: file, image: reader.result as string });
+                                                    onChange({ ...data, uploadBannerFile: file, image: reader.result as string });
                                                 };
                                                 reader.readAsDataURL(file);
                                             }
@@ -518,8 +520,8 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banner Link (Redirect URL)</label>
                                 <input
                                     type="text"
-                                    value={data.primaryButtonLink}
-                                    onChange={(e) => handleChange('primaryButtonLink', e.target.value)}
+                                    value={data.bannerLinkRedirectURL}
+                                    onChange={(e) => handleChange('bannerLinkRedirectURL', e.target.value)}
                                     className="w-full px-4 py-2.5 bg-navbarBg border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
                                     placeholder="https://example.com/promotion"
                                 />
