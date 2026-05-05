@@ -1,31 +1,30 @@
 "use client";
 
-import React, { useRef } from "react";
-import { ChevronLeft, FileText, Mail, Printer } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { ChevronLeft, FileText, Mail, Printer, Loader2 } from "lucide-react";
 import jsPDF from "jspdf";
+import { toPng } from "html-to-image";
 
 const InvoicePreview = () => {
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handlePrintAction = () => {
     const printContent = invoiceRef.current;
     if (!printContent) return;
 
-    // Create a hidden iframe or new window for printing
     const printWindow = window.open("", "_blank", "width=900,height=1100");
     if (!printWindow) {
       alert("Please allow popups for printing");
       return;
     }
 
-    // Collect all styles from the current document
     let stylesHtml = "";
     const styleTags = document.querySelectorAll('style, link[rel="stylesheet"]');
     styleTags.forEach((tag) => {
       stylesHtml += tag.outerHTML;
     });
 
-    // Write the content to the new window
     printWindow.document.write(`
       <html>
         <head>
@@ -47,7 +46,6 @@ const InvoicePreview = () => {
               width: 100% !important;
               max-width: 100% !important;
             }
-            /* Reset card styles for print */
             .invoice-card-print {
               box-shadow: none !important;
               border: none !important;
@@ -80,29 +78,40 @@ const InvoicePreview = () => {
   };
 
   const handlePrint = () => handlePrintAction();
-  
-  const handleDownloadPDF = () => {
+
+  const handleDownloadPDF = async () => {
     const element = invoiceRef.current;
-    if (!element) return;
+    if (!element || isDownloading) return;
 
-    // Create jsPDF instance
-    const doc = new jsPDF({
-      orientation: "portrait",
-      unit: "pt",
-      format: "a4",
-    });
+    try {
+      setIsDownloading(true);
 
-    // Generate PDF from HTML element
-    doc.html(element, {
-      callback: function (doc) {
-        doc.save("invoice.pdf");
-      },
-      x: 0,
-      y: 0,
-      width: 595.28, // A4 width in points
-      windowWidth: 850, // Match your card width
-      autoPaging: "text",
-    });
+      // Convert HTML to PNG using html-to-image (handles modern CSS like lab/oklch)
+      const dataUrl = await toPng(element, {
+        cacheBust: true,
+        pixelRatio: 2, // Better quality
+        backgroundColor: "#ffffff",
+      });
+
+      // Calculate PDF dimensions
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4",
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const imgProps = pdf.getImageProperties(dataUrl);
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save("invoice.pdf");
+    } catch (error) {
+      console.error("PDF generation failed:", error);
+      alert("Failed to generate PDF. Please try the Print option.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -119,10 +128,15 @@ const InvoicePreview = () => {
         <div className="flex items-center gap-8">
           <button
             onClick={handleDownloadPDF}
-            className="flex items-center gap-2 text-[#171717] hover:opacity-70 transition-opacity cursor-pointer"
+            disabled={isDownloading}
+            className={`flex items-center gap-2 text-[#171717] hover:opacity-70 transition-opacity cursor-pointer ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
           >
-            <FileText className="w-6 h-6" />
-            <span className="text-lg font-medium">PDF</span>
+            {isDownloading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <FileText className="w-6 h-6" />
+            )}
+            <span className="text-lg font-medium">{isDownloading ? "Downloading..." : "PDF"}</span>
           </button>
           <button className="flex items-center gap-2 text-[#171717] hover:opacity-70 transition-opacity cursor-pointer">
             <Mail className="w-6 h-6" />
@@ -205,7 +219,7 @@ const InvoicePreview = () => {
                     <td className="border-r border-[#CCCCCC] p-3 font-medium text-[#3D3C3C] text-[12px]"></td>
                     <td className="border-r border-[#CCCCCC] p-3 font-medium text-[#3D3C3C] text-[12px]"></td>
                     <td className="border-r border-[#CCCCCC] p-3 font-medium text-[#3D3C3C] text-[12px]"></td>
-                    <td className="p-3 text-right pr-6 font-bold text-[#171717] text-[12px]">₦</td>
+                    <td className="p-3 text-right pr-6 text-[#171717] text-[12px]">₦</td>
                   </tr>
                 ))}
                 <tr className="border-b border-[#CCCCCC] h-14">
@@ -213,18 +227,18 @@ const InvoicePreview = () => {
                   <td className="border-r border-[#CCCCCC] p-4"></td>
                   <td className="border-r border-[#CCCCCC] p-4"></td>
                   <td className="border-r border-[#CCCCCC] p-4"></td>
-                  <td className="p-4 text-right pr-6 font-bold text-[#3D3C3C] text-[12px]">₦</td>
+                  <td className="p-4 text-right pr-6 text-[#3D3C3C] text-[12px]">₦</td>
                 </tr>
                 <tr className="border-b border-[#CCCCCC] h-14">
                   <td colSpan={3} className="border-r border-[#CCCCCC] p-4 font-bold text-[#3D3C3C] text-[12px]">Discount</td>
                   <td className="border-r border-[#CCCCCC] p-4"></td>
                   <td className="border-r border-[#CCCCCC] p-4"></td>
                   <td className="border-r border-[#CCCCCC] p-4"></td>
-                  <td className="p-4 text-right pr-6 font-bold text-[#3D3C3C] text-[12px]">₦</td>
+                  <td className="p-4 text-right pr-6 text-[#3D3C3C] text-[12px]">₦</td>
                 </tr>
                 <tr className="h-14">
                   <td colSpan={6} className="p-4 font-bold text-[#3D3C3C] text-[12px]">Grand Total</td>
-                  <td className="p-4 text-right pr-6 font-bold text-[#3D3C3C] text-[12px]">₦</td>
+                  <td className="p-4 text-right pr-6 text-[#3D3C3C] text-[12px]">₦</td>
                 </tr>
               </tbody>
             </table>
