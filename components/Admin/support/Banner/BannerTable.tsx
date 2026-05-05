@@ -129,6 +129,15 @@ export default function BannerTable() {
             primaryButtonIcon: banner.primaryButtonIcon || '',
             secondaryButtonIcon: banner.secondaryButtonIcon || '',
             status: banner.status || 'null',
+            imageWidth: banner.imageWidth || 180,
+            imageHeight: banner.imageHeight || 180,
+            isGradient: banner.isGradient !== undefined ? banner.isGradient : true,
+            bgColor: banner.bgColor || '#005C97',
+            gradientColor1: banner.gradientColor1 || '#005C97',
+            gradientColor2: banner.gradientColor2 || '#363795',
+            gradientDirection: banner.gradientDirection || 'to right',
+            mediaPosition: banner.mediaPosition || 'right',
+            imageShape: banner.imageShape || 'original',
         };
     };
 
@@ -173,8 +182,9 @@ export default function BannerTable() {
                     <table className="w-full table-fixed min-w-[800px]">
                         <thead className="bg-navbarBg border-b border-border">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[35%]">Title & Description</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[25%]">Title & Description</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Type</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Targeted User</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Period</th>
                                 <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Status</th>
                                 <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Actions</th>
@@ -183,7 +193,7 @@ export default function BannerTable() {
                         <tbody className="bg-navbarBg divide-y divide-border">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center">
+                                    <td colSpan={6} className="px-6 py-8 text-center">
                                         <Loader2 className="w-8 h-8 animate-spin mx-auto text-bgBlue" />
                                     </td>
                                 </tr>
@@ -201,6 +211,11 @@ export default function BannerTable() {
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(banner.type)}`}>
                                                 {normalizeValue(banner.type)}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className="text-sm text-gray-900 dark:text-white font-medium">
+                                                {normalizeValue(banner.targetUserType || 'ALL_USERS')}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
@@ -257,7 +272,7 @@ export default function BannerTable() {
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                                         {isError ? "Error loading banners." : "No banners found matching your filters."}
                                     </td>
                                 </tr>

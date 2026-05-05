@@ -1,76 +1,51 @@
 'use client';
 
-import AdminNavbar from "@/components/Admin/layout/AdminNavbar";
-import SidebarComponent from "@/components/sidebar/SidebarComponent";
-import { User, Shield, UserCog, Settings } from 'lucide-react';
-import React, { useState, useEffect } from "react";
-import { ThemeProvider } from "@/components/Admin/layout/ThemeProvider";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { ThemeProvider } from '@/components/Admin/layout/ThemeProvider';
+import Navbar from '@/components/Admin/layout/AdminNavbar';
+import Sidebar from '@/components/Admin/layout/AdminSidebar';
+import { useState, useEffect } from 'react';
+import AdminWrapper from '@/components/layout/AdminWrapper';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import SettingsTabs from './_components/SettingsTabs';
 
-const customItems = [
-    {
-        icon: <User className="w-5 h-5" />,
-        label: 'Profile',
-        href: '/admin/profile-settings/profile',
-    },
-    {
-        icon: <Shield className="w-5 h-5" />,
-        label: 'Preferences',
-        href: '/admin/profile-settings/preferences',
-    },
-    {
-        icon: <Shield className="w-5 h-5" />,
-        label: 'Password Security',
-        href: '/admin/profile-settings/password-security',
-    },
-    {
-        icon: <UserCog className="w-5 h-5" />,
-        label: 'Users & Roles',
-        href: '/admin/profile-settings/users-roles',
-    },
-    {
-        icon: <Settings className="w-5 h-5" />,
-        label: 'System',
-        href: '/admin/profile-settings/system',
-    },
-];
+export default function ProfileSettingsLayout({ children }: { children: React.ReactNode }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-// app/dashboard/content/layout.tsx
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsCollapsed(true);
+      }
+    };
 
-export default function ContentLayout({ children }: { children: React.ReactNode }) {
-    const [isCollapsed, setIsCollapsed] = useState(false);
+    // Set initial state
+    handleResize();
 
-    useEffect(() => {
-        const handleResize = () => {
-            if (window.innerWidth < 1024) {
-                setIsCollapsed(true);
-            }
-        };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
-        // Set initial state
-        handleResize();
+  return (
+    <ThemeProvider>
+      <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'SUPER_ADMIN']}>
+        <div className="min-h-screen bg-White">
+          <Navbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+          <Sidebar isCollapsed={isCollapsed} />
 
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
-
-    return (
-        <ThemeProvider>
-            <ProtectedRoute allowedRoles={['ADMIN', 'SUPERADMIN', 'SUPER_ADMIN']}>
-                <div className="bg-White min-h-screen">
-                    <AdminNavbar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-
-                    <div className="flex pt-16">
-                        <SidebarComponent items={customItems} isCollapsed={isCollapsed} />
-
-                        {/* Main content - push right on desktop */}
-                        <main className={`flex-1 transition-all duration-300 ${isCollapsed ? 'ml-16' : 'ml-64'} p-4 md:p-6`}>
-                            {children}
-                        </main>
-                    </div>
+          <main className={`pt-16 transition-all duration-300 ${isCollapsed ? 'ml-16' : 'ml-64'}`}>
+            <AdminWrapper fullWidth={isCollapsed}>
+              <div className="w-full">
+                <div className="mb-6">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Manage your account settings and system preferences</p>
                 </div>
-            </ProtectedRoute>
-        </ThemeProvider>
-    );
+                <SettingsTabs />
+                {children}
+              </div>
+            </AdminWrapper>
+          </main>
+        </div>
+      </ProtectedRoute>
+    </ThemeProvider>
+  );
 }
-

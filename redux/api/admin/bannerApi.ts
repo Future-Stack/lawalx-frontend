@@ -19,6 +19,16 @@ export interface Banner {
   endDate: string;
   targetUserType: string;
   customCss: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  isGradient?: boolean;
+  bgColor?: string;
+  gradientColor1?: string;
+  gradientColor2?: string;
+  gradientDirection?: string;
+  mediaPosition?: string;
+  imageShape?: string;
+  placeholderMediaUrl?: string;
   createdAt: string;
   updatedAt: string;
   createdById: string;
