@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Upload, HelpCircle, Calendar, ChevronDown } from 'lucide-react';
+import { Upload, HelpCircle, Calendar, ChevronDown, Square, Circle, Hexagon, Star, Diamond, Triangle } from 'lucide-react';
 import {
     Select,
     SelectContent,
@@ -39,6 +39,7 @@ export interface BannerFormData {
     placeholderImage?: string | null;
     placeholderFile?: File | null;
     mediaPosition?: 'left' | 'right';
+    imageShape?: string;
 }
 
 const AVAILABLE_ICONS = [
@@ -330,6 +331,36 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                     </button>
                                 </div>
                                 <p className="text-[10px] text-gray-400 mt-1.5">Choose which side the image/video should appear on</p>
+                            </div>
+
+                            {/* Media Shape */}
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Media Shape</label>
+                                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                                    {[
+                                        { id: 'original', icon: Square, label: 'Original' },
+                                        { id: 'circle', icon: Circle, label: 'Circle' },
+                                        { id: 'star', icon: Star, label: 'Star' },
+                                        { id: 'hexagon', icon: Hexagon, label: 'Hexagon' },
+                                        { id: 'diamond', icon: Diamond, label: 'Diamond' },
+                                        { id: 'triangle', icon: Triangle, label: 'Triangle' },
+                                    ].map((shape) => (
+                                        <button
+                                            key={shape.id}
+                                            type="button"
+                                            onClick={() => handleChange('imageShape', shape.id)}
+                                            className={`flex flex-col items-center justify-center p-2 rounded-lg border transition-all ${
+                                                (data.imageShape === shape.id || (!data.imageShape && shape.id === 'original'))
+                                                    ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                                                    : 'bg-white dark:bg-gray-800/50 border-border text-gray-500 hover:border-gray-300 dark:hover:border-gray-600'
+                                            }`}
+                                        >
+                                            <shape.icon className="w-4 h-4 mb-1" />
+                                            <span className="text-[10px] font-medium">{shape.label}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-1.5">Apply a visual shape/mask to your media</p>
                             </div>
                         </div>
 

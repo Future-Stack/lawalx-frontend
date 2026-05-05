@@ -129,6 +129,15 @@ export default function BannerTable() {
             primaryButtonIcon: banner.primaryButtonIcon || '',
             secondaryButtonIcon: banner.secondaryButtonIcon || '',
             status: banner.status || 'null',
+            imageWidth: banner.imageWidth || 180,
+            imageHeight: banner.imageHeight || 180,
+            isGradient: banner.isGradient !== undefined ? banner.isGradient : true,
+            bgColor: banner.bgColor || '#005C97',
+            gradientColor1: banner.gradientColor1 || '#005C97',
+            gradientColor2: banner.gradientColor2 || '#363795',
+            gradientDirection: banner.gradientDirection || 'to right',
+            mediaPosition: banner.mediaPosition || 'right',
+            imageShape: banner.imageShape || 'original',
         };
     };
 

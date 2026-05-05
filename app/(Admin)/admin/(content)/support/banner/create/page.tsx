@@ -112,6 +112,7 @@ export default function CreateBannerPage() {
         gradientColor2: '#363795',
         gradientDirection: 'to right',
         placeholderImage: null,
+        imageShape: 'original',
     });
 
     const handleTabChange = (newTab: 'custom' | 'prebuilt') => {
@@ -178,6 +179,7 @@ export default function CreateBannerPage() {
             data.append('gradientColor2', formData.gradientColor2 || '#363795');
             data.append('gradientDirection', formData.gradientDirection || 'to right');
             data.append('mediaPosition', formData.mediaPosition || 'right');
+            data.append('imageShape', formData.imageShape || 'original');
 
             if (formData.placeholderFile) {
                 data.append('placeholderMedia', formData.placeholderFile);

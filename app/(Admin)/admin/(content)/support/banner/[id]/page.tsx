@@ -116,6 +116,7 @@ export default function EditBannerPage() {
         gradientColor2: '#363795',
         gradientDirection: 'to right',
         placeholderImage: null,
+        imageShape: 'original',
     });
 
     const formatValue = (val: string) => {
@@ -152,6 +153,7 @@ export default function EditBannerPage() {
                 gradientColor2: banner.gradientColor2 || '#363795',
                 gradientDirection: banner.gradientDirection || 'to right',
                 placeholderImage: banner.placeholderMediaUrl ? (banner.placeholderMediaUrl.startsWith('http') ? banner.placeholderMediaUrl : `${baseUrl}/${banner.placeholderMediaUrl}`) : null,
+                imageShape: banner.imageShape || 'original',
             });
         }
     }, [banner]);
@@ -220,6 +222,7 @@ export default function EditBannerPage() {
             data.append('gradientColor2', formData.gradientColor2 || '#363795');
             data.append('gradientDirection', formData.gradientDirection || 'to right');
             data.append('mediaPosition', formData.mediaPosition || 'right');
+            data.append('imageShape', formData.imageShape || 'original');
 
             if (formData.placeholderFile) {
                 data.append('placeholderMedia', formData.placeholderFile);

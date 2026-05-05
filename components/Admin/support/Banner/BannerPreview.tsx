@@ -37,10 +37,22 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
     ? `linear-gradient(${data.gradientDirection || 'to right'}, ${data.gradientColor1 || '#005C97'}, ${data.gradientColor2 || '#363795'})`
     : (data.bgColor || '#005C97');
 
+  const getClipPath = (shape?: string) => {
+    switch (shape) {
+      case 'circle': return 'circle(50% at 50% 50%)';
+      case 'star': return 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)';
+      case 'hexagon': return 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)';
+      case 'diamond': return 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)';
+      case 'triangle': return 'polygon(50% 0%, 0% 100%, 100% 100%)';
+      default: return 'none';
+    }
+  };
+
   const imageStyles = {
     height: data.imageHeight || 180,
     width: data.imageWidth || 180,
-    transform: "scale(1.25)"
+    transform: "scale(1.25)",
+    clipPath: getClipPath(data.imageShape),
   };
 
   return (
@@ -127,7 +139,7 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
                         {(data.image.startsWith('data:video/') || data.image.match(/\.(mp4|webm|ogg)$/i) || data.file?.type.startsWith('video/')) ? (
                           <video
                             src={data.image}
-                            className="object-contain"
+                            className={data.imageShape && data.imageShape !== 'original' ? "object-cover" : "object-contain"}
                             style={imageStyles}
                             autoPlay
                             loop
@@ -139,7 +151,7 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
                             src={data.image}
                             alt="Banner Preview"
                             style={imageStyles}
-                            className="object-contain"
+                            className={data.imageShape && data.imageShape !== 'original' ? "object-cover" : "object-contain"}
                           />
                         )}
                       </div>
