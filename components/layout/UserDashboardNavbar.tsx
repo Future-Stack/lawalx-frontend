@@ -36,6 +36,8 @@ import NavbarNewDropdown from "./NavbarNewDropdown";
 import { useNavbarActions, OnboardingStep } from "@/hooks/useNavbarActions";
 import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 import CreateScreenModal from "@/components/dashboard/CreateScreenModal";
+import FirstSignupAddDeviceModal from "@/components/dashboard/FirstSignupAddDeviceModal";
+import FirstSignupCreateProgramModal from "@/components/dashboard/FirstSignupCreateProgramModal";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import CreateFolderDialog from "@/components/content/CreateFolderDialog";
 import CreateScheduleDialog from "@/app/(User)/(user_content)/schedules/_components/CreateScheduleDialog";
@@ -81,7 +83,6 @@ export default function UserDashboardNavbar() {
     setOnboardingStep,
     startOnboarding,
     completeStep,
-    finishOnboarding,
     handleUploadClick,
   } = useNavbarActions();
 
@@ -187,6 +188,7 @@ export default function UserDashboardNavbar() {
               alt="DigitalSignage Logo"
               width={120}
               height={60}
+              priority
               className="h-18 w-auto"
             />
           </Link>
@@ -656,38 +658,51 @@ export default function UserDashboardNavbar() {
       )}
 
       {/* Modals */}
-      <AddDeviceModal
-        isOpen={isAddDeviceOpen}
-        forceShowProgram={onboardingStep === "add-device" ? false : undefined}
-        onClose={() => {
-          setIsAddDeviceOpen(false);
-          // Auto-proceed to next onboarding step even if closed manually
-          if (onboardingStep === "add-device") {
+      {onboardingStep === "add-device" ? (
+        <FirstSignupAddDeviceModal
+          isOpen={isAddDeviceOpen}
+          forceShowProgram={false}
+          onClose={() => {
+            setIsAddDeviceOpen(false);
             completeStep("add-device");
-          }
-        }}
-        onSuccess={() => completeStep("add-device")}
-      />
+          }}
+          onSuccess={() => completeStep("add-device")}
+        />
+      ) : (
+        <AddDeviceModal
+          isOpen={isAddDeviceOpen}
+          forceShowProgram={undefined}
+          onClose={() => {
+            setIsAddDeviceOpen(false);
+          }}
+          onSuccess={() => {}}
+        />
+      )}
       <UploadFileModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         setIsPageLoading={setIsPageLoading}
       />
-      <CreateScreenModal
-        isOpen={isCreateProgramOpen}
-        onClose={() => {
-          setIsCreateProgramOpen(false);
-          // If in onboarding, finish the flow if closed manually
-          if (onboardingStep === "program") {
+      {onboardingStep === "program" ? (
+        <FirstSignupCreateProgramModal
+          isOpen={isCreateProgramOpen}
+          onClose={() => {
+            setIsCreateProgramOpen(false);
             completeStep("program");
-          }
-        }}
-        onSuccess={() => {
-          if (onboardingStep === "program") {
+          }}
+          onSuccess={() => {
             completeStep("program");
-          }
-        }}
-      />
+          }}
+        />
+      ) : (
+        <CreateScreenModal
+          isOpen={isCreateProgramOpen}
+          onClose={() => {
+            setIsCreateProgramOpen(false);
+          }}
+          onSuccess={() => {}}
+        />
+      )}
       <CreateFolderDialog
         open={isCreateFolderOpen}
         setOpen={setIsCreateFolderOpen}

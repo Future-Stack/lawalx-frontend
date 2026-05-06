@@ -22,6 +22,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, imageSrc = "/images/a
                             alt="Tape logo"
                             width={120}
                             height={40}
+                            priority
                             className="h-10 w-auto"
                         />
                     </Link>

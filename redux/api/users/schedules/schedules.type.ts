@@ -108,6 +108,7 @@ export interface Schedule {
   fileId: string;
   lowerThirdId: string | null;
   lowerThird?: LowerThirdPayload & { id: string };
+  lowerThirds?: (LowerThirdPayload & { id: string })[];
 
   createdAt: string;
   updatedAt: string;

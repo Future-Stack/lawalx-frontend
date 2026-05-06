@@ -42,6 +42,9 @@ interface VideoPlayerProps {
   onPause?: () => void;
   fillParent?: boolean; // New prop to force h-full instead of aspect-ratio padding
   className?: string; // Standard className override
+  onReady?: () => void;
+  volume?: number;
+  onVolumeChange?: (volume: number) => void;
 }
 
 const BaseVideoPlayer = ({
@@ -56,19 +59,37 @@ const BaseVideoPlayer = ({
   onPause,
   fillParent = false,
   className = "",
+  onReady,
+  volume,
+  onVolumeChange,
 }: VideoPlayerProps) => {
   const playerRef = useRef<APITypes>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [ready, setReady] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(false);
   const hasStartedRef = useRef(false);
+
+  // Spinner delay logic: Only show spinner if media takes > 600ms to load/buffer
+  useEffect(() => {
+    if (!ready || !isMounted || isBuffering) {
+      const timer = setTimeout(() => setShowSpinner(true), 600);
+      return () => clearTimeout(timer);
+    } else {
+      setShowSpinner(false);
+    }
+  }, [ready, isMounted, isBuffering, src]);
 
   // Stable callback refs
   const onEndedRef  = useRef(onEnded);
   const onPlayRef   = useRef(onPlay);
   const onPauseRef  = useRef(onPause);
+  const onReadyRef  = useRef(onReady);
   onEndedRef.current  = onEnded;
   onPlayRef.current   = onPlay;
   onPauseRef.current  = onPause;
+  onReadyRef.current  = onReady;
 
   const autoPlayRef = useRef(autoPlay);
   autoPlayRef.current = autoPlay;
@@ -92,12 +113,14 @@ const BaseVideoPlayer = ({
       // READY — fires on mount AND every src swap
       const handleReady = () => {
         setReady(true);
+        onReadyRef.current?.();
         // Always restore saved volume on ready, regardless of autoPlay.
         // For autoPlay: browser needs muted=true to START playing,
         // but we restore volume right after so user hears audio.
-        const vol = getSavedVolume();
+        // Priority: 1. volume prop, 2. localStorage, 3. default (1)
+        const vol = volume !== undefined ? volume : getSavedVolume();
         if (vol === null) return;
-
+        
         setTimeout(() => {
           const p = playerRef.current?.plyr as any;
           if (!p) return;
@@ -106,8 +129,6 @@ const BaseVideoPlayer = ({
           if (!autoPlayRef.current) {
             p.muted = vol === 0;
           }
-          // For autoPlay: volume is set in memory.
-          // After play() succeeds we unmute (see effect #4).
         }, 50);
       };
 
@@ -121,16 +142,37 @@ const BaseVideoPlayer = ({
         // Only save if it's a real user change: not the forced-0 from autoplay start
         if (autoPlayRef.current && vol === 0 && p.muted) return;
         setSavedVolume(vol);
+        onVolumeChange?.(vol);
       };
 
-      const handlePlaying = () => { setReady(true); onPlayRef.current?.(); };
-      const handlePause   = () => onPauseRef.current?.();
-      const handleEnded   = () => onEndedRef.current?.();
-      const handleCanPlay = () => setReady(true);
+      const handlePlaying = () => { 
+        setReady(true); 
+        setIsPlaying(true);
+        setIsBuffering(false);
+        onPlayRef.current?.(); 
+      };
+      const handlePause   = () => {
+        setIsPlaying(false);
+        setIsBuffering(false);
+        onPauseRef.current?.();
+      };
+      const handleWaiting = () => {
+        if (autoPlayRef.current) setIsBuffering(true);
+      };
+      const handleEnded   = () => {
+        setIsPlaying(false);
+        setIsBuffering(false);
+        onEndedRef.current?.();
+      };
+      const handleCanPlay = () => {
+        setReady(true);
+        setIsBuffering(false);
+      };
 
       player.on("ready",        handleReady);
       player.on("canplay",      handleCanPlay);
       player.on("playing",      handlePlaying);
+      player.on("waiting",      handleWaiting);
       player.on("pause",        handlePause);
       player.on("ended",        handleEnded);
       player.on("volumechange", handleVolumeChange);
@@ -172,11 +214,12 @@ const BaseVideoPlayer = ({
 
       if (playPromise && typeof playPromise.then === "function") {
         playPromise.catch((error: any) => {
-          if (error.name === "NotAllowedError" && !hasStartedRef.current) {
-            // If blocked, try muted autoplay as fallback for the first time
-            hasStartedRef.current = true;
-            player.muted = true;
-            player.play().catch(() => console.warn("Playback blocked even when muted"));
+          if (error.name === "NotAllowedError" || error.name === "AbortError") {
+            // Try again after a small delay, maybe interaction state hasn't propagated yet
+            setTimeout(() => {
+              player.muted = true;
+              player.play().catch(() => console.warn("Autoplay blocked even after retry"));
+            }, 100);
           }
         });
       }
@@ -193,6 +236,15 @@ const BaseVideoPlayer = ({
     player.muted  = muted;
     player.volume = muted ? 0 : (getSavedVolume() ?? 1);
   }, [muted, autoPlay, ready]);
+
+  // ── 6. Sync external `volume` prop ────────────────────────
+  useEffect(() => {
+    const player = playerRef.current?.plyr as any;
+    if (!player || !ready || volume === undefined) return;
+    if (Math.abs(player.volume - volume) > 0.01) {
+      player.volume = volume;
+    }
+  }, [volume, ready]);
 
   // ── Memoized source ────────────────────────────────────────
   const source = useMemo(() => {
@@ -231,19 +283,35 @@ const BaseVideoPlayer = ({
     <div
       className={`relative w-full ${
         fillParent || mediaType === "audio" ? "h-full" : "pt-[56.25%]"
-      } ${rounded} bg-black overflow-hidden group ${className}`}
+      } ${rounded} bg-black overflow-hidden group ${className} ${fillParent ? "plyr-fill-parent" : ""}`}
       style={{ 
         transform: "translateZ(0)",
         ["--plyr-color-main" as any]: "#0FA6FF",
       }}
     >
+      <style dangerouslySetInnerHTML={{ __html: `
+        .plyr-fill-parent .plyr__video-wrapper video {
+          object-fit: cover !important;
+          height: 100% !important;
+        }
+        .plyr-fill-parent .plyr {
+          height: 100% !important;
+        }
+        .plyr-has-ticker .plyr__controls {
+          margin-bottom: 40px !important;
+          background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5)) !important;
+        }
+      `}} />
       <div className={`${(fillParent || mediaType === "video") ? "absolute inset-0" : "relative h-full"} flex items-center justify-center`}>
-        {(!ready || !isMounted) && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-3 transition-opacity duration-300">
-            <Loader2 className="w-8 h-8 animate-spin text-white/50" />
-            <span className="text-[10px] text-white/30 uppercase tracking-widest font-medium">
-              Initializing
-            </span>
+        {showSpinner && (
+          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] transition-all duration-300">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-[#0FA6FF]/20 border-t-[#0FA6FF] rounded-full animate-spin" />
+              <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-[#0FA6FF]/30 rounded-full animate-pulse" />
+            </div>
+            {/* <span className="mt-4 text-[10px] text-white/50 uppercase tracking-[0.2em] font-semibold animate-pulse">
+              Buffering
+            </span> */}
           </div>
         )}
         <div className={`absolute inset-0 transition-all duration-700 ease-out ${
