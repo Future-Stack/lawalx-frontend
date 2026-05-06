@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { Clock, FileText, Calendar, Trash2, PencilLine, Play, Pause } from "lucide-react";
+import { Clock, FileText, Calendar, Trash2, PencilLine, Play, Pause, Music, Volume2, VolumeX, PlayCircle } from "lucide-react";
 import BaseDialog from "@/common/BaseDialog";
 import { Schedule } from "@/redux/api/users/schedules/schedules.type";
 import Image from "next/image";
@@ -76,6 +76,28 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     const [isFading, setIsFading] = React.useState(false);
     const audioRef = React.useRef<HTMLAudioElement>(null);
     const [isMediaReady, setIsMediaReady] = React.useState(false);
+    const [showSpinner, setShowSpinner] = React.useState(false);
+
+    // Audio states for custom player
+    const [audioCurrentTime, setAudioCurrentTime] = React.useState(0);
+    const [audioDuration, setAudioDuration] = React.useState(0);
+    const [audioVolume, setAudioVolume] = React.useState(1);
+
+    const formatDuration = (time: number) => {
+        const minutes = Math.floor(time / 60);
+        const seconds = Math.floor(time % 60);
+        return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+    };
+
+    // Spinner delay logic: Only show spinner if media takes > 600ms to load
+    React.useEffect(() => {
+        if (!isMediaReady) {
+            const timer = setTimeout(() => setShowSpinner(true), 600);
+            return () => clearTimeout(timer);
+        } else {
+            setShowSpinner(false);
+        }
+    }, [isMediaReady, playingIndex]);
 
     const allItems = React.useMemo(() => {
         if (!activeSchedule) return [];
@@ -89,23 +111,31 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     // Sync audio playback and volume with localActive
     React.useEffect(() => {
         if (audioRef.current) {
-            // Catch volume from video player storage
-            try {
-                const savedVol = localStorage.getItem("plyr_volume");
-                if (savedVol !== null) {
-                    audioRef.current.volume = parseFloat(savedVol);
-                }
-            } catch (e) {
-                console.warn("Failed to catch volume for audio player", e);
-            }
-
+            audioRef.current.volume = audioVolume;
             if (localActive) {
                 audioRef.current.play().catch(() => { });
             } else {
                 audioRef.current.pause();
             }
         }
-    }, [localActive, currentItem]); // Also trigger when content item changes
+    }, [localActive, currentItem, audioVolume]); // Also trigger when content item changes or volume changes
+
+    // Initial volume load
+    React.useEffect(() => {
+        if (open) {
+            const savedVol = localStorage.getItem("plyr_volume");
+            if (savedVol !== null) {
+                setAudioVolume(parseFloat(savedVol));
+            }
+        }
+    }, [open]);
+
+    // Volume persistence
+    React.useEffect(() => {
+        if (open) {
+            localStorage.setItem("plyr_volume", String(audioVolume));
+        }
+    }, [audioVolume, open]);
 
     const advance = React.useCallback(() => {
         if (allItems.length <= 1) return;
@@ -153,6 +183,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     onEnded={advance}
                     fillParent={true}
                     onReady={() => setIsMediaReady(true)}
+                    className={effectiveLowerThird?.text && effectiveLowerThird.position !== "Top" ? "plyr-has-ticker" : ""}
                 />
             );
         }
@@ -169,25 +200,118 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     onEnded={advance}
                     fillParent={true}
                     onReady={() => setIsMediaReady(true)}
+                    className={effectiveLowerThird?.text && effectiveLowerThird.position !== "Top" ? "plyr-has-ticker" : ""}
                 />
             );
         }
 
         if (file.type === "AUDIO") {
             return (
-                <div className="relative aspect-video bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center p-8 gap-4">
-                    <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
-                        <FileText className="w-8 h-8 text-blue-500" />
-                    </div>
+                <div className="relative w-full h-full bg-gradient-to-br from-indigo-950 via-slate-900 to-black overflow-hidden flex flex-col items-center justify-center p-6 text-center border border-white/10">
                     <audio
                         ref={audioRef}
-                        autoPlay={localActive}
-                        controls
+                        key={file.id}
                         src={getUrl(file.url) || ""}
+                        autoPlay={localActive}
+                        onPlay={() => setLocalActive(true)}
+                        onPause={() => setLocalActive(false)}
+                        onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
+                        onLoadedMetadata={(e) => {
+                            setAudioDuration(e.currentTarget.duration);
+                            setIsMediaReady(true);
+                        }}
                         onEnded={advance}
-                        onCanPlay={() => setIsMediaReady(true)}
-                        className="w-full max-w-md"
+                        hidden
                     />
+
+                    {/* Decorative Background */}
+                    <div className="absolute inset-0 opacity-20 pointer-events-none">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] bg-bgBlue rounded-full blur-[80px]" />
+                    </div>
+
+                    {/* Central Icon */}
+                    <div className="relative z-10 w-20 h-20 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center mb-4 shadow-2xl">
+                        <Music className="w-10 h-10 text-bgBlue animate-pulse" />
+                    </div>
+
+                    <div className="relative z-10 space-y-1 mb-12">
+                        <h4 className="text-white font-bold text-lg md:text-xl tracking-tight line-clamp-1">
+                            {file.originalName || "Audio Content"}
+                        </h4>
+                        <div className="flex items-center justify-center gap-2 text-blue-400/80 font-medium text-xs">
+                            <PlayCircle className="w-3.5 h-3.5" />
+                            <span>Now Playing</span>
+                        </div>
+                    </div>
+
+                    {/* Custom Controls Bar */}
+                    <div 
+                        className={cn(
+                            "absolute left-4 right-4 z-20 flex items-center gap-3 bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-2.5 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-500",
+                            effectiveLowerThird?.text && effectiveLowerThird.position !== "Top" ? "bottom-16" : "bottom-4"
+                        )}
+                    >
+                        <button
+                            onClick={() => {
+                                if (audioRef.current) {
+                                    if (localActive) audioRef.current.pause();
+                                    else audioRef.current.play();
+                                }
+                                setLocalActive(!localActive);
+                            }}
+                            className="flex-shrink-0 p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all outline-none cursor-pointer"
+                        >
+                            {localActive ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+                        </button>
+
+                        <span className="text-[10px] text-white/40 font-medium min-w-[30px] tabular-nums">
+                            {formatDuration(audioCurrentTime)}
+                        </span>
+
+                        <div className="flex-1 flex items-center min-w-0">
+                            <div
+                                className="h-1 w-full bg-white/10 rounded-full cursor-pointer group relative"
+                                onClick={(e) => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    const percent = (e.clientX - rect.left) / rect.width;
+                                    if (audioRef.current) {
+                                        audioRef.current.currentTime = percent * audioDuration;
+                                    }
+                                }}
+                            >
+                                <div
+                                    className="h-full bg-bgBlue rounded-full relative transition-all duration-100"
+                                    style={{ width: `${(audioCurrentTime / (audioDuration || 1)) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        <span className="text-[10px] text-white/40 font-medium min-w-[30px] tabular-nums">
+                            {formatDuration(audioDuration)}
+                        </span>
+
+                        {/* Volume Control */}
+                        <div className="flex-shrink-0 flex items-center gap-2 w-24 border-l border-white/10 pl-3 ml-1">
+                            <button
+                                onClick={() => setAudioVolume(audioVolume === 0 ? 1 : 0)}
+                                className="text-white/60 hover:text-white transition-colors"
+                            >
+                                {audioVolume === 0 ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                            </button>
+                            <input
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                value={audioVolume}
+                                onChange={(e) => setAudioVolume(parseFloat(e.target.value))}
+                                className="w-full h-0.5 rounded-lg appearance-none cursor-pointer accent-bgBlue"
+                                style={{
+                                    background: `linear-gradient(to right, #006AFF ${audioVolume * 100}%, rgba(255, 255, 255, 0.2) ${audioVolume * 100}%)`
+                                }}
+                            />
+                        </div>
+                    </div>
                 </div>
             );
         }
@@ -303,7 +427,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     </div>
 
                     {/* CENTRAL SPINNER (YouTube Style) - Only for Non-Video/Program items (BaseVideoPlayer handles its own) */}
-                    {!isMediaReady && currentItem && !(currentItem as any).isProgram && (currentItem as any).type !== "VIDEO" && (
+                    {showSpinner && currentItem && !(currentItem as any).isProgram && (currentItem as any).type !== "VIDEO" && (
                         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] transition-all duration-300">
                             <div className="relative">
                                 <div className="w-16 h-16 border-4 border-bgBlue/20 border-t-bgBlue rounded-full animate-spin" />

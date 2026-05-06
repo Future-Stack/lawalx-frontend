@@ -413,9 +413,9 @@ export default function UploadFileModal({
                             onClick={onClose}
                             disabled={isUploading}
                             aria-label="Close"
-                            className="text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full transition-colors cursor-pointer"
+                            className="text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full transition-all cursor-pointer group"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
                         </button>
                     </div>
 
