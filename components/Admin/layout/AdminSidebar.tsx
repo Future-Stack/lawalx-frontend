@@ -6,18 +6,10 @@ import Link from 'next/link';
 import { useAppDispatch } from '@/redux/store/hook';
 import { logout } from '@/redux/features/auth/authSlice';
 import {
-  LayoutDashboard, Users, CreditCard, Globe, Monitor,
-  MessageCircle, BarChart3, Activity, FileText, LogOut, ChevronDown,
-  Ticket,
-  UserRoundCogIcon,
-  TvMinimal,
-  TvMinimalPlay,
-  CircleHelp,
-  LineChart,
-  ClipboardList,
-  HomeIcon,
-  BanIcon,
-  Scaling
+  LayoutDashboard, Users, CreditCard, Activity, LogOut, ChevronDown,
+  Ticket, CircleHelp, LineChart, Briefcase, BookOpen, Image as ImageIcon,
+  UserCheck, DollarSign, Receipt, MonitorSmartphone, UserSquare,
+  Headset, FileVideo, PieChart, Settings
 } from 'lucide-react';
 
 export default function AdminSidebar({ isCollapsed }: { isCollapsed: boolean }) {
@@ -44,21 +36,20 @@ export default function AdminSidebar({ isCollapsed }: { isCollapsed: boolean }) 
 
   // Full nested menu items (only used when expanded)
   const clientItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: HomeIcon, href: '/admin/dashboard' },
-    { id: 'user-management', label: 'User Management', icon: UserRoundCogIcon, href: '/admin/user-management' },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/admin/dashboard' },
+    { id: 'user-management', label: 'User Management', icon: Users, href: '/admin/user-management' },
     { id: 'subscription', label: 'Subscription & Billing', icon: CreditCard, href: '/admin/subscription' },
-    { id: 'devices', label: 'Devices (Global)', icon: TvMinimal, href: '/admin/devices' },
-    // { id: 'screen', label: 'Screen & Content', icon: TvMinimalPlay, href: '/admin/screen&content' },
+    { id: 'devices', label: 'Devices (Global)', icon: MonitorSmartphone, href: '/admin/devices' },
     {
       id: 'support',
       label: 'Customer Supports',
       icon: CircleHelp,
       children: [
         { id: 'support-tickets', label: 'Support Tickets', href: '/admin/support/support-tickets', icon: Ticket },
-        { id: 'enterprise-requests', label: 'Enterprise Requests', href: '/admin/support/enterprise-requests', icon: MessageCircle },
-        { id: 'knowledge-base', label: 'Knowledge Base', href: '/admin/support/knowledge-base', icon: MessageCircle },
-        { id: 'banner', label: 'Banner', href: '/admin/support/banner', icon: Scaling },
-        { id: 'supporter-employees', label: 'Supporter Employees', href: '/admin/support/supporter-employees', icon: Scaling },
+        { id: 'enterprise-requests', label: 'Enterprise Requests', href: '/admin/support/enterprise-requests', icon: Briefcase },
+        { id: 'knowledge-base', label: 'Knowledge Base', href: '/admin/support/knowledge-base', icon: BookOpen },
+        { id: 'banner', label: 'Banner', href: '/admin/support/banner', icon: ImageIcon },
+        { id: 'supporter-employees', label: 'Supporter Employees', href: '/admin/support/supporter-employees', icon: UserCheck },
       ],
     },
   ];
@@ -69,18 +60,17 @@ export default function AdminSidebar({ isCollapsed }: { isCollapsed: boolean }) 
       label: 'Reports & Analytics',
       icon: LineChart,
       children: [
-        { id: 'financial-reports', label: 'Financial Reports', href: '/admin/reports/financial-reports', icon: BarChart3 },
-        { id: 'subscription-&-billing-report', label: 'Subscription & Billing Report', href: '/admin/reports/subscription-&-billing-report', icon: BarChart3 },
-        { id: 'device-report', label: 'Device Report', href: '/admin/reports/device-report', icon: BarChart3 },
-        { id: 'user-&-activity-reports', label: 'User & Activity Reports', href: '/admin/reports/user-&-activity-reports', icon: BarChart3 },
-        { id: 'customer-service-&-support-reports', label: 'Customer Service & Support Reports', href: '/admin/reports/customer-service-&-support-reports', icon: ClipboardList },
-        { id: 'content-and-programs', label: 'Content And Programs', href: '/admin/reports/content-and-programs', icon: ClipboardList },
-        { id: 'report-hub', label: 'Report Hub', href: '/admin/reports/report-hub', icon: ClipboardList },
-
+        { id: 'financial-reports', label: 'Financial Reports', href: '/admin/reports/financial-reports', icon: DollarSign },
+        { id: 'subscription-&-billing-report', label: 'Subscription & Billing Report', href: '/admin/reports/subscription-&-billing-report', icon: Receipt },
+        { id: 'device-report', label: 'Device Report', href: '/admin/reports/device-report', icon: MonitorSmartphone },
+        { id: 'user-&-activity-reports', label: 'User & Activity Reports', href: '/admin/reports/user-&-activity-reports', icon: UserSquare },
+        { id: 'customer-service-&-support-reports', label: 'Customer Service & Support Reports', href: '/admin/reports/customer-service-&-support-reports', icon: Headset },
+        { id: 'content-and-programs', label: 'Content And Programs', href: '/admin/reports/content-and-programs', icon: FileVideo },
+        { id: 'report-hub', label: 'Report Hub', href: '/admin/reports/report-hub', icon: PieChart },
       ],
     },
     { id: 'system-health', label: 'System Health', icon: Activity, href: '/admin/system-health' },
-    // { id: 'activity-log', label: 'Activity Log', icon: ClipboardList, href: '/admin/activity-log' },
+    { id: 'settings', label: 'Settings', icon: Settings, href: '/admin/profile-settings/profile' },
   ];
 
   // ONLY the items that should appear when collapsed (parents removed)
@@ -88,21 +78,21 @@ export default function AdminSidebar({ isCollapsed }: { isCollapsed: boolean }) 
     { icon: LayoutDashboard, href: '/admin/dashboard', label: 'Dashboard' },
     { icon: Users, href: '/admin/user-management', label: 'User Management' },
     { icon: CreditCard, href: '/admin/subscription', label: 'Subscription & Billing' },
-    { icon: Globe, href: '/admin/devices', label: 'Devices (Global)' },
-    // { icon: Monitor, href: '/admin/screen&content', label: 'Screen & Content' },
+    { icon: MonitorSmartphone, href: '/admin/devices', label: 'Devices (Global)' },
     { icon: Ticket, href: '/admin/support/support-tickets', label: 'Support Tickets' },
-    { icon: MessageCircle, href: '/admin/support/enterprise-requests', label: 'Enterprise Requests' },
-    { icon: MessageCircle, href: '/admin/support/knowledge-base', label: 'Knowledge Base' },
-    { icon: Scaling, href: '/admin/support/banner', label: 'Banner' },
-    { icon: BarChart3, href: '/admin/reports/financial-reports', label: 'Financial Reports' },
-    { icon: BarChart3, href: '/admin/reports/subscription-&-billing-report', label: 'Subscription & Billing Report' },
-    { icon: BarChart3, href: '/admin/reports/device-report', label: 'Device Report' },
-    { icon: BarChart3, href: '/admin/reports/user-&-activity-reports', label: 'User & Activity Reports' },
-    { icon: ClipboardList, href: '/admin/reports/customer-service-&-support-reports', label: 'Customer Service & Support Reports' },
-    { icon: ClipboardList, href: '/admin/reports/content-and-programs', label: 'Content And Programs' },
-    { icon: ClipboardList, href: '/admin/reports/report-hub', label: 'Report Hub' },
+    { icon: Briefcase, href: '/admin/support/enterprise-requests', label: 'Enterprise Requests' },
+    { icon: BookOpen, href: '/admin/support/knowledge-base', label: 'Knowledge Base' },
+    { icon: ImageIcon, href: '/admin/support/banner', label: 'Banner' },
+    { icon: UserCheck, href: '/admin/support/supporter-employees', label: 'Supporter Employees' },
+    { icon: DollarSign, href: '/admin/reports/financial-reports', label: 'Financial Reports' },
+    { icon: Receipt, href: '/admin/reports/subscription-&-billing-report', label: 'Subscription & Billing Report' },
+    { icon: MonitorSmartphone, href: '/admin/reports/device-report', label: 'Device Report' },
+    { icon: UserSquare, href: '/admin/reports/user-&-activity-reports', label: 'User & Activity Reports' },
+    { icon: Headset, href: '/admin/reports/customer-service-&-support-reports', label: 'Customer Service & Support Reports' },
+    { icon: FileVideo, href: '/admin/reports/content-and-programs', label: 'Content And Programs' },
+    { icon: PieChart, href: '/admin/reports/report-hub', label: 'Report Hub' },
     { icon: Activity, href: '/admin/system-health', label: 'System Health' },
-    // { icon: FileText, href: '/admin/activity-log', label: 'Activity Log' },
+    { icon: Settings, href: '/admin/profile-settings/profile', label: 'Settings' },
   ];
 
   interface MenuChildItem {
