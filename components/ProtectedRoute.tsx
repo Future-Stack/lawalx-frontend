@@ -26,8 +26,14 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     useEffect(() => {
         if (isHydrated) {
             if (!token) {
-                const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
-                router.push(isAdminPath ? "/admin/login" : "/signin");
+                const pathname = typeof window !== 'undefined' ? window.location.pathname : '';
+                if (pathname.startsWith('/admin')) {
+                    router.push("/admin/login");
+                } else if (pathname.startsWith('/supporter')) {
+                    router.push("/supporter/login");
+                } else {
+                    router.push("/signin");
+                }
             } else if (allowedRoles && user && !allowedRoles.includes(user.role)) {
                 // If the user's role is not in the allowed list, redirect them to their respective dashboard
                 const role = user.role.toUpperCase();

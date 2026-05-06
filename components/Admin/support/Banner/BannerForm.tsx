@@ -286,7 +286,7 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Width (px)</label>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Image Width (px)</label>
                                     <input
                                         type="number"
                                         value={data.mediaWidth || 180}
@@ -295,7 +295,7 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Height (px)</label>
+                                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Image Height (px)</label>
                                     <input
                                         type="number"
                                         value={data.mediaHeight || 180}

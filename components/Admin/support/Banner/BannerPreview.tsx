@@ -30,8 +30,11 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
     Menu, Filter, Grid, List, LogOut, LogIn, RefreshCw
   };
 
-  const PrimaryIcon = (data.primaryButtonIcon && data.primaryButtonIcon !== 'none') ? IconMap[data.primaryButtonIcon] : ArrowRight;
-  const SecondaryIcon = (data.secondaryButtonIcon && data.secondaryButtonIcon !== 'none') ? IconMap[data.secondaryButtonIcon] : null;
+  const PrimaryIcon = (data.primaryButtonIcon && data.primaryButtonIcon !== 'none' && data.primaryButtonIcon.trim() !== '') ? IconMap[data.primaryButtonIcon] : null;
+  const SecondaryIcon = (data.secondaryButtonIcon && data.secondaryButtonIcon !== 'none' && data.secondaryButtonIcon.trim() !== '') ? IconMap[data.secondaryButtonIcon] : null;
+
+  const showPrimaryButton = Boolean(data.primaryButtonLabel?.trim());
+  const showSecondaryButton = Boolean(data.enableSecondaryButton && data.secondaryButtonLabel?.trim());
 
   const backgroundStyle = data.backgroundStyle === 'GRADIENT'
     ? `linear-gradient(${data.backgroundDirection || 'to right'}, ${data.backgroundColor1 || '#005C97'}, ${data.backgroundColor2 || '#363795'})`
@@ -91,36 +94,48 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
           {mode === 'custom' ? (
             /* CUSTOM MODE */
             <div 
-              className="banner-container rounded-xl overflow-hidden shadow-lg relative text-white group p-8"
+              className={`banner-container rounded-xl overflow-hidden shadow-lg relative text-white group p-8 ${!showPrimaryButton && !showSecondaryButton ? 'flex flex-col justify-center' : ''}`}
               style={{ background: backgroundStyle }}
             >
 
-              <div className={`flex ${viewMode === 'mobile' ? 'flex-col text-center' : (data.mediaPosition === 'LEFT' ? 'flex-row-reverse items-center justify-between' : 'items-center justify-between')}`}>
+              <div className={`flex ${viewMode === 'mobile' ? 'flex-col text-center' : (data.mediaPosition === 'LEFT' ? 'flex-row-reverse items-center justify-between' : 'items-center justify-between')} ${!showPrimaryButton && !showSecondaryButton ? 'items-center' : ''}`}>
                 <div className={`banner-text-content ${viewMode === 'mobile' ? 'mb-6' : 'max-w-[60%]'}`}>
-                  <h3 className={`banner-title font-bold mb-2 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>
-                    {data.title || 'Your Banner Title'}
-                  </h3>
-                  <p className={`banner-desc text-blue-100 mb-6 ${viewMode === 'mobile' ? 'text-sm' : 'text-base'}`}>
-                    {data.description || 'Your banner description goes here.'}
-                  </p>
+                  {data.title && (
+                    <h3 className={`banner-title font-bold mb-2 ${viewMode === 'mobile' ? 'text-2xl' : 'text-3xl'}`}>
+                      {data.title}
+                    </h3>
+                  )}
+                  {data.description && (
+                    <p className={`banner-desc text-blue-100 mb-6 ${viewMode === 'mobile' ? 'text-sm' : 'text-base'}`}>
+                      {data.description}
+                    </p>
+                  )}
 
-                  <div className={`banner-buttons flex gap-3 ${viewMode === 'mobile' ? 'justify-center flex-col' : 'flex-row'}`}>
-                    <button 
-                      className="primary-btn px-6 py-2.5 bg-white text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 shadow-customShadow cursor-pointer"
-                    >
-                      {data.primaryButtonLabel || 'Get Started'}
-                      {data.primaryButtonLabel && PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
-                    </button>
+                  {(showPrimaryButton || showSecondaryButton) && (
+                    <div className={`banner-buttons flex gap-3 ${viewMode === 'mobile' ? 'justify-center flex-col' : 'flex-row'}`}>
+                      {showPrimaryButton && (
+                        <a
+                          href={data.primaryButtonLink?.trim() || '#'}
+                          onClick={(e) => { if (!data.primaryButtonLink?.trim()) e.preventDefault(); }}
+                        className="primary-btn inline-flex relative z-10 pointer-events-auto px-6 py-2.5 bg-white text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors items-center justify-center gap-2 shadow-customShadow cursor-pointer"
+                        >
+                          {data.primaryButtonLabel}
+                          {PrimaryIcon && <PrimaryIcon className="w-4 h-4" />}
+                        </a>
+                      )}
 
-                    {data.enableSecondaryButton && (
-                      <button 
-                        className="secondary-btn px-6 py-2.5 bg-blue-800/30 text-white border border-blue-400/30 rounded-lg font-medium hover:bg-blue-800/50 transition-colors backdrop-blur-sm flex items-center justify-center gap-2 shadow-customShadow cursor-pointer"
-                      >
-                        {data.secondaryButtonLabel || 'Learn More'}
-                        {SecondaryIcon && <SecondaryIcon className="w-4 h-4" />}
-                      </button>
-                    )}
-                  </div>
+                      {showSecondaryButton && (
+                        <a
+                          href={data.secondaryButtonLink?.trim() || '#'}
+                          onClick={(e) => { if (!data.secondaryButtonLink?.trim()) e.preventDefault(); }}
+                        className="secondary-btn inline-flex relative z-10 pointer-events-auto px-6 py-2.5 bg-blue-800/30 text-white border border-blue-400/30 rounded-lg font-medium hover:bg-blue-800/50 transition-colors backdrop-blur-sm items-center justify-center gap-2 shadow-customShadow cursor-pointer"
+                        >
+                          {data.secondaryButtonLabel}
+                          {SecondaryIcon && <SecondaryIcon className="w-4 h-4" />}
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Image Container */}
@@ -151,14 +166,7 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
                       </div>
                     ) : (
                       <div className="md:mr-2 lg:mr-4 xl:mr-10 md:block hidden">
-                        <Image
-                          src="/userDashboard/img3.webp"
-                          alt="Default Banner Preview"
-                          height={180}
-                          width={180}
-                          style={{ transform: "scale(1.25)" }}
-                          className="object-contain"
-                        />
+                        {/* No default image when no image is provided */}
                       </div>
                     )}
 
@@ -205,8 +213,7 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
                 </>
               ) : (
                 <div className="w-full aspect-[21/9] md:aspect-[4/1] flex flex-col items-center justify-center text-gray-400">
-                  <Upload className="w-12 h-12 mb-2 opacity-20" />
-                  <p className="text-sm font-medium">Upload a banner image</p>
+                  {/* No placeholder text when no image is uploaded */}
                 </div>
               )}
             </a>

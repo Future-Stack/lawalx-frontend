@@ -165,6 +165,15 @@ export default function EditBannerPage() {
                     data.append('placeholderMedia', formData.placeholderFile);
                 }
 
+                console.log('Update data being sent:');
+                for (const [key, value] of data.entries()) {
+                    if (value instanceof File) {
+                        console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
+                    } else {
+                        console.log(`${key}: ${value}`);
+                    }
+                }
+
                 await updateCustomBanner({ id: id as string, data }).unwrap();
             } else {
                 // Prebuilt
@@ -174,6 +183,15 @@ export default function EditBannerPage() {
                     data.append('uploadBanner', formData.uploadBannerFile);
                 }
                 data.append('bannerLinkRedirectURL', formData.bannerLinkRedirectURL || '');
+                
+                console.log('Update prebuilt data being sent:');
+                for (const [key, value] of data.entries()) {
+                    if (value instanceof File) {
+                        console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
+                    } else {
+                        console.log(`${key}: ${value}`);
+                    }
+                }
                 
                 await updatePrebuiltBanner({ id: id as string, data }).unwrap();
             }
