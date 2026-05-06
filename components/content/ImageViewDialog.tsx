@@ -44,10 +44,10 @@ const ImageViewDialog = ({ item, open, setOpen }: ImageViewDialogProps) => {
                         <div className="bg-gray-900 px-4 py-3 flex items-center justify-between">
                             <h3 className="text-white text-sm md:text-base font-medium truncate pr-8">{item.title || "Image"}</h3>
                             <button
-                                className="absolute top-3 right-3 text-white rounded-full w-8 h-8 flex items-center justify-center transition cursor-pointer hover:bg-red-500"
+                                className="absolute top-3 right-3 text-gray-400 hover:text-white rounded-full w-8 h-8 flex items-center justify-center transition-all cursor-pointer hover:bg-red-500/20 group"
                                 onClick={() => setOpen(false)}
                             >
-                                <X />
+                                <X className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
                             </button>
                         </div>
 

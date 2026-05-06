@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { X, Camera, Maximize, Volume2, Sun, Play, Pause, Power, PowerOff, ListTree, Layout, Clock, Monitor, Database } from "lucide-react";
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
-  const { data: detailData, isLoading: isFetchingDetail } = useGetSingleDeviceDataQuery(
+  const { data: detailData } = useGetSingleDeviceDataQuery(
     { id: device?.id },
     { skip: !isOpen || !device?.id }
   );
@@ -280,9 +281,9 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
           </div>
           <button
             onClick={onClose}
-            className="text-[#A3A3A3] hover:text-red-500 transition-colors p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-full cursor-pointer"
+            className="text-gray-400 hover:text-white rounded-full w-10 h-10 flex items-center justify-center transition-all cursor-pointer hover:bg-red-500/20 group"
           >
-            <X className="h-6 w-6" />
+            <X className="h-6 w-6 transition-transform duration-300 group-hover:rotate-90" />
           </button>
         </div>
 

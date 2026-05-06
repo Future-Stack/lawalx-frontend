@@ -47,8 +47,9 @@ const MyContentCard = ({
   onMenuClick,
   onAssignClick,
 }: ContentCardProps) => {
-  const [fileDelete] = useDeleteFileMutation();
-  const [folderDelete] = useDeleteFolderMutation();
+  const [fileDelete, { isLoading: isFileDeleting }] = useDeleteFileMutation();
+  const [folderDelete, { isLoading: isFolderDeleting }] = useDeleteFolderMutation();
+  const isDeleting = isFileDeleting || isFolderDeleting;
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [open, setOpen] = useState(false);
@@ -245,6 +246,7 @@ const MyContentCard = ({
           await handleDelete();
           setOpenDeleteDialog(false);
         }}
+        isLoading={isDeleting}
         title={`Delete ${getTypeLabel()}`}
         description={`Are you sure you want to delete this ${getTypeLabel().toLowerCase()}? This action cannot be undone.`}
         itemName={item.title}
