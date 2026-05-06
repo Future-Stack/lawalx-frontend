@@ -86,11 +86,11 @@ const ScreenCardDetails = () => {
     if (program) {
       if (program.timeline) {
         // Map durations from metaData if available to ensure persistence on reload
-        const savedDurations = program.metaData?.durations || [];
-        const syncedTimeline = program.timeline.map((item, index) => {
-          const savedDuration = savedDurations[index]?.duration;
+        const savedDurations = program.metaData || {};
+        const syncedTimeline = program.timeline.map((item) => {
+          const savedDuration = savedDurations[item.fileId];
           return savedDuration !== undefined
-            ? { ...item, duration: savedDuration }
+            ? { ...item, duration: Number(savedDuration) }
             : item;
         });
         setLocalTimeline(syncedTimeline);
@@ -241,13 +241,13 @@ const ScreenCardDetails = () => {
       const content_ids = localTimeline.map((item) => item.fileId);
       const device_ids = localDevices.map((d) => d.id);
 
-      // Construct metaData with duration mapping for the timeline
-      const metaData = {
-        durations: localTimeline.map((item) => ({
-          fileId: item.fileId,
-          duration: item.duration,
-        })),
-      };
+      // Construct metaData with content ID as key and duration as value
+      const metaData: Record<string, string> = {};
+      localTimeline.forEach((item) => {
+        if (item.fileId) {
+          metaData[item.fileId] = String(item.duration);
+        }
+      });
 
       const res = await updateProgram({
         id: String(id),

@@ -110,17 +110,12 @@ export default function QrScanner({
     };
 
     useEffect(() => {
-        if (isOpen) {
-            // Small initial delay to ensure DOM is ready
-            const timer = setTimeout(() => {
-                startScanner();
-            }, 100);
-            return () => {
-                clearTimeout(timer);
-                stopScanner();
-            };
+        if (!isOpen) {
+            stopScanner();
         }
-        return () => stopScanner();
+        return () => {
+            stopScanner();
+        };
     }, [isOpen]);
 
     const handleClose = async () => {
