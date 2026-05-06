@@ -9,7 +9,7 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from 'lucide-react';
+import { Trash2, Loader2 } from 'lucide-react';
 
 interface DeleteConfirmationModalProps {
     isOpen: boolean;
@@ -18,6 +18,7 @@ interface DeleteConfirmationModalProps {
     title?: string;
     description?: string;
     itemName?: string;
+    isLoading?: boolean;
 }
 
 export default function DeleteConfirmationModal({
@@ -26,10 +27,11 @@ export default function DeleteConfirmationModal({
     onConfirm,
     title = "Delete Report",
     description = "Are you sure you want to delete this report? This action cannot be undone.",
-    itemName
+    itemName,
+    isLoading = false
 }: DeleteConfirmationModalProps) {
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <Dialog open={isOpen} onOpenChange={(open) => !open && !isLoading && onClose()}>
             <DialogContent className="max-w-md p-0 bg-white dark:bg-gray-900 border-none rounded-3xl overflow-hidden focus:outline-none shadow-2xl">
                 <div className="p-8 text-center">
                     <div className="w-16 h-16 rounded-2xl bg-red-50 dark:bg-red-900/20 flex items-center justify-center border border-red-100 dark:border-red-800 mx-auto mb-6 shadow-customShadow">
@@ -54,17 +56,20 @@ export default function DeleteConfirmationModal({
                         <Button
                             className="flex-1 rounded-xl h-12 font-bold border-border hover:bg-gray-50 shadow-customShadow text-body"
                             onClick={onClose}
+                            disabled={isLoading}
                         >
                             Cancel
                         </Button>
                         <Button
                             className="flex-1 rounded-xl h-12 font-bold bg-red-500 hover:bg-red-600 text-white shadow-customShadow"
-                            onClick={() => {
-                                onConfirm();
-                                onClose();
-                            }}
+                            onClick={onConfirm}
+                            disabled={isLoading}
                         >
-                            Delete
+                            {isLoading ? (
+                                <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                            ) : (
+                                "Delete"
+                            )}
                         </Button>
                     </div>
                 </div>

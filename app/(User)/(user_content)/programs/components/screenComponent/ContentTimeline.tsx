@@ -2,7 +2,7 @@
 "use client";
 // Version: 1.0.2 - Shadcn/ui Dropdowns for better layering
 
-import { Plus, GripVertical, Trash2, ChevronDown, FilePlay, CloudUpload, Minus } from "lucide-react";
+import { Plus, GripVertical, Trash2, ChevronDown, FilePlay, CloudUpload, Minus, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import AddContentDialog from "./AddContentDialog";
 import UploadFileModal from "@/components/content/UploadFileModal";
@@ -42,6 +42,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [errorId, setErrorId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   console.log("items", items);
 
 
@@ -66,6 +67,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
 
   const handleRemove = async (item: Timeline) => {
     try {
+      setDeletingId(item.id);
       // Calling the deleteFile API with the file's ID from content.api
       const res = await deleteFile({ id: item.fileId }).unwrap();
       toast.success(res?.message || "File deleted successfully");
@@ -75,6 +77,8 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
       onChange?.(updatedItems);
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to delete file");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -146,7 +150,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
       if (newDuration > maxDuration) {
         newDuration = maxDuration;
         setErrorId(item.id);
-        const timer = setTimeout(() => setErrorId(null), 3000);
+        // const timer = setTimeout(() => setErrorId(null), 3000);
       }
     }
 
@@ -169,7 +173,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
       if (newDuration > maxDuration) {
         newDuration = maxDuration;
         setErrorId(item.id);
-        const timer = setTimeout(() => setErrorId(null), 3000);
+        // const timer = setTimeout(() => setErrorId(null), 3000);
       }
     }
 
@@ -407,12 +411,22 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (deletingId === item.id) return;
                         handleRemove(item);
                       }}
-                      className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer outline-none"
+                      disabled={deletingId === item.id}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer outline-none ${
+                        deletingId === item.id 
+                          ? "text-red-600 opacity-100" 
+                          : "text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      }`}
                       title="Remove item"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      {deletingId === item.id ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
 

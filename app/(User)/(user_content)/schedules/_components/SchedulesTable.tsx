@@ -45,7 +45,7 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
     const { data: devicesData } = useGetMyDevicesDataQuery();
     const router = useRouter();
     const [openPreview, setOpenPreview] = React.useState(false);
-    const [deleteSchedule] = useDeleteScheduleMutation();
+    const [deleteSchedule, { isLoading: isDeleting }] = useDeleteScheduleMutation();
     const [selectedSchedule, setSelectedSchedule] = React.useState<Schedule | null>(null);
     const [openDelete, setOpenDelete] = React.useState(false);
     const [scheduleToDelete, setScheduleToDelete] = React.useState<Schedule | null>(null);
@@ -185,10 +185,12 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
             <DeleteConfirmationModal
                 isOpen={openDelete}
                 onClose={() => {
+                    if (isDeleting) return;
                     setOpenDelete(false);
                     setScheduleToDelete(null);
                 }}
                 onConfirm={handleDelete}
+                isLoading={isDeleting}
                 title="Delete Schedule"
                 description="Are you sure you want to delete this schedule? This action cannot be undone."
                 itemName={scheduleToDelete?.name}

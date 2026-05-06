@@ -54,6 +54,7 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [deleteContent] = useDeleteFileMutation();
   const [deleteFolder] = useDeleteFolderMutation();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [programData, setProgramData] = useState<{
     name: string;
     description: string;
@@ -191,20 +192,23 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     const isExpanded = expandedFolders.has(item.id);
     console.log("item delete", item.id);
     
-    const deleteFile = async (id:any) => {
-        try {
-          const res = item.type === "folder"
-            ? await deleteFolder(id).unwrap()
-            : await deleteContent({ id }).unwrap();
-          console.log(res);
-          
-          if (res.success) {
-            toast.success(res.message || "File deleted successfully");
-          }
-        } catch (error: any) {
-          toast.error(error?.data?.message || "Failed to delete file");
+    const deleteFile = async (id: any) => {
+      try {
+        setDeletingId(id);
+        const res = item.type === "folder"
+          ? await deleteFolder(id).unwrap()
+          : await deleteContent({ id }).unwrap();
+        console.log(res);
+
+        if (res.success) {
+          toast.success(res.message || "File deleted successfully");
         }
-      };
+      } catch (error: any) {
+        toast.error(error?.data?.message || "Failed to delete file");
+      } finally {
+        setDeletingId(null);
+      }
+    };
 
     return (
       <div key={item.id} className="space-y-2">
@@ -265,10 +269,21 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
               {item.type === "folder" ? `${item.fileCount || 0} items` : `${item.size} ${item.duration ? `• ${item.duration}` : ""}`}
             </p>
           </div>
-          <button  onClick={(e) => {
+          <button
+            onClick={(e) => {
               e.stopPropagation();
-            deleteFile(item.id);
-  }} className="hover:bg-red-100 p-2 rounded-lg cursor-pointer"><Trash2 className="w-5 h-5 text-red-500"/></button>
+              if (deletingId) return;
+              deleteFile(item.id);
+            }}
+            disabled={!!deletingId}
+            className="hover:bg-red-100 p-2 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-w-[36px] flex items-center justify-center"
+          >
+            {deletingId === item.id ? (
+              <Loader2 className="w-5 h-5 text-red-500 animate-spin" />
+            ) : (
+              <Trash2 className="w-5 h-5 text-red-500" />
+            )}
+          </button>
         </div>
 
         {item.type === "folder" && isExpanded && item.children && (
