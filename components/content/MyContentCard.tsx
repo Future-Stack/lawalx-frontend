@@ -91,7 +91,9 @@ const MyContentCard = ({
             className="object-cover"
             onError={(e: any) => {
               e.currentTarget.style.display = 'none';
-              e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-xs text-gray-400">Broken</div>';
+              if (e.currentTarget.parentElement) {
+                e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-xs text-gray-400">Broken</div>';
+              }
             }}
           />
           {item.type === "video" && (
@@ -137,7 +139,9 @@ const MyContentCard = ({
               muted
               onError={(e: any) => {
                 e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-xs text-gray-400">No Preview</div>';
+                if (e.currentTarget.parentElement) {
+                  e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-xs text-gray-400">No Preview</div>';
+                }
               }}
             />
             <div className="absolute inset-0 flex items-center justify-center bg-black/10">
@@ -391,7 +395,9 @@ const MyContentCard = ({
                   className="object-cover"
                   onError={(e: any) => {
                     e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-sm text-gray-400">Broken Link</div>';
+                    if (e.currentTarget.parentElement) {
+                      e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-sm text-gray-400">Broken Link</div>';
+                    }
                   }}
                 />
               </div>
@@ -410,7 +416,9 @@ const MyContentCard = ({
                   onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
                   onError={(e: any) => {
                     e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-sm text-gray-400">Preview Unavailable</div>';
+                    if (e.currentTarget.parentElement) {
+                      e.currentTarget.parentElement.innerHTML = '<div class="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-sm text-gray-400">Preview Unavailable</div>';
+                    }
                   }}
                 />
               </div>
