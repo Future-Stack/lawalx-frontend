@@ -116,22 +116,22 @@ export default function BannerTable() {
 
         return {
             bannerType: banner.type || 'Upload',
-            title: banner.title || 'null',
-            description: banner.description || 'null',
+            title: banner.title || '',
+            description: banner.description || '',
             image: isPrebuilt
                 ? (banner.uploadBanner ? (banner.uploadBanner.startsWith('http') ? banner.uploadBanner : `${baseUrl}/${banner.uploadBanner}`) : null)
                 : (banner.mediaUrl ? (banner.mediaUrl.startsWith('http') ? banner.mediaUrl : `${baseUrl}/${banner.mediaUrl}`) : null),
-            primaryButtonLabel: banner.primaryButtonLabel || 'null',
-            primaryButtonLink: banner.primaryButtonUrl || '#',
+            primaryButtonLabel: banner.primaryButtonLabel || '',
+            primaryButtonLink: banner.primaryButtonUrl || '',
             enableSecondaryButton: banner.secondaryButtonEnabled || false,
             secondaryButtonLabel: banner.secondaryButtonLabel || '',
             secondaryButtonLink: banner.secondaryButtonUrl || '',
-            startDate: banner.startDate || 'null',
-            endDate: banner.endDate || 'null',
-            targetUserType: banner.targetUserType || 'All Users',
+            startDate: banner.startDate || '',
+            endDate: banner.endDate || '',
+            targetUserType: banner.targetUserType || 'ALL_USERS',
             primaryButtonIcon: banner.primaryButtonIcon || '',
             secondaryButtonIcon: banner.secondaryButtonIcon || '',
-            status: banner.status || 'null',
+            status: banner.status || 'Draft',
             mediaWidth: banner.mediaWidth || 180,
             mediaHeight: banner.mediaHeight || 180,
             backgroundStyle: banner.backgroundStyle || 'GRADIENT',
@@ -329,7 +329,7 @@ export default function BannerTable() {
                             )}
                         </div>
                         <div className="p-6 border-t border-border bg-navbarBg flex justify-end gap-3">
-                            <Button variant="outline" onClick={() => setSelectedBanner(null)} className="dark:border-gray-600 dark:text-gray-300">Close</Button>
+                            <Button variant="outline" onClick={() => setSelectedBanner(null)} className="dark:border-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-600 hover:border-red-300 dark:hover:bg-red-900/20 dark:hover:text-red-400 dark:hover:border-red-800">Close</Button>
                             <Link href={`/admin/support/banner/${selectedBanner?.id}`}>
                                 <Button className="bg-bgBlue text-white hover:bg-blue-600">Edit Banner</Button>
                             </Link>
