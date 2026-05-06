@@ -686,6 +686,38 @@ body {
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #0088CC;
   }
+
+  .thin-gray-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+  }
+
+  .thin-gray-scrollbar::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+
+  .thin-gray-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .thin-gray-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.3);
+    border-radius: 20px;
+    transition: background 0.2s ease;
+  }
+
+  .thin-gray-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.5);
+  }
+
+  .dark .thin-gray-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.2);
+  }
+
+  .dark .thin-gray-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.4);
+  }
   }
 
 

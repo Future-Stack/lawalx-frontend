@@ -17,6 +17,7 @@ import { useUpdateSingleProgramMutation } from "@/redux/api/users/programs/progr
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect } from "react";
+import Image from "next/image";
 dayjs.extend(relativeTime);
 
 interface ScreenCardProps {
@@ -43,6 +44,13 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   const lastUpdated = dayjs(program.updated_at).fromNow();
   const videos = program.timeline?.filter((t) => t.file?.type === "VIDEO")?.length || 0;
   const images = program.timeline?.filter((t) => t.file?.type === "IMAGE" || t.file?.type === "CONTENT")?.length || 0;
+  const audios = program.timeline?.filter((t) => t.file?.type === "AUDIO")?.length || 0;
+
+  const contentParts = [];
+  if (videos > 0) contentParts.push(`${videos} video${videos !== 1 ? 's' : ''}`);
+  if (audios > 0) contentParts.push(`${audios} audio`);
+  if (images > 0) contentParts.push(`${images} image${images !== 1 ? 's' : ''}`);
+  const assignedLabel = contentParts.length > 0 ? contentParts.join(", ") : "No media assigned";
 
   const getFileUrl = (url: string) => {
     if (!url) return undefined;
@@ -127,9 +135,11 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
         <div className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 aspect-video">
           <div className={`w-full h-full ${isFading ? "animate-preview-exit" : "animate-preview-enter"}`}>
             {(currentItem?.file?.type === "IMAGE" || currentItem?.file?.type === "CONTENT" || !currentItem) ? (
-              <img
+              <Image
                 src={previewData || "/placeholder.png"}
                 alt={program.name}
+                width={500}
+                height={500}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
             ) : currentItem?.file?.type === "AUDIO" ? (
@@ -152,7 +162,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
                 onEnded={advance}
                 onCanPlay={(e) => {
                   if (localActive) {
-                    e.currentTarget.play().catch(() => {});
+                    e.currentTarget.play().catch(() => { });
                   }
                 }}
               />
@@ -164,11 +174,11 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
       {/* Rest of Content (UNCHANGED padding) */}
       <div className="p-4 sm:p-6 flex flex-col flex-grow">
         {/* Title */}
-        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-headings line-clamp-1">
+        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-headings truncate">
           {program.name}
         </h3>
 
-        <p className="text-sm sm:text-base text-body line-clamp-5 py-1 md:py-2">
+        <p className="text-sm sm:text-base text-body truncate py-1 md:py-2">
           {program.description}
         </p>
 
@@ -179,11 +189,11 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
         <div className="space-y-2 sm:space-y-3 mb-6 text-sm sm:text-base text-body">
           <div className="flex items-center gap-2">
             <FilePlay className="w-4 h-4 sm:w-5 sm:h-5 text-headings" />
-            <span>Assigned: {videos} videos, {images} content</span>
+            <span>Assigned Content: {assignedLabel}</span>
           </div>
 
           <div className="flex items-center gap-2">
-            <TvMinimal className="w-4 h-4 sm:w-5 sm:h-5 text-headings" />
+            <TvMinimal className="w-4 h-4 sm:w-5 sm:h-5 text-headings" /> Assigned Devices:
             <span>
               {program.devices?.length || 0} Device{program.devices?.length !== 1 ? "s" : ""}
             </span>

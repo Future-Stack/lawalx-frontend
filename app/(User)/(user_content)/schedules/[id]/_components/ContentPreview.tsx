@@ -9,15 +9,12 @@ import {
   PlayCircle,
   Volume2,
   VolumeX,
-  Loader2,
-  File,
-  FileVideo2,
   FileVideo,
 } from "lucide-react";
 import { ContentItem } from "@/types/content";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import Image from "next/image";
-import { useState, useEffect, useTransition, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Marquee from "react-fast-marquee";
 import { LowerThirdPayload } from "@/redux/api/users/schedules/schedules.type";
 
@@ -50,8 +47,9 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
   isUpdating = false,
 }) => {
   const [isFading, setIsFading] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isMediaReady, setIsMediaReady] = useState(false);
+  const [showSpinner, setShowSpinner] = useState(false);
+  const [playbackVersion, setPlaybackVersion] = useState(0);
 
   // Audio state
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -59,6 +57,16 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
   const [audioVolume, setAudioVolume] = useState(1);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
+
+  // Spinner delay logic: Only show spinner if media takes > 600ms to load
+  useEffect(() => {
+    if (!isMediaReady) {
+      const timer = setTimeout(() => setShowSpinner(true), 600);
+      return () => clearTimeout(timer);
+    } else {
+      setShowSpinner(false);
+    }
+  }, [isMediaReady, playingIndex]);
 
   const content = items[playingIndex];
   const videoSrc = content?.video || (content?.type === "video" ? content?.thumbnail : undefined);
@@ -71,47 +79,78 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     }
   }, [items?.length, playingIndex, setPlayingIndex]);
 
-  // Sync isPlaying with localActive
+  // Reset media ready state when content changes
   useEffect(() => {
-    setIsPlaying(localActive);
-    setIsPaused(!localActive);
+    setIsMediaReady(false);
+  }, [playingIndex, content?.id]);
+
+  // Sync localActive with internal states (but let media events drive isPaused for accuracy)
+  useEffect(() => {
+    if (!localActive) {
+      setIsPaused(true);
+    }
   }, [localActive]);
 
-  // Sync volume to audio element
+  // 1. Initial Volume Sync from localStorage
+  useEffect(() => {
+    try {
+      const savedVol = localStorage.getItem("plyr_volume");
+      if (savedVol !== null) {
+        const vol = parseFloat(savedVol);
+        if (!isNaN(vol)) setAudioVolume(vol);
+      }
+    } catch (e) {
+      console.warn("Failed to load volume", e);
+    }
+  }, []);
+
+  // 2. Sync volume to audio element AND persist to localStorage
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = audioVolume;
+      try {
+        localStorage.setItem("plyr_volume", audioVolume.toString());
+      } catch (e) {}
     }
   }, [audioVolume]);
 
-  // Manually control audio playback
+  // 3. Manually control audio playback
   useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.play().catch(() => {});
-      } else {
-        audioRef.current.pause();
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (localActive) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.warn("Audio playback blocked or failed:", error);
+          setIsPaused(true);
+        });
       }
+    } else {
+      audio.pause();
+      setIsPaused(true);
     }
-  }, [isPlaying]);
+  }, [localActive, playingIndex, content?.audio]);
 
   const advance = useCallback(() => {
-    if (!items || items.length <= 1) return;
+    if (!items || items.length < 1) return;
     setIsFading(true);
     setTimeout(() => {
       setPlayingIndex((playingIndex + 1) % items.length);
+      setPlaybackVersion((prev) => prev + 1);
       setIsFading(false);
     }, 500);
   }, [items.length, playingIndex, setPlayingIndex]);
 
   useEffect(() => {
-    if (!items || items.length <= 1 || !isPlaying) return;
+    if (!items || items.length <= 1 || !localActive) return;
     const currentItem = items[playingIndex];
     if (currentItem?.type === "video" || currentItem?.type === "audio") return;
     const displayDuration = parseInt(currentItem?.duration || "7");
     const timer = setTimeout(advance, Math.max(0, displayDuration * 1000 - 500));
     return () => clearTimeout(timer);
-  }, [playingIndex, items.length, isPlaying, advance]);
+  }, [playingIndex, items.length, localActive, advance]);
 
   return (
     <div className="lg:col-span-5 space-y-6">
@@ -119,9 +158,8 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
 
       <div className="border border-border p-4 sm:p-6 rounded-xl bg-navbarBg space-y-4 sm:space-y-6 shadow-lg transition-shadow hover:shadow-xl overflow-hidden">
         {/* Media Container */}
-        <div className="aspect-video relative overflow-hidden rounded-lg bg-black">
+        <div className="aspect-[16/11] relative overflow-hidden rounded-lg bg-black">
           <div className={`w-full h-full ${isFading ? "animate-preview-exit" : "animate-preview-enter"}`}>
-
             {/* TOP TICKER */}
             {lowerThird?.text && lowerThird.position === "Top" && (
               <div
@@ -134,7 +172,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
               >
                 <Marquee
                   speed={lowerThird.speed || 40}
-                  direction={lowerThird.animation === "Left_to_Light" ? "left" : "right"}
+                  direction={lowerThird.animation === "Right_to_Left" ? "left" : "right"}
                   gradient={false}
                   loop={lowerThird.loop ? 0 : 1}
                 >
@@ -155,34 +193,39 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
             {/* VIDEO */}
             {content?.type === "video" && videoSrc ? (
               <div className="w-full h-full">
-                <BaseVideoPlayer
-                  key={videoSrc}
-                  src={videoSrc}
-                  poster={thumbnailSrc}
-                  autoPlay={isPlaying}
-                  muted={false}
-                  fillParent={true}
-                  rounded="rounded-lg"
-                  onEnded={advance}
-                  onPlay={() => setIsPaused(false)}
-                  onPause={() => setIsPaused(true)}
-                />
+                  <BaseVideoPlayer
+                    key={`${videoSrc}-${playbackVersion}`}
+                    src={videoSrc}
+                    poster={thumbnailSrc}
+                    autoPlay={localActive}
+                    muted={false}
+                    fillParent={true}
+                    rounded="rounded-lg"
+                    onEnded={advance}
+                    onPlay={() => setIsPaused(false)}
+                    onPause={() => setIsPaused(true)}
+                    onReady={() => setIsMediaReady(true)}
+                    className={lowerThird?.text && lowerThird.position !== "Top" ? "plyr-has-ticker" : ""}
+                  />
               </div>
 
             ) : content?.type === "audio" && content.audio ? (
               /* AUDIO */
               <div className="relative w-full h-full rounded-lg bg-gradient-to-br from-indigo-950 via-slate-900 to-black overflow-hidden flex flex-col items-center justify-center p-8 text-center border border-white/10">
-                <audio
-                  ref={audioRef}
-                  key={content.audio}
-                  src={content.audio}
-                  autoPlay={isPlaying}
-                  onPlay={() => setIsPaused(false)}
-                  onPause={() => setIsPaused(true)}
-                  onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
-                  onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
-                  hidden
-                />
+                  <audio
+                    ref={audioRef}
+                    key={`${content.audio}-${playbackVersion}`}
+                    src={content.audio}
+                    autoPlay={localActive}
+                    onPlay={() => setIsPaused(false)}
+                    onPause={() => setIsPaused(true)}
+                    onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
+                    onDurationChange={(e) => setAudioDuration(e.currentTarget.duration)}
+                    onCanPlay={() => setIsMediaReady(true)}
+                    onEnded={advance}
+                    onError={() => setIsMediaReady(true)}
+                    hidden
+                  />
 
                 {/* Glow bg */}
                 <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -203,7 +246,11 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                 </div>
 
                 {/* Audio Controls Bar */}
-                <div className="absolute bottom-6 left-5 right-5 z-20 flex items-center gap-3.5 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div 
+                  className={`absolute left-5 right-5 z-20 flex items-center gap-3.5 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-500 ${
+                    lowerThird?.text && lowerThird.position !== "Top" ? "bottom-20" : "bottom-6"
+                  }`}
+                >
                   {/* Play/Pause */}
                   <button
                     onClick={() => {
@@ -224,24 +271,24 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                   </span>
 
                   {/* Progress bar */}
-                  <div className="flex-1 flex items-center min-w-0">
-                    <div
-                      className="h-1.5 w-full bg-white/10 rounded-full cursor-pointer group relative"
-                      onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const percent = (e.clientX - rect.left) / rect.width;
-                        if (audioRef.current) {
-                          audioRef.current.currentTime = percent * audioDuration;
-                        }
+                  <div className="flex-1 flex items-center min-w-0 group">
+                    <input
+                      type="range"
+                      min="0"
+                      max={audioDuration || 0}
+                      step="0.1"
+                      value={audioCurrentTime}
+                      onChange={(e) => {
+                        const val = parseFloat(e.target.value);
+                        setAudioCurrentTime(val);
+                        if (audioRef.current) audioRef.current.currentTime = val;
                       }}
-                    >
-                      <div
-                        className="h-full bg-bgBlue rounded-full relative transition-all duration-100"
-                        style={{ width: `${(audioCurrentTime / (audioDuration || 1)) * 100}%` }}
-                      >
-                        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform" />
-                      </div>
-                    </div>
+                      className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-bgBlue relative z-30"
+                      style={{
+                        background: `linear-gradient(to right, #006AFF ${(audioCurrentTime / (audioDuration || 1)) * 100}%, rgba(255,255,255,0.1) ${(audioCurrentTime / (audioDuration || 1)) * 100}%)`,
+                      }}
+                      title="Seek Audio"
+                    />
                   </div>
 
                   {/* Total time */}
@@ -284,7 +331,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                         animationDelay: `${i * 0.15}s`,
                         animationDuration: `${0.8 + Math.random()}s`,
                         transform: `scaleY(${scale})`,
-                        animationPlayState: isPlaying ? "running" : "paused",
+                        animationPlayState: localActive ? "running" : "paused",
                       }}
                     />
                   ))}
@@ -295,11 +342,14 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
               /* IMAGE */
               <div className="relative w-full h-full rounded-lg bg-black overflow-hidden flex items-center justify-center">
                 <Image
+                  key={`${thumbnailSrc}-${playbackVersion}`}
                   src={thumbnailSrc}
                   alt={currentFileName}
                   fill
                   className="object-contain"
                   unoptimized
+                  onLoad={() => setIsMediaReady(true)}
+                  onError={() => setIsMediaReady(true)}
                 />
               </div>
 
@@ -323,7 +373,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
               >
                 <Marquee
                   speed={lowerThird.speed || 40}
-                  direction={lowerThird.animation === "Left_to_Light" ? "left" : "right"}
+                  direction={lowerThird.animation === "Right_to_Left" ? "left" : "right"}
                   gradient={false}
                   loop={lowerThird.loop ? 0 : 1}
                 >
@@ -341,6 +391,16 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
               </div>
             )}
           </div>
+
+          {/* CENTRAL SPINNER (YouTube Style) */}
+          {showSpinner && content && content.type !== "video" && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] transition-all duration-300">
+              <div className="relative">
+                <div className="w-16 h-16 border-4 border-bgBlue/20 border-t-bgBlue rounded-full animate-spin" />
+                <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-b-bgBlue/30 rounded-full animate-pulse" />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Footer info bar */}

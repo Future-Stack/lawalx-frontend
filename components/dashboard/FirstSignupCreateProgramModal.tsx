@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   X, FileText, Video, Monitor, CircleCheckBigIcon,
   Search, ChevronLeft, ChevronRight, Loader2, Plus,
@@ -35,13 +36,14 @@ import {
 } from "@/components/ui/select";
 import DeviceStatusBadge from "../common/DeviceStatusBadge";
 
-interface CreateScreenModalProps {
+interface FirstSignupCreateProgramModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-export default function CreateScreenModal({ isOpen, onClose, onSuccess }: CreateScreenModalProps) {
+export default function FirstSignupCreateProgramModal({ isOpen, onClose, onSuccess }: FirstSignupCreateProgramModalProps) {
+  const router = useRouter();
   const { data: allContentData, isLoading: isContentLoading } = useGetAllContentDataQuery(undefined);
   const { data: devicesData, isLoading: isDevicesLoading } = useGetMyDevicesDataQuery(undefined);
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
@@ -180,6 +182,7 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
         toast.success(response.message || "Program created successfully");
         if (onSuccess) onSuccess();
         handleClose();
+        router.push("/programs");
       }
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to create program");
@@ -189,14 +192,12 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
   const renderContentItem = (item: any, depth = 0) => {
     const isSelected = programData.content_ids.includes(item.id);
     const isExpanded = expandedFolders.has(item.id);
-    console.log("item delete", item.id);
     
     const deleteFile = async (id:any) => {
         try {
           const res = item.type === "folder"
             ? await deleteFolder(id).unwrap()
             : await deleteContent({ id }).unwrap();
-          console.log(res);
           
           if (res.success) {
             toast.success(res.message || "File deleted successfully");
@@ -533,7 +534,7 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
               className="px-6 py-2.5 bg-bgBlue hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors shadow-customShadow cursor-pointer flex items-center gap-2"
             >
               {isCreating && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isCreating ? "Creating..." : "Create"}
+              {isCreating ? "Publishing..." : "Publish"}
             </button>
           )}
         </div>
