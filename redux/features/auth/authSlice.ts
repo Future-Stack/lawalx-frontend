@@ -79,22 +79,23 @@ const authSlice = createSlice({
       state.isHydrated = true;
 
       // Save tokens to cookies (Secure & SameSite for security)
-      Cookies.set("token", token, { expires: 7, secure: true, sameSite: 'strict' });
-      Cookies.set("refreshToken", refreshToken, { expires: 30, secure: true, sameSite: 'strict' });
+      Cookies.set("token", token, { expires: 7, secure: true, sameSite: 'strict', path: '/' });
+      Cookies.set("refreshToken", refreshToken, { expires: 30, secure: true, sameSite: 'strict', path: '/' });
     },
     logout: (state) => {
+      console.log('AuthSlice: Logging out and clearing state/cookies');
       state.user = null;
       state.token = null;
       state.refreshToken = null;
 
-      // Remove cookies
-      Cookies.remove("token");
-      Cookies.remove("refreshToken");
+      // Remove cookies with explicit path
+      Cookies.remove("token", { path: '/' });
+      Cookies.remove("refreshToken", { path: '/' });
     },
     setToken: (state, action: PayloadAction<{ token: string }>) => {
       state.token = action.payload.token;
       state.user = getUserFromToken(action.payload.token);
-      Cookies.set("token", action.payload.token, { expires: 7, secure: true, sameSite: 'strict' });
+      Cookies.set("token", action.payload.token, { expires: 7, secure: true, sameSite: 'strict', path: '/' });
     }
   },
 });
