@@ -161,14 +161,27 @@ export default function EmployeesTable() {
       <Table>
         <TableHeader>
           <TableRow className="bg-navbarBg hover:bg-navbarBg">
-            {['Name', 'Email', 'Role', 'Skills', 'Last Active', 'Level', 'Action'].map((col) => (
-              <TableHead
-                key={col}
-                className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-border"
-              >
-                {col}
-              </TableHead>
-            ))}
+            <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-border">
+              Name
+            </TableHead>
+            <TableHead className="md:table-cell px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-border">
+              Email
+            </TableHead>
+            <TableHead className="lg:table-cell px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-border">
+              Role
+            </TableHead>
+            <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-border">
+              Skills
+            </TableHead>
+            <TableHead className="xl:table-cell px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-border">
+              Last Active
+            </TableHead>
+            <TableHead className="sm:table-cell px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-border">
+              Level
+            </TableHead>
+            <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-border">
+              Action
+            </TableHead>
           </TableRow>
         </TableHeader>
 
@@ -250,14 +263,14 @@ export default function EmployeesTable() {
                 </TableCell>
 
                 {/* Email */}
-                <TableCell className="px-4 py-3">
+                <TableCell className="md:table-cell px-4 py-3">
                   <span className="text-sm text-gray-500 dark:text-gray-400">
                     {emp.user.account.email}
                   </span>
                 </TableCell>
 
                 {/* Role badge */}
-                <TableCell className="px-4 py-3">
+                <TableCell className="lg:table-cell px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     {emp.supporterRole.map((role) => (
                       <span
@@ -270,13 +283,13 @@ export default function EmployeesTable() {
                   </div>
                 </TableCell>
 
-                {/* Skills — 2-column grid */}
+                {/* Skills — flex wrap */}
                 <TableCell className="px-4 py-3">
-                  <div className="grid grid-cols-2 gap-1 w-fit">
+                  <div className="flex flex-wrap gap-1 max-w-[250px]">
                     {emp.skills.map((skill, i) => (
                       <span
                         key={i}
-                        className="inline-flex items-center px-2 py-0.5 text-[12px] font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-border rounded whitespace-nowrap"
+                        className="inline-flex items-center px-2 py-0.5 text-[11px] font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 border border-border rounded whitespace-nowrap"
                       >
                         {skill}
                       </span>
@@ -285,14 +298,14 @@ export default function EmployeesTable() {
                 </TableCell>
 
                 {/* Last Active */}
-                <TableCell className="px-4 py-3">
+                <TableCell className="xl:table-cell px-4 py-3">
                   <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {lastActive(emp)}
                   </span>
                 </TableCell>
 
                 {/* Level badge */}
-                <TableCell className="px-4 py-3">
+                <TableCell className="sm:table-cell px-4 py-3">
                   <span
                     className={cn(
                       'inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium border whitespace-nowrap',

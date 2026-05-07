@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Tabs, { TabItem } from "@/common/Tabs";
-import { Users, CreditCard, LayoutGrid, Ticket, Eye } from "lucide-react";
+import { Users, CreditCard, LayoutGrid, Ticket, Eye, FileText } from "lucide-react";
 import SubscribersTab from "./_components/SubscribersTab";
 import BillingTab from "./_components/BillingTab";
 import TransactionSheet from "./_components/TransactionSheet";
@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import PlansTab from "./_components/PlansTab";
 import CouponsTab from "./_components/CouponsTab";
+import { InvoicePreview } from "@/components/Admin/invoice";
 
 const SubscriptionPage = () => {
   const [activeTab, setActiveTab] = useState("Subscribers");
@@ -21,6 +22,7 @@ const SubscriptionPage = () => {
     { label: "Billing & Invoices", icon: CreditCard },
     { label: "Plans", icon: LayoutGrid },
     { label: "Coupons", icon: Ticket },
+    {label: "Invoices", icon: FileText}
   ];
 
   return (
@@ -64,6 +66,7 @@ const SubscriptionPage = () => {
           {activeTab === "Billing & Invoices" && <BillingTab />}
           {activeTab === "Plans" && <PlansTab />}
           {activeTab === "Coupons" && <CouponsTab />}
+          {/* {activeTab === "Invoices" && <InvoicePreview />} */}
         </div>
       </div>
 
