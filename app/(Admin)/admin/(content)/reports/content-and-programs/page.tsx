@@ -28,6 +28,7 @@ import {
 } from "@/redux/api/admin/contentreportApi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { addPdfHeader } from "@/lib/pdfUtils";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 import { formatBytes } from "@/lib/content-utils";
@@ -60,13 +61,12 @@ const ContentAndProgramsReport = () => {
       const files = exportData.data?.files || [];
       const doc = new jsPDF();
 
-      // Add Title
-      doc.setFontSize(18);
-      doc.text('Content Report', 14, 22);
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Exported At: ${new Date().toLocaleString()}`, 14, 30);
-      doc.text(`Total Files: ${exportData.data?.totalFiles || 0}`, 14, 36);
+      // Branded header with logo
+      const startY = await addPdfHeader(
+        doc,
+        'Content Report',
+        `Total Files: ${exportData.data?.totalFiles || 0}  |  Exported: ${new Date().toLocaleString()}`
+      );
 
       // Define table columns
       const tableColumn = ["Index", "Name", "Type", "Size", "User", "Created At"];
@@ -88,9 +88,9 @@ const ContentAndProgramsReport = () => {
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 45,
+        startY,
         theme: 'striped',
-        headStyles: { fillColor: [155, 164, 237] }, // #9BA4ED
+        headStyles: { fillColor: [155, 164, 237] },
         styles: { fontSize: 8 }
       });
 

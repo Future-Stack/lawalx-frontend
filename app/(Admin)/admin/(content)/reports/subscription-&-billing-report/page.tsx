@@ -24,6 +24,7 @@ import {
 } from '@/redux/api/admin/Billing & Payment Report/billingPaymentApi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { addPdfHeader } from '@/lib/pdfUtils';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
@@ -215,15 +216,13 @@ const BillingDashboard = () => {
 
       const doc = new jsPDF();
       const HEADING_GAP = 10;
-      let currentY = 20;
 
-      doc.setFontSize(18);
-      doc.text('Billing & Payment Report', 14, currentY);
-      currentY += 10;
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Time Range: ${timeRangeValue} | Exported At: ${new Date().toLocaleString()}`, 14, currentY);
-      currentY += 15;
+      // Branded header with logo
+      let currentY = await addPdfHeader(
+        doc,
+        'Billing & Payment Report',
+        `Time Range: ${timeRangeValue}  |  Exported: ${new Date().toLocaleString()}`
+      );
 
       // Overview
       doc.setFontSize(14);

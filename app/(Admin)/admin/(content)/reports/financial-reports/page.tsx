@@ -27,6 +27,7 @@ import {
 } from "@/redux/api/admin/financialreportApi";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { addPdfHeader } from '@/lib/pdfUtils';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
@@ -88,17 +89,13 @@ const FinancialReport = () => {
 
       if (format === 'pdf') {
         const doc = new jsPDF();
-        let currentY = 45;
 
-        // Header
-        doc.setFillColor(139, 92, 246); // Purple
-        doc.rect(0, 0, 210, 40, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(24);
-        doc.text('FINANCIAL REPORT', 14, 25);
-        doc.setFontSize(10);
-        doc.text(`Period: ${reportData.mrrTrend.period}`, 14, 34);
-        doc.text(`Generated: ${new Date().toLocaleString()}`, 160, 34);
+        // Branded header with logo
+        let currentY = await addPdfHeader(
+          doc,
+          'Financial Report',
+          `Period: ${reportData.mrrTrend.period}  |  Generated: ${new Date().toLocaleString()}`
+        );
 
         // Section 1: Executive Summary
         doc.setTextColor(50, 50, 50);
@@ -107,11 +104,11 @@ const FinancialReport = () => {
 
         const summaryStats = [
           ['Metric', 'Value', 'Growth %', 'Status'],
-          ['MRR', `$${reportData.stats.mrr.value.toLocaleString()}`, `${reportData.stats.mrr.growth}%`, reportData.stats.mrr.growth >= 0 ? 'GROWING' : 'ATTENTION'],
-          ['ARR', `$${reportData.stats.arr.value.toLocaleString()}`, `${reportData.stats.arr.growth}%`, reportData.stats.arr.growth >= 0 ? 'GROWING' : 'ATTENTION'],
-          ['Churn Rate', `${reportData.stats.churnRate.value}%`, `${reportData.stats.churnRate.growth}%`, reportData.stats.churnRate.growth <= 0 ? 'HEALTHY' : 'STRESS'],
-          ['ARPU', `$${reportData.stats.arpu.value}`, `${reportData.stats.arpu.growth}%`, 'STABLE'],
-          ['New Subs', reportData.stats.newSubscriptions.value.toString(), `${reportData.stats.newSubscriptions.growth}%`, 'N/A'],
+          ['MRR', `$${(reportData.stats?.mrr?.value || 0).toLocaleString()}`, `${reportData.stats?.mrr?.growth || 0}%`, (reportData.stats?.mrr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
+          ['ARR', `$${(reportData.stats?.arr?.value || 0).toLocaleString()}`, `${reportData.stats?.arr?.growth || 0}%`, (reportData.stats?.arr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
+          ['Churn Rate', `${reportData.stats?.churnRate?.value || 0}%`, `${reportData.stats?.churnRate?.growth || 0}%`, (reportData.stats?.churnRate?.growth || 0) <= 0 ? 'HEALTHY' : 'STRESS'],
+          ['ARPU', `$${(reportData.stats?.arpu?.value || 0).toLocaleString()}`, `${reportData.stats?.arpu?.growth || 0}%`, 'STABLE'],
+          ['New Subs', (reportData.stats?.newSubscriptions?.value || 0).toString(), `${reportData.stats?.newSubscriptions?.growth || 0}%`, 'N/A'],
         ];
 
         autoTable(doc, {
@@ -174,12 +171,12 @@ const FinancialReport = () => {
         doc.text('4. Plan Performance Overview', 14, currentY);
         const planHeader = ['Plan Name', 'Subscribers', 'Revenue', 'Avg/User', 'Churn %', 'Growth %'];
         const planRows = reportData.plans.map((p: any) => [
-          p.planName,
-          p.subscribers.toLocaleString(),
-          `$${p.revenue.toLocaleString()}`,
-          `$${p.avgUser}`,
-          `${p.churnRate}%`,
-          `+${p.growth}%`
+          p.planName || 'N/A',
+          (p.subscribers || 0).toLocaleString(),
+          `$${(p.totalRevenue || 0).toLocaleString()}`,
+          `$${(p.avgPerUser || 0).toLocaleString()}`,
+          `${p.churnRate || 0}%`,
+          `+${p.growth || 0}%`
         ]);
         autoTable(doc, {
           startY: currentY + 5,

@@ -200,6 +200,11 @@ export default function UsersRolesSection() {
             } else if (formData.password.length < 8) {
                 newErrors.password = "Password must be at least 8 characters";
             }
+        } else {
+            // In edit mode, password is optional — but if provided it must be valid
+            if (formData.password && formData.password.length < 8) {
+                newErrors.password = "Password must be at least 8 characters";
+            }
         }
 
         if (!formData.role) newErrors.role = "Role is required";
@@ -219,6 +224,10 @@ export default function UsersRolesSection() {
                 const patchData: any = {
                     username: formData.name,
                 };
+                // Only send password if admin has filled it in
+                if (formData.password && formData.password.trim() !== '' && formData.password !== '••••••••') {
+                    patchData.password = formData.password;
+                }
                 if (formData.role === 'Supporter') {
                     patchData.supporterRole = [formData.supporterRole];
                     patchData.skills = formData.skills;
@@ -460,7 +469,7 @@ export default function UsersRolesSection() {
                 ) : (
                     <div className="space-y-4 pt-4 pb-10">
                         <div className="space-y-1.5">
-                            <Label className="text-sm font-bold text-headings">Name <span className="text-red-500">*</span></Label>
+                            <Label className="text-sm font-bold text-headings">Username <span className="text-red-500">*</span></Label>
                             <div className="relative">
                                 <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.name ? 'text-red-400' : 'text-muted'}`} />
                                 <Input
@@ -486,7 +495,7 @@ export default function UsersRolesSection() {
                                     required
                                     disabled={viewOnly || isEditing}
                                     onChange={(e) => handleInputChange('email', e.target.value)}
-                                    className={`bg-navbarBg h-11 pl-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${(viewOnly || isEditing) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    className={`bg-navbarBg h-11 pl-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${(viewOnly || isEditing) ? 'opacity-60 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`}
                                 />
                             </div>
                             {errors.email && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.email}</p>}
@@ -500,10 +509,9 @@ export default function UsersRolesSection() {
                                     type={showPassword ? "text" : "password"}
                                     placeholder="H2di%hGa3d"
                                     value={formData.password}
-                                    required
-                                    disabled={viewOnly || isEditing}
+                                    disabled={viewOnly}
                                     onChange={(e) => handleInputChange('password', e.target.value)}
-                                    className={`bg-navbarBg h-11 pl-10 pr-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${(viewOnly || isEditing) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    className={`bg-navbarBg h-11 pl-10 pr-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${viewOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 />
                                 <button
                                     type="button"
@@ -525,7 +533,7 @@ export default function UsersRolesSection() {
                                 ]}
                                 placeholder="Select Role"
                                 value={formData.role}
-                                disabled={viewOnly || isEditing}
+                                disabled={viewOnly}
                                 className={errors.role ? 'border-red-500' : ''}
                                 onChange={(val: any) => handleInputChange('role', val)}
                             />
@@ -587,7 +595,7 @@ export default function UsersRolesSection() {
                                 disabled={isCreating || isUpdating}
                                 className={`flex-1 bg-bgBlue hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold transition-colors shadow-customShadow cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed`}
                             >
-                                {isUpdating ? "Updating..." : isCreating ? "Creating..." : "Add Email"}
+                                {isUpdating ? "Updating..." : isCreating ? "Creating..." : isEditing ? "Update Employee" : "Add Employee"}
                             </button>
                         </div>
                     </div>

@@ -42,6 +42,7 @@ export const dashboardApi = baseApi.injectEndpoints({
       query: ({ limit, filter }: { limit: number; filter: string }) => ({
         url: `/dashboard/recent-support-tickets?limit=${limit}&filter=${filter}`,
         method: "GET",
+        providesTags: ["SupporterTicket", "SupporterTicketStats", "AdminSupportTicket", "AdminSupportTicketStats"],
       }),
     }),
     getDashboardExport: builder.query({

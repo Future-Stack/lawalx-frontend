@@ -11,6 +11,7 @@ import {
 } from '@/redux/api/admin/devicereportApi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { addPdfHeader } from '@/lib/pdfUtils';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
@@ -31,12 +32,8 @@ const DeviceReportDashboard = () => {
       const devices = exportData.data?.devices || [];
       const doc = new jsPDF();
 
-      // Add Title
-      doc.setFontSize(18);
-      doc.text('Device Report', 14, 22);
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Exported At: ${new Date().toLocaleString()}`, 14, 30);
+      // Branded header with logo
+      const startY = await addPdfHeader(doc, 'Device Report', `Exported: ${new Date().toLocaleString()}`);
 
       // Define table columns
       const tableColumn = ["Index", "Device ID", "Name", "Status", "Region", "Username"];
@@ -58,7 +55,7 @@ const DeviceReportDashboard = () => {
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 40,
+        startY,
         theme: 'striped',
         headStyles: { fillColor: [139, 92, 246] }, // Violet-500
         styles: { fontSize: 9 }

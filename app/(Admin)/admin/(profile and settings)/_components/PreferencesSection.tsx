@@ -95,56 +95,6 @@ export default function PreferencesSection() {
                             className="cursor-pointer"
                         />
                     </div>
-                    <div className="flex items-center justify-between pt-6 border-t border-border">
-                        <div className="space-y-1">
-                            <Label className="text-sm font-semibold text-headings">Push Notifications</Label>
-                            <p className="text-sm text-body">Browser push notifications</p>
-                        </div>
-                        <Switch
-                            checked={preferences?.pushNotification ?? false}
-                            onCheckedChange={(checked) => handleUpdate({ pushNotification: checked })}
-                            className="cursor-pointer"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            {/* Format */}
-            <div className="bg-navbarBg border border-border rounded-xl overflow-hidden shadow-sm">
-                <div className="px-6 py-4 border-b border-border bg-[#F0FAFF] dark:bg-blue-900/10">
-                    <h2 className="text-lg font-semibold text-headings">Format & Language</h2>
-                </div>
-                <div className="p-6 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                        <Label className="text-sm font-semibold text-headings">Date Format</Label>
-                        <BaseSelect
-                            options={dateFormatOptions}
-                            value={preferences?.dateFormat || 'DMY'}
-                            onChange={(val) => handleUpdate({ dateFormat: val })}
-                            showLabel={false}
-                            className="max-w-md"
-                        />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-6 border-t border-border">
-                        <Label className="text-sm font-semibold text-headings">Time Format</Label>
-                        <BaseSelect
-                            options={timeFormatOptions}
-                            value={preferences?.timeFormat || 'H12'}
-                            onChange={(val) => handleUpdate({ timeFormat: val })}
-                            showLabel={false}
-                            className="max-w-md"
-                        />
-                    </div>
-                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center pt-6 border-t border-border">
-                        <Label className="text-sm font-semibold text-headings">Language</Label>
-                        <BaseSelect
-                            options={languageOptions}
-                            value={preferences?.language || 'en'}
-                            onChange={(val) => handleUpdate({ language: val })}
-                            showLabel={false}
-                            className="max-w-md"
-                        />
-                    </div> */}
                 </div>
             </div>
         </div>

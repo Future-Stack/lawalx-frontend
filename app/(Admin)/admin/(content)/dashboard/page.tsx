@@ -16,12 +16,12 @@ import {
 } from '@/redux/api/admin/dashbaordApi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { addPdfHeader } from '@/lib/pdfUtils';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import TicketDetailsModal from '@/components/Admin/modals/TicketDetailsModal';
-import { useGetAdminTicketDetailsQuery } from '@/redux/api/admin/support/adminSupportTicketApi';
-import { SupportTicket } from '@/types/supportTickets';
+import TicketDetailsDialog from '../support/support-tickets/_components/TicketDetailsDialog';
+import { useGetAdminTicketDetailsQuery, type Ticket } from '@/redux/api/admin/support/adminSupportTicketApi';
 
 type DateRange = '1d' | '7d' | '1m' | '1y';
 
@@ -267,10 +267,10 @@ const SubscriptionDistribution: React.FC<{ dateRange: DateRange }> = ({ dateRang
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    content={<CustomTooltip />} 
-                    position={{ y: -20 }} 
-                    allowEscapeViewBox={{ x: true, y: true }} 
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    position={{ y: -20 }}
+                    allowEscapeViewBox={{ x: true, y: true }}
                     wrapperStyle={{ zIndex: 1000 }}
                   />
                 </PieChart>
@@ -542,7 +542,7 @@ const RecentCriticalActivity: React.FC<{ dateRange: DateRange }> = ({ dateRange 
   );
 };
 
-const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (id: string) => void }> = ({ dateRange, onTicketClick }) => {
+const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (ticket: any) => void }> = ({ dateRange, onTicketClick }) => {
   const { data: apiData, isLoading } = useGetRecentSupportTicketsQuery({ limit: 5, filter: dateRange });
   const tickets = useMemo(() => apiData?.data?.tickets || [], [apiData]);
 
@@ -568,7 +568,7 @@ const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (id:
             {tickets.map((ticket: any, idx: number) => (
               <div
                 key={idx}
-                onClick={() => onTicketClick(ticket.id)}
+                onClick={() => onTicketClick(ticket)}
                 className="flex-1 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all group cursor-pointer flex flex-col justify-center"
               >
                 <div className="flex flex-col gap-1.5">
@@ -607,41 +607,56 @@ const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (id:
 const Dashboard: React.FC = () => {
   const [dateRange, setDateRange] = useState<DateRange>('7d');
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
-  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
 
   // Fetch Overview Data
   const { data: overviewData, isLoading: isOverviewLoading } = useGetDashboardOverviewQuery(dateRange);
   const [triggerExport] = useLazyGetDashboardExportQuery();
 
-  // Fetch Ticket Details when selected
-  const { data: ticketDetailResponse } = useGetAdminTicketDetailsQuery(selectedTicketId || '', { skip: !selectedTicketId });
-
-  const selectedTicketData = useMemo(() => {
-    if (!ticketDetailResponse?.success || !ticketDetailResponse.data) return null;
-    const d = ticketDetailResponse.data;
-    const mapped: SupportTicket = {
-      id: d.id,
-      ticketId: d.customId,
-      user: {
-        id: d.userId || '',
-        name: d.user?.username || 'Unknown User',
-        email: 'N/A',
-        planType: 'Guest'
-      },
-      type: (d.issueType?.[0] as any) || 'Account',
-      priority: 'Medium',
-      status: (d.status === 'InProgress' ? 'In Progress' : d.status === 'Resolved' ? 'Completed' : 'Open') as any,
-      subject: d.subject,
-      description: d.description,
-      created: new Date(d.createdAt).toLocaleString(),
-      assignedTo: d.assignments?.[0]?.user?.username
+  const handleTicketClick = (ticket: any) => {
+    const statusMap: Record<string, any> = {
+      'Open': 'Opened',
+      'InProgress': 'In Progress',
+      'Resolved': 'Resolved',
+      'Closed': 'Closed',
     };
-    return mapped;
-  }, [ticketDetailResponse]);
 
-  const handleTicketClick = (id: string) => {
-    setSelectedTicketId(id);
+    const priorityMap: Record<string, any> = {
+      'Low': 'Low',
+      'Medium': 'Medium',
+      'High': 'High'
+    };
+
+    const firstAssignment = ticket.assignments?.length > 0 ? ticket.assignments[0] : null;
+    const assignedTo = firstAssignment?.user ? {
+      id: firstAssignment.user.id || firstAssignment.supporterId || undefined,
+      name: firstAssignment.user.username || 'Supporter',
+      initials: (firstAssignment.user.username || 'S').substring(0, 2).toUpperCase(),
+      role: firstAssignment.user.role || 'Support',
+    } : null;
+
+    const mappedTicket: Ticket = {
+      id: ticket.id,
+      ticketId: ticket.ticketId || ticket.customId || ticket.id,
+      company: {
+        name: ticket.user?.username || 'Unknown',
+        iconBg: 'bg-blue-500',
+        iconText: ticket.user?.username?.charAt(0)?.toUpperCase() || 'U',
+        imageUrl: ticket.user?.image_url
+      },
+      subject: ticket.subject,
+      status: statusMap[ticket.status] || ticket.status || 'Opened',
+      lastUpdated: new Date(ticket.updatedAt || ticket.createdAt).toLocaleDateString(),
+      priority: priorityMap[ticket.priority] || ticket.priority || 'Normal',
+      assignedTo,
+      description: ticket.description,
+      createdAt: new Date(ticket.createdAt).toLocaleDateString(),
+      updatedAt: new Date(ticket.updatedAt || ticket.createdAt).toLocaleDateString(),
+      raw: ticket,
+    };
+
+    setSelectedTicket(mappedTicket);
     setIsTicketModalOpen(true);
   };
 
@@ -666,17 +681,13 @@ const Dashboard: React.FC = () => {
 
       if (format === 'pdf') {
         const doc = new jsPDF();
-        let currentY = 45;
 
-        // Header
-        doc.setFillColor(59, 130, 246); // Blue
-        doc.rect(0, 0, 210, 40, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(24);
-        doc.text('DASHBOARD OVERVIEW REPORT', 14, 25);
-        doc.setFontSize(10);
-        doc.text(`Period: ${timeRangeLabel}`, 14, 34);
-        doc.text(`Generated: ${new Date().toLocaleString()}`, 160, 34);
+        // Branded header with logo
+        let currentY = await addPdfHeader(
+          doc,
+          'Dashboard Overview Report',
+          `Period: ${timeRangeLabel}  |  Generated: ${new Date().toLocaleString()}`
+        );
 
         // Section 1: Key Metrics
         doc.setTextColor(50, 50, 50);
@@ -978,25 +989,22 @@ const Dashboard: React.FC = () => {
           <RecentCriticalActivity dateRange={dateRange} />
           <RecentSupportTickets dateRange={dateRange} onTicketClick={handleTicketClick} />
         </div>
+
+        {/* Modals */}
+        <AddUserModal
+          isOpen={isAddClientModalOpen}
+          onClose={() => setIsAddClientModalOpen(false)}
+          onAddUser={handleAddClient}
+        />
+        <TicketDetailsDialog
+          ticket={selectedTicket}
+          open={isTicketModalOpen}
+          onClose={() => {
+            setIsTicketModalOpen(false);
+            setSelectedTicket(null);
+          }}
+        />
       </div>
-
-      {/* Ticket Details Modal */}
-      <TicketDetailsModal
-        isOpen={isTicketModalOpen}
-        onClose={() => {
-          setIsTicketModalOpen(false);
-          setSelectedTicketId(null);
-        }}
-        ticket={selectedTicketData}
-      />
-
-      {/* THE REUSABLE ADD USER / CLIENT MODAL */}
-      <AddUserModal
-        isOpen={isAddClientModalOpen}
-        onClose={() => setIsAddClientModalOpen(false)}
-        onAddUser={handleAddClient}
-      />
-
 
       <style>{`
         @media print {
