@@ -1,39 +1,62 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import countryList from 'react-select-country-list'
 import Image from "next/image";
-import { Upload } from "lucide-react";
+import { Upload, User } from "lucide-react";
 import BaseSelect from "@/common/BaseSelect";
-import profile from "../../../../../public/images/profile-settings.png";
-import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { toast } from "sonner";
-import { useGetPreferencesQuery, useUpdatePreferencesMutation } from "@/redux/api/users/settings/preferencesApi";
-import { useUpdateProfileMutation } from "@/redux/api/users/settings/personalApi";
+import { useGetPreferencesQuery } from "@/redux/api/users/settings/preferencesApi";
+import { useGetSettingsUserProfileQuery, useUpdateSettingsProfilePreferencesMutation, useUpdateSittingsProfileMutation } from "@/redux/api/users/settings/settingsApi";
+import { getUrl } from "@/lib/content-utils";
 
 export default function General() {
     const [mounted, setMounted] = useState(false);
 
-    // Profile state
-    const [fullName, setFullName] = useState("");
-    const [imageUrl, setImageUrl] = useState("");
-    const [username, setUsername] = useState("");
-    const [designation, setDesignation] = useState("");
+    // Forms
+    const { register, handleSubmit, setValue, watch, reset: resetProfile } = useForm({
+        defaultValues: {
+            full_name: "",
+            designation: "",
+            region: "",
+            timeZone: ""
+        }
+    });
 
-    // Preferences state
-    const [theme, setTheme] = useState("LIGHT");
-    const [language, setLanguage] = useState("en");
-    const [timeFormat, setTimeFormat] = useState("H12");
-    const [dateFormat, setDateFormat] = useState("DMY");
-    const [emailNotification, setEmailNotification] = useState(true);
-    const [pushNotification, setPushNotification] = useState(false);
-    const [region, setRegion] = useState("USA");
-    const [timeZone, setTimeZone] = useState("Pacific Standard Time (PST)");
+    const { handleSubmit: handleSubmitPref, setValue: setValuePref, watch: watchPref, reset: resetPref } = useForm({
+        defaultValues: {
+            theme: "LIGHT",
+            language: "en",
+            timeFormat: "H12",
+            dateFormat: "DMY"
+        }
+    });
+
+    const region = watch("region");
+    const timeZone = watch("timeZone");
+    const theme = watchPref("theme");
+    const language = watchPref("language");
+    const timeFormat = watchPref("timeFormat");
+    const dateFormat = watchPref("dateFormat");
+
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState("");
+
+    const countryOptions = useMemo(() => {
+        const options = countryList().getData();
+        if (region && !options.find(opt => opt.value === region)) {
+            return [{ value: region, label: region }, ...options];
+        }
+        return options;
+    }, [region]);
 
     // API hooks
-    const { data: profileData, isLoading: profileLoading } = useGetUserProfileQuery();
+    const { data: profileData, isLoading: profileLoading } = useGetSettingsUserProfileQuery(undefined);
     const { data: preferencesData, isLoading: preferencesLoading } = useGetPreferencesQuery();
-    const [updateProfile, { isLoading: updatingProfile }] = useUpdateProfileMutation();
-    const [updatePreferences, { isLoading: updatingPreferences }] = useUpdatePreferencesMutation();
+    const [updateProfile, { isLoading: updatingProfile }] = useUpdateSittingsProfileMutation();
+    const [updatePreferences, { isLoading: updatingPreferences }] = useUpdateSettingsProfilePreferencesMutation();  
 
     // Set mounted state
     useEffect(() => {
@@ -43,52 +66,68 @@ export default function General() {
     // Initialize profile data
     useEffect(() => {
         if (profileData?.data) {
-            setFullName(profileData.data.full_name || "");
-            setImageUrl(profileData.data.image_url || "");
-            setUsername(profileData.data.username || "");
-            setDesignation(profileData.data.role || "");
+            const data = profileData.data;
+            resetProfile({
+                full_name: data.full_name || "",
+                designation: data.designation || data.role || "",
+                region: data.cityCountry || "",
+                timeZone: data.timeZone || "UTC"
+            });
+            setPreviewUrl(getUrl(data.image_url) || "");
+
+            // Also initialize preferences if available in profile data
+            if (data.preferences) {
+                resetPref({
+                    theme: data.preferences.theme || "LIGHT",
+                    language: data.preferences.language || "en",
+                    timeFormat: data.preferences.timeFormat || "H12",
+                    dateFormat: data.preferences.dateFormat || "DMY"
+                });
+            }
         }
-    }, [profileData]);
+    }, [profileData, resetProfile, resetPref]);
 
     // Initialize preferences data
     useEffect(() => {
         if (preferencesData?.data) {
-            setTheme(preferencesData.data.theme || "LIGHT");
-            setLanguage(preferencesData.data.language || "en");
-            setTimeFormat(preferencesData.data.timeFormat || "H12");
-            setDateFormat(preferencesData.data.dateFormat || "DMY");
-            setEmailNotification(preferencesData.data.emailNotification ?? true);
-            setPushNotification(preferencesData.data.pushNotification ?? false);
+            const data = preferencesData.data;
+            resetPref({
+                theme: data.theme || "LIGHT",
+                language: data.language || "en",
+                timeFormat: data.timeFormat || "H12",
+                dateFormat: data.dateFormat || "DMY"
+            });
         }
-    }, [preferencesData]);
+    }, [preferencesData, resetPref]);
 
-    const handleUpdateProfile = async () => {
+    const onUpdateProfile = async (data: any) => {
         try {
-            const result = await updateProfile({
-                full_name: fullName,
-                image_url: imageUrl,
-                // username: username,
-                // designation: designation,
-            }).unwrap();
+            const formData = new FormData();
+            formData.append("full_name", data.full_name);
+            if (selectedFile) {
+                formData.append("image_url", selectedFile);
+            }
+            formData.append("designation", data.designation);
+            formData.append("cityCountry", data.region);
+            formData.append("timeZone", data.timeZone);
+
+            const result = await updateProfile(formData).unwrap();
 
             if (result.success) {
                 toast.success(result.message || "Profile updated successfully");
+                setSelectedFile(null);
             }
         } catch (error: any) {
             toast.error(error?.data?.message || "Failed to update profile");
         }
     };
 
-    const handleUpdatePreferences = async () => {
+    const onUpdatePreferences = async (data: any) => {
         try {
-            const result = await updatePreferences({
-                theme: theme as "LIGHT" | "DARK",
-                language,
-                dateFormat: dateFormat as "DMY" | "MDY" | "YMD",
-                timeFormat: timeFormat as "H12" | "H24",
-                emailNotification,
-                pushNotification,
-            }).unwrap();
+            // Remove notifications from payload
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { emailNotification, pushNotification, ...payload } = data;
+            const result = await updatePreferences(payload).unwrap();
 
             if (result.success) {
                 toast.success(result.message || "Preferences updated successfully");
@@ -97,8 +136,6 @@ export default function General() {
             toast.error(error?.data?.message || "Failed to update preferences");
         }
     };
-
-    const info = profileData?.data;
 
     // Prevent hydration mismatch by showing loading state
     if (!mounted || profileLoading || preferencesLoading) {
@@ -111,6 +148,15 @@ export default function General() {
         );
     }
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            const url = URL.createObjectURL(file);
+            setPreviewUrl(url);
+        }
+    };
+
     const userInfo = profileData?.data;
 
     return (
@@ -119,7 +165,7 @@ export default function General() {
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg md:text-xl font-bold text-headings">Personal Information</h2>
                     <button
-                        onClick={handleUpdateProfile}
+                        onClick={handleSubmit(onUpdateProfile)}
                         disabled={updatingProfile}
                         className="px-4 py-2 md:px-6 md:py-3 bg-bgBlue text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors shadow-customShadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -132,49 +178,57 @@ export default function General() {
                     <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
                         <label className="w-full md:w-1/3 text-sm font-semibold text-body">Profile Photo</label>
                         <div className="flex items-center gap-6">
-                            <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-100">
-                                <Image
-                                    src={profile}
-                                    alt="Profile"
-                                    fill
-                                    className="object-cover"
-                                />
+                            <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 border border-border flex items-center justify-center">
+                                {previewUrl ? (
+                                    <Image
+                                        src={previewUrl}
+                                        alt="Profile"
+                                        fill
+                                        className="object-cover"
+                                        unoptimized
+                                    />
+                                ) : (
+                                    <User className="w-8 h-8 text-gray-400" />
+                                )}
                             </div>
-                            <div className="flex-1 border border-border bg-navbarBg rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer">
-                                <div className="w-8 h-8 mb-2 bg-navbarBg rounded-lg flex items-center justify-center border border-border">
-                                    <Upload className="w-4 h-4 text-gray-500" />
+                            <label className="flex-1 border border-border border-dashed bg-navbarBg rounded-xl p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-bgBlue transition-colors group">
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileChange}
+                                />
+                                <div className="w-8 h-8 mb-2 bg-navbarBg rounded-lg flex items-center justify-center border border-border group-hover:border-bgBlue transition-colors">
+                                    <Upload className="w-4 h-4 text-gray-500 group-hover:text-bgBlue" />
                                 </div>
                                 <p className="text-sm">
                                     <span className="text-bgBlue font-medium">Click to Upload</span> or drag and drop
                                 </p>
                                 <p className="text-xs text-muted mt-1">SVG, PNG, or JPG (Max 800 x 800px)</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Image URL */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
-                        <label className="w-full md:w-1/3 text-sm font-semibold text-body">Name</label>
-                        <div className="flex-1 flex gap-4">
-                            <input
-                                type="text"
-                                placeholder="Full Name"
-                                value={userInfo?.full_name ?? "null"}
-                                readOnly
-                                className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-70 text-gray-500"
-                            />
+                            </label>
                         </div>
                     </div>
 
                     {/* Name */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
+                        <label className="w-full md:w-1/3 text-sm font-semibold text-body">Name</label>
+                        <input
+                            type="text"
+                            placeholder="Full Name"
+                            {...register("full_name")}
+                            className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-bgBlue bg-transparent dark:bg-gray-800 text-body font-medium"
+                        />
+                    </div>
+
+                    {/* Email */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
                         <label className="w-full md:w-1/3 text-sm font-semibold text-body">Email</label>
                         <input
                             type="email"
                             placeholder="Email"
-                            value={userInfo?.username ?? "null"}
+                            value={userInfo?.email || ""}
                             readOnly
-                            className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-70 text-gray-500"
+                            className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none bg-gray-50 dark:bg-gray-800/50 cursor-not-allowed text-gray-500 font-medium"
                         />
                     </div>
 
@@ -183,10 +237,9 @@ export default function General() {
                         <label className="w-full md:w-1/3 text-sm font-semibold text-body">Designation</label>
                         <input
                             type="text"
-                            placeholder="Designation"
-                            value={userInfo?.designation ?? "null"}
-                            readOnly
-                            className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none bg-gray-100 dark:bg-gray-800 cursor-not-allowed opacity-70 text-gray-500"
+                            placeholder={userInfo?.designation || ""}
+                            {...register("designation")}
+                            className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-bgBlue bg-transparent dark:bg-gray-800 text-body font-medium"
                         />
                     </div>
 
@@ -196,9 +249,9 @@ export default function General() {
                         <div className="flex-1">
                             <BaseSelect
                                 value={region}
-                                onChange={setRegion}
-                                options={[{ value: "USA", label: "USA" }, { value: "UK", label: "UK" }, { value: "Canada", label: "Canada" }]}
-                                placeholder="Select Region"
+                                onChange={(val) => setValue("region", val)}
+                                options={countryOptions}
+                                placeholder={userInfo?.cityCountry || "Select Region"}
                                 showLabel={false}
                                 className="w-full"
                             />
@@ -211,8 +264,9 @@ export default function General() {
                         <div className="flex-1">
                             <BaseSelect
                                 value={timeZone}
-                                onChange={setTimeZone}
+                                onChange={(val) => setValue("timeZone", val)}
                                 options={[
+                                    { value: "UTC", label: "Coordinated Universal Time (UTC)" },
                                     { value: "Pacific Standard Time (PST)", label: "Pacific Standard Time (PST) UTC-08:00" },
                                     { value: "Eastern Standard Time (EST)", label: "Eastern Standard Time (EST) UTC-05:00" }
                                 ]}
@@ -230,11 +284,11 @@ export default function General() {
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg md:text-xl font-bold text-headings">Preferences</h2>
                     <button
-                        onClick={handleUpdatePreferences}
+                        onClick={handleSubmitPref(onUpdatePreferences)}
                         disabled={updatingPreferences}
                         className="px-4 py-2 md:px-6 md:py-3 bg-bgBlue text-white text-sm font-medium rounded-lg hover:bg-blue-500 transition-colors shadow-customShadow cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {updatingPreferences ? "Saving..." : "Save Preferences"}
+                        {updatingPreferences ? "Saving..." : "Save Changes"}
                     </button>
                 </div>
 
@@ -245,7 +299,7 @@ export default function General() {
                         <div className="flex-1">
                             <BaseSelect
                                 value={theme}
-                                onChange={setTheme}
+                                onChange={(val) => setValuePref("theme", val)}
                                 options={[
                                     { value: "LIGHT", label: "Light" },
                                     { value: "DARK", label: "Dark" }
@@ -263,7 +317,7 @@ export default function General() {
                         <div className="flex-1">
                             <BaseSelect
                                 value={language}
-                                onChange={setLanguage}
+                                onChange={(val) => setValuePref("language", val)}
                                 options={[
                                     { value: "en", label: "English" },
                                     { value: "es", label: "Spanish" },
@@ -282,10 +336,10 @@ export default function General() {
                         <div className="flex-1">
                             <BaseSelect
                                 value={timeFormat}
-                                onChange={setTimeFormat}
+                                onChange={(val) => setValuePref("timeFormat", val)}
                                 options={[
-                                    { value: "H12", label: "12 Hour (AM/PM)" },
-                                    { value: "H24", label: "24 Hour" }
+                                    { value: "H12", label: "12 Hours (02:00 PM)" },
+                                    { value: "H24", label: "24 Hours (14:00)" }
                                 ]}
                                 placeholder="Select Time Format"
                                 showLabel={false}
@@ -295,12 +349,12 @@ export default function General() {
                     </div>
 
                     {/* Date format */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-6">
                         <label className="w-full md:w-1/3 text-sm font-semibold text-body">Date format</label>
                         <div className="flex-1">
                             <BaseSelect
                                 value={dateFormat}
-                                onChange={setDateFormat}
+                                onChange={(val) => setValuePref("dateFormat", val)}
                                 options={[
                                     { value: "DMY", label: "DD/MM/YYYY (15/01/2025)" },
                                     { value: "MDY", label: "MM/DD/YYYY (01/15/2025)" },
@@ -318,28 +372,34 @@ export default function General() {
                         <label className="w-full md:w-1/3 text-sm font-semibold text-body">Email Notifications</label>
                         <div className="flex-1">
                             <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={emailNotification}
-                                    onChange={(e) => setEmailNotification(e.target.checked)}
-                                    className="w-5 h-5 text-bgBlue border-border rounded focus:ring-bgBlue cursor-pointer"
-                                />
+                                <div className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={emailNotification}
+                                        onChange={(e) => setValuePref("emailNotification", e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-bgBlue after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                </div>
                                 <span className="text-sm text-body">Receive email notifications</span>
                             </label>
                         </div>
                     </div> */}
 
                     {/* Push Notifications */}
-                    {/* <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
+                     {/* <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6">
                         <label className="w-full md:w-1/3 text-sm font-semibold text-body">Push Notifications</label>
                         <div className="flex-1">
                             <label className="flex items-center gap-3 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={pushNotification}
-                                    onChange={(e) => setPushNotification(e.target.checked)}
-                                    className="w-5 h-5 text-bgBlue border-border rounded focus:ring-bgBlue cursor-pointer"
-                                />
+                                <div className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={pushNotification}
+                                        onChange={(e) => setValuePref("pushNotification", e.target.checked)}
+                                        className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:bg-bgBlue after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                                </div>
                                 <span className="text-sm text-body">Receive push notifications</span>
                             </label>
                         </div>
