@@ -115,7 +115,7 @@ const InvoicePreview = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] p-8 font-inter overflow-y-auto custom-scrollbar">
+    <div className="min-h-screen bg-[#F5F5F5] dark:bg-gray-900 p-8 font-inter overflow-y-auto custom-scrollbar">
       {/* Toolbar */}
       <div className="max-w-[900px] mx-auto flex justify-between items-center mb-8 no-print">
         <div className="flex items-center gap-4">

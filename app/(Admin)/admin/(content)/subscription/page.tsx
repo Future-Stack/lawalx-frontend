@@ -66,7 +66,7 @@ const SubscriptionPage = () => {
           {activeTab === "Billing & Invoices" && <BillingTab />}
           {activeTab === "Plans" && <PlansTab />}
           {activeTab === "Coupons" && <CouponsTab />}
-          {activeTab === "Invoices" && <InvoicePreview />}
+          {/* {activeTab === "Invoices" && <InvoicePreview />} */}
         </div>
       </div>
 
