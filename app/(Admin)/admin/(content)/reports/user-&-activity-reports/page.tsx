@@ -7,6 +7,7 @@ import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { addPdfHeader } from '@/lib/pdfUtils';
 import * as XLSX from 'xlsx';
 import {
   useGetUserActivityOverviewQuery, useGetAuditOverviewQuery, useGetRecentActivityQuery,
@@ -187,10 +188,12 @@ const UserActivityReports = () => {
       const res = await triggerExport({ timeRange: apiTimeRange }).unwrap();
       const exp = res?.data;
       const doc = new jsPDF();
-      doc.setFontSize(16); doc.text('User Activity Report', 14, 15);
-      doc.setFontSize(10); doc.text(`Exported: ${new Date().toLocaleString()}`, 14, 22);
-      doc.setFontSize(13); doc.text('Summary', 14, 30);
-      autoTable(doc, { startY: 34, head: [['Metric', 'Value']], body: [['Total Users', exp?.summary?.totalUsers?.value ?? 0], ['Active Users', exp?.summary?.activeUsers?.value ?? 0], ['Logins Today', exp?.summary?.loginsToday?.value ?? 0], ['Failed Logins', exp?.summary?.failedLogins?.value ?? 0]] });
+
+      // Branded header with logo
+      const startY = await addPdfHeader(doc, 'User Activity Report');
+
+      doc.setFontSize(13); doc.setTextColor(30, 41, 59); doc.text('Summary', 14, startY + 4);
+      autoTable(doc, { startY: startY + 8, head: [['Metric', 'Value']], body: [['Total Users', exp?.summary?.totalUsers?.value ?? 0], ['Active Users', exp?.summary?.activeUsers?.value ?? 0], ['Logins Today', exp?.summary?.loginsToday?.value ?? 0], ['Failed Logins', exp?.summary?.failedLogins?.value ?? 0]] });
       let y: number = (doc as any).lastAutoTable.finalY + 10;
       doc.setFontSize(13); doc.text('Audit Overview', 14, y);
       autoTable(doc, { startY: y + 4, head: [['Metric', 'Value']], body: [['Total Actions', exp?.audit?.overview?.totalActions?.value ?? 0], ['Successful', exp?.audit?.overview?.successful?.value ?? 0], ['Failed', exp?.audit?.overview?.failed?.value ?? 0], ['Unique Users', exp?.audit?.overview?.uniqueUsers?.value ?? 0]] });

@@ -8,6 +8,7 @@ import TicketsTable from './_components/TicketsTable';
 import { useLazyGetAllSupportTicketsQuery } from '@/redux/api/admin/support/adminSupportTicketApi';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { addPdfHeader } from "@/lib/pdfUtils";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
@@ -27,12 +28,8 @@ export default function SupportTickets2Page() {
       const tickets = exportData.data || [];
       const doc = new jsPDF();
 
-      // Add Title
-      doc.setFontSize(18);
-      doc.text('Support Tickets Report', 14, 22);
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Exported At: ${new Date().toLocaleString()}`, 14, 30);
+      // Branded header with logo
+      const startY = await addPdfHeader(doc, 'Support Tickets Report', `Exported: ${new Date().toLocaleString()}`);
 
       // Define table columns
       const tableColumn = ["Index", "Ticket ID", "Subject", "Issue Type", "Priority", "Status", "Assigned To", "Created At"];
@@ -59,19 +56,19 @@ export default function SupportTickets2Page() {
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 40,
+        startY,
         theme: 'striped',
-        headStyles: { fillColor: [59, 130, 246], fontSize: 7 }, // Blue-500
+        headStyles: { fillColor: [59, 130, 246], fontSize: 7 },
         styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
         columnStyles: {
-          0: { cellWidth: 10 }, // Index
-          1: { cellWidth: 25 }, // Ticket ID
-          2: { cellWidth: 40 }, // Subject
-          3: { cellWidth: 25 }, // Issue Type
-          4: { cellWidth: 15 }, // Priority
-          5: { cellWidth: 15 }, // Status
-          6: { cellWidth: 30 }, // Assigned To
-          7: { cellWidth: 20 }, // Created At
+          0: { cellWidth: 10 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 40 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 15 },
+          5: { cellWidth: 15 },
+          6: { cellWidth: 30 },
+          7: { cellWidth: 20 },
         }
       });
 

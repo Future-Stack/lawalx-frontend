@@ -22,7 +22,7 @@ body {
 
 ::view-transition-new(root) {
   z-index: 9999;
-  animation: 1.1s ease-in-out both circle-reveal;
+  animation: 1.7s ease-in-out both circle-reveal;
 }
 
 @keyframes circle-reveal {
@@ -664,8 +664,10 @@ body {
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    height: 6px; /* Thin horizontal scrollbar */
-    width: 6px;  /* Thin vertical scrollbar */
+    height: 6px;
+    /* Thin horizontal scrollbar */
+    width: 6px;
+    /* Thin vertical scrollbar */
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -718,7 +720,7 @@ body {
   .dark .thin-gray-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(156, 163, 175, 0.4);
   }
-  }
+}
 
 
 @layer base {

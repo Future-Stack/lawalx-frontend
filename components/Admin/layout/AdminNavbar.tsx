@@ -9,14 +9,36 @@ import { useGetAdminProfileQuery } from '@/redux/api/admin/profile&settings/admi
 import { useGetMyNotificationsQuery, useReadAllNotificationsMutation, useReadNotificationMutation } from "@/redux/api/users/notificationApi";
 import { formatDistanceToNow } from "date-fns";
 
-const getFullImageUrl = (path: string | null | undefined) => {
-  if (!path) return '/images/profile-settings.png';
+const getFullImageUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
   if (path.startsWith('http')) return path;
-  
-  // Derive base domain from NEXT_PUBLIC_BASE_URL
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', ''); 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', '');
   return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 };
+
+function NavbarAvatar({ imageUrl, name }: { imageUrl: string | null; name?: string }) {
+  const initials = name
+    ? name.trim().split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+    : '';
+
+  if (imageUrl) {
+    return (
+      <div className="relative w-10 h-10 rounded-full overflow-hidden">
+        <Image src={imageUrl} alt="Profile" fill className="object-cover" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0">
+      {initials ? (
+        <span className="text-sm font-bold text-white">{initials}</span>
+      ) : (
+        <User className="w-5 h-5 text-white" />
+      )}
+    </div>
+  );
+}
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -70,7 +92,8 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
   };
   
   const profileImage = profileData?.data?.profileImage || profileData?.data?.image_url;
-  const imageUrl = getFullImageUrl(profileImage);
+  const resolvedImageUrl = getFullImageUrl(profileImage);
+  const profileName = profileData?.data?.full_name || profileData?.data?.fullname || profileData?.data?.username || '';
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 bg-navbarBg border-b border-border z-30">
@@ -208,15 +231,15 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
           </button>
 
           <div className="hidden xs:flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-gray-700">
-            <Link href="/admin/profile-settings/profile" className="rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 relative w-10 h-10 overflow-hidden">
-              <Image src={imageUrl} alt="Profile" fill className="object-cover" />
+            <Link href="/admin/profile-settings/profile">
+              <NavbarAvatar imageUrl={resolvedImageUrl} name={profileName} />
             </Link>
           </div>
 
           {/* Mobile: Only avatar (no border on mobile) */}
           <div className="xs:hidden">
-            <Link href="/admin/profile-settings/profile" className="rounded-full flex items-center justify-center text-white text-sm font-semibold relative w-10 h-10 overflow-hidden">
-              <Image src={imageUrl} alt="Profile" fill className="object-cover" />
+            <Link href="/admin/profile-settings/profile">
+              <NavbarAvatar imageUrl={resolvedImageUrl} name={profileName} />
             </Link>
           </div>
         </div>
