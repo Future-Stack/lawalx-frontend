@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -51,6 +52,8 @@ export default function ProfileSection() {
     const { data: profileData, isLoading, isError, error } = useGetAdminProfileQuery({});
     const [updateAdminProfile, { isLoading: isUpdating }] = useUpdateAdminProfileMutation();
     const [uploadProfilePhoto, { isLoading: isUploading }] = useUploadProfilePhotoMutation();
+    console.log("profile get data response", profileData);
+
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
