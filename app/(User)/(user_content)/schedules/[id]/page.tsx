@@ -541,7 +541,7 @@ export default function ScheduleDetailPage() {
           scheduleTime={scheduleTimeDisplay}
           playingIndex={playingIndex}
           setPlayingIndex={setPlayingIndex}
-          lowerThird={schedule?.lowerThird}
+          lowerThird={schedule?.lowerThird || (schedule?.lowerThirds && schedule.lowerThirds.length > 0 ? schedule.lowerThirds[0] : undefined)}
           localActive={localActive}
           onPowerClick={handlePowerClick}
           isUpdating={isUpdating}

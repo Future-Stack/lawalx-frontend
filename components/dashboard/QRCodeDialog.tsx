@@ -39,7 +39,7 @@ const QRCodeDialog = ({ open, setOpen }: QRCodeDialogProps) => {
                     </div>
 
                     <p className="text-sm text-center text-textGray max-w-[250px]">
-                        Point your device's camera at the QR code above to instantly pair it.
+                        Point your device&apos;s camera at the QR code above to instantly pair it.
                     </p>
                 </div>
             </DialogContent>

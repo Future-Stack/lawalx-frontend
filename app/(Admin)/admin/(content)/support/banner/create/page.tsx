@@ -82,12 +82,48 @@ export default function CreateBannerPage() {
 
     const handleSave = async (overrideStatus?: string) => {
         try {
+            // Validation
+            if (activeTab === 'custom') {
+                if (!formData.title?.trim()) {
+                    toast.error('Title is required');
+                    return;
+                }
+                if (!formData.description?.trim()) {
+                    toast.error('Description is required');
+                    return;
+                }
+            } else {
+                if (!formData.title?.trim()) {
+                    toast.error('Title is required');
+                    return;
+                }
+            }
+
             const data = new FormData();
+            console.log('Form data before sending:', {
+                activeTab,
+                title: formData.title,
+                description: formData.description,
+                hasFile: !!formData.file,
+                hasUploadBannerFile: !!formData.uploadBannerFile,
+                primaryButtonLabel: formData.primaryButtonLabel,
+                primaryButtonLink: formData.primaryButtonLink
+            });
             data.append('type', formData.bannerType.toUpperCase());
             data.append('status', overrideStatus || formData.status.toUpperCase());
             data.append('startDate', formData.startDate ? new Date(formData.startDate).toISOString() : '');
             data.append('endDate', formData.endDate ? new Date(formData.endDate).toISOString() : '');
             data.append('targetUserType', formData.targetUserType.toUpperCase().replace(' ', '_'));
+
+            // Log FormData contents
+            console.log('FormData entries:');
+            for (const [key, value] of data.entries()) {
+                if (value instanceof File) {
+                    console.log(`${key}: File(${value.name}, ${value.size} bytes, ${value.type})`);
+                } else {
+                    console.log(`${key}: ${value}`);
+                }
+            }
 
             if (activeTab === 'custom') {
                 data.append('title', formData.title);
@@ -117,7 +153,14 @@ export default function CreateBannerPage() {
                     data.append('placeholderMedia', formData.placeholderFile);
                 }
 
-                await createCustomBanner(data).unwrap();
+                console.log('Create data being sent:');
+                for (const [key, value] of data.entries()) {
+                    if (value instanceof File) {
+                        console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
+                    } else {
+                        console.log(`${key}: ${value}`);
+                    }
+                }
             } else {
                 // Prebuilt
                 data.append('title', formData.title || '');
@@ -126,15 +169,44 @@ export default function CreateBannerPage() {
                     data.append('uploadBanner', formData.uploadBannerFile);
                 }
                 data.append('bannerLinkRedirectURL', formData.bannerLinkRedirectURL || '');
-                
-                await createPrebuiltBanner(data).unwrap();
+
+                console.log('Create prebuilt data being sent:');
+                for (const [key, value] of data.entries()) {
+                    if (value instanceof File) {
+                        console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
+                    } else {
+                        console.log(`${key}: ${value}`);
+                    }
+                }
+            }
+
+            console.log('Sending API request...');
+            try {
+                if (activeTab === 'custom') {
+                    await createCustomBanner(data).unwrap();
+                } else {
+                    await createPrebuiltBanner(data).unwrap();
+                }
+                console.log('API request successful');
+            } catch (apiError) {
+                console.error('API Error caught:', apiError);
+                console.error('Error type:', typeof apiError);
+                console.error('Error keys:', Object.keys(apiError || {}));
+                throw apiError;
             }
 
             toast.success('Banner created successfully');
             router.push('/admin/support/banner');
         } catch (error: any) {
-            toast.error(error?.data?.message || 'Failed to create banner');
             console.error('Create error:', error);
+            console.error('Error details:', {
+                message: error?.message,
+                status: error?.status,
+                data: error?.data,
+                originalStatus: error?.originalStatus,
+                error: error?.error
+            });
+            toast.error(error?.data?.message || error?.message || 'Failed to create banner');
         }
     };
 

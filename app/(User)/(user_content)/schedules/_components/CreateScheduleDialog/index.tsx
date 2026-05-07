@@ -228,9 +228,9 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                     </div>
                     <button
                         onClick={handleCancel}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all cursor-pointer text-muted hover:text-red-500"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all cursor-pointer text-muted hover:text-red-500 group"
                     >
-                        <X className="w-6 h-6" />
+                        <X className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" />
                     </button>
                 </div>
 

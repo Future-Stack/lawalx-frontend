@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -50,10 +51,10 @@ const AddContentDialog = ({ open, setOpen, programId, programName, existingFileI
     );
   };
 
-  const handleClearSelection = () => {
-    setSelectedItems([]);
-    setOpen(false);
-  };
+  // const handleClearSelection = () => {
+  //   setSelectedItems([]);
+  //   setOpen(false);
+  // };
 
   const handleAddContent = async () => {
     if (!data?.data) return;
@@ -106,9 +107,9 @@ const AddContentDialog = ({ open, setOpen, programId, programName, existingFileI
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close"
-                className="text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full transition-colors cursor-pointer"
+                className="text-gray-400 hover:text-red-500 hover:bg-gray-100 dark:hover:bg-gray-800 p-1.5 rounded-full transition-colors cursor-pointer group"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
               </button>
             </div>
 
