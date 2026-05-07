@@ -42,6 +42,7 @@ import UploadFileModal from "@/components/content/UploadFileModal";
 import CreateFolderDialog from "@/components/content/CreateFolderDialog";
 import CreateScheduleDialog from "@/app/(User)/(user_content)/schedules/_components/CreateScheduleDialog";
 import LogoutConfirmModal from "@/components/common/LogoutConfirmModal";
+import { getUrl } from "@/lib/content-utils";
 
 
 const navItems = [
@@ -62,8 +63,7 @@ export default function UserDashboardNavbar() {
   const dispatch = useAppDispatch();
 
   // User Profile
-  // const { data: userProfile } = useGetUserProfileQuery(undefined);
-  const { data: userProfile } = useGetUserProfileQuery(undefined, { pollingInterval: 60000 });
+  const { data: userProfile } = useGetUserProfileQuery(undefined);
   const userInfo = userProfile?.data;
 
   const {
@@ -388,52 +388,64 @@ export default function UserDashboardNavbar() {
                 setHelpOpen(false);
                 setNotificationOpen(false);
               }}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full bg-gray-100 dark:bg-gray-800 transition-colors cursor-pointer"
+              className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all cursor-pointer overflow-hidden border border-gray-200 dark:border-gray-700"
             >
-              <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              {userInfo?.image_url ? (
+                <Image
+                  src={getUrl(userInfo.image_url) || ""}
+                  alt={userInfo.full_name || "Profile"}
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-cover"
+                  unoptimized
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full w-full text-xs font-bold text-gray-500 uppercase">
+                  {userInfo?.full_name?.substring(0, 2) || "JD"}
+                </div>
+              )}
             </button>
             {profileOpen && (
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setProfileOpen(false)} />
-                <div className="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-xl overflow-hidden z-40">
+                <div className="absolute right-0 mt-2 w-64 md:w-72 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-xl overflow-hidden z-40">
                   <div className="px-6 py-3">
-                    <div className="flex items-center space-x-3">
-                      {
-                        userInfo?.image_url ? (
-                          <div className="w-10 h-10 rounded-full overflow-hidden">
-                            <Image
-                              src={userInfo.image_url}
-                              alt={userInfo.full_name}
-                              width={40}
-                              height={40}
-                              className="object-cover w-full h-full"
-                            />
-                          </div>
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-400 text-sm font-medium uppercase">
-                            {userInfo?.full_name?.substring(0, 2) || "JD"}
-                          </div>
-                        )
-                      }
                       <div>
                         <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                           {userInfo?.full_name || "User"}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">@{userInfo?.username || "username"}</p>
-                      </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userInfo?.username || "username"}</p>
                     </div>
                   </div>
 
                   <div className="px-6 py-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-1">
                       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        My Plans
+                        {userInfo?.role === "ADMIN" ? "Admin Access" : "My Plans"}
                       </p>
-                      <span className="bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs font-semibold px-2 py-0.5 rounded-full">
-                        Pro
+                      <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-semibold px-2 py-0.5 rounded-full">
+                        {userInfo?.role === "ADMIN" ? "Admin" : "Pro"}
                       </span>
                     </div>
-                    <button className="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                    
+                    {/* Storage Info */}
+                    <div className="mt-2 space-y-1">
+                      <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">
+                        <span>Storage</span>
+                        <span>{((userInfo?.usedStorage || 0) / (userInfo?.totalStorage || 1) * 100).toFixed(1)}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-500 rounded-full" 
+                          style={{ width: `${Math.min(((userInfo?.usedStorage || 0) / (userInfo?.totalStorage || 1) * 100), 100)}%` }}
+                        />
+                      </div>
+                      <p className="text-[10px] text-gray-400">
+                        {userInfo?.usedStorage?.toFixed(2)} GB of {userInfo?.totalStorage} GB used
+                      </p>
+                    </div>
+
+                    <button className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:underline">
                       Manage Plans
                     </button>
                   </div>
@@ -625,12 +637,25 @@ export default function UserDashboardNavbar() {
 
             {/* Mobile Profile */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
-              <div className="flex items-center px-2 mb-3">
-                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-500 mr-3 uppercase">
-                  {userInfo?.full_name?.substring(0, 2) || "JD"}
+              <div className="flex items-center px-4 mb-3">
+                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mr-3 overflow-hidden border border-gray-200 dark:border-gray-700">
+                  {userInfo?.image_url ? (
+                    <Image
+                      src={getUrl(userInfo.image_url) || ""}
+                      alt={userInfo.full_name || "Profile"}
+                      width={40}
+                      height={40}
+                      className="h-full w-full object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <span className="text-sm font-bold text-gray-500 uppercase">
+                      {userInfo?.full_name?.substring(0, 2) || "JD"}
+                    </span>
+                  )}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{userInfo?.full_name || "User"}</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{userInfo?.full_name || "User"}</p>
                   <p className="text-xs text-gray-500">@{userInfo?.username || "username"}</p>
                 </div>
               </div>

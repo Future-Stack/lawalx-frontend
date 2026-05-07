@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Video, Clock, Trash2, PenLine, Eye } from "lucide-react";
 import Link from "next/link";
