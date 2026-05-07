@@ -15,7 +15,7 @@ export default function Security() {
 
                 <div className="space-y-6">
                     {/* Via Email */}
-                    <div className="flex items-center justify-between pb-6 border-b border-border">
+                    <div className="flex items-center justify-between pb-6">
                         <div>
                             <h3 className="text-sm font-semibold text-headings mb-1">Via email</h3>
                             <p className="text-xs text-muted">Receive a one-time passcode via SMS each time you log in.</p>

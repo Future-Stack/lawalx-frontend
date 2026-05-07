@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../../baseApi";
 
 export interface PreferencesData {
@@ -18,15 +19,15 @@ export const preferencesApi = baseApi.injectEndpoints({
       }),
       providesTags: ["User"],
     }),
-    updatePreferences: builder.mutation<any, PreferencesData>({
-      query: (body) => ({
-        url: "/settings/preferences",
-        method: "PATCH",
-        body,
-      }),
-      invalidatesTags: ["User"],
-    }),
+    // updatePreferences: builder.mutation<any, PreferencesData>({
+    //   query: (body) => ({
+    //     url: "/settings/preferences",
+    //     method: "PATCH",
+    //     body,
+    //   }),
+    //   invalidatesTags: ["User"],
+    // }),
   }),
 });
 
-export const { useGetPreferencesQuery, useUpdatePreferencesMutation } = preferencesApi;
+export const { useGetPreferencesQuery } = preferencesApi;

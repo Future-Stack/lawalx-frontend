@@ -1,18 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { MoreVertical, Loader2 } from "lucide-react";
 import { useState } from "react";
-import { useChangePasswordMutation } from "@/redux/api/users/settings/settingsApi";
+import { useChangePasswordMutation, useGetSettingsSessionsQuery } from "@/redux/api/users/settings/settingsApi";
 import { toast } from "sonner";
-import { useAppSelector } from "@/redux/store/hook";
+import { useAppDispatch } from "@/redux/store/hook";
+import { logout } from "@/redux/features/auth/authSlice";
+import { useRouter } from "next/navigation";
 
 export default function Account() {
-    const { user } = useAppSelector((state) => state.auth);
+    const dispatch = useAppDispatch();
+    const router = useRouter();
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
 
     const [changePassword, { isLoading }] = useChangePasswordMutation();
+    const { data: sessionData } = useGetSettingsSessionsQuery();
+    const sessions = sessionData?.data?.sessions || [];
+    const notificationEmail = sessionData?.data?.notificationEmail;
 
     const handlePasswordChange = async () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
@@ -33,10 +40,16 @@ export default function Account() {
         try {
             const res = await changePassword({ oldPassword, newPassword }).unwrap();
             if (res.success) {
-                toast.success(res.message || "Password changed successfully");
+                toast.success(res.message || "Password changed successfully. Please login again.");
                 setOldPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
+                
+                // Automatically logout and navigate to signin page
+                setTimeout(() => {
+                    dispatch(logout());
+                    router.push("/signin");
+                }, 1000);
             }
         } catch (error: any) {
             toast.error(error?.data?.message || "Failed to change password");
@@ -118,35 +131,34 @@ export default function Account() {
             {/* Where you are logged in */}
             <section>
                 <h2 className="text-lg md:text-xl font-bold text-headings mb-2">Where you are logged in</h2>
-                <p className="text-sm text-muted mb-6">We will notify you via lawal@tape.io if there is any unusual activity on your account</p>
+                <p className="text-sm text-muted mb-6">
+                    We will notify you via <span className="text-headings font-medium">{notificationEmail || "your email"}</span> if there is any unusual activity on your account
+                </p>
 
                 <div className="space-y-6">
-                    <div className="flex items-start justify-between pb-6 border-b border-border">
-                        <div>
-                            <div className="flex items-center gap-3 mb-1">
-                                <span className="font-semibold text-headings">2024 MacBook Pro 14</span>
-                                <span className="px-2 py-0.5 bg-[#E6FFEF] text-[#008A2E] text-xs font-medium rounded-full flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 bg-[#008A2E] rounded-full"></span> Active Now
-                                </span>
+                    {sessions.map((session, index) => (
+                        <div 
+                            key={session.id} 
+                            className={`flex items-start justify-between ${index !== sessions.length - 1 ? "pb-6 border-b border-border" : "pb-2"}`}
+                        >
+                            <div>
+                                <div className="flex items-center gap-3 mb-1">
+                                    <span className="font-semibold text-headings">{session.deviceName}</span>
+                                    {session.isCurrent && (
+                                        <span className="px-2 py-0.5 bg-[#E6FFEF] text-[#008A2E] text-xs font-medium rounded-full flex items-center gap-1">
+                                            <span className="w-1.5 h-1.5 bg-[#008A2E] rounded-full"></span> Active Now
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-xs text-muted">
+                                    {session.location} • {session.lastActive} • {session.ipAddress}
+                                </p>
                             </div>
-                            <p className="text-xs text-muted">Melbourne, Australia • 22 Jan at 04:29 PM</p>
+                            <button className="text-muted hover:text-body cursor-pointer">
+                                <MoreVertical className="w-5 h-5" />
+                            </button>
                         </div>
-                        <button className="text-muted hover:text-body cursor-pointer">
-                            <MoreVertical className="w-5 h-5" />
-                        </button>
-                    </div>
-
-                    <div className="flex items-start justify-between pb-2">
-                        <div>
-                            <div className="flex items-center gap-3 mb-1">
-                                <span className="font-semibold text-headings">2024 MacBook Pro 14</span>
-                            </div>
-                            <p className="text-xs text-muted">Melbourne, Australia • 22 Jan at 04:29 PM</p>
-                        </div>
-                        <button className="text-muted hover:text-body cursor-pointer">
-                            <MoreVertical className="w-5 h-5" />
-                        </button>
-                    </div>
+                    ))}
                 </div>
             </section>
 
