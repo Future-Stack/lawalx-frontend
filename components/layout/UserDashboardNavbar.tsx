@@ -105,13 +105,13 @@ export default function UserDashboardNavbar() {
     const isNewUser = localStorage.getItem("is_new_user") === "true";
     const savedStep = localStorage.getItem("onboarding_step") as OnboardingStep;
 
-    if (isDashboardPath && isNewUser && userInfo?.firstTimeLogin === false) {
+    if (isNewUser && userInfo?.firstTimeLogin === false) {
       if (savedStep && !onboardingStep) {
         // Resume onboarding from saved step
         setOnboardingStep(savedStep);
         if (savedStep === "add-device") setIsAddDeviceOpen(true);
         if (savedStep === "program") setIsCreateProgramOpen(true);
-      } else if (!onboardingStep) {
+      } else if (isDashboardPath && !onboardingStep) {
         startOnboarding();
       }
     }

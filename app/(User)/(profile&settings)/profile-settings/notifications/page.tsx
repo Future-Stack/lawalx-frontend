@@ -45,7 +45,7 @@ export default function Notifications() {
                     </div>
 
                     {/* Push Notifications */}
-                    <div className="flex items-center justify-between pb-6 border-b border-border">
+                    {/* <div className="flex items-center justify-between pb-6 border-b border-border">
                         <div>
                             <h3 className="text-sm font-semibold text-headings mb-1">Push Notifications</h3>
                             <p className="text-xs text-muted">Receive push notifications on your device</p>
@@ -57,7 +57,7 @@ export default function Notifications() {
                         >
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${permissions.push ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
-                    </div>
+                    </div> */}
 
                     {/* Device Alerts */}
                     <div className="flex items-center justify-between pb-6 border-b border-border">
