@@ -42,6 +42,7 @@ import {
 } from "@/redux/api/admin/usermanagementApi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { addPdfHeader } from "@/lib/pdfUtils";
 import * as XLSX from "xlsx";
 
 interface UserPayment {
@@ -186,12 +187,8 @@ export default function UserManagementPage() {
       const users = exportData.data?.users?.users || [];
       const doc = new jsPDF();
 
-      // Add Title
-      doc.setFontSize(18);
-      doc.text('User Management Report', 14, 22);
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Exported At: ${new Date().toLocaleString()}`, 14, 30);
+      // Branded header with logo
+      const startY = await addPdfHeader(doc, 'User Management Report', `Exported: ${new Date().toLocaleString()}`);
 
       // Define table columns
       const tableColumn = ["Index", "User ID", "Name", "Email", "Plan", "Role", "Status"];
@@ -214,9 +211,9 @@ export default function UserManagementPage() {
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 40,
+        startY,
         theme: 'striped',
-        headStyles: { fillColor: [59, 130, 246] }, // Blue-500
+        headStyles: { fillColor: [59, 130, 246] },
         styles: { fontSize: 8 }
       });
 

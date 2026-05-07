@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, Monitor, MoreVertical, LogOut, Loader2, AlertCircle, Trash2 } from 'lucide-react';
-import MenuDropdown from '@/common/MenuDropdown';
+import { Eye, EyeOff, Monitor, Clock, LogOut, Loader2, AlertCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -149,9 +148,9 @@ export default function SecuritySection() {
                                 value={oldPassword}
                                 onChange={(e) => setOldPassword(e.target.value)}
                                 placeholder="Enter current password"
-                                className="bg-input border-border text-headings pr-10 h-11"
+                                className="bg-input border-border text-headings pr-10 h-11 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:border-bgBlue focus-visible:ring-bgBlue/30"
                             />
-                            <button onClick={() => setShowOldPass(!showOldPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-headings cursor-pointer">
+                            <button type="button" onClick={() => setShowOldPass(!showOldPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-colors">
                                 {showOldPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                         </div>
@@ -164,9 +163,9 @@ export default function SecuritySection() {
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                                 placeholder="Enter new password"
-                                className="bg-input border-border text-headings pr-10 h-11"
+                                className="bg-input border-border text-headings pr-10 h-11 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:border-bgBlue focus-visible:ring-bgBlue/30"
                             />
-                            <button onClick={() => setShowNewPass(!showNewPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-headings cursor-pointer">
+                            <button type="button" onClick={() => setShowNewPass(!showNewPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-colors">
                                 {showNewPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                         </div>
@@ -179,9 +178,9 @@ export default function SecuritySection() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 placeholder="Confirm new password"
-                                className="bg-input border-border text-headings pr-10 h-11"
+                                className="bg-input border-border text-headings pr-10 h-11 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:border-bgBlue focus-visible:ring-bgBlue/30"
                             />
-                            <button onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-headings cursor-pointer">
+                            <button type="button" onClick={() => setShowConfirmPass(!showConfirmPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer transition-colors">
                                 {showConfirmPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                             </button>
                         </div>
@@ -260,78 +259,75 @@ export default function SecuritySection() {
 
             {/* Active Sessions */}
             <div className="bg-navbarBg border border-border rounded-xl overflow-hidden shadow-sm">
-                <div className="px-6 py-4 border-b border-border bg-[#F0FAFF] dark:bg-blue-900/10 flex items-center justify-between">
+                <div className="px-6 py-4 border-b border-border bg-[#F0FAFF] dark:bg-blue-900/10">
                     <h2 className="text-lg font-semibold text-headings">Active Sessions</h2>
-                    <div className="flex items-center gap-3">
-                        {sessions.length > 1 && (
-                            <button
-                                onClick={handleEndOtherSessions}
-                                className="text-xs font-bold text-red-500 hover:text-red-600 cursor-pointer transition-colors"
-                            >
-                                End All Sessions
-                            </button>
-                        )}
-                        <span className="text-xs text-muted bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-md font-medium">
-                            {sessions.length} active
-                        </span>
-                    </div>
                 </div>
-                <div className="p-6 space-y-4">
-                    <div className="space-y-3">
-                        {sessions.map((session: any) => (
+                <div className="p-4 space-y-3">
+                    {sessions.map((session: any) => {
+                        const isCurrent = session.isCurrent;
+                        const lastActive = session.lastActive
+                            ? (() => {
+                                const diff = Math.round((Date.now() - new Date(session.lastActive).getTime()) / 60000);
+                                if (diff < 1) return 'Just now';
+                                if (diff < 60) return `${diff} minutes ago`;
+                                const hrs = Math.round(diff / 60);
+                                return `${hrs} hour${hrs > 1 ? 's' : ''} ago`;
+                            })()
+                            : '';
+
+                        return (
                             <div
                                 key={session.id}
-                                className={`p-4 rounded-xl border flex items-center justify-between transition-all ${
-                                    session.isCurrent ? 'border-bgBlue/30 bg-[#F0FAFF] dark:bg-blue-900/10' : 'border-border'
-                                }`}
+                                className="rounded-xl border border-border p-4 bg-navbarBg"
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className={`p-2 rounded-lg ${session.isCurrent ? 'bg-bgBlue/10 text-bgBlue' : 'bg-gray-100 text-muted dark:bg-gray-800'}`}>
-                                        <Monitor className="w-5 h-5" />
+                                {/* Top row: device info + time/badge */}
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-start gap-3">
+                                        <Monitor className="w-5 h-5 text-gray-500 dark:text-gray-400 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-bold text-headings">{parseUserAgent(session.userAgent)}</p>
+                                            <p className="text-xs text-muted mt-0.5">
+                                                {session.location || 'Unknown'}{session.ipAddress ? ` • ${session.ipAddress}` : ''}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="space-y-0.5">
-                                        <p className="text-sm font-semibold text-headings">{parseUserAgent(session.userAgent)}</p>
-                                        <p className="text-xs text-muted">{session.location} • {session.ipAddress}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <div className="flex flex-col items-end gap-1">
-                                        {session.isCurrent && (
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-bgBlue bg-bgBlue/10 px-2.5 py-1 rounded-md">
+
+                                    {/* Right side: always show last active time, plus Current badge if applicable */}
+                                    <div className="shrink-0 flex items-center gap-2">
+                                        {isCurrent && (
+                                            <span className="text-xs font-medium text-gray-500 border border-gray-300 dark:border-gray-600 rounded-full px-3 py-0.5">
                                                 Current
                                             </span>
                                         )}
-                                        <span className="text-xs text-muted">
-                                            {new Date(session.lastActive).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
+                                        <div className="flex items-center gap-1 text-xs text-muted">
+                                            <Clock className="w-3.5 h-3.5 shrink-0" />
+                                            <span>{lastActive}</span>
+                                        </div>
                                     </div>
-                                    <MenuDropdown
-                                        triggerIcon={<MoreVertical className="w-4 h-4" />}
-                                        options={[
-                                            {
-                                                label: 'Delete',
-                                                value: 'delete',
-                                                icon: <Trash2 className="w-4 h-4" />,
-                                                danger: true,
-                                                onClick: () => handleEndSession(session.id)
-                                            }
-                                        ]}
-                                    />
+                                </div>
+
+                                {/* Bottom row: End Session button */}
+                                <div className="mt-3 pl-8">
+                                    <button
+                                        onClick={() => handleEndSession(session.id)}
+                                        className="bg-orange-500 hover:bg-orange-600 text-white text-xs font-semibold px-4 py-1.5 rounded-md shadow-customShadow transition-colors cursor-pointer"
+                                    >
+                                        End Session
+                                    </button>
                                 </div>
                             </div>
-                        ))}
-                    </div>
-                    {/* {nonCurrentSessions.length > 0 && (
-                        <div className="pt-2">
-                            <button
-                                onClick={handleEndOtherSessions}
-                                className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-semibold transition-all shadow-lg shadow-red-500/10 flex items-center justify-center gap-2 cursor-pointer"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                End All Other Sessions
-                            </button>
-                        </div>
-                    )} */}
+                        );
+                    })}
+
+                    {sessions.length > 1 && (
+                        <button
+                            onClick={handleEndOtherSessions}
+                            className="w-full mt-2 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <LogOut className="w-4 h-4" />
+                            End All Other Sessions
+                        </button>
+                    )}
                 </div>
             </div>
 
