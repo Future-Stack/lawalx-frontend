@@ -22,7 +22,7 @@ const SubscriptionPage = () => {
     { label: "Billing & Invoices", icon: CreditCard },
     { label: "Plans", icon: LayoutGrid },
     { label: "Coupons", icon: Ticket },
-    {label: "Invoices", icon: FileText}
+    // {label: "Invoices", icon: FileText}
   ];
 
   return (
