@@ -445,9 +445,9 @@ export default function UserDashboardNavbar() {
                       </p>
                     </div>
 
-                    <button className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:underline">
+                    <Link href="/choose-plan" className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1">
                       Manage Plans
-                    </button>
+                    </Link>
                   </div>
 
                   <div className="px-4">
@@ -456,15 +456,15 @@ export default function UserDashboardNavbar() {
 
                   <div className="py-1 space-y-1">
                     <div className="px-4">
-                      <Link href="/profile-settings/general" className="flex items-center w-full text-left py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 px-2">
+                      {/* <Link href="/profile-settings/general" className="flex items-center w-full text-left py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 px-2">
                         <UserRoundCogIcon className="w-4 h-4 mr-2" />
                         Edit Profile
-                      </Link>
+                      </Link> */}
                     </div>
                     <div className="px-4">
                       <Link href="/profile-settings/general" className="flex items-center w-full text-left py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 px-2">
                         <SettingsIcon className="w-4 h-4 mr-2" />
-                        Settings
+                        Edit Profile & Settings
                       </Link>
                     </div>
                     <div className="px-4">
@@ -660,11 +660,11 @@ export default function UserDashboardNavbar() {
                 </div>
               </div>
               <div className="space-y-1">
-                <button onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2">
+                {/* <button onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2">
                   <UserRoundCogIcon className="w-4 h-4" /> Edit Profile
-                </button>
+                </button> */}
                 <button onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2">
-                  <SettingsIcon className="w-4 h-4" /> Settings
+                  <SettingsIcon className="w-4 h-4" /> Edit Profile & Settings
                 </button>
                 <button
                   onClick={() => {

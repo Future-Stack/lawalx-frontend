@@ -310,7 +310,7 @@ body {
     --bg-background: #f9fafb;
     /* Gray/50 */
     --bg-cardBackground: #FFFFFF;
-    --bg-cardBackgound2: #F0FAFF;
+    --bg-cardBackground2: #F0FAFF;
     /* Primary/50 light */
     --selected-background: rgba(10, 10, 10, 0.05);
     --bg-input: #f3f4f6;
@@ -421,7 +421,7 @@ body {
     --bg-black: #FFFFFF;
     --bg-background: #0f172a;
     --bg-cardBackground: #1e293b;
-    --bg-cardBackgound2: rgba(59, 130, 246, 0.1);
+    --bg-cardBackground2: rgba(59, 130, 246, 0.1);
     --selected-background: rgba(59, 130, 246, 0.15);
     --bg-input: #334155;
     --hover-background: #1e293b;
@@ -493,7 +493,7 @@ body {
   }
 
   .bg-cardBackground2 {
-    background-color: var(--bg-cardBackgound2);
+    background-color: var(--bg-cardBackground2);
   }
 
   .bg-selected {
