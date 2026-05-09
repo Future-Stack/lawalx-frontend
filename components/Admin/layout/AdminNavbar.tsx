@@ -8,6 +8,13 @@ import { useState } from 'react';
 import { useGetAdminProfileQuery } from '@/redux/api/admin/profile&settings/adminSettingsApi';
 import { useGetMyNotificationsQuery, useReadAllNotificationsMutation, useReadNotificationMutation } from "@/redux/api/users/notificationApi";
 import { formatDistanceToNow } from "date-fns";
+import { useGetPreferencesQuery, useUpdatePreferencesMutation } from '@/redux/api/admin/navbarApi';
+import { ChevronDown, Globe } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCurrency } from '@/redux/features/settings/settingsSlice';
+import { RootState } from '@/redux/store/store';
+import { useEffect } from 'react';
+import { getCurrencySymbol } from '@/lib/currencyUtils';
 
 const getFullImageUrl = (path: string | null | undefined): string | null => {
   if (!path) return null;
@@ -62,6 +69,29 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
   const { data: notificationData } = useGetMyNotificationsQuery();
   const [readAllNotifications] = useReadAllNotificationsMutation();
   const [readNotification] = useReadNotificationMutation();
+
+  const dispatch = useDispatch();
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const { data: preferencesData } = useGetPreferencesQuery();
+  const [updatePreferences] = useUpdatePreferencesMutation();
+  
+  const currentCurrency = useSelector((state: RootState) => state.settings.currency);
+
+  useEffect(() => {
+    if (preferencesData?.data?.currency) {
+      dispatch(setCurrency(preferencesData.data.currency as 'USD' | 'NGN'));
+    }
+  }, [preferencesData, dispatch]);
+
+  const handleCurrencyChange = async (currency: 'USD' | 'NGN') => {
+    try {
+      await updatePreferences({ currency }).unwrap();
+      dispatch(setCurrency(currency));
+      setCurrencyOpen(false);
+    } catch (error) {
+      console.error("Failed to update currency", error);
+    }
+  };
 
   const allNotifications = notificationData?.data || [];
   const unreadCount = allNotifications.filter((n: any) => !n.isRead).length;
@@ -126,6 +156,40 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
 
         {/* RIGHT SIDE */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Currency Switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setCurrencyOpen(!currencyOpen)}
+              className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              <span className="w-4 h-4 flex items-center justify-center font-bold text-bgBlue">
+                {getCurrencySymbol(currentCurrency)}
+              </span>
+              <span>{currentCurrency}</span>
+              <ChevronDown className={`w-3 h-3 transition-transform ${currencyOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {currencyOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setCurrencyOpen(false)} />
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg overflow-hidden z-40">
+                  <button
+                    onClick={() => handleCurrencyChange('USD')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${currentCurrency === 'USD' ? 'text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'}`}
+                  >
+                    USD ($)
+                  </button>
+                  <button
+                    onClick={() => handleCurrencyChange('NGN')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${currentCurrency === 'NGN' ? 'text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'}`}
+                  >
+                    NGN (₦)
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Notifications */}
           <div className="relative">
             <button

@@ -90,7 +90,7 @@ export const billingsApi = baseApi.injectEndpoints({
           params: cleaned,
         };
       },
-      providesTags: ["Billing"],
+      providesTags: ["Billing", "FinancialData"],
     }),
 
     viewInGateway: builder.query<GatewayViewResponse, string>({
