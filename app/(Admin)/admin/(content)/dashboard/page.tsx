@@ -22,6 +22,9 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import TicketDetailsDialog from '../support/support-tickets/_components/TicketDetailsDialog';
 import { useGetAdminTicketDetailsQuery, type Ticket } from '@/redux/api/admin/support/adminSupportTicketApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store/store';
+import { getCurrencySymbol } from '@/lib/currencyUtils';
 
 type DateRange = '1d' | '7d' | '1m' | '1y';
 
@@ -609,6 +612,9 @@ const Dashboard: React.FC = () => {
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  
+  const currency = useSelector((state: RootState) => state.settings.currency);
+  const currencySymbol = getCurrencySymbol(currency);
 
   // Fetch Overview Data
   const { data: overviewData, isLoading: isOverviewLoading } = useGetDashboardOverviewQuery(dateRange);
@@ -698,7 +704,7 @@ const Dashboard: React.FC = () => {
           ['Metric', 'Value', 'Growth %'],
           ['Total Users', (reportData.overview.totalUsers.value || 0).toLocaleString(), `${reportData.overview.totalUsers.growth || 0}%`],
           ['Active Subscriptions', (reportData.overview.activeSubscriptions.value || 0).toLocaleString(), `${reportData.overview.activeSubscriptions.growth || 0}%`],
-          ['MRR', `$${(reportData.overview.monthlyRecurringRevenue.value || 0).toLocaleString()}`, `${reportData.overview.monthlyRecurringRevenue.growth || 0}%`],
+          ['MRR', `${currencySymbol}${(reportData.overview.monthlyRecurringRevenue.value || 0).toLocaleString()}`, `${reportData.overview.monthlyRecurringRevenue.growth || 0}%`],
           ['Active Devices', (reportData.overview.activeDevices.value || 0).toLocaleString(), `${reportData.overview.activeDevices.growth || 0}%`],
           ['Open Support Tickets', (reportData.overview.openSupportTickets.value || 0).toString(), `${reportData.overview.openSupportTickets.growth || 0}%`],
         ];
@@ -934,10 +940,10 @@ const Dashboard: React.FC = () => {
           <MetricCard
             icon={<DollarSign className="w-4 h-4" />}
             title="Monthly Recurring Revenue"
-            value={`$${stats?.monthlyRecurringRevenue?.value?.toLocaleString() || '0'}`}
+            value={`${getCurrencySymbol(currency)}${(stats?.monthlyRecurringRevenue?.value || 0).toLocaleString()}`}
             change={`${stats?.monthlyRecurringRevenue?.growth || 0}%`}
             isPositive={(stats?.monthlyRecurringRevenue?.growth || 0) >= 0}
-            subtitle={`ARR: $${stats?.monthlyRecurringRevenue?.arr?.toLocaleString() || '0'}`}
+            subtitle={`ARR: ${getCurrencySymbol(currency)}${(stats?.monthlyRecurringRevenue?.arr || 0).toLocaleString()}`}
             isLoading={isOverviewLoading}
           />
           <MetricCard

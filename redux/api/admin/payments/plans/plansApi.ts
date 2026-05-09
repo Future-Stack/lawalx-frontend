@@ -48,14 +48,14 @@ export const plansApi = baseApi.injectEndpoints({
         url: `/plans`,
         method: "GET",
       }),
-      providesTags: ["Subscription"],
+      providesTags: ["Subscription", "FinancialData"],
     }),
     getSinglePlan: builder.query<GetSinglePlanResponse, string>({
       query: (id) => ({
         url: `/plans/${id}`,
         method: "GET",
       }),
-      providesTags: ["Subscription"],
+      providesTags: ["Subscription", "FinancialData"],
     }),
     updatePlan: builder.mutation<UpdatePlanResponse, { id: string; data: UpdatePlanPayload }>({
       query: ({ id, data }) => ({
@@ -63,7 +63,7 @@ export const plansApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["Subscription"],
+      invalidatesTags: ["Subscription", "FinancialData"],
     }),
   }),
 });

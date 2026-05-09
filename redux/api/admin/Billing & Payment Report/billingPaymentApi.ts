@@ -8,7 +8,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
-      providesTags: ["Activity"],
+      providesTags: ["FinancialData"],
     }),
     getTransactionReport: builder.query({
       query: (params) => ({
@@ -16,6 +16,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getRecentTransactions: builder.query({
       query: (params) => ({
@@ -23,6 +24,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getPaymentMethods: builder.query({
       query: (params) => ({
@@ -30,6 +32,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getTransactionVolume: builder.query({
       query: (params) => ({
@@ -37,6 +40,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getAgingReport: builder.query({
       query: (params) => ({
@@ -44,6 +48,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getFailedPaymentsAnalysis: builder.query({
       query: (params) => ({
@@ -51,6 +56,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getDelinquencyReport: builder.query({
       query: (params) => ({
@@ -58,6 +64,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getRefundReport: builder.query({
       query: (params) => ({
@@ -65,6 +72,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getTaxReport: builder.query({
       query: (params) => ({
@@ -72,6 +80,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getDsoAnalysis: builder.query({
       query: (params) => ({
@@ -79,6 +88,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getBillingExportAll: builder.query({
       query: (params) => ({
@@ -86,6 +96,7 @@ export const billingPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
   }),
 });

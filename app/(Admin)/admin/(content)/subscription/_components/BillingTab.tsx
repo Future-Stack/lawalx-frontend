@@ -27,6 +27,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import TransactionSheet from "./TransactionSheet";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store/store";
+import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
 import {
     useGetPaymentHistoryQuery,
     useLazyViewInGatewayQuery,
@@ -82,12 +85,6 @@ function formatDate(iso: string) {
     });
 }
 
-function formatAmount(amount: number) {
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-    }).format(amount);
-}
 
 const LIMIT = 10;
 
@@ -99,6 +96,8 @@ const BillingTab = () => {
     const [debouncedSearch, setDebouncedSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<PaymentStatus | "all">("all");
     const [period, setPeriod] = useState("ALL");
+
+    const currency = useSelector((state: RootState) => state.settings.currency);
 
     // Sheet state — pass user.id so TransactionSheet can load user invoice details
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -288,7 +287,7 @@ const BillingTab = () => {
 
                                 {/* Amount */}
                                 <TableCell className="font-semibold text-headings">
-                                    {formatAmount(payment.amount)}
+                                    {formatCurrency(payment.amount, currency)}
                                 </TableCell>
 
                                 {/* Status */}

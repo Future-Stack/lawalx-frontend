@@ -104,14 +104,14 @@ export const subscribersApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
-      providesTags: ["Subscription"],
+      providesTags: ["Subscription", "FinancialData"],
     }),
     getUserInvoices: builder.query<GetUserInvoicesResponse, string>({
       query: (userId) => ({
         url: `/subscribers/${userId}/invoices`,
         method: "GET",
       }),
-      providesTags: ["Subscription"],
+      providesTags: ["Subscription", "FinancialData"],
     }),
   }),
 });
