@@ -21,6 +21,9 @@ import {
 } from "lucide-react";
 import CreatePlanDialog from "./CreatePlanDialog";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store/store";
+import { getCurrencySymbol } from "@/lib/currencyUtils";
 
 const PlansTab = () => {
   const { data, isLoading, isError } = useGetPlansQuery();
@@ -39,6 +42,9 @@ const PlansTab = () => {
   const [discountPercentage, setDiscountPercentage] = useState("30");
   const [allPlansActive, setAllPlansActive] = useState(true);
 
+  const currency = useSelector((state: RootState) => state.settings.currency);
+  const currencySymbol = getCurrencySymbol(currency);
+
   const plans = data?.data || [];
   const discountInfo = discountData?.data?.[0];
 
@@ -54,11 +60,8 @@ const PlansTab = () => {
     setEditModalOpen(true);
   };
 
-    const formatPrice = (price: string, currency: string) => {
-        return new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: currency || "USD",
-        }).format(parseFloat(price));
+    const formatPrice = (price: string) => {
+        return `${currencySymbol}${parseFloat(price).toLocaleString()}`;
     };
 
     const handleToggleDiscount = async () => {
@@ -165,7 +168,7 @@ const PlansTab = () => {
               <div className="flex items-baseline justify-between mb-8">
                 <div className="flex items-baseline gap-1">
                   <span className="text-3xl font-bold text-headings">
-                    {formatPrice(plan.price, plan.currency)}
+                    {formatPrice(plan.price)}
                   </span>
                   <span className="text-sm text-muted">/month</span>
                 </div>

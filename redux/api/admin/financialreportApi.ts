@@ -8,7 +8,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
-      providesTags: ["Activity"],
+      providesTags: ["FinancialData"],
     }),
     getMrrStats: builder.query({
       query: (params) => ({
@@ -16,6 +16,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getMrrTrend: builder.query({
       query: (params) => ({
@@ -23,6 +24,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getFinancialBreakdown: builder.query({
       query: (params) => ({
@@ -30,6 +32,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getChurnStats: builder.query({
       query: (params) => ({
@@ -37,6 +40,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getChurnTrend: builder.query({
       query: (params) => ({
@@ -44,6 +48,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getChurnRateByPlan: builder.query({
       query: (params) => ({
@@ -51,6 +56,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getPlanStats: builder.query({
       query: (params) => ({
@@ -58,6 +64,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getPlanRevenue: builder.query({
       query: (params) => ({
@@ -65,6 +72,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getPlanSubscribers: builder.query({
       query: (params) => ({
@@ -72,6 +80,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getTrialStats: builder.query({
       query: (params) => ({
@@ -79,6 +88,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getTrialConvertByPlan: builder.query({
       query: (params) => ({
@@ -86,6 +96,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getArpuStats: builder.query({
       query: (params) => ({
@@ -93,6 +104,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getArpuTrend: builder.query({
       query: (params) => ({
@@ -100,6 +112,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
     getExportFinancialReport: builder.query({
       query: (params) => ({
@@ -107,6 +120,7 @@ export const financialreportApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["FinancialData"],
     }),
   }),
 });
