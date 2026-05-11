@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AreaChart, Area, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { CheckCircle, Clock, TrendingUp, Download, Filter, Home, ChevronRight, AlertCircle, TrendingDown, Zap } from 'lucide-react';
+import { CheckCircle, Clock, TrendingUp, Download, Filter, Home, ChevronRight, AlertCircle, TrendingDown, Zap, RefreshCw } from 'lucide-react';
 import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
 import {
@@ -12,7 +12,13 @@ import {
   useGetSupportCategoriesQuery,
   useGetResponseTrendQuery,
   useGetSupportInsightsQuery,
+  useLazyGetExportSupportReportQuery,
 } from '@/redux/api/admin/customerSupportReportApi';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { addPdfHeader } from '@/lib/pdfUtils';
+import { toast } from 'sonner';
 
 const CustomerServiceReports = () => {
   const [timeRange, setTimeRange] = useState('30d');
@@ -26,6 +32,7 @@ const CustomerServiceReports = () => {
   const { data: categoriesData, isLoading: categoriesLoading } = useGetSupportCategoriesQuery(timeRange);
   const { data: responseTrendData, isLoading: responseTrendLoading } = useGetResponseTrendQuery(timeRange);
   const { data: insightsData, isLoading: insightsLoading } = useGetSupportInsightsQuery(timeRange);
+  const [triggerExport] = useLazyGetExportSupportReportQuery();
 
   const timeRanges = [
     { value: '1d', label: 'Last 1 day' },
@@ -74,9 +81,196 @@ const CustomerServiceReports = () => {
     }
   };
 
-  const handleExport = (format: 'pdf' | 'excel') => {
-    // Export logic would go here
-    console.log(`Exporting as ${format}`);
+  const processedTrendData = useMemo(() => {
+    return trendData?.data?.map((item: any, index: number) => ({
+      ...item,
+      uniqueLabel: `${item.label}--${index}`
+    })) || [];
+  }, [trendData]);
+
+  const processedResponseTrendData = useMemo(() => {
+    return responseTrendData?.data?.map((item: any, index: number) => ({
+      ...item,
+      uniqueLabel: `${item.label}--${index}`
+    })) || [];
+  }, [responseTrendData]);
+
+  const handleExport = async (format: 'pdf' | 'excel') => {
+    try {
+      toast.loading(`Preparing ${format.toUpperCase()} report...`);
+      const { data: exportData } = await triggerExport(timeRange);
+      toast.dismiss();
+
+      if (!exportData || !exportData.success) {
+        toast.error('Failed to fetch export data');
+        return;
+      }
+
+      const reportData = exportData.data;
+
+      if (format === 'pdf') {
+        const doc = new jsPDF();
+
+        // Branded header with logo
+        let currentY = await addPdfHeader(
+          doc,
+          'Customer Service & Support Report',
+          `Period: ${timeRanges.find(t => t.value === timeRange)?.label}  |  Generated: ${new Date().toLocaleString()}`
+        );
+
+        // Section 1: Executive Summary
+        doc.setTextColor(50, 50, 50);
+        doc.setFontSize(14);
+        doc.text('1. Executive Summary', 14, currentY);
+
+        const summaryStats = [
+          ['Metric', 'Value', 'Change %', 'Status'],
+          ['Total Tickets', reportData.summary.totalTickets.value.toString(), `${reportData.summary.totalTickets.change}%`, 'N/A'],
+          ['Resolved Tickets', reportData.summary.resolvedTickets.value.toString(), `${reportData.summary.resolvedTickets.change}%`, `${reportData.summary.resolvedTickets.resolutionRate}% Rate`],
+          ['Avg Response Time', `${reportData.summary.avgResponseTime.value} ${reportData.summary.avgResponseTime.unit}`, `${reportData.summary.avgResponseTime.change}%`, 'N/A'],
+          ['Avg Resolution Time', `${reportData.summary.avgResolutionTime.value} ${reportData.summary.avgResolutionTime.unit}`, `${reportData.summary.avgResolutionTime.change}%`, 'N/A'],
+        ];
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [summaryStats[0]],
+          body: summaryStats.slice(1),
+          theme: 'grid',
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [139, 92, 246] }
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+
+        // Section 2: Ticket Trend
+        doc.setFontSize(14);
+        doc.text('2. Ticket Trend Overview', 14, currentY);
+        const trendHeader = ['Label', 'Total Tickets', 'Resolved Tickets'];
+        const trendRows = (reportData.trends.tickets || []).map((t: any) => [
+          t.label,
+          t.total.toString(),
+          t.resolved.toString()
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [trendHeader],
+          body: trendRows,
+          theme: 'striped',
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [59, 130, 246] }
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+
+        // Section 3: Categories
+        if (currentY > 230) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(14);
+        doc.text('3. Tickets by Category', 14, currentY);
+        const categoryHeader = ['Category', 'Ticket Count', 'Percentage'];
+        const categoryRows = (reportData.categories || []).map((c: any) => [
+          c.name,
+          c.count.toString(),
+          `${c.percentage}%`
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [categoryHeader],
+          body: categoryRows,
+          theme: 'grid',
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [16, 185, 129] }
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+
+        // Section 4: Performance Insights
+        if (currentY > 230) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(14);
+        doc.text('4. Performance Insights', 14, currentY);
+        const insightRows = (reportData.insights || []).map((i: any) => [
+          i.title,
+          i.description,
+          i.type.toUpperCase()
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Insight', 'Description', 'Type']],
+          body: insightRows,
+          theme: 'striped',
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [245, 158, 11] }
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+
+        // Section 5: Recent Tickets
+        if (currentY > 230) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(14);
+        doc.text('5. Recent Support Tickets', 14, currentY);
+        const ticketHeader = ['ID', 'Customer', 'Subject', 'Category', 'Priority', 'Status'];
+        const ticketRows = (reportData.recentTickets || []).map((t: any) => [
+          t.ticketId,
+          t.customer,
+          t.subject,
+          t.category,
+          t.priority,
+          t.status
+        ]);
+
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [ticketHeader],
+          body: ticketRows,
+          theme: 'grid',
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [79, 70, 229] }
+        });
+
+        doc.save(`Support_Report_${timeRange}.pdf`);
+      } else {
+        // EXCEL EXPORT
+        const wb = XLSX.utils.book_new();
+
+        // Summary
+        const summaryData = [
+          ['Support Summary Report'],
+          ['Period', timeRanges.find(t => t.value === timeRange)?.label],
+          ['Generated At', new Date().toLocaleString()],
+          [],
+          ['Metric', 'Value', 'Change %'],
+          ['Total Tickets', reportData.summary.totalTickets.value, reportData.summary.totalTickets.change],
+          ['Resolved Tickets', reportData.summary.resolvedTickets.value, reportData.summary.resolvedTickets.change],
+          ['Resolution Rate', `${reportData.summary.resolvedTickets.resolutionRate}%`, ''],
+          ['Avg Response Time', `${reportData.summary.avgResponseTime.value} ${reportData.summary.avgResponseTime.unit}`, reportData.summary.avgResponseTime.change],
+          ['Avg Resolution Time', `${reportData.summary.avgResolutionTime.value} ${reportData.summary.avgResolutionTime.unit}`, reportData.summary.avgResolutionTime.change],
+        ];
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+        XLSX.utils.book_append_sheet(wb, wsSummary, 'Executive Summary');
+
+        // Trends
+        if (reportData.trends?.tickets) {
+          const wsTrends = XLSX.utils.json_to_sheet(reportData.trends.tickets);
+          XLSX.utils.book_append_sheet(wb, wsTrends, 'Ticket Trends');
+        }
+
+        // Categories
+        if (reportData.categories) {
+          const wsCategories = XLSX.utils.json_to_sheet(reportData.categories);
+          XLSX.utils.book_append_sheet(wb, wsCategories, 'Categories');
+        }
+
+        // Recent Tickets
+        if (reportData.recentTickets) {
+          const wsTickets = XLSX.utils.json_to_sheet(reportData.recentTickets);
+          XLSX.utils.book_append_sheet(wb, wsTickets, 'Recent Tickets');
+        }
+
+        XLSX.writeFile(wb, `Support_Report_${timeRange}.xlsx`);
+      }
+      toast.success(`Report exported successfully as ${format.toUpperCase()}`);
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('An error occurred during export');
+    }
   };
 
   return (
@@ -110,27 +304,29 @@ const CustomerServiceReports = () => {
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu(!showExportMenu)}
-                className="px-2.5 sm:px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer bg-navbarBg"
+                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm font-medium cursor-pointer bg-navbarBg hover:bg-blue-50 dark:hover:bg-blue-900/20 whitespace-nowrap"
               >
                 <Download className="w-4 h-4" />
-                <span className="hidden lg:inline text-nowrap">Export Support Report</span>
+                Export Report
               </button>
 
               {showExportMenu && (
                 <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)}></div>
-                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 min-w-[160px] overflow-hidden">
+                  <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                  <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
                     <button
                       onClick={() => { handleExport('pdf'); setShowExportMenu(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
                     >
-                      📄 Download PDF
+                      <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                      <span className="font-medium">Export as PDF</span>
                     </button>
                     <button
                       onClick={() => { handleExport('excel'); setShowExportMenu(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
                     >
-                      📊 Download Excel
+                      <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                      <span className="font-medium">Export as Excel</span>
                     </button>
                   </div>
                 </>
@@ -185,11 +381,15 @@ const CustomerServiceReports = () => {
         {/* Ticket Trend Chart */}
         <div className="bg-navbarBg rounded-lg p-6 border border-border mb-6">
           <h2 className="text-lg font-semibold mb-4">Ticket Trend</h2>
-          <ResponsiveContainer width="100%" height={250}>
-            {trendLoading ? (
-              <div className="h-full w-full flex items-center justify-center">Loading trend data...</div>
-            ) : (
-              <AreaChart data={trendData?.data}>
+          {trendLoading || !trendData?.data ? (
+            <div className="h-[250px] flex items-center justify-center">
+              <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+            </div>
+          ) : processedTrendData.length === 0 ? (
+            <div className="h-[250px] flex items-center justify-center text-gray-500">No data available for this period</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={250}>
+              <AreaChart key={`ticket-trend-${timeRange}`} data={processedTrendData}>
                 <defs>
                   <linearGradient id="colorResolved" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
@@ -202,26 +402,28 @@ const CustomerServiceReports = () => {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
                 <XAxis
-                  dataKey="label"
+                  dataKey="uniqueLabel"
+                  tickFormatter={(value) => value.split('--')[0]}
                   className="fill-gray-600 dark:fill-gray-400"
                   tick={{ fontSize: 12 }}
-                  interval={timeRange === '30d' ? 4 : 0}
+                  interval={timeRange === '30d' ? 4 : 'preserveStartEnd'}
                 />
                 <YAxis className="fill-gray-600 dark:fill-gray-400" tick={{ fontSize: 12 }} />
                 <Tooltip
+                  labelFormatter={(value) => value.split('--')[0]}
                   contentStyle={{
                     backgroundColor: 'var(--tooltip-bg)',
                     border: '1px solid var(--tooltip-border)',
                     borderRadius: '0.5rem'
                   }}
-                  wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
+                  wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb] z-50"
                 />
                 <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                <Area type="monotone" dataKey="resolved" stroke="#10b981" fillOpacity={1} fill="url(#colorResolved)" name="Resolved" />
-                <Area type="monotone" dataKey="total" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorTotal)" name="Total Tickets" />
+                <Area type="monotone" dataKey="resolved" stroke="#10b981" fillOpacity={1} fill="url(#colorResolved)" name="Resolved" isAnimationActive={false} />
+                <Area type="monotone" dataKey="total" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorTotal)" name="Total Tickets" isAnimationActive={false} />
               </AreaChart>
-            )}
-          </ResponsiveContainer>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* Recent Tickets Table */}
@@ -246,7 +448,12 @@ const CustomerServiceReports = () => {
               <tbody>
                 {recentLoading ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-gray-500">Loading tickets...</td>
+                    <td colSpan={7} className="py-12 text-center">
+                      <div className="flex flex-col items-center justify-center gap-2">
+                        <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+                        <span className="text-xs text-gray-500">Loading tickets...</span>
+                      </div>
+                    </td>
                   </tr>
                 ) : (
                   recentTicketsData?.data.map((ticket, idx) => (
@@ -281,10 +488,12 @@ const CustomerServiceReports = () => {
           {/* Tickets by Category */}
           <div className="bg-navbarBg rounded-lg p-6 border border-border">
             <h2 className="text-lg font-semibold mb-4">Tickets by Category</h2>
-            <ResponsiveContainer width="100%" height={280}>
-              {categoriesLoading ? (
-                <div className="h-full w-full flex items-center justify-center">Loading categories...</div>
-              ) : (
+            {categoriesLoading ? (
+              <div className="h-[280px] flex items-center justify-center">
+                <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
                     data={categoriesData?.data as any[]}
@@ -302,24 +511,29 @@ const CustomerServiceReports = () => {
                   </Pie>
                   <Tooltip />
                 </PieChart>
-              )}
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            )}
           </div>
 
           {/* Response Time Trend */}
           <div className="bg-navbarBg rounded-lg p-6 border border-border">
             <h2 className="text-lg font-semibold mb-4">Response Time Trend</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              {responseTrendLoading ? (
-                <div className="h-full w-full flex items-center justify-center">Loading response trend...</div>
-              ) : (
-                <LineChart data={responseTrendData?.data}>
+            {responseTrendLoading || !responseTrendData?.data ? (
+              <div className="h-[300px] flex items-center justify-center">
+                <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+              </div>
+            ) : processedResponseTrendData.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-gray-500">No data available for this period</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart key={`response-trend-${timeRange}`} data={processedResponseTrendData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
                   <XAxis
-                    dataKey="label"
+                    dataKey="uniqueLabel"
+                    tickFormatter={(value) => value.split('--')[0]}
                     className="fill-gray-600 dark:fill-gray-400"
                     tick={{ fontSize: 12 }}
-                    interval={timeRange === '30d' ? 4 : 0}
+                    interval={timeRange === '30d' ? 4 : 'preserveStartEnd'}
                   />
                   <YAxis
                     className="fill-gray-600 dark:fill-gray-400"
@@ -327,12 +541,13 @@ const CustomerServiceReports = () => {
                     label={{ value: 'Minutes', angle: -90, position: 'insideLeft' }}
                   />
                   <Tooltip
+                    labelFormatter={(value) => value.split('--')[0]}
                     contentStyle={{
                       backgroundColor: 'var(--tooltip-bg)',
                       border: '1px solid var(--tooltip-border)',
                       borderRadius: '0.5rem'
                     }}
-                    wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
+                    wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb] z-50"
                     formatter={(value: number | undefined) => value !== undefined ? [`${value.toFixed(1)} min`, 'Avg Response (min)'] : ['', '']}
                   />
                   <Line
@@ -342,10 +557,11 @@ const CustomerServiceReports = () => {
                     strokeWidth={2}
                     dot={{ fill: '#10b981', r: 4 }}
                     name="Avg Response (min)"
+                    isAnimationActive={false}
                   />
                 </LineChart>
-              )}
-            </ResponsiveContainer>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -354,7 +570,10 @@ const CustomerServiceReports = () => {
           <h2 className="text-lg font-semibold mb-4">Performance Insights</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {insightsLoading ? (
-              <div className="col-span-3 text-center py-4 text-gray-500">Loading insights...</div>
+              <div className="col-span-3 flex flex-col items-center justify-center py-12 gap-2">
+                <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+                <span className="text-xs text-gray-500">Loading insights...</span>
+              </div>
             ) : (
               insightsData?.data.map((insight, idx) => (
                 <div key={idx} className={`rounded-lg p-4 border ${getInsightBg(insight.type)}`}>

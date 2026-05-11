@@ -23,6 +23,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "lawaltwo.sakibalhasa.xyz",
       },
+      {
+        protocol: "https",
+        hostname: "*.ngrok-free.dev",
+      },
+      {
+        protocol: "https",
+        hostname: "*.ngrok.io",
+      },
     ],
   },
 };

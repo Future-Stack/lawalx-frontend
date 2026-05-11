@@ -78,6 +78,9 @@ export const customerSupportReportApi = baseApi.injectEndpoints({
     getSupportInsights: builder.query<{ data: SupportInsight[] }, string>({
       query: (type) => `/support-report/insights?type=${type}`,
     }),
+    getExportSupportReport: builder.query<{ success: boolean; data: any; message?: string }, string>({
+      query: (type) => `/support-report/export?type=${type}`,
+    }),
   }),
 });
 
@@ -88,4 +91,6 @@ export const {
   useGetSupportCategoriesQuery,
   useGetResponseTrendQuery,
   useGetSupportInsightsQuery,
+  useGetExportSupportReportQuery,
+  useLazyGetExportSupportReportQuery,
 } = customerSupportReportApi;
