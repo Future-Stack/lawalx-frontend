@@ -202,7 +202,9 @@ const BillingDashboard = () => {
 
   const handleExport = async () => {
     try {
+      toast.loading("Preparing PDF report...");
       const result = await triggerExport({ timeRange: timeRangeValue });
+      toast.dismiss();
 
       if (result.error || !result.data || !result.data.success) {
         console.error("Export error:", result.error);
@@ -213,50 +215,52 @@ const BillingDashboard = () => {
 
       const rawData = result.data.data;
       if (!rawData) {
-        console.error("Export error: rawData is undefined", result.data);
         toast.error("Export data is empty");
         return;
       }
 
-      // console.log("Raw Export Data:", rawData);
-
       const doc = new jsPDF();
-      const HEADING_GAP = 10;
+      const timeRangeLabel = timeRanges.find(t => t.value === timeRange)?.label || 'All Time';
 
       // Branded header with logo
       let currentY = await addPdfHeader(
         doc,
-        'Billing & Payment Report',
-        `Time Range: ${timeRangeValue}  |  Exported: ${new Date().toLocaleString()}`
+        'Subscription & Billing Report',
+        `Period: ${timeRangeLabel}  |  Generated: ${new Date().toLocaleString()}`
       );
 
-      // Overview
+      // Section 1: Billing Overview
+      doc.setTextColor(50, 50, 50);
       doc.setFontSize(14);
-      doc.setTextColor(0);
-      doc.text('Overview', 14, currentY);
+      doc.text('1. Billing Overview', 14, currentY);
 
       const overview = rawData.overview || {};
       const overviewRows = [
-        ['Success Rate', `${overview.successRate?.value || 0}%`, overview.successRate?.trend || ''],
-        ['Failed Payments Count', overview.failedPayments?.count || 0, ''],
-        ['Failed Payments Amount', `${currencySymbol}${overview.failedPayments?.amount || 0}`, ''],
-        ['Overdue Invoices Count', overview.overdueInvoices?.count || 0, ''],
-        ['Overdue Invoices Amount', `${currencySymbol}${overview.overdueInvoices?.amount || 0}`, ''],
+        ['Metric', 'Value', 'Trend'],
+        ['Success Rate', `${overview.successRate?.value || 0}%`, overview.successRate?.trend || 'Stable'],
+        ['Failed Payments Count', (overview.failedPayments?.count || 0).toLocaleString(), ''],
+        ['Failed Payments Amount', `${currencySymbol}${(overview.failedPayments?.amount || 0).toLocaleString()}`, ''],
+        ['Overdue Invoices Count', (overview.overdueInvoices?.count || 0).toLocaleString(), ''],
+        ['Overdue Invoices Amount', `${currencySymbol}${(overview.overdueInvoices?.amount || 0).toLocaleString()}`, ''],
         ['Recovery Rate', `${overview.recoveryRate?.value || 0}%`, ''],
         ['Avg DSO', `${overview.avgDSO?.value || 0} days`, overview.avgDSO?.status || ''],
       ];
 
       autoTable(doc, {
-        body: overviewRows,
+        head: [overviewRows[0]],
+        body: overviewRows.slice(1),
         startY: currentY + 5,
         theme: 'striped',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [59, 130, 246] } // Blue-500
       });
 
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 60)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Transactions
-      if (currentY > 250) { doc.addPage(); currentY = 20; }
-      doc.text('Recent Transactions', 14, currentY);
+      // Section 2: Recent Transactions
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('2. Recent Transactions', 14, currentY);
 
       const transactions = rawData.recentTransactions || rawData.transactions || [];
       const txRows = transactions.map((tx: any) => [
@@ -274,13 +278,16 @@ const BillingDashboard = () => {
         body: txRows,
         startY: currentY + 5,
         theme: 'grid',
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [139, 92, 246] } // Purple-500
       });
 
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 60)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Invoice Aging
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('Invoice Aging Summary', 14, currentY);
+      // Section 3: Invoice Aging Summary
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('3. Invoice Aging Summary', 14, currentY);
       const agingRows = (rawData.agingReport?.summary || []).map((item: any) => [
         item.range,
         item.count,
@@ -291,12 +298,15 @@ const BillingDashboard = () => {
         body: agingRows,
         startY: currentY + 5,
         theme: 'striped',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [245, 158, 11] } // Amber-500
       });
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 40)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Failed Payments
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('Failed Payments Analysis', 14, currentY);
+      // Section 4: Failed Payments Analysis
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('4. Failed Payments Analysis', 14, currentY);
       const failedRows = (rawData.failedPaymentsAnalysis?.commonFailureReasons || []).map((item: any) => [
         item.reason,
         `${item.percentage}%`
@@ -305,13 +315,16 @@ const BillingDashboard = () => {
         head: [['Reason', 'Percentage']],
         body: failedRows,
         startY: currentY + 5,
-        theme: 'striped',
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [239, 68, 68] } // Red-500
       });
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 40)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Delinquency
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('Delinquent Accounts', 14, currentY);
+      // Section 5: Delinquent Accounts
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('5. Delinquent Accounts', 14, currentY);
       const delRows = (rawData.delinquencyReport?.details || []).map((item: any) => [
         item.customer,
         `${currencySymbol}${item.balance}`,
@@ -322,13 +335,16 @@ const BillingDashboard = () => {
         head: [['Customer', 'Balance', 'Days Overdue', 'Status']],
         body: delRows,
         startY: currentY + 5,
-        theme: 'grid',
+        theme: 'striped',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [107, 114, 128] } // Gray-500
       });
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 60)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Refunds & Tax (Side by side summary conceptual)
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('Refund & Tax Summary', 14, currentY);
+      // Section 6: Refund & Tax Summary
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('6. Refund & Tax Summary', 14, currentY);
       const refundTaxRows = [
         ['Total Refunds', rawData.refundReport?.summary?.totalRefunds || 0, 'Tax Collected', `${currencySymbol}${(rawData.taxReport?.summary?.taxCollected || 0).toLocaleString()}`],
         ['Refund Amount', `${currencySymbol}${(rawData.refundReport?.summary?.refundAmount || 0).toLocaleString()}`, 'Taxable Revenue', `${currencySymbol}${(rawData.taxReport?.summary?.taxableRevenue || 0).toLocaleString()}`],
@@ -338,26 +354,10 @@ const BillingDashboard = () => {
         body: refundTaxRows,
         startY: currentY + 5,
         theme: 'plain',
-      });
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 30)) + 15;
-
-      // DSO Analysis
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('DSO Analysis Metrics', 14, currentY);
-      const dso = rawData.dsoAnalysis?.metrics || {};
-      const dsoRows = [
-        ['Current DSO', `${dso.currentDso || 0} days`],
-        ['Best Possible DSO', `${dso.bestPossibleDso || 0} days`],
-        ['Collection Efficiency', dso.collectionEfficiency || '0%'],
-        ['DSO Status', dso.dsoStatus || '-'],
-      ];
-      autoTable(doc, {
-        body: dsoRows,
-        startY: currentY + 5,
-        theme: 'striped',
+        styles: { fontSize: 8 }
       });
 
-      doc.save(`billing-report-${timeRangeValue}-${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`Subscription_Billing_Report_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success("Billing report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
@@ -1405,16 +1405,31 @@ const BillingDashboard = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowExportMenu(prev => !prev)}
-                  className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer"
+                  className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm font-medium cursor-pointer bg-navbarBg hover:bg-blue-50 dark:hover:bg-blue-900/20 whitespace-nowrap"
                 >
                   <Download size={18} />
                   Export Report
                 </button>
                 {showExportMenu && (
-                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
-                    <button onClick={handleExport} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                    <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
-                  </div>
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                    <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                      <button
+                        onClick={() => { handleExport(); setShowExportMenu(false); }}
+                        className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                      >
+                        <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                        <span className="font-medium">Export as PDF</span>
+                      </button>
+                      <button
+                        onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
+                        className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                      >
+                        <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                        <span className="font-medium">Export as Excel</span>
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             </div>

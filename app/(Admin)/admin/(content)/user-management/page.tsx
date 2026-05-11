@@ -352,9 +352,21 @@ export default function UserManagementPage() {
                     className="fixed inset-0 z-10"
                     onClick={() => setShowExportMenu(false)}
                   />
-                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 min-w-[140px]">
-                    <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                    <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+                  <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <button
+                      onClick={() => { handleExportPDF(); setShowExportMenu(false); }}
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                    >
+                      <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                      <span className="font-medium">Export as PDF</span>
+                    </button>
+                    <button
+                      onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                    >
+                      <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                      <span className="font-medium">Export as Excel</span>
+                    </button>
                   </div>
                 </>
               )}
