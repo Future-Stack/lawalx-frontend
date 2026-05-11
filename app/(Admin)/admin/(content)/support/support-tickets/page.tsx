@@ -142,7 +142,7 @@ export default function SupportTickets2Page() {
       </div>
 
       {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Support Tickets Overview
@@ -152,26 +152,40 @@ export default function SupportTickets2Page() {
           </p>
         </div>
 
-        <div className="relative">
-          <button
-            onClick={() => setShowExportMenu(prev => !prev)}
-            className="px-4 py-2 shadow-customShadow cursor-pointer bg-navbarBg text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors"
-          >
-            <CloudDownload className="w-4 h-4" />
-            <span className="hidden lg:block">Export Report</span>
-          </button>
-          {showExportMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowExportMenu(false)}
-              />
-              <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 min-w-[140px]">
-                <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 rounded-t-lg cursor-pointer">📄 PDF</button>
-                <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 rounded-b-lg cursor-pointer">📊 Excel</button>
-              </div>
-            </>
-          )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(prev => !prev)}
+              className="px-4 py-2 shadow-customShadow cursor-pointer bg-navbarBg text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors"
+            >
+              <CloudDownload className="w-4 h-4" />
+              <span className="hidden lg:block">Export Report</span>
+            </button>
+            {showExportMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowExportMenu(false)}
+                />
+                <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                  <button
+                    onClick={handleExportPDF}
+                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                  >
+                    <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                    <span className="font-medium">Export as PDF</span>
+                  </button>
+                  <button
+                    onClick={handleExportExcel}
+                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                  >
+                    <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                    <span className="font-medium">Export as Excel</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
