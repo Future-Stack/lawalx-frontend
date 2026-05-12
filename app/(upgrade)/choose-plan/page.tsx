@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { Crown, Loader2, Monitor, Database, Video, LayoutTemplate, ArrowLeft } from "lucide-react";
+import { Crown, Monitor, Database, Video, LayoutTemplate, ArrowLeft } from "lucide-react";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { useGetProfileQuery } from "@/redux/api/users/settings/personalApi";
 import { useCreatePaymentMutation } from "@/redux/api/subscription/subscription.api";
@@ -19,9 +19,9 @@ const plans = [
     description: "For trying out this platform",
     monthlyPrice: 29999,
     yearlyPrice: Math.round(29999 * 12 * 0.85),
-    buttonColor: "bg-[#111827] text-white hover:bg-slate-800 shadow-customShadow",
-    borderColor: "border-border",
-    cardStyle: "bg-white",
+    buttonColor: "bg-primary text-gray-500 hover:bg-gray-600 shadow-customShadow",
+    borderColor: "border-color",
+    cardStyle: "bg-navbarBg",
     devices: 5,
     storage: "2 GB",
     templates: 1,
@@ -36,8 +36,8 @@ const plans = [
     monthlyPrice: 49999,
     yearlyPrice: Math.round(49999 * 12 * 0.85),
     buttonColor: "bg-bgBlue text-white hover:opacity-90 shadow-customShadow",
-    borderColor: "border-border",
-    cardStyle: "bg-white",
+    borderColor: "border-color",
+    cardStyle: "bg-navbarBg",
     devices: 10,
     storage: "5 GB",
     templates: 1,
@@ -53,7 +53,7 @@ const plans = [
     yearlyPrice: Math.round(59999 * 12 * 0.85),
     buttonColor: "bg-[#7F56D9] text-white hover:opacity-90 shadow-customShadow",
     borderColor: "border-[#7F56D9] border-2",
-    cardStyle: "bg-white",
+    cardStyle: "bg-navbarBg",
     highlight: true,
     devices: 20,
     storage: "10 GB",
@@ -119,16 +119,16 @@ export default function ChoosePlanPage() {
   };
 
   return (
-    <div className="min-h-screen px-4 py-10 sm:px-6 lg:px-10">
+    <div className="min-h-screen px-4 py-10 sm:px-6 lg:px-10 bg-background text-foreground transition-colors duration-300">
       <div className="mx-auto w-full max-w-7xl">
         {step === 1 ? (
           <>
             <div className="mb-8">
               <button
                 onClick={() => router.push("/dashboard")}
-                className="flex items-center gap-2 text-[#737373] hover:text-bgBlue transition-all group cursor-pointer"
+                className="flex items-center gap-2 text-muted hover:text-bgBlue transition-all group cursor-pointer"
               >
-                <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-white shadow-sm transition-all group-hover:bg-blue-50 group-hover:border-bgBlue/30">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border border-color bg-navbarBg shadow-sm transition-all group-hover:bg-hover group-hover:border-bgBlue/30">
                   <ArrowLeft className="w-5 h-5 transition-colors group-hover:text-bgBlue" />
                 </div>
                 <span className="font-medium text-[16px] transition-colors">Back to Dashboard</span>
@@ -138,30 +138,30 @@ export default function ChoosePlanPage() {
             <div className="">
               <div className="relative z-10 text-center mx-auto max-w-3xl mb-12">
                 <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center">
-                  <Crown className="h-8 w-8 text-[#0EA5E9]" />
+                  <Crown className="h-8 w-8 text-primary-action" />
                 </div>
-                <h1 className="text-[40px] font-bold leading-tight text-[#171717]" style={{ fontFamily: "Inter" }}>
+                <h1 className="text-[40px] font-bold leading-tight text-headings">
                   Choose Your Plan
                 </h1>
-                <p className="mt-4 text-[16px] leading-[24px] text-[#737373]" style={{ fontFamily: "Inter" }}>
+                <p className="mt-4 text-[16px] leading-[24px] text-muted">
                   Scale your digital signage network with the right plan for your business.
                 </p>
               </div>
 
               <div className="relative z-10 mb-10 flex items-center justify-center gap-4">
-                <span className={`text-[16px] font-medium leading-[24px] ${!isAnnual ? "text-[#171717]" : "text-[#737373]"}`}>
+                <span className={`text-[16px] font-medium leading-[24px] ${!isAnnual ? "text-headings" : "text-muted"}`}>
                   Monthly
                 </span>
                 <button
                   type="button"
                   onClick={() => setIsAnnual(!isAnnual)}
-                  className={`relative h-[24px] w-[44px] rounded-full p-1 transition-colors duration-300 ${isAnnual ? "bg-[#22C55E]" : "bg-[#D4D4D4]"} cursor-pointer focus:outline-none`}
+                  className={`relative h-[24px] w-[44px] rounded-full p-1 transition-colors duration-300 ${isAnnual ? "bg-bgGreen" : "bg-borderGray"} cursor-pointer focus:outline-none`}
                   aria-label="Toggle billing cycle"
                 >
                   <span className={`block h-[16px] w-[16px] rounded-full bg-white shadow transition-all duration-300 ${isAnnual ? "translate-x-[20px]" : "translate-x-0"}`} />
                 </button>
-                <span className={`text-[16px] font-medium leading-[24px] ${isAnnual ? "text-[#171717]" : "text-[#737373]"}`}>
-                  Annual<span className="text-[#22C55E] ml-1">(15% off)</span>
+                <span className={`text-[16px] font-medium leading-[24px] ${isAnnual ? "text-headings" : "text-muted"}`}>
+                  Annual<span className="text-bgGreen ml-1">(15% off)</span>
                 </span>
               </div>
 
@@ -180,11 +180,11 @@ export default function ChoosePlanPage() {
                 ))}
               </div>
 
-              <div className="relative z-10 mt-12 overflow-hidden rounded-[24px] border border-border p-6 shadow-sm flex flex-col lg:flex-row items-center gap-10 justify-between add-bg-img !bg-white">
+              <div className="relative z-10 mt-12 overflow-hidden rounded-[24px] border border-color p-6 shadow-sm flex flex-col lg:flex-row items-center gap-10 justify-between add-bg-img bg-navbarBg transition-colors duration-300">
                 <div className="relative z-10 flex flex-col items-start gap-6 lg:w-1/2">
                   <div>
-                    <h2 className="font-inter text-[18px] font-semibold leading-normal text-[#171717]">Custom</h2>
-                    <p className="mt-2 font-inter text-[14px] font-normal leading-[20px] text-[#737373]">
+                    <h2 className="font-inter text-[18px] font-semibold leading-normal text-headings">Custom</h2>
+                    <p className="mt-2 font-inter text-[14px] font-normal leading-[20px] text-muted">
                       Custom solutions for large organizations that requires flexible limits and Enterprise-level scalability and support.
                     </p>
                   </div>
@@ -199,31 +199,31 @@ export default function ChoosePlanPage() {
                 
                 <div className="relative z-10 w-full lg:w-1/2">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-                    <div className="flex items-center gap-3 pb-5 border-b border-border">
-                      <Monitor className="h-5 w-5 text-[#404040]" />
+                    <div className="flex items-center gap-3 pb-5 border-b border-color">
+                      <Monitor className="h-5 w-5 text-body" />
                       <div>
-                        <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Devices</p>
+                        <p className="font-inter text-[14px] font-normal leading-[20px] text-body">Devices</p>
                         <p className="font-inter text-[14px] font-semibold leading-[20px] text-bgBlue">Custom</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 pb-5 border-b border-border">
-                      <Database className="h-5 w-5 text-[#404040]" />
+                    <div className="flex items-center gap-3 pb-5 border-b border-color">
+                      <Database className="h-5 w-5 text-body" />
                       <div>
-                        <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Storage</p>
+                        <p className="font-inter text-[14px] font-normal leading-[20px] text-body">Storage</p>
                         <p className="font-inter text-[14px] font-semibold leading-[20px] text-bgBlue">Custom</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 pt-5 border-b border-border sm:border-b-0 pb-5 sm:pb-0">
-                      <Video className="h-5 w-5 text-[#404040]" />
+                    <div className="flex items-center gap-3 pt-5 border-b border-color sm:border-b-0 pb-5 sm:pb-0">
+                      <Video className="h-5 w-5 text-body" />
                       <div>
-                        <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Upload Limits</p>
+                        <p className="font-inter text-[14px] font-normal leading-[20px] text-body">Upload Limits</p>
                         <p className="font-inter text-[14px] font-semibold leading-[20px] text-bgBlue">Custom</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 pt-5">
-                      <LayoutTemplate className="h-5 w-5 text-[#404040]" />
+                      <LayoutTemplate className="h-5 w-5 text-body" />
                       <div>
-                        <p className="font-inter text-[14px] font-normal leading-[20px] text-[#404040]">Templates</p>
+                        <p className="font-inter text-[14px] font-normal leading-[20px] text-body">Templates</p>
                         <p className="font-inter text-[14px] font-semibold leading-[20px] text-bgBlue">Custom</p>
                       </div>
                     </div>
