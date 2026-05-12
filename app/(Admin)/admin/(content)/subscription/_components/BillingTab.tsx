@@ -24,9 +24,11 @@ import {
     Search,
     CloudDownload,
     Loader2,
+    RotateCcw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import TransactionSheet from "./TransactionSheet";
+import RefundDialog from "./RefundDialog";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
@@ -103,6 +105,9 @@ const BillingTab = () => {
     const [sheetOpen, setSheetOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState("");
 
+    const [refundOpen, setRefundOpen] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState<PaymentHistoryItem | null>(null);
+
     // Debounce search input (400 ms)
     useEffect(() => {
         const t = setTimeout(() => {
@@ -147,6 +152,11 @@ const BillingTab = () => {
     const handleViewDetails = (userId: string) => {
         setSelectedUserId(userId);
         setSheetOpen(true);
+    };
+
+    const handleRefund = (payment: PaymentHistoryItem) => {
+        setSelectedPayment(payment);
+        setRefundOpen(true);
     };
 
     const [gatewayLoadingId, setGatewayLoadingId] = useState<string | null>(null);
@@ -344,6 +354,15 @@ const BillingTab = () => {
                                                 )}
                                                 View in Gateway
                                             </DropdownMenuItem>
+
+                                            {/* Refund */}
+                                            <DropdownMenuItem
+                                                className="text-red-500 focus:text-red-500"
+                                                onClick={() => handleRefund(payment)}
+                                            >
+                                                <RotateCcw className="mr-2 h-4 w-4" />
+                                                Refund
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -386,6 +405,13 @@ const BillingTab = () => {
                 open={sheetOpen}
                 setOpen={setSheetOpen}
                 userId={selectedUserId}
+            />
+
+            {/* Refund dialog */}
+            <RefundDialog
+                open={refundOpen}
+                setOpen={setRefundOpen}
+                payment={selectedPayment}
             />
         </div>
     );
