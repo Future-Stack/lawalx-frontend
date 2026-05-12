@@ -11,6 +11,7 @@ import {
 } from '@/redux/api/admin/devicereportApi';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { addPdfHeader } from '@/lib/pdfUtils';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
@@ -21,7 +22,9 @@ const DeviceReportDashboard = () => {
 
   const handleExportPDF = async () => {
     try {
+      toast.loading("Preparing PDF report...");
       const { data: exportData, isError } = await triggerExport({});
+      toast.dismiss();
 
       if (isError || !exportData?.success) {
         toast.error("Failed to fetch export data");
@@ -29,43 +32,90 @@ const DeviceReportDashboard = () => {
       }
 
       const devices = exportData.data?.devices || [];
+      const stats = exportData.data?.summary || {};
+      const regions = exportData.data?.regionalStats || [];
+
       const doc = new jsPDF();
+      const timeRangeLabel = timeRanges.find(t => t.value === timeRange)?.label || 'All Time';
 
-      // Add Title
-      doc.setFontSize(18);
-      doc.text('Device Report', 14, 22);
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Exported At: ${new Date().toLocaleString()}`, 14, 30);
+      // Branded header with logo
+      let currentY = await addPdfHeader(
+        doc,
+        'Device Report',
+        `Period: ${timeRangeLabel}  |  Generated: ${new Date().toLocaleString()}`
+      );
 
-      // Define table columns
-      const tableColumn = ["Index", "Device ID", "Name", "Status", "Region", "Username"];
-      const tableRows: any[] = [];
+      // Section 1: Device Summary
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(14);
+      doc.text('1. Device Summary', 14, currentY);
 
-      devices.forEach((device: any, index: number) => {
-        const deviceData = [
-          index + 1,
-          device.id || 'N/A',
-          device.name || 'N/A',
-          device.status || 'N/A',
-          device.region || 'N/A',
-          device.user?.username || 'N/A'
-        ];
-        tableRows.push(deviceData);
+      const summaryStats = [
+        ['Metric', 'Value'],
+        ['Total Devices', (stats.totalDevices || devices.length || 0).toLocaleString()],
+        ['Online Devices', (stats.onlineDevices || 0).toLocaleString()],
+        ['Offline Devices', (stats.offlineDevices || 0).toLocaleString()],
+        ['Average Uptime', `${stats.averageUptime || 0}%`]
+      ];
+
+      autoTable(doc, {
+        startY: currentY + 5,
+        head: [summaryStats[0]],
+        body: summaryStats.slice(1),
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [59, 130, 246] } // Blue-500
       });
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Generate Table
+      // Section 2: Regional Distribution
+      if (regions.length > 0) {
+        doc.setFontSize(14);
+        doc.text('2. Regional Distribution', 14, currentY);
+        const regionRows = regions.map((r: any) => [
+          r.region || r.name,
+          (r.totalDevices || 0).toLocaleString(),
+          (r.onlineDevices || 0).toLocaleString(),
+          (r.offlineDevices || 0).toLocaleString(),
+          `${((r.onlineDevices / r.totalDevices) * 100 || 0).toFixed(1)}%`
+        ]);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Region', 'Total', 'Online', 'Offline', 'Online Rate']],
+          body: regionRows,
+          theme: 'striped',
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [139, 92, 246] } // Purple-500
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // Section 3: Device Inventory
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text(`${regions.length > 0 ? '3' : '2'}. Device Inventory List`, 14, currentY);
+
+      const tableColumn = ["Index", "Device ID", "Name", "Status", "Region", "Username"];
+      const tableRows = devices.map((device: any, index: number) => [
+        index + 1,
+        device.id || 'N/A',
+        device.name || 'N/A',
+        device.status || 'N/A',
+        device.region || 'N/A',
+        device.user?.username || 'N/A'
+      ]);
+
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 40,
-        theme: 'striped',
-        headStyles: { fillColor: [139, 92, 246] }, // Violet-500
-        styles: { fontSize: 9 }
+        startY: currentY + 5,
+        theme: 'grid',
+        headStyles: { fillColor: [16, 185, 129] }, // Emerald-500
+        styles: { fontSize: 8 }
       });
 
       // Save PDF
-      doc.save(`device-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`Device_Report_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success("Device report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
@@ -188,17 +238,32 @@ const DeviceReportDashboard = () => {
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu(prev => !prev)}
-                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer bg-navbarBg"
+                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm font-medium cursor-pointer bg-navbarBg hover:bg-blue-50 dark:hover:bg-blue-900/20 whitespace-nowrap"
               >
                 <Download className="w-4 h-4" />
                 Export Report
               </button>
 
               {showExportMenu && (
-                <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
-                  <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                  <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
-                </div>
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                  <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <button
+                      onClick={() => { handleExportPDF(); setShowExportMenu(false); }}
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                    >
+                      <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                      <span className="font-medium">Export as PDF</span>
+                    </button>
+                    <button
+                      onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                    >
+                      <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                      <span className="font-medium">Export as Excel</span>
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>

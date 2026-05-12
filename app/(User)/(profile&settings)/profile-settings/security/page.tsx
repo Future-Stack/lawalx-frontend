@@ -15,7 +15,7 @@ export default function Security() {
 
                 <div className="space-y-6">
                     {/* Via Email */}
-                    <div className="flex items-center justify-between pb-6 border-b border-border">
+                    <div className="flex items-center justify-between pb-6">
                         <div>
                             <h3 className="text-sm font-semibold text-headings mb-1">Via email</h3>
                             <p className="text-xs text-muted">Receive a one-time passcode via SMS each time you log in.</p>
@@ -29,7 +29,7 @@ export default function Security() {
                     </div>
 
                     {/* Authenticator App */}
-                    <div className="flex items-center justify-between">
+                    {/* <div className="flex items-center justify-between">
                         <div>
                             <h3 className="text-sm font-semibold text-headings mb-1">Authenticator App (TOTP)</h3>
                             <p className="text-xs text-muted">Use an app to receive a temporary one-time passcode each time you log in.</p>
@@ -40,7 +40,7 @@ export default function Security() {
                         >
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${authenticator2FA ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
-                    </div>
+                    </div> */}
                 </div>
             </div>
 

@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useGetAllEmployeesQuery, useCreateEmployeeMutation, useUpdateEmployeeMutation } from '@/redux/api/admin/profile&settings/userRoleApi';
 import { toast } from 'sonner';
+import { getUrl } from '@/lib/content-utils';
+import Image from 'next/image';
 
 type Role = 'Super Admin' | 'Admin' | 'Sales Staff' | 'Support Staff' | 'Supporter';
 
@@ -92,6 +94,36 @@ function CustomSelect({ options, placeholder, value, onChange, className, multip
                         ))}
                     </div>
                 </>
+            )}
+        </div>
+    );
+}
+
+function ProfileAvatar({ imageUrl, name, size = 'lg' }: { imageUrl: string | null | undefined; name: string; size?: 'sm' | 'lg' }) {
+    const initials = name
+        ? name.trim().split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+        : '';
+
+    const sizeClasses = size === 'lg'
+        ? 'w-24 h-24 text-2xl'
+        : 'w-10 h-10 text-sm';
+
+    const resolvedUrl = getUrl(imageUrl || null);
+
+    if (resolvedUrl) {
+        return (
+            <div className={`relative ${sizeClasses} rounded-full overflow-hidden border border-border shadow-sm flex-shrink-0`}>
+                <Image src={resolvedUrl} alt={name} fill className="object-cover" sizes={size === 'lg' ? '96px' : '40px'} />
+            </div>
+        );
+    }
+
+    return (
+        <div className={`${sizeClasses} rounded-full border border-border shadow-sm flex-shrink-0 bg-gradient-to-br from-bgBlue to-blue-700 flex items-center justify-center`}>
+            {initials ? (
+                <span className="font-bold text-white uppercase">{initials}</span>
+            ) : (
+                <User className={size === 'lg' ? 'w-10 h-10 text-white' : 'w-5 h-5 text-white'} />
             )}
         </div>
     );
@@ -200,6 +232,11 @@ export default function UsersRolesSection() {
             } else if (formData.password.length < 8) {
                 newErrors.password = "Password must be at least 8 characters";
             }
+        } else {
+            // In edit mode, password is optional — but if provided it must be valid
+            if (formData.password && formData.password.length < 8) {
+                newErrors.password = "Password must be at least 8 characters";
+            }
         }
 
         if (!formData.role) newErrors.role = "Role is required";
@@ -219,6 +256,10 @@ export default function UsersRolesSection() {
                 const patchData: any = {
                     username: formData.name,
                 };
+                // Only send password if admin has filled it in
+                if (formData.password && formData.password.trim() !== '' && formData.password !== '••••••••') {
+                    patchData.password = formData.password;
+                }
                 if (formData.role === 'Supporter') {
                     patchData.supporterRole = [formData.supporterRole];
                     patchData.skills = formData.skills;
@@ -306,9 +347,11 @@ export default function UsersRolesSection() {
                                 <tr key={emp.id} className="border-b border-border/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
                                     <td className="py-4 px-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden border border-border">
-                                                <img src="/images/profile-settings.png" alt="" className="w-full h-full object-cover" />
-                                            </div>
+                                            <ProfileAvatar 
+                                                imageUrl={emp.user?.image_url || emp.user?.profileImage} 
+                                                name={emp.user?.username || emp.user?.full_name || ''} 
+                                                size="sm" 
+                                            />
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-sm font-bold text-headings">{emp.user?.username || emp.user?.full_name || 'N/A'}</p>
@@ -372,9 +415,11 @@ export default function UsersRolesSection() {
                     <div className="space-y-6 pt-2 pb-10">
                         {/* Header Section */}
                         <div className="flex flex-col items-center text-center space-y-3 pb-6 border-b border-border/50">
-                            <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 border-4 border-bgBlue/10 overflow-hidden shadow-inner">
-                                <img src="/images/profile-settings.png" alt="" className="w-full h-full object-cover" />
-                            </div>
+                            <ProfileAvatar 
+                                imageUrl={currentUser?.user?.image_url || currentUser?.user?.profileImage} 
+                                name={formData.name} 
+                                size="lg" 
+                            />
                             <div className="space-y-1">
                                 <h3 className="text-xl font-bold text-headings tracking-tight">{formData.name}</h3>
                                 <div className="flex items-center justify-center gap-2 text-sm text-muted">
@@ -460,7 +505,7 @@ export default function UsersRolesSection() {
                 ) : (
                     <div className="space-y-4 pt-4 pb-10">
                         <div className="space-y-1.5">
-                            <Label className="text-sm font-bold text-headings">Name <span className="text-red-500">*</span></Label>
+                            <Label className="text-sm font-bold text-headings">Username <span className="text-red-500">*</span></Label>
                             <div className="relative">
                                 <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.name ? 'text-red-400' : 'text-muted'}`} />
                                 <Input
@@ -486,7 +531,7 @@ export default function UsersRolesSection() {
                                     required
                                     disabled={viewOnly || isEditing}
                                     onChange={(e) => handleInputChange('email', e.target.value)}
-                                    className={`bg-navbarBg h-11 pl-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${(viewOnly || isEditing) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    className={`bg-navbarBg h-11 pl-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${(viewOnly || isEditing) ? 'opacity-60 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`}
                                 />
                             </div>
                             {errors.email && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.email}</p>}
@@ -500,10 +545,9 @@ export default function UsersRolesSection() {
                                     type={showPassword ? "text" : "password"}
                                     placeholder="H2di%hGa3d"
                                     value={formData.password}
-                                    required
-                                    disabled={viewOnly || isEditing}
+                                    disabled={viewOnly}
                                     onChange={(e) => handleInputChange('password', e.target.value)}
-                                    className={`bg-navbarBg h-11 pl-10 pr-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${(viewOnly || isEditing) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                    className={`bg-navbarBg h-11 pl-10 pr-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${viewOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 />
                                 <button
                                     type="button"
@@ -525,7 +569,7 @@ export default function UsersRolesSection() {
                                 ]}
                                 placeholder="Select Role"
                                 value={formData.role}
-                                disabled={viewOnly || isEditing}
+                                disabled={viewOnly}
                                 className={errors.role ? 'border-red-500' : ''}
                                 onChange={(val: any) => handleInputChange('role', val)}
                             />
@@ -587,7 +631,7 @@ export default function UsersRolesSection() {
                                 disabled={isCreating || isUpdating}
                                 className={`flex-1 bg-bgBlue hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold transition-colors shadow-customShadow cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed`}
                             >
-                                {isUpdating ? "Updating..." : isCreating ? "Creating..." : "Add Email"}
+                                {isUpdating ? "Updating..." : isCreating ? "Creating..." : isEditing ? "Update Employee" : "Add Employee"}
                             </button>
                         </div>
                     </div>

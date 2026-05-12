@@ -22,8 +22,12 @@ import {
   useGetDsoAnalysisQuery,
   useLazyGetBillingExportAllQuery,
 } from '@/redux/api/admin/Billing & Payment Report/billingPaymentApi';
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store/store";
+import { getCurrencySymbol, formatAmount as formatCurrency } from "@/lib/currencyUtils";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { addPdfHeader } from '@/lib/pdfUtils';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 
@@ -170,6 +174,9 @@ const BillingDashboard = () => {
 
   const isDark = mounted && (resolvedTheme === 'dark' || currentTheme === 'dark');
 
+  const currency = useSelector((state: RootState) => state.settings.currency);
+  const currencySymbol = getCurrencySymbol(currency);
+
   const [timeRange, setTimeRange] = useState(30);
 
   const timeRangeValue = useMemo(() => {
@@ -195,7 +202,9 @@ const BillingDashboard = () => {
 
   const handleExport = async () => {
     try {
+      toast.loading("Preparing PDF report...");
       const result = await triggerExport({ timeRange: timeRangeValue });
+      toast.dismiss();
 
       if (result.error || !result.data || !result.data.success) {
         console.error("Export error:", result.error);
@@ -206,59 +215,59 @@ const BillingDashboard = () => {
 
       const rawData = result.data.data;
       if (!rawData) {
-        console.error("Export error: rawData is undefined", result.data);
         toast.error("Export data is empty");
         return;
       }
 
-      // console.log("Raw Export Data:", rawData);
-
       const doc = new jsPDF();
-      const HEADING_GAP = 10;
-      let currentY = 20;
+      const timeRangeLabel = timeRanges.find(t => t.value === timeRange)?.label || 'All Time';
 
-      doc.setFontSize(18);
-      doc.text('Billing & Payment Report', 14, currentY);
-      currentY += 10;
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Time Range: ${timeRangeValue} | Exported At: ${new Date().toLocaleString()}`, 14, currentY);
-      currentY += 15;
+      // Branded header with logo
+      let currentY = await addPdfHeader(
+        doc,
+        'Subscription & Billing Report',
+        `Period: ${timeRangeLabel}  |  Generated: ${new Date().toLocaleString()}`
+      );
 
-      // Overview
+      // Section 1: Billing Overview
+      doc.setTextColor(50, 50, 50);
       doc.setFontSize(14);
-      doc.setTextColor(0);
-      doc.text('Overview', 14, currentY);
+      doc.text('1. Billing Overview', 14, currentY);
 
       const overview = rawData.overview || {};
       const overviewRows = [
-        ['Success Rate', `${overview.successRate?.value || 0}%`, overview.successRate?.trend || ''],
-        ['Failed Payments Count', overview.failedPayments?.count || 0, ''],
-        ['Failed Payments Amount', `$${overview.failedPayments?.amount || 0}`, ''],
-        ['Overdue Invoices Count', overview.overdueInvoices?.count || 0, ''],
-        ['Overdue Invoices Amount', `$${overview.overdueInvoices?.amount || 0}`, ''],
+        ['Metric', 'Value', 'Trend'],
+        ['Success Rate', `${overview.successRate?.value || 0}%`, overview.successRate?.trend || 'Stable'],
+        ['Failed Payments Count', (overview.failedPayments?.count || 0).toLocaleString(), ''],
+        ['Failed Payments Amount', `${currencySymbol}${(overview.failedPayments?.amount || 0).toLocaleString()}`, ''],
+        ['Overdue Invoices Count', (overview.overdueInvoices?.count || 0).toLocaleString(), ''],
+        ['Overdue Invoices Amount', `${currencySymbol}${(overview.overdueInvoices?.amount || 0).toLocaleString()}`, ''],
         ['Recovery Rate', `${overview.recoveryRate?.value || 0}%`, ''],
         ['Avg DSO', `${overview.avgDSO?.value || 0} days`, overview.avgDSO?.status || ''],
       ];
 
       autoTable(doc, {
-        body: overviewRows,
+        head: [overviewRows[0]],
+        body: overviewRows.slice(1),
         startY: currentY + 5,
         theme: 'striped',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [59, 130, 246] } // Blue-500
       });
 
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 60)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Transactions
-      if (currentY > 250) { doc.addPage(); currentY = 20; }
-      doc.text('Recent Transactions', 14, currentY);
+      // Section 2: Recent Transactions
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('2. Recent Transactions', 14, currentY);
 
       const transactions = rawData.recentTransactions || rawData.transactions || [];
       const txRows = transactions.map((tx: any) => [
         tx.id || tx.transactionId || '-',
         tx.date || '-',
         tx.customer || '-',
-        `$${tx.amount || 0}`,
+        `${currencySymbol}${tx.amount || 0}`,
         tx.status || '-',
         tx.method || '-',
         tx.invoice || '-'
@@ -269,29 +278,35 @@ const BillingDashboard = () => {
         body: txRows,
         startY: currentY + 5,
         theme: 'grid',
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [139, 92, 246] } // Purple-500
       });
 
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 60)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Invoice Aging
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('Invoice Aging Summary', 14, currentY);
+      // Section 3: Invoice Aging Summary
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('3. Invoice Aging Summary', 14, currentY);
       const agingRows = (rawData.agingReport?.summary || []).map((item: any) => [
         item.range,
         item.count,
-        `$${(item.amount || 0).toLocaleString()}`
+        `${currencySymbol}${(item.amount || 0).toLocaleString()}`
       ]);
       autoTable(doc, {
         head: [['Range', 'Invoice Count', 'Amount']],
         body: agingRows,
         startY: currentY + 5,
         theme: 'striped',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [245, 158, 11] } // Amber-500
       });
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 40)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Failed Payments
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('Failed Payments Analysis', 14, currentY);
+      // Section 4: Failed Payments Analysis
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('4. Failed Payments Analysis', 14, currentY);
       const failedRows = (rawData.failedPaymentsAnalysis?.commonFailureReasons || []).map((item: any) => [
         item.reason,
         `${item.percentage}%`
@@ -300,16 +315,19 @@ const BillingDashboard = () => {
         head: [['Reason', 'Percentage']],
         body: failedRows,
         startY: currentY + 5,
-        theme: 'striped',
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [239, 68, 68] } // Red-500
       });
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 40)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Delinquency
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('Delinquent Accounts', 14, currentY);
+      // Section 5: Delinquent Accounts
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('5. Delinquent Accounts', 14, currentY);
       const delRows = (rawData.delinquencyReport?.details || []).map((item: any) => [
         item.customer,
-        `$${item.balance}`,
+        `${currencySymbol}${item.balance}`,
         `${item.daysOverdue} days`,
         item.status
       ]);
@@ -317,42 +335,29 @@ const BillingDashboard = () => {
         head: [['Customer', 'Balance', 'Days Overdue', 'Status']],
         body: delRows,
         startY: currentY + 5,
-        theme: 'grid',
+        theme: 'striped',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [107, 114, 128] } // Gray-500
       });
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 60)) + 15;
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Refunds & Tax (Side by side summary conceptual)
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('Refund & Tax Summary', 14, currentY);
+      // Section 6: Refund & Tax Summary
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('6. Refund & Tax Summary', 14, currentY);
       const refundTaxRows = [
-        ['Total Refunds', rawData.refundReport?.summary?.totalRefunds || 0, 'Tax Collected', `$${(rawData.taxReport?.summary?.taxCollected || 0).toLocaleString()}`],
-        ['Refund Amount', `$${(rawData.refundReport?.summary?.refundAmount || 0).toLocaleString()}`, 'Taxable Revenue', `$${(rawData.taxReport?.summary?.taxableRevenue || 0).toLocaleString()}`],
+        ['Total Refunds', rawData.refundReport?.summary?.totalRefunds || 0, 'Tax Collected', `${currencySymbol}${(rawData.taxReport?.summary?.taxCollected || 0).toLocaleString()}`],
+        ['Refund Amount', `${currencySymbol}${(rawData.refundReport?.summary?.refundAmount || 0).toLocaleString()}`, 'Taxable Revenue', `${currencySymbol}${(rawData.taxReport?.summary?.taxableRevenue || 0).toLocaleString()}`],
         ['Chargebacks', rawData.refundReport?.summary?.chargebacks || 0, 'Avg Tax Rate', rawData.taxReport?.summary?.avgTaxRate || '0%'],
       ];
       autoTable(doc, {
         body: refundTaxRows,
         startY: currentY + 5,
         theme: 'plain',
-      });
-      currentY = ((doc as any).lastAutoTable?.finalY || (currentY + 30)) + 15;
-
-      // DSO Analysis
-      if (currentY > 240) { doc.addPage(); currentY = 20; }
-      doc.text('DSO Analysis Metrics', 14, currentY);
-      const dso = rawData.dsoAnalysis?.metrics || {};
-      const dsoRows = [
-        ['Current DSO', `${dso.currentDso || 0} days`],
-        ['Best Possible DSO', `${dso.bestPossibleDso || 0} days`],
-        ['Collection Efficiency', dso.collectionEfficiency || '0%'],
-        ['DSO Status', dso.dsoStatus || '-'],
-      ];
-      autoTable(doc, {
-        body: dsoRows,
-        startY: currentY + 5,
-        theme: 'striped',
+        styles: { fontSize: 8 }
       });
 
-      doc.save(`billing-report-${timeRangeValue}-${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`Subscription_Billing_Report_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success("Billing report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
@@ -385,9 +390,9 @@ const BillingDashboard = () => {
         ['Metric', 'Value', 'Growth'],
         ['Success Rate', `${overview.successRate?.value || 0}%`, overview.successRate?.trend || ''],
         ['Failed Payments Count', overview.failedPayments?.count || 0, ''],
-        ['Failed Payments Amount', `$${overview.failedPayments?.amount || 0}`, ''],
+        ['Failed Payments Amount', `${currencySymbol}${overview.failedPayments?.amount || 0}`, ''],
         ['Overdue Invoices Count', overview.overdueInvoices?.count || 0, ''],
-        ['Overdue Invoices Amount', `$${overview.overdueInvoices?.amount || 0}`, ''],
+        ['Overdue Invoices Amount', `${currencySymbol}${overview.overdueInvoices?.amount || 0}`, ''],
         ['Recovery Rate', `${overview.recoveryRate?.value || 0}%`, ''],
         ['Avg DSO', `${overview.avgDSO?.value || 0} days`, overview.avgDSO?.status || ''],
       ];
@@ -401,7 +406,7 @@ const BillingDashboard = () => {
           tx.id || tx.transactionId || '-',
           tx.date || '-',
           tx.customer || '-',
-          `$${tx.amount || 0}`,
+          `${currencySymbol}${tx.amount || 0}`,
           tx.status || '-',
           tx.method || '-',
           tx.invoice || '-'
@@ -415,7 +420,7 @@ const BillingDashboard = () => {
         ['Customer', 'Balance', 'Days Overdue', 'Status'],
         ...delinquent.map((item: any) => [
           item.customer,
-          `$${item.balance}`,
+          `${currencySymbol}${item.balance}`,
           `${item.daysOverdue} days`,
           item.status
         ])
@@ -425,8 +430,8 @@ const BillingDashboard = () => {
       // Refund & Tax summary
       const refundTaxRows = [
         ['Label', 'Value', 'Label', 'Value'],
-        ['Total Refunds', rawData.refundReport?.summary?.totalRefunds || 0, 'Tax Collected', `$${(rawData.taxReport?.summary?.taxCollected || 0).toLocaleString()}`],
-        ['Refund Amount', `$${(rawData.refundReport?.summary?.refundAmount || 0).toLocaleString()}`, 'Taxable Revenue', `$${(rawData.taxReport?.summary?.taxableRevenue || 0).toLocaleString()}`],
+        ['Total Refunds', rawData.refundReport?.summary?.totalRefunds || 0, 'Tax Collected', `${currencySymbol}${(rawData.taxReport?.summary?.taxCollected || 0).toLocaleString()}`],
+        ['Refund Amount', `${currencySymbol}${(rawData.refundReport?.summary?.refundAmount || 0).toLocaleString()}`, 'Taxable Revenue', `${currencySymbol}${(rawData.taxReport?.summary?.taxableRevenue || 0).toLocaleString()}`],
         ['Chargebacks', rawData.refundReport?.summary?.chargebacks || 0, 'Avg Tax Rate', rawData.taxReport?.summary?.avgTaxRate || '0%'],
       ];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(refundTaxRows), 'Refund & Tax');
@@ -678,7 +683,7 @@ const BillingDashboard = () => {
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{txn.id}</td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{txn.date}</td>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{txn.customer}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>${txn.amount}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{txn.amount}</td>
                   <td className="py-3 px-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${txn.status === 'Successful' ? 'bg-green-100 text-green-800' :
                       txn.status === 'Failed' ? 'bg-red-100 text-red-800' :
@@ -711,7 +716,7 @@ const BillingDashboard = () => {
           <div className='border border-border rounded-xl p-4'>
             <h4 className={`font-semibold mb-2 ${theme.text}`}>Transaction Volume</h4>
             <div className="space-y-2">
-              <div className={`text-2xl font-bold ${theme.text}`}>${(transactionVolume.transactionVolume?.value || 0).toLocaleString()}</div>
+              <div className={`text-2xl font-bold ${theme.text}`}>{currencySymbol}{(transactionVolume.transactionVolume?.value || 0).toLocaleString()}</div>
               <div className={`text-sm ${theme.textSecondary}`}>{transactionVolume.transactionVolume?.period || 'Total processed'}</div>
               <div className={`text-sm ${transactionVolume.transactionVolume?.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {transactionVolume.transactionVolume?.change >= 0 ? '+' : ''}{transactionVolume.transactionVolume?.change}% vs last period
@@ -722,7 +727,7 @@ const BillingDashboard = () => {
           <div className='border border-border rounded-xl p-4'>
             <h4 className={`font-semibold mb-2 ${theme.text}`}>Average Transaction</h4>
             <div className="space-y-2">
-              <div className={`text-2xl font-bold ${theme.text}`}>${(transactionVolume.averageTransaction?.value || 0).toLocaleString()}</div>
+              <div className={`text-2xl font-bold ${theme.text}`}>{currencySymbol}{(transactionVolume.averageTransaction?.value || 0).toLocaleString()}</div>
               <div className={`text-sm ${theme.textSecondary}`}>{transactionVolume.averageTransaction?.period || 'Per transaction'}</div>
               <div className={`text-sm ${transactionVolume.averageTransaction?.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {transactionVolume.averageTransaction?.change >= 0 ? '+' : ''}{transactionVolume.averageTransaction?.change}% change
@@ -753,7 +758,7 @@ const BillingDashboard = () => {
                 item.range === '61-90 Days' ? 'text-red-600 dark:text-red-500' :
                   item.range === '31-60 Days' ? 'text-orange-600 dark:text-orange-500' :
                     'text-yellow-600 dark:text-yellow-500'
-                }`}>${item.amount.toLocaleString()} {item.label || 'outstanding'}</div>
+                }`}>{currencySymbol}{item.amount.toLocaleString()} {item.label || 'outstanding'}</div>
             </div>
           ))}
         </div>
@@ -769,7 +774,7 @@ const BillingDashboard = () => {
                 border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`
               }}
             />
-            <Bar dataKey="amount" fill="#f59e0b" name="Outstanding Amount ($)" />
+            <Bar dataKey="amount" fill="#f59e0b" name={`Outstanding Amount (${currencySymbol})`} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -795,7 +800,7 @@ const BillingDashboard = () => {
                 <tr key={idx} className={`border-b ${theme.border} ${theme.hover}`}>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{invoice.invoice}</td>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{invoice.customer}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>${invoice.amount}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{invoice.amount}</td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{invoice.dueDate}</td>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{invoice.daysOverdue} days</td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{invoice.category}</td>
@@ -929,7 +934,7 @@ const BillingDashboard = () => {
           </div>
           <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">
             <div className="text-sm text-gray-600 mb-1">Total Outstanding</div>
-            <div className="text-3xl font-bold text-orange-600">${(delinquencySummary.totalOutstanding || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold text-orange-600">{currencySymbol}{(delinquencySummary.totalOutstanding || 0).toLocaleString()}</div>
             <div className="text-sm text-orange-600">Across {delinquencySummary.delinquentAccounts || 0} accounts</div>
           </div>
           <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
@@ -967,7 +972,7 @@ const BillingDashboard = () => {
                 <tr key={idx} className={`border-b ${theme.border} ${theme.hover}`}>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{account.customer}</td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{account.plan}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>${account.balance}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{account.balance}</td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{account.lastPayment}</td>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{account.daysOverdue} days</td>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{account.attempts}</td>
@@ -1056,7 +1061,7 @@ const BillingDashboard = () => {
           </div>
           <div className="text-center p-4 bg-yellow-50 rounded-xl border border-yellow-200">
             <DollarSign className="mx-auto text-yellow-600 mb-2" size={32} />
-            <div className="text-3xl font-bold text-yellow-600">${(refundSummary.refundAmount || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold text-yellow-600">{currencySymbol}{(refundSummary.refundAmount || 0).toLocaleString()}</div>
             <div className="text-sm text-gray-600">Refund Amount</div>
           </div>
           <div className="text-center p-4 bg-red-50 rounded-xl border border-red-200">
@@ -1066,7 +1071,7 @@ const BillingDashboard = () => {
           </div>
           <div className="text-center p-4 bg-purple-50 rounded-xl border border-purple-200">
             <DollarSign className="mx-auto text-purple-600 mb-2" size={32} />
-            <div className="text-3xl font-bold text-purple-600">${(refundSummary.chargebackFees || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold text-purple-600">{currencySymbol}{(refundSummary.chargebackFees || 0).toLocaleString()}</div>
             <div className="text-sm text-gray-600">Chargeback Fees</div>
           </div>
         </div>
@@ -1095,7 +1100,7 @@ const BillingDashboard = () => {
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.id}</td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.date}</td>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.customer}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>${item.amount}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{item.amount}</td>
                   <td className="py-3 px-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.type === 'Refund' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'
                       }`}>
@@ -1173,12 +1178,12 @@ const BillingDashboard = () => {
         </div>
         <div className={`bg-navbarBg rounded-xl p-4 shadow-sm border border-border`}>
           <h4 className={`font-semibold mb-2 ${theme.text}`}>Revenue Impact</h4>
-          <div className="text-2xl font-bold text-red-600">${(refundReportData?.data?.revenueImpact || 0).toLocaleString()}</div>
+          <div className="text-2xl font-bold text-red-600">{currencySymbol}{(refundReportData?.data?.revenueImpact || 0).toLocaleString()}</div>
           <div className={`text-sm ${theme.textSecondary}`}>Lost revenue (inc. fees)</div>
         </div>
         <div className={`bg-navbarBg rounded-xl p-4 shadow-sm border border-border`}>
           <h4 className={`font-semibold mb-2 ${theme.text}`}>Avg Refund Value</h4>
-          <div className="text-2xl font-bold text-purple-600">${(refundReportData?.data?.avgRefundValue || 0).toLocaleString()}</div>
+          <div className="text-2xl font-bold text-purple-600">{currencySymbol}{(refundReportData?.data?.avgRefundValue || 0).toLocaleString()}</div>
           <div className={`text-sm ${theme.textSecondary}`}>Per refund request</div>
         </div>
       </div>
@@ -1204,7 +1209,7 @@ const BillingDashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-200">
             <div className="text-sm text-gray-600 mb-1">Tax by Collected</div>
-            <div className="text-3xl font-bold text-blue-600">${(taxSummary.taxCollected || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold text-blue-600">{currencySymbol}{(taxSummary.taxCollected || 0).toLocaleString()}</div>
             <div className="text-sm text-blue-600">{taxSummary.period || 'This month'}</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-xl border border-green-200">
@@ -1214,7 +1219,7 @@ const BillingDashboard = () => {
           </div>
           <div className="text-center p-4 bg-purple-50 rounded-xl border border-purple-200">
             <div className="text-sm text-gray-600 mb-1">Taxable Revenue</div>
-            <div className="text-3xl font-bold text-purple-600">${(taxSummary.taxableRevenue || 0).toLocaleString()}</div>
+            <div className="text-3xl font-bold text-purple-600">{currencySymbol}{(taxSummary.taxableRevenue || 0).toLocaleString()}</div>
             <div className="text-sm text-purple-600">Total taxable</div>
           </div>
           <div className="text-center p-4 bg-orange-50 rounded-xl border border-orange-200">
@@ -1244,9 +1249,9 @@ const BillingDashboard = () => {
                 <tr key={idx} className={`border-b ${theme.border} ${theme.hover}`}>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.jurisdiction}</td>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.transactions}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>${item.revenue.toLocaleString()}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{item.revenue.toLocaleString()}</td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.rate}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm font-semibold`}>${item.collected.toLocaleString()}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm font-semibold`}>{currencySymbol}{item.collected.toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
@@ -1400,16 +1405,31 @@ const BillingDashboard = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowExportMenu(prev => !prev)}
-                  className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer"
+                  className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm font-medium cursor-pointer bg-navbarBg hover:bg-blue-50 dark:hover:bg-blue-900/20 whitespace-nowrap"
                 >
                   <Download size={18} />
                   Export Report
                 </button>
                 {showExportMenu && (
-                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
-                    <button onClick={handleExport} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                    <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
-                  </div>
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                    <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                      <button
+                        onClick={() => { handleExport(); setShowExportMenu(false); }}
+                        className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                      >
+                        <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                        <span className="font-medium">Export as PDF</span>
+                      </button>
+                      <button
+                        onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
+                        className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                      >
+                        <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                        <span className="font-medium">Export as Excel</span>
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -1423,7 +1443,7 @@ const BillingDashboard = () => {
               <span className={`text-sm ${theme.textSecondary}`}>Success Rate</span>
               <CheckCircle size={20} className="text-green-600" />
             </div>
-            <div className={`text-2xl font-bold ${theme.text}`}>${kpiData.successRate.value.toLocaleString()}</div>
+            <div className={`text-2xl font-bold ${theme.text}`}>{currencySymbol}{kpiData.successRate.value.toLocaleString()}</div>
             <div className="flex items-center gap-1 text-sm text-red-600 mt-1">
               <TrendingDown size={14} />
               <span>{kpiData.successRate.change}%</span>
@@ -1436,7 +1456,7 @@ const BillingDashboard = () => {
               <span className={`text-sm ${theme.textSecondary}`}>Failed Payments</span>
               <XCircle size={20} className="text-red-600" />
             </div>
-            <div className={`text-2xl font-bold ${theme.text}`}>${kpiData.failedPayments.value.toLocaleString()}</div>
+            <div className={`text-2xl font-bold ${theme.text}`}>{currencySymbol}{kpiData.failedPayments.value.toLocaleString()}</div>
             <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
               <TrendingDown size={14} />
               <span>{kpiData.failedPayments.change}%</span>

@@ -28,6 +28,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import TransactionSheet from "./TransactionSheet";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store/store";
+import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
 
 const SubscribersTab = () => {
   const [page, setPage] = useState(1);
@@ -36,6 +39,8 @@ const SubscribersTab = () => {
   const [planFilter, setPlanFilter] = useState("all");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+
+  const currency = useSelector((state: RootState) => state.settings.currency);
 
   const { data, isLoading, isError } = useGetSubscribersQuery({
     page,
@@ -69,12 +74,6 @@ const SubscribersTab = () => {
     });
   };
 
-  const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency || "USD",
-    }).format(amount);
-  };
 
   const handleViewInvoices = (userId: string) => {
     setSelectedUserId(userId);
@@ -172,7 +171,7 @@ const SubscribersTab = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-semibold text-headings">
-                      {formatAmount(sub.amount, sub.currency)}
+                      {formatCurrency(sub.amount, currency)}
                     </TableCell>
                     <TableCell className="text-headings">
                       {sub.paymentCycle}

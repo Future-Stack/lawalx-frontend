@@ -42,6 +42,7 @@ import {
 } from "@/redux/api/admin/usermanagementApi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { addPdfHeader } from "@/lib/pdfUtils";
 import * as XLSX from "xlsx";
 
 interface UserPayment {
@@ -186,12 +187,8 @@ export default function UserManagementPage() {
       const users = exportData.data?.users?.users || [];
       const doc = new jsPDF();
 
-      // Add Title
-      doc.setFontSize(18);
-      doc.text('User Management Report', 14, 22);
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Exported At: ${new Date().toLocaleString()}`, 14, 30);
+      // Branded header with logo
+      const startY = await addPdfHeader(doc, 'User Management Report', `Exported: ${new Date().toLocaleString()}`);
 
       // Define table columns
       const tableColumn = ["Index", "User ID", "Name", "Email", "Plan", "Role", "Status"];
@@ -214,9 +211,9 @@ export default function UserManagementPage() {
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 40,
+        startY,
         theme: 'striped',
-        headStyles: { fillColor: [59, 130, 246] }, // Blue-500
+        headStyles: { fillColor: [59, 130, 246] },
         styles: { fontSize: 8 }
       });
 
@@ -355,9 +352,21 @@ export default function UserManagementPage() {
                     className="fixed inset-0 z-10"
                     onClick={() => setShowExportMenu(false)}
                   />
-                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 min-w-[140px]">
-                    <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                    <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
+                  <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <button
+                      onClick={() => { handleExportPDF(); setShowExportMenu(false); }}
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                    >
+                      <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                      <span className="font-medium">Export as PDF</span>
+                    </button>
+                    <button
+                      onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                    >
+                      <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                      <span className="font-medium">Export as Excel</span>
+                    </button>
                   </div>
                 </>
               )}
@@ -374,7 +383,7 @@ export default function UserManagementPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div className="bg-navbarBg p-4 rounded-lg border border-border">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
@@ -415,7 +424,7 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        <div className="bg-navbarBg p-4 rounded-lg border border-border">
+        {/* <div className="bg-navbarBg p-4 rounded-lg border border-border">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
               <Clock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
@@ -433,7 +442,7 @@ export default function UserManagementPage() {
               Conversion rate
             </span>
           </div>
-        </div>
+        </div> */}
 
         {/* <div className="bg-navbarBg p-4 rounded-lg border border-border">
           <div className="flex items-center gap-3 mb-3">
@@ -458,11 +467,21 @@ export default function UserManagementPage() {
         {/* Table Header */}
         <div className="p-4 border-b border-border">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {selectedUsers.size > 0
-                ? `Selected (${selectedUsers.size})`
-                : `All Users (${meta.total || 0})`}
-            </h2>
+            <div className="flex items-center gap-3">
+              <div className="lg:hidden">
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.size === users.length && users.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded border-gray-300 dark:border-gray-600 w-5 h-5 cursor-pointer"
+                />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                {selectedUsers.size > 0
+                  ? `Selected (${selectedUsers.size})`
+                  : `All Users (${meta.total || 0})`}
+              </h2>
+            </div>
             {selectedUsers.size > 0 && (
               <div className="flex gap-2">
                 <button
@@ -482,37 +501,43 @@ export default function UserManagementPage() {
           </div>
 
           {/* Search and Filters */}
-          <div className="flex gap-3">
-            <div className="flex-1 relative">
+          <div className="flex flex-col xl:flex-row gap-4">
+            <div className="flex-1 relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="Search by name, email, or user ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border bg-navbarBg rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white"
+                className="w-full pl-10 pr-4 py-2.5 border border-border bg-navbarBg rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
               />
             </div>
-            <Dropdown
-              value={planFilter}
-              options={["All Plans", "Premium", "Free Trial"]}
-              onChange={setPlanFilter}
-            />
-            <Dropdown
-              value={statusFilter}
-              options={["All Status", "Active", "Suspended"]}
-              onChange={setStatusFilter}
-            />
-            <SliderDropdown
-              label="Storage"
-              value={storageFilter}
-              onChange={setStorageFilter}
-            />
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full xl:w-auto">
+              <Dropdown
+                value={planFilter}
+                options={["All Plans", "Premium", "Free Trial"]}
+                onChange={setPlanFilter}
+                className="w-full"
+              />
+              <Dropdown
+                value={statusFilter}
+                options={["All Status", "Active", "Suspended"]}
+                onChange={setStatusFilter}
+                className="w-full"
+              />
+              <SliderDropdown
+                label="Storage"
+                value={storageFilter}
+                onChange={setStorageFilter}
+                className="w-full sm:col-span-2 md:col-span-1"
+              />
+            </div>
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto scrollbar-hide">
+        {/* Table/Card View */}
+        <div className="overflow-x-auto scrollbar-hide hidden lg:block">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
@@ -600,7 +625,7 @@ export default function UserManagementPage() {
                     }}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedUsers.has(user.id)}
@@ -609,9 +634,9 @@ export default function UserManagementPage() {
                         className="rounded border-gray-300 dark:border-gray-600"
                       />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-nowrap">
                       <div>
-                        <div className="font-medium text-gray-900 dark:text-white text-nowrap">
+                        <div className="font-medium text-gray-900 dark:text-white">
                           {user.full_name || user.username}
                         </div>
                         <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -619,12 +644,12 @@ export default function UserManagementPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-nowrap">
                       <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium">
                         {plan}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white mb-1">
                         {`${deviceUsed}/${deviceLimit || 0}`}
                       </div>
@@ -640,7 +665,7 @@ export default function UserManagementPage() {
                         />
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white mb-1">
                         {`${storageUsed}GB/${storageGB || 0}GB`}
                       </div>
@@ -656,7 +681,7 @@ export default function UserManagementPage() {
                         />
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-nowrap">
                       <span
                         className={`flex items-center gap-1 w-fit px-3 py-1 rounded-full text-xs font-medium border ${user.status === "ACTIVE"
                           ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
@@ -676,13 +701,13 @@ export default function UserManagementPage() {
                         {statusStr}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-nowrap">
                       {user.issues && user.issues.length > 0 && user.issues[0] !== "No issues" ? (
                         <div className="flex gap-2">
                           {user.issues.map((issue: string, idx: number) => (
                             <span
                               key={idx}
-                              className="px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-xs text-nowrap"
+                              className="px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-xs"
                             >
                               {issue}
                             </span>
@@ -694,7 +719,7 @@ export default function UserManagementPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 text-nowrap">
                       <div className="relative">
                         <button
                           onClick={(e) => {
@@ -772,7 +797,7 @@ export default function UserManagementPage() {
                                 Impersonate User
                               </button>
 
-                              <button
+                              {/* <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedUser(user);
@@ -783,7 +808,7 @@ export default function UserManagementPage() {
                               >
                                 <RotateCcw className="w-4 h-4" />
                                 Reset Password
-                              </button>
+                              </button> */}
 
                               {user.status === "SUSPENDED" ? (
                                 <button
@@ -839,6 +864,241 @@ export default function UserManagementPage() {
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile/Tablet Card View */}
+        <div className="lg:hidden p-4 space-y-4">
+          {isUsersLoading ? (
+            <div className="px-4 py-10 text-center text-gray-500 dark:text-gray-400 bg-navbarBg rounded-lg border border-border">
+              Loading users...
+            </div>
+          ) : users.length === 0 ? (
+            <div className="px-4 py-10 text-center text-gray-500 dark:text-gray-400 bg-navbarBg rounded-lg border border-border">
+              No users found
+            </div>
+          ) : users.map((user: any, index: number) => {
+            const isLastRows = index >= users.length - 2;
+
+            // Derive fields from API response
+            const payment = user.payments?.[0];
+            const plan = (payment?.planName || "Free Trial").replace("_", " ");
+            const deviceLimit = payment?.deviceLimit || 0;
+            const storageGB = payment?.storageGB || 0;
+
+            const deviceUsedRaw = user.device ?? user.deviceUsage ?? 0;
+            const deviceUsed = Number(String(deviceUsedRaw).replace(/[^0-9.]/g, '')) || 0;
+            const storageUsedRaw = user.storage ?? user.storageUsage ?? 0;
+            const storageUsed = Number(String(storageUsedRaw).replace(/[^0-9.]/g, '')) || 0;
+
+            const deviceUsage = deviceLimit > 0 ? Math.min(100, Math.round((deviceUsed / deviceLimit) * 100)) : 0;
+            const storageUsage = storageGB > 0 ? Math.min(100, Math.round((storageUsed / storageGB) * 100)) : 0;
+            const statusStr = user.status.charAt(0) + user.status.slice(1).toLowerCase();
+
+            const query = new URLSearchParams({
+              name: user.full_name || user.username,
+              email: user.account?.email || "",
+              plan: plan,
+              status: user.status,
+              device: `${deviceLimit || 0}`,
+              storage: `${storageGB || 0}`,
+              deviceUsage: `${deviceUsage}`,
+              storageUsage: `${storageUsage}`,
+              phone: user.phoneNumber || "",
+              location: user.location || "",
+              joinDate: user.account?.created_at || "",
+            }).toString();
+
+            return (
+              <div
+                key={user.id}
+                onClick={() => router.push(`/admin/user-management/${user.id}?${query}`)}
+                className="bg-navbarBg rounded-xl border border-border p-4 space-y-4 cursor-pointer hover:shadow-md transition-all"
+              >
+                {/* Card Header */}
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex gap-3 items-start flex-1 min-w-0">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.has(user.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={() => toggleSelectUser(user.id)}
+                      className="rounded border-gray-300 dark:border-gray-600 mt-1 shrink-0"
+                    />
+                    <div className="min-w-0">
+                      <div className="font-bold text-gray-900 dark:text-white truncate">
+                        {user.full_name || user.username}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {user.account?.email || "N/A"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span
+                      className={`px-2 py-1 rounded-full text-[10px] font-bold border ${user.status === "ACTIVE"
+                        ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
+                        : user.status === "SUSPENDED"
+                          ? "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
+                        }`}
+                    >
+                      {statusStr}
+                    </span>
+                    <div className="relative">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenActionMenu(
+                            openActionMenu === user.id ? null : user.id
+                          );
+                        }}
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-border"
+                      >
+                        <MoreVertical className="w-4 h-4 text-gray-400" />
+                      </button>
+                      {openActionMenu === user.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-[60]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenActionMenu(null);
+                            }}
+                          />
+                          <div
+                            className={`absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[70] ${isLastRows ? "bottom-full mb-2" : "mt-2"}`}
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push(`/admin/user-management/${user.id}?${query}`);
+                              }}
+                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Profile
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedUser(user);
+                                setIsEditModalOpen(true);
+                                setOpenActionMenu(null);
+                              }}
+                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Edit User
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleLoginAsUser(user.id);
+                                setOpenActionMenu(null);
+                              }}
+                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
+                            >
+                              <LogIn className="w-4 h-4" />
+                              Impersonate User
+                            </button>
+                            {user.status === "SUSPENDED" ? (
+                              <button
+                                onClick={async (e) => {
+                                  e.stopPropagation();
+                                  try {
+                                    await unsuspendUser(user.id).unwrap();
+                                    toast.success("User unsuspended successfully");
+                                  } catch (err: any) {
+                                    toast.error(err?.data?.message || "Failed to unsuspend user");
+                                  }
+                                  setOpenActionMenu(null);
+                                }}
+                                className="w-full cursor-pointer px-4 py-2 text-left text-sm text-green-600 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
+                              >
+                                <UserCheck className="w-4 h-4" />
+                                Unsuspend User
+                              </button>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedUser(user);
+                                  setIsSuspendModalOpen(true);
+                                  setOpenActionMenu(null);
+                                }}
+                                className="w-full cursor-pointer px-4 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
+                              >
+                                <UserX className="w-4 h-4" />
+                                Suspend User
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedUser(user);
+                                setIsDeleteModalOpen(true);
+                                setOpenActionMenu(null);
+                              }}
+                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete User
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Rows */}
+                <div className="flex items-center justify-between text-xs py-2 border-y border-border/50">
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400 font-medium">Current Plan:</span>
+                    <span className="ml-2 font-bold text-bgBlue">{plan}</span>
+                  </div>
+                  {user.issues && user.issues.length > 0 && user.issues[0] !== "No issues" && (
+                    <div className="flex gap-1">
+                      {user.issues.slice(0, 1).map((issue: string, idx: number) => (
+                        <span key={idx} className="px-2 py-0.5 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-[10px] font-bold border border-orange-100">
+                          {issue}
+                        </span>
+                      ))}
+                      {user.issues.length > 1 && <span className="text-[10px] text-muted">+{user.issues.length - 1} more</span>}
+                    </div>
+                  )}
+                </div>
+
+                {/* Usage Bars */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight text-gray-500">
+                      <span>Device Used</span>
+                      <span>{deviceUsed}/{deviceLimit}</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden border border-border/30">
+                      <div
+                        className={`h-full transition-all duration-500 ${deviceUsage > 80 ? "bg-red-500" : deviceUsage > 60 ? "bg-orange-500" : "bg-bgBlue"}`}
+                        style={{ width: `${deviceUsage}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight text-gray-500">
+                      <span>Storage Used</span>
+                      <span>{storageUsed}GB/{storageGB}GB</span>
+                    </div>
+                    <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden border border-border/30">
+                      <div
+                        className={`h-full transition-all duration-500 ${storageUsage > 80 ? "bg-red-500" : storageUsage > 60 ? "bg-orange-500" : "bg-bgBlue"}`}
+                        style={{ width: `${storageUsage}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Pagination */}

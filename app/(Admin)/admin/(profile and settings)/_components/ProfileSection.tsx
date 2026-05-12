@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Upload, Info, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, Info, Loader2, AlertCircle, User } from 'lucide-react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,70 +13,65 @@ import {
 } from '@/redux/api/admin/profile&settings/adminSettingsApi';
 import { toast } from 'sonner';
 
-const getFullImageUrl = (path: string | null | undefined) => {
-    if (!path) return '/images/profile-settings.png';
+const getFullImageUrl = (path: string | null | undefined): string | null => {
+    if (!path) return null;
     if (path.startsWith('http')) return path;
-
-    // Derive base domain from NEXT_PUBLIC_BASE_URL
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', '');
     return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 };
+
+function ProfileAvatar({ imageUrl, name, size = 'lg' }: { imageUrl: string | null; name: string; size?: 'sm' | 'lg' }) {
+    const initials = name
+        ? name.trim().split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+        : '';
+
+    const sizeClasses = size === 'lg'
+        ? 'w-24 h-24 text-2xl'
+        : 'w-10 h-10 text-sm';
+
+    if (imageUrl) {
+        return (
+            <div className={`relative ${sizeClasses} rounded-full overflow-hidden border-2 border-border shadow-sm flex-shrink-0`}>
+                <Image src={imageUrl} alt="Profile" fill className="object-cover" sizes={size === 'lg' ? '96px' : '40px'} />
+            </div>
+        );
+    }
+
+    return (
+        <div className={`${sizeClasses} rounded-full border-2 border-border shadow-sm flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center`}>
+            {initials ? (
+                <span className="font-bold text-white">{initials}</span>
+            ) : (
+                <User className={size === 'lg' ? 'w-10 h-10 text-white' : 'w-5 h-5 text-white'} />
+            )}
+        </div>
+    );
+}
 
 export default function ProfileSection() {
     const { data: profileData, isLoading, isError, error } = useGetAdminProfileQuery({});
     const [updateAdminProfile, { isLoading: isUpdating }] = useUpdateAdminProfileMutation();
     const [uploadProfilePhoto, { isLoading: isUploading }] = useUploadProfilePhotoMutation();
+    console.log("profile get data response", profileData);
+
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [fullName, setFullName] = useState('');
-    const [officialName, setOfficialName] = useState('');
-    const [designation, setDesignation] = useState('');
-    const [companyName, setCompanyName] = useState('');
-    const [website, setWebsite] = useState('');
-    const [industryType, setIndustryType] = useState('');
-    const [totalEmployees, setTotalEmployees] = useState('');
-    const [location, setLocation] = useState('');
-    const [cityCountry, setCityCountry] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [phoneCountry, setPhoneCountry] = useState('');
-    const [imageUrl, setImageUrl] = useState('/images/profile-settings.png');
+    const [resolvedImageUrl, setResolvedImageUrl] = useState<string | null>(null);
 
     useEffect(() => {
         if (profileData?.success && profileData?.data) {
             const d = profileData.data;
             setFullName(d.fullname || d.full_name || '');
-            setOfficialName(d.officialName || '');
-            setDesignation(d.designation || '');
-            setCompanyName(d.company_name || '');
-            setWebsite(d.website || '');
-            setIndustryType(d.industryType || '');
-            setTotalEmployees(d.totalEmployees || '');
-            setLocation(d.location || '');
-            setCityCountry(d.cityCountry || '');
-            setPhoneNumber(d.phoneNumber || '');
-            setPhoneCountry(d.phoneCountry || '');
-            if (d.profileImage || d.image_url) {
-                setImageUrl(getFullImageUrl(d.profileImage || d.image_url));
-            }
+            const imgPath = d.profileImage || d.image_url;
+            setResolvedImageUrl(getFullImageUrl(imgPath));
         }
     }, [profileData]);
 
     const handleSave = async () => {
         try {
-            const res = await updateAdminProfile({
-                full_name: fullName,
-                officialName,
-                designation,
-                company_name: companyName,
-                website,
-                industryType,
-                totalEmployees,
-                location,
-                cityCountry,
-                phoneNumber,
-                phoneCountry,
-            }).unwrap();
+            const res = await updateAdminProfile({ full_name: fullName }).unwrap();
             if (res.success) {
                 toast.success(res.message || 'Profile updated successfully');
             }
@@ -93,7 +89,7 @@ export default function ProfileSection() {
             const res = await uploadProfilePhoto(formData).unwrap();
             if (res.success) {
                 toast.success('Photo updated successfully');
-                if (res.data?.image_url) setImageUrl(getFullImageUrl(res.data.image_url));
+                if (res.data?.image_url) setResolvedImageUrl(getFullImageUrl(res.data.image_url));
             }
         } catch (err: any) {
             toast.error(err?.data?.message || 'Failed to upload photo');
@@ -142,15 +138,7 @@ export default function ProfileSection() {
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                         <Label className="w-32 text-sm font-medium text-headings shrink-0">Profile Photo</Label>
                         <div className="flex items-center gap-6">
-                            <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-border shadow-sm">
-                                <Image
-                                    src={imageUrl}
-                                    alt="Profile"
-                                    fill
-                                    className="object-cover"
-                                    sizes="100px"
-                                />
-                            </div>
+                            <ProfileAvatar imageUrl={resolvedImageUrl} name={fullName} size="lg" />
                             <div className="flex flex-col gap-2">
                                 <input
                                     ref={fileInputRef}
@@ -187,19 +175,7 @@ export default function ProfileSection() {
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                                 placeholder="Enter full name"
-                                className="flex-1 max-w-2xl bg-input border-border text-headings h-11"
-                            />
-                        </div>
-
-                        {/* Official Name */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <Label className="w-32 text-sm font-medium text-headings shrink-0">Official Name</Label>
-                            <Input
-                                type="text"
-                                value={officialName}
-                                onChange={(e) => setOfficialName(e.target.value)}
-                                placeholder="Enter official name"
-                                className="flex-1 max-w-2xl bg-input border-border text-headings h-11"
+                                className="flex-1 max-w-2xl bg-input border-border text-headings h-11 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                             />
                         </div>
 
@@ -217,108 +193,14 @@ export default function ProfileSection() {
                             </div>
                         </div>
 
-                        {/* Designation */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <Label className="w-32 text-sm font-medium text-headings shrink-0">Designation</Label>
-                            <Input
-                                type="text"
-                                value={designation}
-                                onChange={(e) => setDesignation(e.target.value)}
-                                placeholder="Enter designation (e.g. Software Engineer)"
-                                className="flex-1 max-w-2xl bg-input border-border text-headings h-11"
-                            />
-                        </div>
-
-                        {/* Phone Number */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <Label className="w-32 text-sm font-medium text-headings shrink-0">Phone</Label>
-                            <div className="flex gap-2 flex-1 max-w-2xl">
-                                <Input
-                                    type="text"
-                                    value={phoneCountry}
-                                    onChange={(e) => setPhoneCountry(e.target.value)}
-                                    placeholder="+1"
-                                    className="w-20 bg-input border-border text-headings h-11"
-                                />
-                                <Input
-                                    type="text"
-                                    value={phoneNumber}
-                                    onChange={(e) => setPhoneNumber(e.target.value)}
-                                    placeholder="Enter phone number"
-                                    className="flex-1 bg-input border-border text-headings h-11"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Location */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <Label className="w-32 text-sm font-medium text-headings shrink-0">Location</Label>
-                            <Input
-                                type="text"
-                                value={cityCountry}
-                                onChange={(e) => setCityCountry(e.target.value)}
-                                placeholder="Enter city, country"
-                                className="flex-1 max-w-2xl bg-input border-border text-headings h-11"
-                            />
-                        </div>
-
                         {/* Role */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                             <Label className="w-32 text-sm font-medium text-headings shrink-0">Role</Label>
                             <div className="flex-1">
-                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-500 border border-red-100">
-                                    {profile?.role || 'SUPERADMIN'}
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-500 border border-red-100 dark:bg-red-950/20 dark:border-red-900/30">
+                                    {profile?.role || 'ADMIN'}
                                 </span>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Company Section */}
-                    <div className="border-t border-border pt-8 space-y-6">
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-headings">Company Information</h3>
-
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <Label className="w-32 text-sm font-medium text-headings shrink-0">Company</Label>
-                            <Input
-                                type="text"
-                                value={companyName}
-                                onChange={(e) => setCompanyName(e.target.value)}
-                                placeholder="Enter company name"
-                                className="flex-1 max-w-2xl bg-input border-border text-headings h-11"
-                            />
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <Label className="w-32 text-sm font-medium text-headings shrink-0">Website</Label>
-                            <Input
-                                type="url"
-                                value={website}
-                                onChange={(e) => setWebsite(e.target.value)}
-                                placeholder="https://example.com"
-                                className="flex-1 max-w-2xl bg-input border-border text-headings h-11"
-                            />
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <Label className="w-32 text-sm font-medium text-headings shrink-0">Industry</Label>
-                            <Input
-                                type="text"
-                                value={industryType}
-                                onChange={(e) => setIndustryType(e.target.value)}
-                                placeholder="Enter industry"
-                                className="flex-1 max-w-2xl bg-input border-border text-headings h-11"
-                            />
-                        </div>
-
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                            <Label className="w-32 text-sm font-medium text-headings shrink-0">Team Size</Label>
-                            <Input
-                                type="text"
-                                value={totalEmployees}
-                                onChange={(e) => setTotalEmployees(e.target.value)}
-                                placeholder="50-100"
-                                className="flex-1 max-w-2xl bg-input border-border text-headings h-11"
-                            />
                         </div>
                     </div>
                 </div>

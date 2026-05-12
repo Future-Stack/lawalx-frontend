@@ -1,23 +1,25 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useGetNotificationPermissionQuery, useUpdateNotificationPermissionMutation } from "@/redux/api/users/notificationPermisstionApi";
+import { useGetSettingsNotificationQuery, useUpdateSettingsNotificationMutation } from "@/redux/api/users/settings/settingsApi";
+import { NotificationPreferences } from "@/redux/api/users/settings/settings.type";
 import { toast } from "sonner";
 
 export default function Notifications() {
-    const { data: permissionData, isLoading } = useGetNotificationPermissionQuery();
-    const [updatePermission] = useUpdateNotificationPermissionMutation();
-
-    const permissions = permissionData?.data || {};
-
-    const handleToggle = async (field: string, currentValue: boolean) => {
+    // 1. Fetch the user's notification settings from the server
+    const { data: response, isLoading: isFetching } = useGetSettingsNotificationQuery(undefined);
+    const [updateNotification, { isLoading: isUpdating }] = useUpdateSettingsNotificationMutation();
+    const settings = (response?.data || {}) as Partial<NotificationPreferences>;
+    const handleToggle = async (settingKey: string, currentStatus: boolean) => {
         try {
-            console.log(`Updating ${field} to ${!currentValue}`);
-            const result = await updatePermission({ [field]: !currentValue }).unwrap();
-            console.log("Update success:", result);
-            toast.success("Notification updated successfully");
+            const result = await updateNotification({ 
+                [settingKey]: !currentStatus 
+            }).unwrap();
+            if (result.success) {
+                toast.success(result.message || "Setting updated!");
+            }
         } catch (error: any) {
-            console.error("Failed to update notification:", error);
-            const errorMessage = error?.data?.message || error?.message || "Failed to update notification";
+            const errorMessage = error?.data?.message || "Something went wrong. Please try again.";
             toast.error(errorMessage);
         }
     };
@@ -36,16 +38,16 @@ export default function Notifications() {
                             <p className="text-xs text-muted">Receive email notifications for important events</p>
                         </div>
                         <button
-                            onClick={() => handleToggle('email', !!permissions.email)}
-                            disabled={isLoading}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${permissions.email ? 'bg-bgBlue' : 'bg-gray-200'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleToggle('email', !!settings.email)}
+                            disabled={isFetching || isUpdating}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${settings.email ? 'bg-bgBlue' : 'bg-gray-200'} ${isFetching || isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${permissions.email ? 'translate-x-6' : 'translate-x-1'}`} />
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.email ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
 
                     {/* Push Notifications */}
-                    <div className="flex items-center justify-between pb-6 border-b border-border">
+                    {/* <div className="flex items-center justify-between pb-6 border-b border-border">
                         <div>
                             <h3 className="text-sm font-semibold text-headings mb-1">Push Notifications</h3>
                             <p className="text-xs text-muted">Receive push notifications on your device</p>
@@ -57,7 +59,7 @@ export default function Notifications() {
                         >
                             <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${permissions.push ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
-                    </div>
+                    </div> */}
 
                     {/* Device Alerts */}
                     <div className="flex items-center justify-between pb-6 border-b border-border">
@@ -66,11 +68,11 @@ export default function Notifications() {
                             <p className="text-xs text-muted">Get notified when devices go offline or have issues</p>
                         </div>
                         <button
-                            onClick={() => handleToggle('deviceAlerts', !!permissions.deviceAlerts)}
-                            disabled={isLoading}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${permissions.deviceAlerts ? 'bg-bgBlue' : 'bg-gray-200'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleToggle('deviceAlerts', !!settings.deviceAlerts)}
+                            disabled={isFetching || isUpdating}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${settings.deviceAlerts ? 'bg-bgBlue' : 'bg-gray-200'} ${isFetching || isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${permissions.deviceAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.deviceAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
 
@@ -81,11 +83,11 @@ export default function Notifications() {
                             <p className="text-xs text-muted">Get notified when video uploads are completed</p>
                         </div>
                         <button
-                            onClick={() => handleToggle('videoUpload', !!permissions.videoUpload)}
-                            disabled={isLoading}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${permissions.videoUpload ? 'bg-bgBlue' : 'bg-gray-200'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleToggle('videoUpload', !!settings.videoUpload)}
+                            disabled={isFetching || isUpdating}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${settings.videoUpload ? 'bg-bgBlue' : 'bg-gray-200'} ${isFetching || isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${permissions.videoUpload ? 'translate-x-6' : 'translate-x-1'}`} />
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.videoUpload ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
 
@@ -96,11 +98,11 @@ export default function Notifications() {
                             <p className="text-xs text-muted">Receive notifications about schedule changes</p>
                         </div>
                         <button
-                            onClick={() => handleToggle('scheduleUpdates', !!permissions.scheduleUpdates)}
-                            disabled={isLoading}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${permissions.scheduleUpdates ? 'bg-bgBlue' : 'bg-gray-200'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleToggle('scheduleUpdates', !!settings.scheduleUpdates)}
+                            disabled={isFetching || isUpdating}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${settings.scheduleUpdates ? 'bg-bgBlue' : 'bg-gray-200'} ${isFetching || isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${permissions.scheduleUpdates ? 'translate-x-6' : 'translate-x-1'}`} />
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.scheduleUpdates ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
 
@@ -111,11 +113,11 @@ export default function Notifications() {
                             <p className="text-xs text-muted">Receive general system-wide alerts</p>
                         </div>
                         <button
-                            onClick={() => handleToggle('systemAlerts', !!permissions.systemAlerts)}
-                            disabled={isLoading}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${permissions.systemAlerts ? 'bg-bgBlue' : 'bg-gray-200'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleToggle('systemAlerts', !!settings.systemAlerts)}
+                            disabled={isFetching || isUpdating}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${settings.systemAlerts ? 'bg-bgBlue' : 'bg-gray-200'} ${isFetching || isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${permissions.systemAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.systemAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
 
@@ -126,11 +128,11 @@ export default function Notifications() {
                             <p className="text-xs text-muted">Receive marketing and promotional notifications</p>
                         </div>
                         <button
-                            onClick={() => handleToggle('promotions', !!permissions.promotions)}
-                            disabled={isLoading}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${permissions.promotions ? 'bg-bgBlue' : 'bg-gray-200'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleToggle('promotions', !!settings.promotions)}
+                            disabled={isFetching || isUpdating}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${settings.promotions ? 'bg-bgBlue' : 'bg-gray-200'} ${isFetching || isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${permissions.promotions ? 'translate-x-6' : 'translate-x-1'}`} />
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${settings.promotions ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                     </div>
                 </div>

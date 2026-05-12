@@ -7,6 +7,7 @@ import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { addPdfHeader } from '@/lib/pdfUtils';
 import * as XLSX from 'xlsx';
 import {
   useGetUserActivityOverviewQuery, useGetAuditOverviewQuery, useGetRecentActivityQuery,
@@ -17,6 +18,7 @@ import {
   useGetAuthEventsQuery, useGetLoginActivityTrendQuery, useGetSecurityAlertsQuery,
   useLazyGetUserActivityExportQuery,
 } from '@/redux/api/admin/User Report/userreportApi';
+import { toast } from 'sonner';
 
 // Demo data generator
 const generateData = (days: number) => {
@@ -184,28 +186,137 @@ const UserActivityReports = () => {
 
   const handleExportPDF = async () => {
     try {
+      toast.loading("Preparing PDF report...");
       const res = await triggerExport({ timeRange: apiTimeRange }).unwrap();
+      toast.dismiss();
       const exp = res?.data;
+      if (!exp) {
+        toast.error("Failed to fetch export data");
+        return;
+      }
       const doc = new jsPDF();
-      doc.setFontSize(16); doc.text('User Activity Report', 14, 15);
-      doc.setFontSize(10); doc.text(`Exported: ${new Date().toLocaleString()}`, 14, 22);
-      doc.setFontSize(13); doc.text('Summary', 14, 30);
-      autoTable(doc, { startY: 34, head: [['Metric', 'Value']], body: [['Total Users', exp?.summary?.totalUsers?.value ?? 0], ['Active Users', exp?.summary?.activeUsers?.value ?? 0], ['Logins Today', exp?.summary?.loginsToday?.value ?? 0], ['Failed Logins', exp?.summary?.failedLogins?.value ?? 0]] });
-      let y: number = (doc as any).lastAutoTable.finalY + 10;
-      doc.setFontSize(13); doc.text('Audit Overview', 14, y);
-      autoTable(doc, { startY: y + 4, head: [['Metric', 'Value']], body: [['Total Actions', exp?.audit?.overview?.totalActions?.value ?? 0], ['Successful', exp?.audit?.overview?.successful?.value ?? 0], ['Failed', exp?.audit?.overview?.failed?.value ?? 0], ['Unique Users', exp?.audit?.overview?.uniqueUsers?.value ?? 0]] });
-      y = (doc as any).lastAutoTable.finalY + 10;
-      if ((exp?.audit?.recentActivity ?? []).length) {
-        doc.setFontSize(13); doc.text('Recent Activity', 14, y);
-        autoTable(doc, { startY: y + 4, head: [['ID', 'Timestamp', 'User', 'Action', 'Resource', 'Status']], body: exp.audit.recentActivity.map((a: any) => [a.id, a.timestamp, a.user, a.action, a.resource, a.status]) });
-        y = (doc as any).lastAutoTable.finalY + 10;
-      }
-      if ((exp?.inventory?.directory ?? []).length) {
-        doc.setFontSize(13); doc.text('User Directory', 14, y);
-        autoTable(doc, { startY: y + 4, head: [['ID', 'Name', 'Email', 'Role', 'Status']], body: exp.inventory.directory.map((u: any) => [u.id, u.name, u.email, u.role, u.status]) });
-      }
-      doc.save('user-activity-report.pdf');
-    } catch (e) { console.error('PDF export failed', e); }
+      const timeRangeLabel = timeRanges.find(t => t.value === timeRange)?.label || 'All Time';
+
+      // Branded header with logo
+      let currentY = await addPdfHeader(
+        doc,
+        'User & Activity Reports',
+        `Period: ${timeRangeLabel}  |  Generated: ${new Date().toLocaleString()}`
+      );
+
+      // Section 1: Executive Summary
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(14);
+      doc.text('1. Executive Summary', 14, currentY);
+
+      const summaryStats = [
+        ['Metric', 'Value'],
+        ['Total Users', (exp.summary?.totalUsers?.value ?? 0).toLocaleString()],
+        ['Active Users', (exp.summary?.activeUsers?.value ?? 0).toLocaleString()],
+        ['Logins Today', (exp.summary?.loginsToday?.value ?? 0).toLocaleString()],
+        ['Failed Logins', (exp.summary?.failedLogins?.value ?? 0).toLocaleString()],
+        ['Avg Session Duration', exp.summary?.avgSession?.value ? `${exp.summary.avgSession.value} min` : 'N/A']
+      ];
+
+      autoTable(doc, {
+        startY: currentY + 5,
+        head: [summaryStats[0]],
+        body: summaryStats.slice(1),
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [59, 130, 246] } // Blue-500
+      });
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+
+      // Section 2: Audit Overview
+      doc.setFontSize(14);
+      doc.text('2. Audit Overview', 14, currentY);
+      const auditRows = [
+        ['Metric', 'Value'],
+        ['Total Actions', (exp.audit?.overview?.totalActions?.value ?? 0).toLocaleString()],
+        ['Successful Actions', (exp.audit?.overview?.successful?.value ?? 0).toLocaleString()],
+        ['Failed Actions', (exp.audit?.overview?.failed?.value ?? 0).toLocaleString()],
+        ['Unique Users Active', (exp.audit?.overview?.uniqueUsers?.value ?? 0).toLocaleString()]
+      ];
+      autoTable(doc, {
+        startY: currentY + 5,
+        head: [auditRows[0]],
+        body: auditRows.slice(1),
+        theme: 'striped',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [139, 92, 246] } // Purple-500
+      });
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+
+      // Section 3: Recent Activity
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('3. Recent Activity Log', 14, currentY);
+      const activityRows = (exp.audit?.recentActivity ?? []).map((a: any) => [
+        a.id,
+        a.timestamp,
+        a.user,
+        a.action,
+        a.resource,
+        a.status
+      ]);
+      autoTable(doc, {
+        startY: currentY + 5,
+        head: [['ID', 'Timestamp', 'User', 'Action', 'Resource', 'Status']],
+        body: activityRows,
+        theme: 'grid',
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [16, 185, 129] } // Emerald-500
+      });
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+
+      // Section 4: User Directory
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('4. User Directory Summary', 14, currentY);
+      const directoryRows = (exp.inventory?.directory ?? []).map((u: any) => [
+        u.id,
+        u.name,
+        u.email,
+        u.role,
+        u.status,
+        u.lastLogin || 'N/A'
+      ]);
+      autoTable(doc, {
+        startY: currentY + 5,
+        head: [['ID', 'Name', 'Email', 'Role', 'Status', 'Last Login']],
+        body: directoryRows,
+        theme: 'striped',
+        styles: { fontSize: 7 },
+        headStyles: { fillColor: [107, 114, 128] } // Gray-500
+      });
+      currentY = (doc as any).lastAutoTable.finalY + 15;
+
+      // Section 5: Usage & Engagement
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text('5. Feature Usage Analytics', 14, currentY);
+      const usageRows = (exp.usage?.features ?? []).map((f: any) => [
+        f.name,
+        f.users.toLocaleString(),
+        `${f.percentage}%`,
+        f.growth
+      ]);
+      autoTable(doc, {
+        startY: currentY + 5,
+        head: [['Feature', 'Users', 'Usage %', 'Growth']],
+        body: usageRows,
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [245, 158, 11] } // Amber-500
+      });
+
+      doc.save(`User_Activity_Report_${apiTimeRange}.pdf`);
+      toast.success("PDF report exported successfully");
+    } catch (e) {
+      console.error('PDF export failed', e);
+      toast.error("An error occurred during PDF export");
+    }
     setShowExportMenu(false);
   };
 
@@ -227,7 +338,7 @@ const UserActivityReports = () => {
     <div className="min-h-screen text-gray-900 dark:text-gray-100 transition-colors duration-200">
       <div className="">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-3">
           <div>
             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-6">
               <Link href="/admin/dashboard">
@@ -244,7 +355,7 @@ const UserActivityReports = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Dropdown
               value={timeRanges.find(t => t.value === timeRange)?.label || ''}
               options={timeRanges.map(t => t.label)}
@@ -254,16 +365,31 @@ const UserActivityReports = () => {
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu(prev => !prev)}
-                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer"
+                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm font-medium cursor-pointer bg-navbarBg hover:bg-blue-50 dark:hover:bg-blue-900/20 whitespace-nowrap"
               >
                 <Download className="w-4 h-4" />
                 Export Report
               </button>
               {showExportMenu && (
-                <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
-                  <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                  <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
-                </div>
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                  <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                    <button
+                      onClick={() => { handleExportPDF(); setShowExportMenu(false); }}
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                    >
+                      <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                      <span className="font-medium">Export as PDF</span>
+                    </button>
+                    <button
+                      onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                    >
+                      <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                      <span className="font-medium">Export as Excel</span>
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>

@@ -8,6 +8,7 @@ import TicketsTable from './_components/TicketsTable';
 import { useLazyGetAllSupportTicketsQuery } from '@/redux/api/admin/support/adminSupportTicketApi';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { addPdfHeader } from "@/lib/pdfUtils";
 import * as XLSX from "xlsx";
 import { toast } from "sonner";
 
@@ -27,12 +28,8 @@ export default function SupportTickets2Page() {
       const tickets = exportData.data || [];
       const doc = new jsPDF();
 
-      // Add Title
-      doc.setFontSize(18);
-      doc.text('Support Tickets Report', 14, 22);
-      doc.setFontSize(11);
-      doc.setTextColor(100);
-      doc.text(`Exported At: ${new Date().toLocaleString()}`, 14, 30);
+      // Branded header with logo
+      const startY = await addPdfHeader(doc, 'Support Tickets Report', `Exported: ${new Date().toLocaleString()}`);
 
       // Define table columns
       const tableColumn = ["Index", "Ticket ID", "Subject", "Issue Type", "Priority", "Status", "Assigned To", "Created At"];
@@ -59,19 +56,19 @@ export default function SupportTickets2Page() {
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY: 40,
+        startY,
         theme: 'striped',
-        headStyles: { fillColor: [59, 130, 246], fontSize: 7 }, // Blue-500
+        headStyles: { fillColor: [59, 130, 246], fontSize: 7 },
         styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
         columnStyles: {
-          0: { cellWidth: 10 }, // Index
-          1: { cellWidth: 25 }, // Ticket ID
-          2: { cellWidth: 40 }, // Subject
-          3: { cellWidth: 25 }, // Issue Type
-          4: { cellWidth: 15 }, // Priority
-          5: { cellWidth: 15 }, // Status
-          6: { cellWidth: 30 }, // Assigned To
-          7: { cellWidth: 20 }, // Created At
+          0: { cellWidth: 10 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 40 },
+          3: { cellWidth: 25 },
+          4: { cellWidth: 15 },
+          5: { cellWidth: 15 },
+          6: { cellWidth: 30 },
+          7: { cellWidth: 20 },
         }
       });
 
@@ -145,7 +142,7 @@ export default function SupportTickets2Page() {
       </div>
 
       {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Support Tickets Overview
@@ -155,26 +152,40 @@ export default function SupportTickets2Page() {
           </p>
         </div>
 
-        <div className="relative">
-          <button
-            onClick={() => setShowExportMenu(prev => !prev)}
-            className="px-4 py-2 shadow-customShadow cursor-pointer bg-navbarBg text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors"
-          >
-            <CloudDownload className="w-4 h-4" />
-            <span className="hidden lg:block">Export Report</span>
-          </button>
-          {showExportMenu && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setShowExportMenu(false)}
-              />
-              <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 min-w-[140px]">
-                <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 rounded-t-lg cursor-pointer">📄 PDF</button>
-                <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 rounded-b-lg cursor-pointer">📊 Excel</button>
-              </div>
-            </>
-          )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(prev => !prev)}
+              className="px-4 py-2 shadow-customShadow cursor-pointer bg-navbarBg text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors"
+            >
+              <CloudDownload className="w-4 h-4" />
+              <span className="hidden lg:block">Export Report</span>
+            </button>
+            {showExportMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowExportMenu(false)}
+                />
+                <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                  <button
+                    onClick={handleExportPDF}
+                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                  >
+                    <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                    <span className="font-medium">Export as PDF</span>
+                  </button>
+                  <button
+                    onClick={handleExportExcel}
+                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                  >
+                    <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                    <span className="font-medium">Export as Excel</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

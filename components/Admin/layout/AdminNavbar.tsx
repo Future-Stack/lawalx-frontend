@@ -8,15 +8,44 @@ import { useState } from 'react';
 import { useGetAdminProfileQuery } from '@/redux/api/admin/profile&settings/adminSettingsApi';
 import { useGetMyNotificationsQuery, useReadAllNotificationsMutation, useReadNotificationMutation } from "@/redux/api/users/notificationApi";
 import { formatDistanceToNow } from "date-fns";
+import { useGetPreferencesQuery, useUpdatePreferencesMutation } from '@/redux/api/admin/navbarApi';
+import { ChevronDown, Globe } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { setCurrency } from '@/redux/features/settings/settingsSlice';
+import { RootState } from '@/redux/store/store';
+import { useEffect } from 'react';
+import { getCurrencySymbol } from '@/lib/currencyUtils';
 
-const getFullImageUrl = (path: string | null | undefined) => {
-  if (!path) return '/images/profile-settings.png';
+const getFullImageUrl = (path: string | null | undefined): string | null => {
+  if (!path) return null;
   if (path.startsWith('http')) return path;
-  
-  // Derive base domain from NEXT_PUBLIC_BASE_URL
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', ''); 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', '');
   return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
 };
+
+function NavbarAvatar({ imageUrl, name }: { imageUrl: string | null; name?: string }) {
+  const initials = name
+    ? name.trim().split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+    : '';
+
+  if (imageUrl) {
+    return (
+      <div className="relative w-10 h-10 rounded-full overflow-hidden">
+        <Image src={imageUrl} alt="Profile" fill className="object-cover" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center flex-shrink-0">
+      {initials ? (
+        <span className="text-sm font-bold text-white">{initials}</span>
+      ) : (
+        <User className="w-5 h-5 text-white" />
+      )}
+    </div>
+  );
+}
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
@@ -40,6 +69,29 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
   const { data: notificationData } = useGetMyNotificationsQuery();
   const [readAllNotifications] = useReadAllNotificationsMutation();
   const [readNotification] = useReadNotificationMutation();
+
+  const dispatch = useDispatch();
+  const [currencyOpen, setCurrencyOpen] = useState(false);
+  const { data: preferencesData } = useGetPreferencesQuery();
+  const [updatePreferences] = useUpdatePreferencesMutation();
+  
+  const currentCurrency = useSelector((state: RootState) => state.settings.currency);
+
+  useEffect(() => {
+    if (preferencesData?.data?.currency) {
+      dispatch(setCurrency(preferencesData.data.currency as 'USD' | 'NGN'));
+    }
+  }, [preferencesData, dispatch]);
+
+  const handleCurrencyChange = async (currency: 'USD' | 'NGN') => {
+    try {
+      await updatePreferences({ currency }).unwrap();
+      dispatch(setCurrency(currency));
+      setCurrencyOpen(false);
+    } catch (error) {
+      console.error("Failed to update currency", error);
+    }
+  };
 
   const allNotifications = notificationData?.data || [];
   const unreadCount = allNotifications.filter((n: any) => !n.isRead).length;
@@ -70,7 +122,8 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
   };
   
   const profileImage = profileData?.data?.profileImage || profileData?.data?.image_url;
-  const imageUrl = getFullImageUrl(profileImage);
+  const resolvedImageUrl = getFullImageUrl(profileImage);
+  const profileName = profileData?.data?.full_name || profileData?.data?.fullname || profileData?.data?.username || '';
 
   return (
     <nav className="fixed top-0 left-0 right-0 h-16 bg-navbarBg border-b border-border z-30">
@@ -103,6 +156,40 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
 
         {/* RIGHT SIDE */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Currency Switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setCurrencyOpen(!currencyOpen)}
+              className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              <span className="w-4 h-4 flex items-center justify-center font-bold text-bgBlue">
+                {getCurrencySymbol(currentCurrency)}
+              </span>
+              <span>{currentCurrency}</span>
+              <ChevronDown className={`w-3 h-3 transition-transform ${currencyOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {currencyOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setCurrencyOpen(false)} />
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg overflow-hidden z-40">
+                  <button
+                    onClick={() => handleCurrencyChange('USD')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${currentCurrency === 'USD' ? 'text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'}`}
+                  >
+                    USD ($)
+                  </button>
+                  <button
+                    onClick={() => handleCurrencyChange('NGN')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${currentCurrency === 'NGN' ? 'text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'}`}
+                  >
+                    NGN (₦)
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Notifications */}
           <div className="relative">
             <button
@@ -208,15 +295,15 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
           </button>
 
           <div className="hidden xs:flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-gray-700">
-            <Link href="/admin/profile-settings/profile" className="rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0 relative w-10 h-10 overflow-hidden">
-              <Image src={imageUrl} alt="Profile" fill className="object-cover" />
+            <Link href="/admin/profile-settings/profile">
+              <NavbarAvatar imageUrl={resolvedImageUrl} name={profileName} />
             </Link>
           </div>
 
           {/* Mobile: Only avatar (no border on mobile) */}
           <div className="xs:hidden">
-            <Link href="/admin/profile-settings/profile" className="rounded-full flex items-center justify-center text-white text-sm font-semibold relative w-10 h-10 overflow-hidden">
-              <Image src={imageUrl} alt="Profile" fill className="object-cover" />
+            <Link href="/admin/profile-settings/profile">
+              <NavbarAvatar imageUrl={resolvedImageUrl} name={profileName} />
             </Link>
           </div>
         </div>

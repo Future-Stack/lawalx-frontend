@@ -18,6 +18,11 @@ const baseQuery = fetchBaseQuery({
     }
     // Ngrok warning bypass for development
     headers.set("ngrok-skip-browser-warning", "true");
+
+    const currency = (getState() as any).settings.currency;
+    if (currency) {
+      headers.set("X-Display-Currency", currency);
+    }
     return headers;
   },
 });
@@ -108,5 +113,5 @@ export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
   endpoints: () => ({}),
-  tagTypes: ["User", "NotificationPermission", "Notification", "Activity", "Content", "Devices", "Programs", "Schedules", "Device", "AdminSettings", "Subscription", "ReportHub", "ReportHistory", "Banner", "Billing", "SupportTicket", "AdminSupportTicket", "AdminEmployee", "AdminSupporter", "SupporterTicket", "SupporterTicketStats", "FAQ", "VideoFAQ"],
+  tagTypes: ["User", "NotificationPermission", "Notification", "Activity", "Content", "Devices", "Programs", "Schedules", "Device", "AdminSettings", "Subscription", "ReportHub", "ReportHistory", "Banner", "Billing", "SupportTicket", "AdminSupportTicket", "AdminEmployee", "AdminSupporter", "SupporterTicket", "SupporterTicketStats", "FAQ", "VideoFAQ", "Preferences", "FinancialData"],
 });
