@@ -86,7 +86,7 @@ export default function PlanCard({
       {/* Pricing & Selection Section */}
       <div className="p-6 space-y-6">
         <Select value={selectedSize} onValueChange={onSizeChange}>
-          <SelectTrigger className="flex w-full items-center justify-between rounded-[12px] border border-color bg-navbarBg px-5 py-[14px] h-auto text-sm font-medium text-body transition hover:bg-hover focus:ring-0 outline-none">
+          <SelectTrigger className="flex w-full items-center justify-between rounded-[12px] border border-color bg-navbarBg px-5 py-[14px] h-auto text-sm font-medium text-body transition dark:hover:bg-hover focus:ring-0 outline-none">
             <SelectValue placeholder="Select size" />
           </SelectTrigger>
           <SelectContent className="bg-navbarBg border-color">
