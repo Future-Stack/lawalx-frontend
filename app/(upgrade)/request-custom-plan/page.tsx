@@ -35,6 +35,8 @@ export default function RequestCustomPlanPage() {
             <button
               onClick={() => router.back()}
               className="group absolute right-0 top-0 p-2 text-gray-600 hover:text-red-600 hover:bg-red-100 transition-all cursor-pointer rounded-full"
+              aria-label="Close"
+              title="Close"
             >
               <X className="h-6 w-6 transition-transform duration-300 group-hover:rotate-90" />
             </button>
@@ -190,9 +192,15 @@ export default function RequestCustomPlanPage() {
 
             {/* Budget / Price Range Section */}
             <div className="space-y-4 pt-2">
+              <Label htmlFor="budget-range" className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+                Estimated Budget / Price Range <span className="text-red-500">*</span> <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
+              </Label>
               <div className="relative px-1">
                 <input
+                  id="budget-range"
                   type="range"
+                  title="Estimated Budget"
+                  aria-label="Estimated Budget"
                   min={0}
                   max={5000}
                   step={100}
@@ -231,10 +239,11 @@ export default function RequestCustomPlanPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+              <Label htmlFor="additional-requirements" className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
                 Additional Requirements & Comments <span className="text-red-500">*</span> <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
               </Label>
               <Textarea
+                id="additional-requirements"
                 placeholder="Tell us about any specific requirements, integration needs, or questions you have."
                 className="w-full min-h-[120px] rounded-[10px] border border-[#D4D4D4] p-3 text-[16px] placeholder:text-[#737373] bg-white resize-none"
               />
