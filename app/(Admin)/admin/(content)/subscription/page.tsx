@@ -7,10 +7,10 @@ import SubscribersTab from "./_components/SubscribersTab";
 import BillingTab from "./_components/BillingTab";
 import TransactionSheet from "./_components/TransactionSheet";
 import Breadcrumb from "@/common/BreadCrumb";
-import Image from "next/image";
 import Link from "next/link";
 import PlansTab from "./_components/PlansTab";
 import CouponsTab from "./_components/CouponsTab";
+import ManageScreenSizeTab from "./_components/ManageScreenSizeTab";
 import { InvoicePreview } from "@/components/Admin/invoice";
 
 const SubscriptionPage = () => {
@@ -21,8 +21,9 @@ const SubscriptionPage = () => {
     { label: "Subscribers", icon: Users },
     { label: "Billing & Invoices", icon: CreditCard },
     { label: "Plans", icon: LayoutGrid },
+     { label: "Manage screen size", icon: FileText },
     { label: "Coupons", icon: Ticket },
-    // {label: "Invoices", icon: FileText}
+   
   ];
 
   return (
@@ -64,9 +65,10 @@ const SubscriptionPage = () => {
         <div className="min-h-[400px]">
           {activeTab === "Subscribers" && <SubscribersTab />}
           {activeTab === "Billing & Invoices" && <BillingTab />}
-          {activeTab === "Plans" && <PlansTab />}
-          {activeTab === "Coupons" && <CouponsTab />}
-          {/* {activeTab === "Invoices" && <InvoicePreview />} */}
+          { activeTab === "Plans" && <PlansTab /> }
+          { activeTab === "Manage screen size" && <ManageScreenSizeTab /> }
+          { activeTab === "Coupons" && <CouponsTab /> }
+        
         </div>
       </div>
 
