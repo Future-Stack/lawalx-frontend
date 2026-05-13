@@ -28,10 +28,10 @@ const SubscriptionTabLayout = ({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-3 px-1">
           <div>
             {title && (
-              <h2 className="text-[20px] font-bold text-headings">{title}</h2>
+              <h2 className="text-[20px] font-semibold text-Heading">{title}</h2>
             )}
             {subtitle && (
-              <p className="text-muted text-[14px] mt-1">{subtitle}</p>
+              <p className="text-muted text-[16px] mt-1">{subtitle}</p>
             )}
           </div>
           {actionButton}

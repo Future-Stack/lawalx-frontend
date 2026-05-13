@@ -10,6 +10,7 @@ import {
   Check,
   PencilLine,
   Layout,
+  SquarePen,
 } from "lucide-react";
 
 interface PlanCardProps {
@@ -136,7 +137,7 @@ const PlanCard = ({
         onClick={onEdit}
         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md border border-[#D0D5DD] dark:border-gray-700 font-bold text-[14px] text-headings hover:bg-gray-50 dark:hover:bg-gray-800 transition-all cursor-pointer"
       >
-        <PencilLine className="w-4 h-4" />
+        <SquarePen className="w-4 h-4" />
         Edit Plan
       </button>
     </div>
