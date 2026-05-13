@@ -27,9 +27,9 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import TransactionSheet from "./TransactionSheet";
-import RefundDialog from "./RefundDialog";
-import SubscriptionTabLayout from "./SubscriptionTabLayout";
+import TransactionSheet from "../TransactionSheet";
+import RefundDialog from "./_components/RefundDialog";
+import SubscriptionTabLayout from "../SubscriptionTabLayout";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { formatAmount as formatCurrency } from "@/lib/currencyUtils";

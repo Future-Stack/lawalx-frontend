@@ -27,11 +27,11 @@ import {
   Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import TransactionSheet from "./TransactionSheet";
+import TransactionSheet from "../TransactionSheet";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
-import SubscriptionTabLayout from "./SubscriptionTabLayout";
+import SubscriptionTabLayout from "../SubscriptionTabLayout";
 
 const SubscribersTab = () => {
   const [page, setPage] = useState(1);

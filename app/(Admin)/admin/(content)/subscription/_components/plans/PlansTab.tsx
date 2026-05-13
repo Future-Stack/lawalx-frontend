@@ -8,10 +8,10 @@ import {
   useUpdateDiscountStatusMutation,
 } from "@/redux/api/admin/payments/discount/discountApi";
 import { toast } from "sonner";
-import PlanCard from "./PlanCard";
-import EditPlanDialog from "./EditPlanDialog";
+import PlanCard from "./_components/PlanCard";
+import EditPlanDialog from "./_components/EditPlanDialog";
 import BaseSelect from "@/common/BaseSelect";
-import SubscriptionTabLayout from "./SubscriptionTabLayout";
+import SubscriptionTabLayout from "../SubscriptionTabLayout";
 
 const staticPlans = [
   {
