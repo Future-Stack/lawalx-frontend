@@ -30,6 +30,9 @@ import autoTable from 'jspdf-autotable';
 import { addPdfHeader } from '@/lib/pdfUtils';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store/store';
+import { getCurrencySymbol } from '@/lib/currencyUtils';
 
 const FinancialReport = () => {
   const { theme, resolvedTheme } = useTheme();
@@ -46,6 +49,8 @@ const FinancialReport = () => {
   }, [searchParams]);
 
   const isDark = mounted && (resolvedTheme === 'dark' || theme === 'dark');
+  const currency = useSelector((state: RootState) => state.settings.currency);
+  const currencySymbol = getCurrencySymbol(currency);
 
   const [timeRange, setTimeRange] = useState(30);
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -104,10 +109,10 @@ const FinancialReport = () => {
 
         const summaryStats = [
           ['Metric', 'Value', 'Growth %', 'Status'],
-          ['MRR', `$${(reportData.stats?.mrr?.value || 0).toLocaleString()}`, `${reportData.stats?.mrr?.growth || 0}%`, (reportData.stats?.mrr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
-          ['ARR', `$${(reportData.stats?.arr?.value || 0).toLocaleString()}`, `${reportData.stats?.arr?.growth || 0}%`, (reportData.stats?.arr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
+          ['MRR', `${currencySymbol}${(reportData.stats?.mrr?.value || 0).toLocaleString()}`, `${reportData.stats?.mrr?.growth || 0}%`, (reportData.stats?.mrr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
+          ['ARR', `${currencySymbol}${(reportData.stats?.arr?.value || 0).toLocaleString()}`, `${reportData.stats?.arr?.growth || 0}%`, (reportData.stats?.arr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
           ['Churn Rate', `${reportData.stats?.churnRate?.value || 0}%`, `${reportData.stats?.churnRate?.growth || 0}%`, (reportData.stats?.churnRate?.growth || 0) <= 0 ? 'HEALTHY' : 'STRESS'],
-          ['ARPU', `$${(reportData.stats?.arpu?.value || 0).toLocaleString()}`, `${reportData.stats?.arpu?.growth || 0}%`, 'STABLE'],
+          ['ARPU', `${currencySymbol}${(reportData.stats?.arpu?.value || 0).toLocaleString()}`, `${reportData.stats?.arpu?.growth || 0}%`, 'STABLE'],
           ['New Subs', (reportData.stats?.newSubscriptions?.value || 0).toString(), `${reportData.stats?.newSubscriptions?.growth || 0}%`, 'N/A'],
         ];
 
@@ -126,12 +131,12 @@ const FinancialReport = () => {
         doc.text('2. MRR Movement Breakdown', 14, currentY);
         const mrrMovement = [
           ['Component', 'Value'],
-          ['New Sales', `$${reportData.mrr.summary.newSales.toLocaleString()}`],
-          ['Upgrades', `$${reportData.mrr.summary.upgrades.toLocaleString()}`],
-          ['Downgrades', `-$${Math.abs(reportData.mrr.summary.downgrades).toLocaleString()}`],
-          ['Churned', `-$${Math.abs(reportData.mrr.summary.churned).toLocaleString()}`],
-          ['Net New MRR', `$${reportData.mrr.summary.netNewMrr.toLocaleString()}`],
-          ['Annual RR', `$${reportData.mrr.footer.annualRecurringRevenue.toLocaleString()}`],
+          ['New Sales', `${currencySymbol}${reportData.mrr.summary.newSales.toLocaleString()}`],
+          ['Upgrades', `${currencySymbol}${reportData.mrr.summary.upgrades.toLocaleString()}`],
+          ['Downgrades', `-${currencySymbol}${Math.abs(reportData.mrr.summary.downgrades).toLocaleString()}`],
+          ['Churned', `-${currencySymbol}${Math.abs(reportData.mrr.summary.churned).toLocaleString()}`],
+          ['Net New MRR', `${currencySymbol}${reportData.mrr.summary.netNewMrr.toLocaleString()}`],
+          ['Annual RR', `${currencySymbol}${reportData.mrr.footer.annualRecurringRevenue.toLocaleString()}`],
         ];
         autoTable(doc, {
           startY: currentY + 5,
@@ -173,8 +178,8 @@ const FinancialReport = () => {
         const planRows = reportData.plans.map((p: any) => [
           p.planName || 'N/A',
           (p.subscribers || 0).toLocaleString(),
-          `$${(p.totalRevenue || 0).toLocaleString()}`,
-          `$${(p.avgPerUser || 0).toLocaleString()}`,
+          `${currencySymbol}${(p.totalRevenue || 0).toLocaleString()}`,
+          `${currencySymbol}${(p.avgPerUser || 0).toLocaleString()}`,
           `${p.churnRate || 0}%`,
           `+${p.growth || 0}%`
         ]);
@@ -192,7 +197,7 @@ const FinancialReport = () => {
         if (currentY > 230) { doc.addPage(); currentY = 20; }
         doc.setFontSize(14);
         doc.text('5. ARPU by Plan', 14, currentY);
-        const arpuRows = reportData.arpu.byPlan.map((p: any) => [p.planName, `$${p.arpu}`, `+${p.growth}% growth`]);
+        const arpuRows = reportData.arpu.byPlan.map((p: any) => [p.planName, `${currencySymbol}${p.arpu}`, `+${p.growth}% growth`]);
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Plan', 'ARPU', 'Growth']],
@@ -375,10 +380,10 @@ const FinancialReport = () => {
           return Object.values(combinedData);
         })(),
         growthFactors: [
-          { name: 'Plan Upgrades', description: 'Users moving to higher tiers', impact: '+$1.80' },
-          { name: 'Add-on Features', description: 'Extra storage, devices, etc.', impact: '+$1.20' },
-          { name: 'Price Adjustments', description: 'Annual price increases', impact: '+$0.60' },
-          { name: 'Plan Downgrades', description: 'Users moving to lower tiers', impact: '-$0.20' }
+          { name: 'Plan Upgrades', description: 'Users moving to higher tiers', impact: `+${currencySymbol}1.80` },
+          { name: 'Add-on Features', description: 'Extra storage, devices, etc.', impact: `+${currencySymbol}1.20` },
+          { name: 'Price Adjustments', description: 'Annual price increases', impact: `+${currencySymbol}0.60` },
+          { name: 'Plan Downgrades', description: 'Users moving to lower tiers', impact: `-${currencySymbol}0.20` }
         ]
       },
       trials: {
@@ -445,26 +450,28 @@ const FinancialReport = () => {
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu(!showExportMenu)}
-                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm cursor-pointer bg-navbarBg"
+                className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm font-medium cursor-pointer bg-navbarBg hover:bg-blue-50 dark:hover:bg-blue-900/20 whitespace-nowrap"
               >
-                <Download className="w-4 h-4" /> Export Financial Report
+                <Download className="w-4 h-4" /> Export Report
               </button>
 
               {showExportMenu && (
                 <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)}></div>
-                  <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-20 min-w-[160px] overflow-hidden">
+                  <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                  <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
                     <button
                       onClick={() => { handleExport('pdf'); setShowExportMenu(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
                     >
-                      📄 Download PDF
+                      <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                      <span className="font-medium">Export as PDF</span>
                     </button>
                     <button
                       onClick={() => { handleExport('excel'); setShowExportMenu(false); }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
                     >
-                      📊 Download Excel
+                      <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                      <span className="font-medium">Export as Excel</span>
                     </button>
                   </div>
                 </>
@@ -480,7 +487,7 @@ const FinancialReport = () => {
               <span className='border border-border rounded-full p-2'><DollarSign className="w-4 h-4 text-red-500" /></span>
               <span className="text-xs text-gray-500 dark:text-gray-400">MRR</span>
             </div>
-            <div className="text-2xl font-bold mb-1">${data.summary.mrr.toLocaleString()}</div>
+            <div className="text-2xl font-bold mb-1">{currencySymbol}{data.summary.mrr.toLocaleString()}</div>
             <div className={`text-xs ${data.summary.mrrGrowth >= 0 ? 'text-green-500' : 'text-red-500'} flex items-center gap-1`}>
               {data.summary.mrrGrowth >= 0 ? <TrendingUp className="w-3 h-3 text-green-500" /> : <TrendingDown className="w-3 h-3 text-red-500" />}
               {data.summary.mrrGrowth}% {data.summary.mrrPeriod}
@@ -492,7 +499,7 @@ const FinancialReport = () => {
               <span className='border border-border rounded-full p-2'><TargetIcon className="w-4 h-4 text-green-500" /></span>
               <span className="text-xs text-gray-500 dark:text-gray-400">ARR</span>
             </div>
-            <div className="text-2xl font-bold mb-1">${data.summary.arr.toLocaleString()}</div>
+            <div className="text-2xl font-bold mb-1">{currencySymbol}{data.summary.arr.toLocaleString()}</div>
             <div className={`text-xs ${data.summary.arrGrowth >= 0 ? 'text-green-500' : 'text-red-500'} flex items-center gap-1`}>
               {data.summary.arrGrowth >= 0 ? <TrendingUp className="w-3 h-3 text-green-500" /> : <TrendingDown className="w-3 h-3 text-red-500" />}
               {data.summary.arrGrowth}% {data.summary.arrPeriod}
@@ -516,7 +523,7 @@ const FinancialReport = () => {
               <span className='border border-border rounded-full p-2'><TrendingUp className="w-4 h-4 text-green-500" /></span>
               <span className="text-xs text-gray-500 dark:text-gray-400">ARPU</span>
             </div>
-            <div className="text-2xl font-bold mb-1">${data.summary.arpu}</div>
+            <div className="text-2xl font-bold mb-1">{currencySymbol}{data.summary.arpu}</div>
             <div className={`text-xs ${data.summary.arpuGrowth >= 0 ? 'text-green-500' : 'text-red-500'} flex items-center gap-1`}>
               {data.summary.arpuGrowth >= 0 ? <TrendingUp className="w-3 h-3 text-green-500" /> : <TrendingDown className="w-3 h-3 text-red-500" />}
               {data.summary.arpuGrowth}% {data.summary.arpuPeriod}
@@ -562,22 +569,22 @@ const FinancialReport = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="border border-border rounded-xl p-6">
                   <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">New Sales</div>
-                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">${data.mrrArr.newSales.toLocaleString()}</div>
+                  <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">{currencySymbol}{data.mrrArr.newSales.toLocaleString()}</div>
                   <div className="text-xs text-gray-400 mt-1">This month</div>
                 </div>
                 <div className="border border-border rounded-xl p-6">
                   <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Upgrades</div>
-                  <div className="text-3xl font-bold text-cyan-500 dark:text-cyan-400">${data.mrrArr.upgrades.toLocaleString()}</div>
+                  <div className="text-3xl font-bold text-cyan-500 dark:text-cyan-400">{currencySymbol}{data.mrrArr.upgrades.toLocaleString()}</div>
                   <div className="text-xs text-gray-400 mt-1">This month</div>
                 </div>
                 <div className="border border-border rounded-xl p-6">
                   <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Downgrades</div>
-                  <div className="text-3xl font-bold text-orange-400 dark:text-orange-300">-${Math.abs(data.mrrArr.downgrades).toLocaleString()}</div>
+                  <div className="text-3xl font-bold text-orange-400 dark:text-orange-300">-{currencySymbol}{Math.abs(data.mrrArr.downgrades).toLocaleString()}</div>
                   <div className="text-xs text-gray-400 mt-1">This month</div>
                 </div>
                 <div className="border border-border rounded-xl p-6">
                   <div className="text-sm text-gray-500 dark:text-gray-400 mb-1">Churned</div>
-                  <div className="text-3xl font-bold text-pink-500 dark:text-pink-400">-${Math.abs(data.mrrArr.churned).toLocaleString()}</div>
+                  <div className="text-3xl font-bold text-pink-500 dark:text-pink-400">-{currencySymbol}{Math.abs(data.mrrArr.churned).toLocaleString()}</div>
                   <div className="text-xs text-gray-400 mt-1">This month</div>
                 </div>
               </div>
@@ -636,7 +643,7 @@ const FinancialReport = () => {
                       borderRadius: '0.5rem'
                     }}
                     cursor={{ fill: 'transparent' }}
-                    formatter={(value: number | undefined) => value !== undefined ? [`$${Math.abs(value).toLocaleString()}`, undefined] : ['', undefined]}
+                    formatter={(value: number | undefined) => value !== undefined ? [`${currencySymbol}${Math.abs(value).toLocaleString()}`, undefined] : ['', undefined]}
                     wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
                   />
                   <Legend
@@ -658,7 +665,7 @@ const FinancialReport = () => {
               <div className="bg-[#f5f3ff] dark:bg-purple-900/20 rounded-xl p-8 border border-purple-100 dark:border-purple-800 flex items-center justify-between">
                 <div>
                   <div className="text-sm text-purple-600 dark:text-purple-400 mb-1">Annual Recurring Revenue</div>
-                  <div className="text-4xl font-bold text-purple-700 dark:text-purple-300">${data.mrrArr.annualRevenue.toLocaleString()}</div>
+                  <div className="text-4xl font-bold text-purple-700 dark:text-purple-300">{currencySymbol}{data.mrrArr.annualRevenue.toLocaleString()}</div>
                   <div className="text-xs text-purple-500 dark:text-purple-400 mt-2">Based on current MRR</div>
                 </div>
                 <div className="flex items-center justify-center w-16 h-16 rounded-full border-4 border-purple-400/30">
@@ -825,11 +832,11 @@ const FinancialReport = () => {
                       <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-500 dark:text-gray-400">Revenue</span>
-                          <span className="font-bold text-gray-900 dark:text-gray-100">${plan.revenue.toLocaleString()}/mo</span>
+                          <span className="font-bold text-gray-900 dark:text-gray-100">{currencySymbol}{plan.revenue.toLocaleString()}/mo</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-500 dark:text-gray-400">Avg/User</span>
-                          <span className="font-bold text-gray-900 dark:text-gray-100">${plan.avgUser}/mo</span>
+                          <span className="font-bold text-gray-900 dark:text-gray-100">{currencySymbol}{plan.avgUser}/mo</span>
                         </div>
                         <div className="flex justify-between items-center text-sm">
                           <span className="text-gray-500 dark:text-gray-400">Churn Rate</span>
@@ -869,11 +876,11 @@ const FinancialReport = () => {
                           tick={{ fontSize: 12 }}
                           axisLine={false}
                           tickLine={false}
-                          tickFormatter={(v) => `$${v}`}
+                          tickFormatter={(v) => `${currencySymbol}${v}`}
                         />
                         <Tooltip
                           cursor={{ fill: 'rgba(139,92,246,0.08)' }}
-                          formatter={(v: any) => [`$${Number(v).toFixed(2)}`, 'Revenue']}
+                          formatter={(v: any) => [`${currencySymbol}${Number(v).toFixed(2)}`, 'Revenue']}
                           contentStyle={{
                             backgroundColor: 'var(--tooltip-bg)',
                             border: 'none',
@@ -957,14 +964,14 @@ const FinancialReport = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
                 <div className="rounded-2xl p-6 border border-purple-100 dark:border-purple-800/30 bg-[#f5f3ff] dark:bg-purple-900/10">
                   <div className="text-xs text-purple-600 dark:text-purple-400 mb-2 font-medium">Overall ARPU</div>
-                  <div className="text-4xl font-bold text-purple-700 dark:text-purple-300 mb-1">${data.arpu.overall}</div>
+                  <div className="text-4xl font-bold text-purple-700 dark:text-purple-300 mb-1">{currencySymbol}{data.arpu.overall}</div>
                   <div className="text-xs text-purple-500 dark:text-purple-400">Per month</div>
                 </div>
 
                 {data.arpu.byPlan.map((plan: any, idx: number) => (
                   <div key={idx} className="rounded-2xl p-6 border border-border">
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">{plan.name} ARPU</div>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">${plan.arpu}</div>
+                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{currencySymbol}{plan.arpu}</div>
                     <div className={`text-xs flex items-center gap-1 ${plan.growth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                       {plan.growth >= 0 ? `+${plan.growth}% growth` : `${plan.growth}% growth`}
                     </div>

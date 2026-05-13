@@ -7,51 +7,59 @@ export const dashboardApi = baseApi.injectEndpoints({
         url: `/dashboard/overview?filter=${filter}`,
         method: "GET",
       }),
+      providesTags: ["FinancialData"],
     }),
     getSubscriptionDistribution: builder.query({
       query: (filter: string) => ({
         url: `/dashboard/subscription-distribution?filter=${filter}`,
         method: "GET",
       }),
+      providesTags: ["FinancialData"],
     }),
     getActivityTrend: builder.query({
       query: (filter: string) => ({
         url: `/dashboard/activity-trend?filter=${filter}`,
         method: "GET",
       }),
+      providesTags: ["FinancialData"],
     }),
     getContentUsageBreakdown: builder.query({
       query: (filter: string) => ({
         url: `/dashboard/content-usage-breakdown?filter=${filter}`,
         method: "GET",
       }),
+      providesTags: ["FinancialData"],
     }),
     getDunningEffectiveness: builder.query({
       query: (filter: string) => ({
         url: `/dashboard/dunning-effectiveness?filter=${filter}`,
         method: "GET",
       }),
+      providesTags: ["FinancialData"],
     }),
     getCriticalActivity: builder.query({
       query: (filter: string) => ({
         url: `/dashboard/critical-activity?filter=${filter}`,
         method: "GET",
       }),
+      providesTags: ["FinancialData"],
     }),
     getRecentSupportTickets: builder.query({
       query: ({ limit, filter }: { limit: number; filter: string }) => ({
         url: `/dashboard/recent-support-tickets?limit=${limit}&filter=${filter}`,
         method: "GET",
       }),
-      providesTags: ["SupporterTicket", "SupporterTicketStats", "AdminSupportTicket"],
+      providesTags: ["SupporterTicket", "SupporterTicketStats", "AdminSupportTicket", "FinancialData"],
     }),
     getDashboardExport: builder.query({
       query: (filter: string) => ({
         url: `/dashboard/export?filter=${filter}`,
         method: "GET",
       }),
+      providesTags: ["FinancialData"],
     }),
   }),
+  overrideExisting: true,
 });
 
 export const {

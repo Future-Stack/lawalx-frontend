@@ -8,24 +8,28 @@ import { Textarea } from "@/components/ui/textarea";
 import BaseSelect from "@/common/BaseSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 
+import { PaymentHistoryItem } from "@/redux/api/admin/payments/billings/billingsApi";
+
 interface RefundDialogProps {
     open: boolean;
     setOpen: (open: boolean) => void;
-    invoiceId: string;
+    payment: PaymentHistoryItem | null;
 }
 
-const RefundDialog = ({ open, setOpen, invoiceId }: RefundDialogProps) => {
+const RefundDialog = ({ open, setOpen, payment }: RefundDialogProps) => {
     const [refundType, setRefundType] = useState("full");
     const [reason, setReason] = useState("duplicate");
     const [cancelSub, setCancelSub] = useState(false);
     const [sendReceipt, setSendReceipt] = useState(false);
 
+    if (!payment) return null;
+
     return (
         <BaseDialog
             open={open}
             setOpen={setOpen}
-            title={`Refund Transaction ${invoiceId}`}
-            description="Customer: TechCorp Inc. | Original Amount: $2,400.00"
+            title={`Refund Transaction ${payment.invoice}`}
+            description={`Customer: ${payment.user.name} | Original Amount: $${payment.amount.toLocaleString()}`}
             maxWidth="lg"
         >
             <div className="space-y-6">
@@ -106,7 +110,7 @@ const RefundDialog = ({ open, setOpen, invoiceId }: RefundDialogProps) => {
                                 Send Refund Receipt to Customer
                             </label>
                             <p className="text-sm text-muted">
-                                Email confirmation will be sent to TechCorp Inc.
+                                Email confirmation will be sent to {payment.user.name}.
                             </p>
                         </div>
                     </div>
@@ -114,8 +118,15 @@ const RefundDialog = ({ open, setOpen, invoiceId }: RefundDialogProps) => {
 
 
                 <div className="flex justify-end gap-3 pt-4">
-                    <button className="flex items-center gap-2 px-4 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-red-500 text-headings transition-all duration-300 ease-in-out" disabled>Cancel</button>
-                    <button className="flex items-center gap-2 px-4 py-2 border border-red-500 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-red-600 text-white transition-all duration-300 ease-in-out bg-red-500">Process Refund</button>
+                    <button 
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-2 px-6 py-2.5 border border-borderGray dark:border-gray-600 rounded-lg font-bold shadow-customShadow cursor-pointer hover:bg-gray-100 text-headings transition-all duration-300 ease-in-out"
+                    >
+                        Cancel
+                    </button>
+                    <button className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-bold shadow-customShadow cursor-pointer hover:opacity-90 text-white transition-all duration-300 ease-in-out bg-[#ef4444]">
+                        Process Refund
+                    </button>
                 </div>
             </div>
         </BaseDialog>

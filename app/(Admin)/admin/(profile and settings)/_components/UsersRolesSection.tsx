@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useGetAllEmployeesQuery, useCreateEmployeeMutation, useUpdateEmployeeMutation } from '@/redux/api/admin/profile&settings/userRoleApi';
 import { toast } from 'sonner';
+import { getUrl } from '@/lib/content-utils';
+import Image from 'next/image';
 
 type Role = 'Super Admin' | 'Admin' | 'Sales Staff' | 'Support Staff' | 'Supporter';
 
@@ -92,6 +94,36 @@ function CustomSelect({ options, placeholder, value, onChange, className, multip
                         ))}
                     </div>
                 </>
+            )}
+        </div>
+    );
+}
+
+function ProfileAvatar({ imageUrl, name, size = 'lg' }: { imageUrl: string | null | undefined; name: string; size?: 'sm' | 'lg' }) {
+    const initials = name
+        ? name.trim().split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase()
+        : '';
+
+    const sizeClasses = size === 'lg'
+        ? 'w-24 h-24 text-2xl'
+        : 'w-10 h-10 text-sm';
+
+    const resolvedUrl = getUrl(imageUrl || null);
+
+    if (resolvedUrl) {
+        return (
+            <div className={`relative ${sizeClasses} rounded-full overflow-hidden border border-border shadow-sm flex-shrink-0`}>
+                <Image src={resolvedUrl} alt={name} fill className="object-cover" sizes={size === 'lg' ? '96px' : '40px'} />
+            </div>
+        );
+    }
+
+    return (
+        <div className={`${sizeClasses} rounded-full border border-border shadow-sm flex-shrink-0 bg-gradient-to-br from-bgBlue to-blue-700 flex items-center justify-center`}>
+            {initials ? (
+                <span className="font-bold text-white uppercase">{initials}</span>
+            ) : (
+                <User className={size === 'lg' ? 'w-10 h-10 text-white' : 'w-5 h-5 text-white'} />
             )}
         </div>
     );
@@ -315,9 +347,11 @@ export default function UsersRolesSection() {
                                 <tr key={emp.id} className="border-b border-border/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
                                     <td className="py-4 px-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden border border-border">
-                                                <img src="/images/profile-settings.png" alt="" className="w-full h-full object-cover" />
-                                            </div>
+                                            <ProfileAvatar 
+                                                imageUrl={emp.user?.image_url || emp.user?.profileImage} 
+                                                name={emp.user?.username || emp.user?.full_name || ''} 
+                                                size="sm" 
+                                            />
                                             <div>
                                                 <div className="flex items-center gap-2">
                                                     <p className="text-sm font-bold text-headings">{emp.user?.username || emp.user?.full_name || 'N/A'}</p>
@@ -381,9 +415,11 @@ export default function UsersRolesSection() {
                     <div className="space-y-6 pt-2 pb-10">
                         {/* Header Section */}
                         <div className="flex flex-col items-center text-center space-y-3 pb-6 border-b border-border/50">
-                            <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 border-4 border-bgBlue/10 overflow-hidden shadow-inner">
-                                <img src="/images/profile-settings.png" alt="" className="w-full h-full object-cover" />
-                            </div>
+                            <ProfileAvatar 
+                                imageUrl={currentUser?.user?.image_url || currentUser?.user?.profileImage} 
+                                name={formData.name} 
+                                size="lg" 
+                            />
                             <div className="space-y-1">
                                 <h3 className="text-xl font-bold text-headings tracking-tight">{formData.name}</h3>
                                 <div className="flex items-center justify-center gap-2 text-sm text-muted">

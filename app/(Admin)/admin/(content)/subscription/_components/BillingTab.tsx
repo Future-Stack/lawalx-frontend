@@ -24,9 +24,14 @@ import {
     Search,
     CloudDownload,
     Loader2,
+    RotateCcw,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import TransactionSheet from "./TransactionSheet";
+import RefundDialog from "./RefundDialog";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store/store";
+import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
 import {
     useGetPaymentHistoryQuery,
     useLazyViewInGatewayQuery,
@@ -82,12 +87,6 @@ function formatDate(iso: string) {
     });
 }
 
-function formatAmount(amount: number) {
-    return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-    }).format(amount);
-}
 
 const LIMIT = 10;
 
@@ -100,9 +99,14 @@ const BillingTab = () => {
     const [statusFilter, setStatusFilter] = useState<PaymentStatus | "all">("all");
     const [period, setPeriod] = useState("ALL");
 
+    const currency = useSelector((state: RootState) => state.settings.currency);
+
     // Sheet state — pass user.id so TransactionSheet can load user invoice details
     const [sheetOpen, setSheetOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState("");
+
+    const [refundOpen, setRefundOpen] = useState(false);
+    const [selectedPayment, setSelectedPayment] = useState<PaymentHistoryItem | null>(null);
 
     // Debounce search input (400 ms)
     useEffect(() => {
@@ -148,6 +152,11 @@ const BillingTab = () => {
     const handleViewDetails = (userId: string) => {
         setSelectedUserId(userId);
         setSheetOpen(true);
+    };
+
+    const handleRefund = (payment: PaymentHistoryItem) => {
+        setSelectedPayment(payment);
+        setRefundOpen(true);
     };
 
     const [gatewayLoadingId, setGatewayLoadingId] = useState<string | null>(null);
@@ -288,7 +297,7 @@ const BillingTab = () => {
 
                                 {/* Amount */}
                                 <TableCell className="font-semibold text-headings">
-                                    {formatAmount(payment.amount)}
+                                    {formatCurrency(payment.amount, currency)}
                                 </TableCell>
 
                                 {/* Status */}
@@ -345,6 +354,15 @@ const BillingTab = () => {
                                                 )}
                                                 View in Gateway
                                             </DropdownMenuItem>
+
+                                            {/* Refund */}
+                                            <DropdownMenuItem
+                                                className="text-red-500 focus:text-red-500"
+                                                onClick={() => handleRefund(payment)}
+                                            >
+                                                <RotateCcw className="mr-2 h-4 w-4" />
+                                                Refund
+                                            </DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -387,6 +405,13 @@ const BillingTab = () => {
                 open={sheetOpen}
                 setOpen={setSheetOpen}
                 userId={selectedUserId}
+            />
+
+            {/* Refund dialog */}
+            <RefundDialog
+                open={refundOpen}
+                setOpen={setRefundOpen}
+                payment={selectedPayment}
             />
         </div>
     );

@@ -51,7 +51,9 @@ const ContentAndProgramsReport = () => {
 
   const handleExportPDF = async () => {
     try {
+      toast.loading("Preparing PDF report...");
       const { data: exportData, isError } = await triggerExport({});
+      toast.dismiss();
 
       if (isError || !exportData?.success) {
         toast.error("Failed to fetch export data");
@@ -59,43 +61,111 @@ const ContentAndProgramsReport = () => {
       }
 
       const files = exportData.data?.files || [];
+      const distribution = exportData.data?.contentTypeDistribution || [];
+      const quality = exportData.data?.contentQualityStats || {};
+
       const doc = new jsPDF();
+      const timeRangeLabel = selectedRange.label;
 
       // Branded header with logo
-      const startY = await addPdfHeader(
+      let currentY = await addPdfHeader(
         doc,
-        'Content Report',
-        `Total Files: ${exportData.data?.totalFiles || 0}  |  Exported: ${new Date().toLocaleString()}`
+        'Content And Programs Report',
+        `Period: ${timeRangeLabel}  |  Generated: ${new Date().toLocaleString()}`
       );
 
-      // Define table columns
-      const tableColumn = ["Index", "Name", "Type", "Size", "User", "Created At"];
-      const tableRows: any[] = [];
+      // Section 1: Content KPI Summary
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(14);
+      doc.text('1. Content KPI Summary', 14, currentY);
 
-      files.forEach((file: any, index: number) => {
-        const fileData = [
-          index + 1,
-          file.originalName || 'N/A',
-          file.type || 'N/A',
-          file.size ? formatBytes(file.size) : 'N/A',
-          file.user?.username || 'N/A',
-          file.createdAt ? new Date(file.createdAt).toLocaleDateString() : 'N/A'
-        ];
-        tableRows.push(fileData);
+      const summaryStats = [
+        ['Metric', 'Value'],
+        ['Total Content Items', (exportData.data?.totalFiles || files.length || 0).toLocaleString()],
+        ['Active Screens', (exportData.data?.totalScreens || 0).toLocaleString()],
+        ['Storage Used', exportData.data?.storageUsed || '0 MB'],
+        ['Flagged Content', (exportData.data?.flaggedContent || 0).toString()]
+      ];
+
+      autoTable(doc, {
+        startY: currentY + 5,
+        head: [summaryStats[0]],
+        body: summaryStats.slice(1),
+        theme: 'grid',
+        styles: { fontSize: 8 },
+        headStyles: { fillColor: [59, 130, 246] } // Blue-500
       });
+      currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Generate Table
+      // Section 2: Content Type Distribution
+      if (distribution.length > 0) {
+        doc.setFontSize(14);
+        doc.text('2. Content Type Distribution', 14, currentY);
+        const distRows = distribution.map((d: any) => [
+          d.type,
+          (d.count || 0).toLocaleString(),
+          d.storage || '0 MB',
+          `${d.percentage || 0}%`
+        ]);
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [['Type', 'File Count', 'Storage', 'Percentage']],
+          body: distRows,
+          theme: 'striped',
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [139, 92, 246] } // Purple-500
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // Section 3: Content Quality Analytics
+      if (quality.totalContentItems) {
+        if (currentY > 230) { doc.addPage(); currentY = 20; }
+        doc.setFontSize(14);
+        doc.text(`${distribution.length > 0 ? '3' : '2'}. Content Quality Stats`, 14, currentY);
+        const qualityRows = [
+          ['Status', 'Count', 'Percentage'],
+          ['Active', (quality.activeContent || 0).toLocaleString(), `${((quality.activeContent / quality.totalContentItems) * 100 || 0).toFixed(1)}%`],
+          ['Flagged', (quality.flaggedContent || 0).toLocaleString(), `${((quality.flaggedContent / quality.totalContentItems) * 100 || 0).toFixed(1)}%`],
+          ['Archived', (quality.archivedContent || 0).toLocaleString(), `${((quality.archivedContent / quality.totalContentItems) * 100 || 0).toFixed(1)}%`],
+        ];
+        autoTable(doc, {
+          startY: currentY + 5,
+          head: [qualityRows[0]],
+          body: qualityRows.slice(1),
+          theme: 'grid',
+          styles: { fontSize: 8 },
+          headStyles: { fillColor: [239, 68, 68] } // Red-500
+        });
+        currentY = (doc as any).lastAutoTable.finalY + 15;
+      }
+
+      // Section 4: Content File Inventory
+      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      doc.setFontSize(14);
+      doc.text(`${(distribution.length > 0 && quality.totalContentItems) ? '4' : (distribution.length > 0 || quality.totalContentItems) ? '3' : '2'}. Content File Inventory`, 14, currentY);
+
+      const tableColumn = ["Index", "Name", "Type", "Size", "User", "Created At"];
+      const tableRows = files.map((file: any, index: number) => [
+        index + 1,
+        file.originalName || 'N/A',
+        file.type || 'N/A',
+        file.size ? formatBytes(file.size) : 'N/A',
+        file.user?.username || 'N/A',
+        file.createdAt ? new Date(file.createdAt).toLocaleDateString() : 'N/A'
+      ]);
+
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
-        startY,
+        startY: currentY + 5,
         theme: 'striped',
-        headStyles: { fillColor: [155, 164, 237] },
-        styles: { fontSize: 8 }
+        headStyles: { fillColor: [16, 185, 129] }, // Emerald-500
+        styles: { fontSize: 7 }
       });
 
       // Save PDF
-      doc.save(`content-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(`Content_Report_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success("Content report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
@@ -246,17 +316,32 @@ const ContentAndProgramsReport = () => {
           <div className="relative">
             <button
               onClick={() => setShowExportMenu(prev => !prev)}
-              className="px-4 py-2 bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              className="px-4 py-2 border border-bgBlue text-bgBlue rounded-lg shadow-customShadow flex items-center gap-2 transition-colors text-sm font-medium cursor-pointer bg-navbarBg hover:bg-blue-50 dark:hover:bg-blue-900/20 whitespace-nowrap"
             >
               <Download className="w-4 h-4" />
               Export Report
             </button>
 
             {showExportMenu && (
-              <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[140px]">
-                <button onClick={handleExportPDF} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                <button onClick={handleExportExcel} className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
-              </div>
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                  <button
+                    onClick={() => { handleExportPDF(); setShowExportMenu(false); }}
+                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                  >
+                    <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                    <span className="font-medium">Export as PDF</span>
+                  </button>
+                  <button
+                    onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
+                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                  >
+                    <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                    <span className="font-medium">Export as Excel</span>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -267,7 +352,7 @@ const ContentAndProgramsReport = () => {
         {/* Card 1: Total Screens */}
         <div className="bg-navbarBg p-6 rounded-xl border border-border shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Screens</h3>
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Programs</h3>
             <Monitor className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
           </div>
           <div className="flex flex-col">

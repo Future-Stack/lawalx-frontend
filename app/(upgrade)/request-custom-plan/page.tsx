@@ -25,7 +25,7 @@ export default function RequestCustomPlanPage() {
         <div className="border-b border-border pb-6 mb-10 px-4 md:px-8">
           <div className="relative flex items-center justify-center">
             <div className="text-center">
-              <h1 className="text-[32px] font-semibold text-[#171717] font-inter leading-normal">
+              <h1 className="text-[32px] font-semibold text-Heading font-inter leading-normal">
                 Request Your Custom Enterprise Plan
               </h1>
               <p className="text-[16px] font-normal text-[#404040] font-inter leading-[24px] mt-2">
@@ -35,6 +35,8 @@ export default function RequestCustomPlanPage() {
             <button
               onClick={() => router.back()}
               className="group absolute right-0 top-0 p-2 text-gray-600 hover:text-red-600 hover:bg-red-100 transition-all cursor-pointer rounded-full"
+              aria-label="Close"
+              title="Close"
             >
               <X className="h-6 w-6 transition-transform duration-300 group-hover:rotate-90" />
             </button>
@@ -44,7 +46,7 @@ export default function RequestCustomPlanPage() {
         <div className="space-y-8 pb-20 max-w-3xl mx-auto">
           {/* Company Information Section */}
           <div className="rounded-[16px] border border-[#D4D4D4] bg-[#FAFAFA] p-6 space-y-6">
-            <h3 className="text-[24px] font-semibold text-[#171717] font-inter">Company Information</h3>
+            <h3 className="text-[24px] font-semibold text-Heading font-inter">Company Information</h3>
 
             <div className="flex flex-col md:flex-row gap-4 w-full">
               <div className="space-y-2 w-full">
@@ -121,7 +123,7 @@ export default function RequestCustomPlanPage() {
 
           {/* Find a Custom Enterprise Plan Section */}
           <div className="rounded-[16px] border border-[#D4D4D4] bg-[#FAFAFA] p-6 space-y-6">
-            <h3 className="text-[24px] font-semibold text-[#171717] font-inter text-center md:text-left">Find a Custom Enterprise Plan</h3>
+            <h3 className="text-[24px] font-semibold text-Heading font-inter text-center md:text-left">Find a Custom Enterprise Plan</h3>
 
             <div className="space-y-2">
               <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
@@ -190,9 +192,15 @@ export default function RequestCustomPlanPage() {
 
             {/* Budget / Price Range Section */}
             <div className="space-y-4 pt-2">
+              <Label htmlFor="budget-range" className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+                Estimated Budget / Price Range <span className="text-red-500">*</span> <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
+              </Label>
               <div className="relative px-1">
                 <input
+                  id="budget-range"
                   type="range"
+                  title="Estimated Budget"
+                  aria-label="Estimated Budget"
                   min={0}
                   max={5000}
                   step={100}
@@ -223,18 +231,19 @@ export default function RequestCustomPlanPage() {
                 />
               </div>
               <div className="flex justify-between">
-                <span className="inline-block bg-[#EFF6FF] text-[#171717] text-[14px] font-semibold px-2 py-1 rounded-md">$0.0</span>
-                <span className="inline-block bg-[#EFF6FF] text-[#171717] text-[14px] font-semibold px-2 py-1 rounded-md">$500</span>
-                <span className="inline-block bg-[#EFF6FF] text-[#171717] text-[14px] font-semibold px-2 py-1 rounded-md">$1000</span>
-                <span className="inline-block bg-[#EFF6FF] text-[#171717] text-[14px] font-semibold px-2 py-1 rounded-md">$5000</span>
+                <span className="inline-block bg-[#EFF6FF] text-Heading text-[14px] font-semibold px-2 py-1 rounded-md">$0.0</span>
+                <span className="inline-block bg-[#EFF6FF] text-Heading text-[14px] font-semibold px-2 py-1 rounded-md">$500</span>
+                <span className="inline-block bg-[#EFF6FF] text-Heading text-[14px] font-semibold px-2 py-1 rounded-md">$1000</span>
+                <span className="inline-block bg-[#EFF6FF] text-Heading text-[14px] font-semibold px-2 py-1 rounded-md">$5000</span>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+              <Label htmlFor="additional-requirements" className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
                 Additional Requirements & Comments <span className="text-red-500">*</span> <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
               </Label>
               <Textarea
+                id="additional-requirements"
                 placeholder="Tell us about any specific requirements, integration needs, or questions you have."
                 className="w-full min-h-[120px] rounded-[10px] border border-[#D4D4D4] p-3 text-[16px] placeholder:text-[#737373] bg-white resize-none"
               />

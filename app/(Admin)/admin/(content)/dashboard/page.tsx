@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Calendar, Users, MousePointer, Clock, CheckSquare, FileText, Headphones, RefreshCw, AlertCircle, ChevronDown, Plus, Crown, DollarSign, Shield, Webhook, TvMinimal, FileVideo } from 'lucide-react';
+import { Calendar, Users, MousePointer, Clock, CheckSquare, FileText, Headphones, RefreshCw, AlertCircle, ChevronDown, Plus, Crown, DollarSign, Shield, Webhook, TvMinimal, FileVideo, Download } from 'lucide-react';
 import AddUserModal from '@/components/Admin/usermanagement/AddUserModal';
 import {
   useGetDashboardOverviewQuery,
@@ -22,6 +22,9 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import TicketDetailsDialog from '../support/support-tickets/_components/TicketDetailsDialog';
 import { useGetAdminTicketDetailsQuery, type Ticket } from '@/redux/api/admin/support/adminSupportTicketApi';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store/store';
+import { getCurrencySymbol } from '@/lib/currencyUtils';
 
 type DateRange = '1d' | '7d' | '1m' | '1y';
 
@@ -96,22 +99,35 @@ const DashboardHeader: React.FC<{ onExport: () => void; onExportExcel: () => voi
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Monitor system performance and manage client operations</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <div className="relative">
             <button
               onClick={() => setShowExportMenu(prev => !prev)}
               className="cursor-pointer text-nowrap px-3 py-2 text-xs font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1.5 transition-colors"
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+              <Download className="w-3.5 h-3.5" />
               <span className='hidden lg:block'>Export Overview Report</span>
             </button>
             {showExportMenu && (
-              <div className="absolute right-0 mt-1 bg-navbarBg border border-border rounded-lg shadow-lg z-10 min-w-[160px]">
-                <button onClick={() => { onExport(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-t-lg cursor-pointer">📄 PDF</button>
-                <button onClick={() => { onExportExcel(); setShowExportMenu(false); }} className="w-full text-left px-4 py-2 text-sm text-black dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg cursor-pointer">📊 Excel</button>
-              </div>
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setShowExportMenu(false)} />
+                <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
+                  <button
+                    onClick={() => { onExport(); setShowExportMenu(false); }}
+                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
+                  >
+                    <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                    <span className="font-medium">Export as PDF</span>
+                  </button>
+                  <button
+                    onClick={() => { onExportExcel(); setShowExportMenu(false); }}
+                    className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
+                  >
+                    <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                    <span className="font-medium">Export as Excel</span>
+                  </button>
+                </div>
+              </>
             )}
           </div>
           {/* <button className="text-nowrap px-3 py-2 text-xs font-medium text-red-600 dark:text-red-400 bg-navbarBg border border-red-200 dark:border-red-900/50 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-1.5 transition-colors">
@@ -609,6 +625,9 @@ const Dashboard: React.FC = () => {
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  
+  const currency = useSelector((state: RootState) => state.settings.currency);
+  const currencySymbol = getCurrencySymbol(currency);
 
   // Fetch Overview Data
   const { data: overviewData, isLoading: isOverviewLoading } = useGetDashboardOverviewQuery(dateRange);
@@ -698,7 +717,7 @@ const Dashboard: React.FC = () => {
           ['Metric', 'Value', 'Growth %'],
           ['Total Users', (reportData.overview.totalUsers.value || 0).toLocaleString(), `${reportData.overview.totalUsers.growth || 0}%`],
           ['Active Subscriptions', (reportData.overview.activeSubscriptions.value || 0).toLocaleString(), `${reportData.overview.activeSubscriptions.growth || 0}%`],
-          ['MRR', `$${(reportData.overview.monthlyRecurringRevenue.value || 0).toLocaleString()}`, `${reportData.overview.monthlyRecurringRevenue.growth || 0}%`],
+          ['MRR', `${currencySymbol}${(reportData.overview.monthlyRecurringRevenue.value || 0).toLocaleString()}`, `${reportData.overview.monthlyRecurringRevenue.growth || 0}%`],
           ['Active Devices', (reportData.overview.activeDevices.value || 0).toLocaleString(), `${reportData.overview.activeDevices.growth || 0}%`],
           ['Open Support Tickets', (reportData.overview.openSupportTickets.value || 0).toString(), `${reportData.overview.openSupportTickets.growth || 0}%`],
         ];
@@ -934,10 +953,10 @@ const Dashboard: React.FC = () => {
           <MetricCard
             icon={<DollarSign className="w-4 h-4" />}
             title="Monthly Recurring Revenue"
-            value={`$${stats?.monthlyRecurringRevenue?.value?.toLocaleString() || '0'}`}
+            value={`${getCurrencySymbol(currency)}${(stats?.monthlyRecurringRevenue?.value || 0).toLocaleString()}`}
             change={`${stats?.monthlyRecurringRevenue?.growth || 0}%`}
             isPositive={(stats?.monthlyRecurringRevenue?.growth || 0) >= 0}
-            subtitle={`ARR: $${stats?.monthlyRecurringRevenue?.arr?.toLocaleString() || '0'}`}
+            subtitle={`ARR: ${getCurrencySymbol(currency)}${(stats?.monthlyRecurringRevenue?.arr || 0).toLocaleString()}`}
             isLoading={isOverviewLoading}
           />
           <MetricCard
