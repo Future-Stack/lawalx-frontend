@@ -43,7 +43,7 @@ const SubscriptionTabLayout = ({
       )}
 
       {/* Main Content Container */}
-      <div className="rounded-[24px] border border-borderGray bg-navbarBg overflow-hidden p-6">
+      <div className="rounded-[24px] bg-navbarBg overflow-hidden lg:p-6">
         {/* Filters Section */}
         {filters && <div className="mb-8">{filters}</div>}
 

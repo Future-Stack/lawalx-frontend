@@ -1,50 +1,82 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect } from "react";
-import {
-  useGetPlansQuery,
-  PlanItem,
-} from "@/redux/api/admin/payments/plans/plansApi";
 import {
   useGetYearlyDiscountsQuery,
   useUpdateDiscountMutation,
   useUpdateDiscountStatusMutation,
 } from "@/redux/api/admin/payments/discount/discountApi";
-import {
-  Monitor,
-  Database,
-  UploadCloud,
-  Layout,
-  Edit,
-  Loader2,
-  Save,
-} from "lucide-react";
-import CreatePlanDialog from "./CreatePlanDialog";
 import { toast } from "sonner";
-import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store/store";
-import { getCurrencySymbol } from "@/lib/currencyUtils";
+import PlanCard from "./PlanCard";
+import EditPlanDialog from "./EditPlanDialog";
+import BaseSelect from "@/common/BaseSelect";
 import SubscriptionTabLayout from "./SubscriptionTabLayout";
 
+const staticPlans = [
+  {
+    id: "basic",
+    name: "Basic",
+    price: "₦29,999/mo",
+    discount: "-10% Yearly",
+    devices: "5",
+    storage: "10 GB",
+    templates: "1",
+    limits: { photo: "5", audio: "10", video: "5" },
+    features: [
+      "5 Devices",
+      "10 GB Storage",
+      "Basic Analytics",
+      "Email Support",
+    ],
+  },
+  {
+    id: "business",
+    name: "Business",
+    price: "₦49,999/mo",
+    discount: "-10% Yearly",
+    devices: "20",
+    storage: "50 GB",
+    templates: "1",
+    limits: { photo: "5", audio: "10", video: "5" },
+    features: [
+      "20 Devices",
+      "50 GB Storage",
+      "Advanced Analytics",
+      "Priority Support",
+      "Content Creation Tools",
+    ],
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: "₦59,999/mo",
+    discount: "-10% Yearly",
+    devices: "100",
+    storage: "500 GB",
+    templates: "1",
+    limits: { photo: "5", audio: "10", video: "5" },
+    features: [
+      "Unlimited Devices",
+      "Unlimited Storage",
+      "24/7 Dedicated Support",
+      "Custom Integrations",
+      "SLA Agreement",
+    ],
+  },
+];
+
 const PlansTab = () => {
-  const { data, isLoading, isError } = useGetPlansQuery();
-  const { data: discountData, isLoading: isDiscountLoading } =
-    useGetYearlyDiscountsQuery();
-  const [updateDiscount, { isLoading: isUpdatingDiscount }] =
-    useUpdateDiscountMutation();
-  const [updateDiscountStatus, { isLoading: isUpdatingStatus }] =
-    useUpdateDiscountStatusMutation();
+  const { data: discountData } = useGetYearlyDiscountsQuery();
+  const [updateDiscount] = useUpdateDiscountMutation();
+  const [updateDiscountStatus] = useUpdateDiscountStatusMutation();
 
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<PlanItem | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [yearlyDiscount, setYearlyDiscount] = useState(false);
   const [discountPercentage, setDiscountPercentage] = useState("30");
-  const [allPlansActive, setAllPlansActive] = useState(true);
+  const [screenSize, setScreenSize] = useState("42 inches");
 
-  const currency = useSelector((state: RootState) => state.settings.currency);
-  const currencySymbol = getCurrencySymbol(currency);
-
-  const plans = data?.data || [];
   const discountInfo = discountData?.data?.[0];
 
   useEffect(() => {
@@ -53,15 +85,6 @@ const PlansTab = () => {
       setDiscountPercentage(discountInfo.yearlyDiscountRate.toString());
     }
   }, [discountInfo]);
-
-  const handleEditClick = (plan: PlanItem) => {
-    setSelectedPlan(plan);
-    setEditModalOpen(true);
-  };
-
-  const formatPrice = (price: string) => {
-    return `${currencySymbol}${parseFloat(price).toLocaleString()}`;
-  };
 
   const handleToggleDiscount = async () => {
     if (!discountInfo?.id) {
@@ -77,6 +100,7 @@ const PlansTab = () => {
       toast.success(
         `Yearly discount ${!yearlyDiscount ? "enabled" : "disabled"} successfully!`,
       );
+      setYearlyDiscount(!yearlyDiscount);
     } catch (error) {
       const err = error as { data?: { message?: string } };
       toast.error(err?.data?.message || "Failed to update discount status");
@@ -110,205 +134,163 @@ const PlansTab = () => {
     }
   };
 
+  const handleEdit = (plan: any) => {
+    setSelectedPlan(plan);
+    setEditModalOpen(true);
+  };
+
   return (
     <SubscriptionTabLayout
       title="All Plans"
       subtitle="Your plan has been upgraded successfully. New features are now available."
-      actionButton={
-        <button
-          onClick={() => setAllPlansActive(!allPlansActive)}
-          aria-label="Toggle all plans status"
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${allPlansActive ? "bg-[#3B82F6]" : "bg-gray-200 dark:bg-gray-700"}`}
-        >
-          <span
-            className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${allPlansActive ? "translate-x-5" : "translate-x-0"}`}
-          />
-        </button>
-      }
     >
       <div className="space-y-8">
-        {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {isLoading ? (
-            <div className="col-span-full flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-muted" />
-            </div>
-          ) : isError ? (
-            <div className="col-span-full flex items-center justify-center py-12">
-              <p className="text-red-500">
-                Error loading plans. Please try again.
+        {/* Screen Size Selector Card */}
+        <div className="bg-white dark:bg-gray-900 border border-[#F2F4F7] dark:border-gray-800 rounded-[24px] p-6 max-w-[280px]">
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-[16px] font-bold text-headings">
+                Screen Size
+              </h3>
+              <p className="text-[#667085] text-[12px]">
+                Select the screen sizes you need.
               </p>
             </div>
-          ) : plans.length === 0 ? (
-            <div className="col-span-full flex items-center justify-center py-12">
-              <p className="text-muted">No plans found.</p>
-            </div>
-          ) : (
-            plans.map((plan) => (
-              <div
-                key={plan.id}
-                className="bg-navbarBg rounded-2xl border border-borderGray p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full"
-              >
-                <div className="mb-6">
-                  <h3 className="text-lg font-bold text-headings mb-1">
-                    {plan.name}
-                  </h3>
-                  <p className="text-sm text-muted line-clamp-2">
-                    {plan.description}
-                  </p>
-                </div>
-
-                <div className="flex items-baseline justify-between mb-8">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-headings">
-                      {formatPrice(plan.price)}
-                    </span>
-                    <span className="text-sm text-muted">/month</span>
-                  </div>
-                </div>
-
-                <div className="space-y-4 mb-8 grow">
-                  <div className="grid grid-cols-2 gap-y-4 gap-x-2">
-                    <div className="flex items-center gap-2">
-                      <Monitor className="w-4 h-4 text-muted" />
-                      <div>
-                        <div className="text-[10px] text-muted uppercase font-bold">
-                          Devices
-                        </div>
-                        <div className="text-sm font-semibold text-headings">
-                          {plan.deviceLimit}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Database className="w-4 h-4 text-muted" />
-                      <div>
-                        <div className="text-[10px] text-muted uppercase font-bold">
-                          Storage
-                        </div>
-                        <div className="text-sm font-semibold text-headings">
-                          {plan.storageLimitGb} GB
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <UploadCloud className="w-4 h-4 text-muted" />
-                      <div>
-                        <div className="text-[10px] text-muted uppercase font-bold">
-                          File Limit
-                        </div>
-                        <div className="text-sm font-semibold text-headings">
-                          {plan.fileLimit}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Layout className="w-4 h-4 text-muted" />
-                      <div>
-                        <div className="text-[10px] text-muted uppercase font-bold">
-                          Templates
-                        </div>
-                        <div className="text-sm font-semibold text-headings">
-                          N/A
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleEditClick(plan)}
-                  className="w-full py-2.5 border border-border rounded-lg font-medium text-headings flex items-center justify-center gap-2 transition-colors shadow-customShadow cursor-pointer hover:text-bgBlue"
-                >
-                  <Edit className="w-4 h-4" /> Edit
-                </button>
-              </div>
-            ))
-          )}
+            <BaseSelect
+              options={[
+                { label: "42 inches", value: "42 inches" },
+                { label: "55 inches", value: "55 inches" },
+                { label: "65 inches", value: "65 inches" },
+              ]}
+              value={screenSize}
+              onChange={setScreenSize}
+              showLabel={false}
+            />
+          </div>
         </div>
 
-        {/* Yearly Discount Section */}
-        <div className="bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/20 rounded-2xl p-6">
-          {isDiscountLoading ? (
-            <div className="flex items-center justify-center py-6">
-              <Loader2 className="w-6 h-6 animate-spin text-muted" />
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-orange-900 dark:text-orange-200 font-bold">
-                  Yearly Discount
-                </h3>
-                <button
-                  onClick={handleToggleDiscount}
-                  disabled={isUpdatingStatus}
-                  aria-label="Toggle yearly discount"
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
-                    yearlyDiscount ? "bg-bgBlue" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                      yearlyDiscount ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-              <p className="text-sm text-orange-800/70 dark:text-orange-300/60 mb-6">
+        {/* Plans Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {staticPlans.map((plan) => (
+            <PlanCard key={plan.id} {...plan} onEdit={() => handleEdit(plan)} />
+          ))}
+        </div>
+
+        {/* Yearly Discount Configuration Card */}
+        <div className="bg-[#FFF9F5] dark:bg-gray-900/40 border border-[#F2F4F7] dark:border-gray-800 rounded-[24px] p-8 space-y-8">
+          <div className="flex justify-between items-center">
+            <div className="space-y-1">
+              <h3 className="text-[18px] font-bold text-[#7A271A] dark:text-orange-400">
+                Yearly Discount
+              </h3>
+              <p className="text-[#7A271A]/70 dark:text-orange-300/70 text-[14px]">
                 Offer a discount for yearly billing.
               </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={yearlyDiscount ? "true" : "false"}
+              onClick={handleToggleDiscount}
+              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 cursor-pointer ${
+                yearlyDiscount ? "bg-[#00A3FF]" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                  yearlyDiscount ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1 w-full space-y-2">
-                  <label
-                    htmlFor="discount-percentage"
-                    className="text-sm font-bold text-headings"
+          <div className="space-y-3">
+            <label
+              htmlFor="discount-percentage"
+              className="text-[14px] font-bold text-[#7A271A] dark:text-orange-400"
+            >
+              Discount Percentage %
+            </label>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <input
+                  id="discount-percentage"
+                  type="number"
+                  title="Discount Percentage"
+                  value={discountPercentage}
+                  onChange={(e) => setDiscountPercentage(e.target.value)}
+                  className="w-full bg-white dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-xl px-4 py-3.5 text-[16px] text-headings focus:outline-none focus:ring-1 focus:ring-[#00A3FF] transition-all"
+                />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDiscountPercentage((prev) =>
+                        (parseInt(prev) + 1).toString(),
+                      )
+                    }
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    Discount Percentage %
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="discount-percentage"
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="e.g. 30"
-                      value={discountPercentage}
-                      onChange={(e) => setDiscountPercentage(e.target.value)}
-                      className="w-full bg-white dark:bg-gray-900 border border-borderGray dark:border-gray-700 rounded-lg py-3 px-4 focus:outline-none text-headings"
-                      disabled={isUpdatingDiscount}
-                    />
-                  </div>
+                    <svg
+                      width="10"
+                      height="6"
+                      viewBox="0 0 10 6"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M1 5L5 1L9 5"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setDiscountPercentage((prev) =>
+                        Math.max(0, parseInt(prev) - 1).toString(),
+                      )
+                    }
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <svg
+                      width="10"
+                      height="6"
+                      viewBox="0 0 10 6"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M9 1L5 5L1 1"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
                 </div>
-                <button
-                  onClick={handleSaveDiscount}
-                  disabled={isUpdatingDiscount}
-                  className="h-[46px] w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-bgBlue text-white rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-bgBlue/90 transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isUpdatingDiscount ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Save Discount
-                    </>
-                  )}
-                </button>
               </div>
-            </>
-          )}
+              <button
+                type="button"
+                onClick={handleSaveDiscount}
+                className="px-8 py-3 bg-[#00A3FF] text-white rounded-xl font-bold hover:bg-[#00A3FF]/90 transition-all shadow-sm cursor-pointer"
+              >
+                Update
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <CreatePlanDialog
-        open={editModalOpen}
-        setOpen={setEditModalOpen}
-        editMode={true}
-        initialData={selectedPlan}
-      />
+        <EditPlanDialog
+          open={editModalOpen}
+          setOpen={setEditModalOpen}
+          initialData={selectedPlan}
+        />
+      </div>
     </SubscriptionTabLayout>
   );
 };
