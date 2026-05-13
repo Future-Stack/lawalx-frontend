@@ -3,8 +3,6 @@
 import React, { useState } from "react";
 import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import BaseSelect from "@/common/BaseSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -61,7 +59,7 @@ const RefundDialog = ({ open, setOpen, payment }: RefundDialogProps) => {
                     </div>
                 </div>
 
-                <div className="bg-border h-[1px] w-full" />
+                <div className="bg-border h-px w-full" />
 
                 {/* Refund Details */}
                 <div className="space-y-4">
@@ -84,13 +82,13 @@ const RefundDialog = ({ open, setOpen, payment }: RefundDialogProps) => {
                         <Label className="text-body">Internal Note</Label>
                         <textarea
                             placeholder="Add internal comments (e.g., 'Approved by Manager')..."
-                            className="w-full min-h-[120px] resize-none rounded-md border border-border bg-input px-4 py-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring placeholder:text-muted text-muted"
+                            className="w-full min-h-[120px] resize-none rounded-md border border-border bg-input px-4 py-3 text-sm placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring text-muted"
                         />
                     </div>
 
                 </div>
 
-                <div className="bg-borderGray h-[1px] w-full" />
+                <div className="bg-borderGray h-px w-full" />
 
 
                 {/* Documentation */}
