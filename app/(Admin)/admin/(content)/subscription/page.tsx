@@ -1,28 +1,39 @@
-"use client";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
+"use client";
 import { useState } from "react";
 import Tabs, { TabItem } from "@/common/Tabs";
-import { Users, CreditCard, LayoutGrid, Ticket, Eye, FileText } from "lucide-react";
+import {
+  Users,
+  CreditCard,
+  LayoutGrid,
+  Ticket,
+  Eye,
+  FileText,
+  Globe,
+} from "lucide-react";
 import SubscribersTab from "./_components/SubscribersTab";
 import BillingTab from "./_components/BillingTab";
 import TransactionSheet from "./_components/TransactionSheet";
 import Breadcrumb from "@/common/BreadCrumb";
-import Image from "next/image";
 import Link from "next/link";
 import PlansTab from "./_components/PlansTab";
 import CouponsTab from "./_components/CouponsTab";
+import ManageScreenSizeTab from "./_components/ManageScreenSizeTab";
+import TaxTab from "./_components/TaxTab";
 import { InvoicePreview } from "@/components/Admin/invoice";
 
 const SubscriptionPage = () => {
   const [activeTab, setActiveTab] = useState("Subscribers");
-//   const [sheetOpen, setSheetOpen] = useState(false); // Global sheet for "View Reports" button
+  //   const [sheetOpen, setSheetOpen] = useState(false); // Global sheet for "View Reports" button
 
   const tabs: TabItem<string>[] = [
     { label: "Subscribers", icon: Users },
     { label: "Billing & Invoices", icon: CreditCard },
     { label: "Plans", icon: LayoutGrid },
+    { label: "Manage screen size", icon: FileText },
     { label: "Coupons", icon: Ticket },
-    // {label: "Invoices", icon: FileText}
+    { label: "Tax", icon: Globe },
   ];
 
   return (
@@ -65,8 +76,9 @@ const SubscriptionPage = () => {
           {activeTab === "Subscribers" && <SubscribersTab />}
           {activeTab === "Billing & Invoices" && <BillingTab />}
           {activeTab === "Plans" && <PlansTab />}
+          {activeTab === "Manage screen size" && <ManageScreenSizeTab />}
+          {activeTab === "Tax" && <TaxTab />}
           {activeTab === "Coupons" && <CouponsTab />}
-          {/* {activeTab === "Invoices" && <InvoicePreview />} */}
         </div>
       </div>
 
