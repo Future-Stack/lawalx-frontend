@@ -147,9 +147,11 @@ const CreateCouponDialog = ({
         {/* Name & Code */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-headings font-medium">Name</Label>
+            <Label htmlFor="coupon-name" className="text-headings font-medium">Name</Label>
             <input
-              placeholder="AEION"
+              id="coupon-name"
+              title="Coupon Name"
+              placeholder="e.g. SUMMER20"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className={inputClass}
@@ -157,10 +159,12 @@ const CreateCouponDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-headings font-medium">Coupon Code</Label>
+            <Label htmlFor="coupon-code" className="text-headings font-medium">Coupon Code</Label>
             <div className="flex gap-2">
               <input
-                placeholder="AEION"
+                id="coupon-code"
+                title="Coupon Code"
+                placeholder="e.g. DISCOUNT50"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 className={`${inputClass} flex-1`}
@@ -195,12 +199,15 @@ const CreateCouponDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-headings font-medium">
+            <Label htmlFor="discount-value" className="text-headings font-medium">
               {discountType === "PERCENTAGE" ? "Percentage %" : "Amount"}
             </Label>
             <input
+              id="discount-value"
               type="number"
               min="0"
+              title={discountType === "PERCENTAGE" ? "Discount Percentage" : "Discount Amount"}
+              placeholder={discountType === "PERCENTAGE" ? "15" : "100"}
               value={discountValue}
               onChange={(e) => setDiscountValue(e.target.value)}
               className={inputClass}
@@ -211,10 +218,13 @@ const CreateCouponDialog = ({
         {/* Usage & Expiry */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-headings font-medium">Use Limit</Label>
+            <Label htmlFor="use-limit" className="text-headings font-medium">Use Limit</Label>
             <input
+              id="use-limit"
               type="number"
               min="1"
+              title="Usage Limit"
+              placeholder="100"
               value={useLimit}
               onChange={(e) => setUseLimit(Number(e.target.value))}
               className={inputClass}
@@ -222,9 +232,12 @@ const CreateCouponDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-headings font-medium">Expiry Date</Label>
+            <Label htmlFor="expiry-date" className="text-headings font-medium">Expiry Date</Label>
             <input
+              id="expiry-date"
               type="date"
+              title="Expiry Date"
+              placeholder="YYYY-MM-DD"
               value={expiryDate}
               onChange={(e) => setExpiryDate(e.target.value)}
               className={inputClass}

@@ -68,7 +68,7 @@ const CouponsTab = () => {
         data: { status: newStatus },
       }).unwrap();
       toast.success(
-        `Coupon ${newStatus === "DISABLED" ? "disabled" : "activated"} successfully!`
+        `Coupon ${newStatus === "DISABLED" ? "disabled" : "activated"} successfully!`,
       );
     } catch (error) {
       const err = error as { data?: { message?: string } };
@@ -150,7 +150,9 @@ const CouponsTab = () => {
       }
       pagination={
         <div className="flex items-center justify-between">
-          <div className="text-sm text-muted">Showing {coupons.length} of {totalCoupons} coupons</div>
+          <div className="text-sm text-muted">
+            Showing {coupons.length} of {totalCoupons} coupons
+          </div>
           <div className="flex items-center gap-2">
             <button
               className="flex items-center gap-2 px-4 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
@@ -179,7 +181,9 @@ const CouponsTab = () => {
         </div>
       ) : isError ? (
         <div className="flex items-center justify-center py-12">
-          <p className="text-red-500">Error loading coupons. Please try again.</p>
+          <p className="text-red-500">
+            Error loading coupons. Please try again.
+          </p>
         </div>
       ) : coupons.length === 0 ? (
         <div className="flex items-center justify-center py-12">
@@ -232,11 +236,16 @@ const CouponsTab = () => {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="default" className={`font-normal border ${getStatusColor(coupon.status)}`}>
+                  <Badge
+                    variant="default"
+                    className={`font-normal border ${getStatusColor(coupon.status)}`}
+                  >
                     {coupon.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-muted">{formatDate(coupon.expiryDate)}</TableCell>
+                <TableCell className="text-muted">
+                  {formatDate(coupon.expiryDate)}
+                </TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -261,7 +270,9 @@ const CouponsTab = () => {
                         disabled={isUpdatingStatus}
                       >
                         <Ban className="mr-2 h-4 w-4" />
-                        {coupon.status === "ACTIVE" ? "Stop Coupon" : "Activate Coupon"}
+                        {coupon.status === "ACTIVE"
+                          ? "Stop Coupon"
+                          : "Activate Coupon"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

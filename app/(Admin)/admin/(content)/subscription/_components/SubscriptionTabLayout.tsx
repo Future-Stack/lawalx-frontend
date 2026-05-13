@@ -27,8 +27,12 @@ const SubscriptionTabLayout = ({
       {(title || actionButton) && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-3 px-1">
           <div>
-            {title && <h2 className="text-[20px] font-bold text-headings">{title}</h2>}
-            {subtitle && <p className="text-muted text-[14px] mt-1">{subtitle}</p>}
+            {title && (
+              <h2 className="text-[20px] font-bold text-headings">{title}</h2>
+            )}
+            {subtitle && (
+              <p className="text-muted text-[14px] mt-1">{subtitle}</p>
+            )}
           </div>
           {actionButton}
         </div>
@@ -44,15 +48,11 @@ const SubscriptionTabLayout = ({
         {filters && <div className="mb-8">{filters}</div>}
 
         {/* Content (Table, etc.) */}
-        <div className="overflow-x-auto">
-          {children}
-        </div>
+        <div className="overflow-x-auto">{children}</div>
 
         {/* Pagination Section */}
         {pagination && (
-          <div className="mt-6 pt-6 border-t border-border">
-            {pagination}
-          </div>
+          <div className="mt-6 pt-6 border-t border-border">{pagination}</div>
         )}
       </div>
     </div>

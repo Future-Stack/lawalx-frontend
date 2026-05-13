@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-
 import { useState, useEffect } from "react";
 import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
@@ -97,9 +97,11 @@ const CreatePlanDialog = ({
             <div className="space-y-4 md:space-y-6 px-1 bg-navbarBg">
                 {/* Plan Name */}
                 <div className="space-y-2">
-                    <Label className="text-headings font-medium">Plan Name</Label>
+                    <Label htmlFor="plan-name" className="text-headings font-medium">Plan Name</Label>
                     <input
+                        id="plan-name"
                         type="text"
+                        title="Plan Name"
                         placeholder="Business"
                         value={planName}
                         onChange={(e) => setPlanName(e.target.value)}
@@ -113,8 +115,10 @@ const CreatePlanDialog = ({
 
                 {/* Description */}
                 <div className="space-y-2">
-                    <Label className="text-headings font-medium">Description</Label>
+                    <Label htmlFor="plan-description" className="text-headings font-medium">Description</Label>
                     <textarea
+                        id="plan-description"
+                        title="Plan Description"
                         placeholder="Description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
@@ -124,10 +128,12 @@ const CreatePlanDialog = ({
 
                 {/* Price */}
                 <div className="space-y-1">
-                    <Label className="text-headings font-medium">Price</Label>
+                    <Label htmlFor="plan-price" className="text-headings font-medium">Price</Label>
                     <div className="flex items-center gap-2">
                         <input
+                            id="plan-price"
                             type="number"
+                            title="Plan Price"
                             value={price}
                             onChange={(e) => setPrice(e.target.value)}
                             placeholder="$ 256.25"
@@ -158,7 +164,7 @@ const CreatePlanDialog = ({
                         <button
                             type="button"
                             role="switch"
-                            aria-checked={isAdvanced}
+                            aria-checked={isAdvanced ? "true" : "false"}
                             onClick={() => setIsAdvanced(prev => !prev)}
                             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer ${isAdvanced ? "bg-bgBlue" : "bg-gray-300"
                                 }`}
@@ -175,11 +181,13 @@ const CreatePlanDialog = ({
                 {isAdvanced && (
                     <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <Label className="text-headings font-medium">
+                            <Label htmlFor="device-limit" className="text-headings font-medium">
                                 Device Limit
                             </Label>
                             <input
+                                id="device-limit"
                                 type="number"
+                                title="Device Limit"
                                 placeholder="100"
                                 value={limits.deviceLimit}
                                 onChange={(e) =>
@@ -190,12 +198,14 @@ const CreatePlanDialog = ({
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-headings font-medium">
+                            <Label htmlFor="storage-limit" className="text-headings font-medium">
                                 Storage Limit
                             </Label>
                             <div className="relative">
                                 <input
+                                    id="storage-limit"
                                     type="number"
+                                    title="Storage Limit"
                                     placeholder="100"
                                     value={limits.storageLimit}
                                     onChange={(e) =>
@@ -210,11 +220,13 @@ const CreatePlanDialog = ({
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-headings font-medium">
+                            <Label htmlFor="file-limit" className="text-headings font-medium">
                                 File Limit
                             </Label>
                             <input
+                                id="file-limit"
                                 type="number"
+                                title="File Limit"
                                 value={limits.fileLimit}
                                 placeholder="100"
                                 onChange={(e) =>
@@ -225,11 +237,13 @@ const CreatePlanDialog = ({
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-headings font-medium">
+                            <Label htmlFor="file-size-limit" className="text-headings font-medium">
                                 File Size Limit (MB)
                             </Label>
                             <input
+                                id="file-size-limit"
                                 type="number"
+                                title="File Size Limit"
                                 value={limits.fileSizeLimit}
                                 placeholder="100"
                                 onChange={(e) =>

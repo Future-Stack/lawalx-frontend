@@ -75,7 +75,6 @@ const SubscribersTab = () => {
     });
   };
 
-
   const handleViewInvoices = (userId: string) => {
     setSelectedUserId(userId);
     setSheetOpen(true);
@@ -235,8 +234,7 @@ const SubscribersTab = () => {
                           <FileText className="mr-2 h-4 w-4" /> View Invoices
                         </DropdownMenuItem>
                         <DropdownMenuItem>
-                          <ArrowUpCircle className="mr-2 h-4 w-4" /> Change
-                          Plan
+                          <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-red-500 focus:text-red-500">
                           <XCircle className="mr-2 h-4 w-4" /> Cancel Plan

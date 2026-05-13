@@ -28,10 +28,8 @@ import SubscriptionTabLayout from "./SubscriptionTabLayout";
 
 const PlansTab = () => {
   const { data, isLoading, isError } = useGetPlansQuery();
-  const {
-    data: discountData,
-    isLoading: isDiscountLoading,
-  } = useGetYearlyDiscountsQuery();
+  const { data: discountData, isLoading: isDiscountLoading } =
+    useGetYearlyDiscountsQuery();
   const [updateDiscount, { isLoading: isUpdatingDiscount }] =
     useUpdateDiscountMutation();
   const [updateDiscountStatus, { isLoading: isUpdatingStatus }] =
@@ -61,23 +59,23 @@ const PlansTab = () => {
     setEditModalOpen(true);
   };
 
-    const formatPrice = (price: string) => {
-        return `${currencySymbol}${parseFloat(price).toLocaleString()}`;
-    };
+  const formatPrice = (price: string) => {
+    return `${currencySymbol}${parseFloat(price).toLocaleString()}`;
+  };
 
-    const handleToggleDiscount = async () => {
-        if (!discountInfo?.id) {
-            toast.error("Discount configuration not found");
-            return;
-        }
+  const handleToggleDiscount = async () => {
+    if (!discountInfo?.id) {
+      toast.error("Discount configuration not found");
+      return;
+    }
 
-        try {
-            await updateDiscountStatus({
-                id: discountInfo.id,
-                data: { hasYearlyDiscount: !yearlyDiscount },
-            }).unwrap();
+    try {
+      await updateDiscountStatus({
+        id: discountInfo.id,
+        data: { hasYearlyDiscount: !yearlyDiscount },
+      }).unwrap();
       toast.success(
-        `Yearly discount ${!yearlyDiscount ? "enabled" : "disabled"} successfully!`
+        `Yearly discount ${!yearlyDiscount ? "enabled" : "disabled"} successfully!`,
       );
     } catch (error) {
       const err = error as { data?: { message?: string } };
@@ -262,7 +260,7 @@ const PlansTab = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 items-end">
                 <div className="flex-1 w-full space-y-2">
-                  <label 
+                  <label
                     htmlFor="discount-percentage"
                     className="text-sm font-bold text-headings"
                   >

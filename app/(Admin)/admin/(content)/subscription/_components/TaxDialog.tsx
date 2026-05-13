@@ -4,30 +4,30 @@
 import { useEffect, useState } from "react";
 import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
-import { TvMinimal } from "lucide-react";
+import { Globe } from "lucide-react";
 
-interface ScreenSizeDialogProps {
+interface TaxDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   mode: "add" | "edit";
   data: any;
 }
 
-const ScreenSizeDialog = ({
+const TaxDialog = ({
   open,
   setOpen,
   mode,
   data,
-}: ScreenSizeDialogProps) => {
-  const [size, setSize] = useState("");
+}: TaxDialogProps) => {
+  const [tax, setTax] = useState("");
   const [price, setPrice] = useState("");
 
   useEffect(() => {
     if (mode === "edit" && data) {
-      setSize(data.size);
-      setPrice(data.price.replace("$", ""));
+      setTax(data.tax);
+      setPrice(data.taxRate.replace("%", ""));
     } else {
-      setSize("");
+      setTax("");
       setPrice("");
     }
   }, [mode, data, open]);
@@ -39,7 +39,7 @@ const ScreenSizeDialog = ({
       title=""
       description=""
       maxWidth="xl"
-      className="p-0" // Remove default padding to have full control
+      className="p-0"
     >
       <div className="flex flex-col h-full">
         {/* Header with Icon */}
@@ -47,14 +47,12 @@ const ScreenSizeDialog = ({
           <div className="flex flex-col gap-4">
             <div className="w-12 h-12 rounded-full border border-[#7F56D933] bg-[#7F56D90D] flex items-center justify-center">
               <div className="w-8 h-8 flex items-center justify-center">
-                <TvMinimal className="w-4 h-4 text-[#7F56D9]" />
+                <Globe className="w-4 h-4 text-[#7F56D9]" />
               </div>
             </div>
             <div>
               <h2 className="text-[20px] font-bold text-headings leading-tight">
-                {mode === "add"
-                  ? "Add New Screen Size"
-                  : "Edit New Screen Size"}
+                {mode === "add" ? "Add New Tax" : "Edit New Tax"}
               </h2>
               <p className="text-[#667085] text-[14px] mt-1">
                 Configure the plan details, limits, and features.
@@ -67,24 +65,24 @@ const ScreenSizeDialog = ({
         <div className="p-6 space-y-5 flex-1">
           <div className="space-y-1.5">
             <Label
-              htmlFor="screen-size"
+              htmlFor="tax-name"
               className="text-[14px] font-bold text-headings"
             >
-              Screen Size
+              Tax
             </Label>
             <input
-              id="screen-size"
+              id="tax-name"
               type="text"
-              placeholder="42"
-              value={size}
-              onChange={(e) => setSize(e.target.value)}
+              placeholder="e.g. California, USA"
+              value={tax}
+              onChange={(e) => setTax(e.target.value)}
               className="w-full bg-white dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-lg px-3.5 py-2.5 text-[16px] text-headings placeholder:text-[#667085] focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all shadow-sm"
             />
           </div>
 
           <div className="space-y-1.5">
             <Label
-              htmlFor="screen-price"
+              htmlFor="tax-price"
               className="text-[14px] font-bold text-headings"
             >
               Price
@@ -94,7 +92,7 @@ const ScreenSizeDialog = ({
                 $
               </span>
               <input
-                id="screen-price"
+                id="tax-price"
                 type="text"
                 placeholder="256.25"
                 value={price}
@@ -127,4 +125,4 @@ const ScreenSizeDialog = ({
   );
 };
 
-export default ScreenSizeDialog;
+export default TaxDialog;
