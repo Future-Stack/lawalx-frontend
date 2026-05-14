@@ -3,10 +3,8 @@
 import { useState } from "react";
 import {
   Search,
-  Download,
   Eye,
-  FileDown,
-  Loader2,
+  CloudDownload,
 } from "lucide-react";
 import {
   Table,
@@ -19,6 +17,7 @@ import {
 import BaseSelect from "@/common/BaseSelect";
 import { Button } from "@/components/ui/button";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
+import InvoicePreview from "./_components/InvoicePreview";
 
 interface PaymentHistoryData {
   id: string;
@@ -33,7 +32,7 @@ const initialData: PaymentHistoryData[] = [
   {
     id: "1",
     billTo: "TechCorp Inc.",
-    billFrom: "Jenny Wilson",
+    billFrom: "Tape",
     address: "Antopolis Designs and Technologies",
     totalPrice: "$299.00",
     status: "Unpaid",
@@ -41,7 +40,7 @@ const initialData: PaymentHistoryData[] = [
   {
     id: "2",
     billTo: "TechCorp Inc.",
-    billFrom: "Brooklyn Simmons",
+    billFrom: "Tape",
     address: "Antopolis Designs and Technologies",
     totalPrice: "$299.00",
     status: "Paid",
@@ -49,7 +48,7 @@ const initialData: PaymentHistoryData[] = [
   {
     id: "3",
     billTo: "TechCorp Inc.",
-    billFrom: "Kristin Watson",
+    billFrom: "Tape",
     address: "Antopolis Designs and Technologies",
     totalPrice: "$299.00",
     status: "Unpaid",
@@ -57,7 +56,7 @@ const initialData: PaymentHistoryData[] = [
   {
     id: "4",
     billTo: "TechCorp Inc.",
-    billFrom: "Dianne Russell",
+    billFrom: "Tape",
     address: "Antopolis Designs and Technologies",
     totalPrice: "$299.00",
     status: "Paid",
@@ -84,6 +83,25 @@ const AdditionalPaymentTab = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("this-month");
+  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<PaymentHistoryData | null>(
+    null,
+  );
+  const [invoiceAction, setInvoiceAction] = useState<"preview" | "download">(
+    "preview",
+  );
+
+  const handleViewInvoice = (item: PaymentHistoryData) => {
+    setSelectedInvoice(item);
+    setInvoiceAction("preview");
+    setIsInvoiceOpen(true);
+  };
+
+  const handleDownloadInvoice = (item: PaymentHistoryData) => {
+    setSelectedInvoice(item);
+    setInvoiceAction("download");
+    setIsInvoiceOpen(true);
+  };
 
   return (
     <SubscriptionTabLayout
@@ -181,11 +199,10 @@ const AdditionalPaymentTab = () => {
               </TableCell>
               <TableCell className="py-5">
                 <span
-                  className={`px-3 py-1 rounded-full text-[12px] font-medium border ${
-                    item.status === "Paid"
+                  className={`px-3 py-1 rounded-full text-[12px] font-medium border ${item.status === "Paid"
                       ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
                       : "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800"
-                  }`}
+                    }`}
                 >
                   {item.status}
                 </span>
@@ -193,12 +210,14 @@ const AdditionalPaymentTab = () => {
               <TableCell className="py-5 text-right">
                 <div className="flex items-center justify-end gap-3">
                   <button
+                    onClick={() => handleDownloadInvoice(item)}
                     aria-label="Download invoice"
                     className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer"
                   >
-                    <FileDown className="w-5 h-5 opacity-70" />
+                    <CloudDownload className="w-5 h-5 opacity-70" />
                   </button>
                   <button
+                    onClick={() => handleViewInvoice(item)}
                     aria-label="View invoice"
                     className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer"
                   >
@@ -210,6 +229,14 @@ const AdditionalPaymentTab = () => {
           ))}
         </TableBody>
       </Table>
+
+      <InvoicePreview
+        open={isInvoiceOpen}
+        setOpen={setIsInvoiceOpen}
+        invoiceData={selectedInvoice}
+        defaultAction={invoiceAction}
+        onDefaultActionHandled={() => setInvoiceAction("preview")}
+      />
     </SubscriptionTabLayout>
   );
 };

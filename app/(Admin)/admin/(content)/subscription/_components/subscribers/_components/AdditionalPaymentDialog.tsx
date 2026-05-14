@@ -28,10 +28,10 @@ const AdditionalPaymentDialog = ({
   subscriberData,
 }: AdditionalPaymentDialogProps) => {
   const [billTo, setBillTo] = useState(
-    subscriberData?.userName || "TechCorp Inc.",
+    subscriberData?.userName,
   );
   const [billFrom, setBillFrom] = useState(
-    "Antopolis Designs and Technologies",
+    "Tape",
   );
   const [address, setAddress] = useState("Antopolis Designs and Technologies");
   const [subject, setSubject] = useState("");

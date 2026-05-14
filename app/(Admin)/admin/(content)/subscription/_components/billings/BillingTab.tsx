@@ -25,6 +25,8 @@ import {
   CloudDownload,
   Loader2,
   RotateCcw,
+  ArrowUpCircle,
+  Mail,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import TransactionSheet from "../TransactionSheet";
@@ -359,6 +361,15 @@ const BillingTab = () => {
                       <Eye className="mr-2 h-4 w-4" />
                       View Details
                     </DropdownMenuItem>
+                    <DropdownMenuItem >
+                      <ArrowUpCircle className="mr-2 h-4 w-4" />
+                      change plan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Resend Receipt
+                    </DropdownMenuItem>
+                    
                     <DropdownMenuItem
                       onClick={() => handleViewInGateway(payment.paymentId)}
                       disabled={gatewayLoadingId === payment.paymentId}

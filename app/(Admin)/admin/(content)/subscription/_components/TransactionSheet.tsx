@@ -14,7 +14,6 @@ import {
   Copy,
   CornerDownLeft,
   ExternalLink,
-  Mail,
   Loader2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -196,23 +195,23 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-3 w-full">
                 <h4 className="font-medium text-sm text-headings">
                   Quick Actions
                 </h4>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-4">
                   <Button
                     variant="default"
                     className="w-full text-xs bg-gray-300 h-9 shadow-customShadow hover:text-bgBlue border border-border"
                   >
-                    <CloudDownload className="w-3 h-3 mr-1" /> Invoice
+                    <CloudDownload className="w-3 h-3 mr-1" />Download Invoice
                   </Button>
-                  <Button
+                  {/* <Button
                     variant="outline"
                     className="w-full text-xs h-9 text-headings border border-border shadow-customShadow hover:text-bgBlue hover:bg-gray-100"
                   >
                     <Mail className="w-3 h-3 mr-1" /> Receipt
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="destructive"
                     className="w-full text-xs h-9 shadow-customShadow hover:text-gray-100 bg-red-500"

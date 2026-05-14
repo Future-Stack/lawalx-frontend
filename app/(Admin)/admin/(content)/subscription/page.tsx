@@ -20,7 +20,6 @@ import PlansTab from "./_components/plans/PlansTab";
 import CouponsTab from "./_components/coupons/CouponsTab";
 import ManageScreenSizeTab from "./_components/screen-size/ManageScreenSizeTab";
 import TaxTab from "./_components/tax/TaxTab";
-import { InvoicePreview } from "@/components/Admin/invoice";
 
 import AdditionalPaymentTab from "./_components/additional-payment/AdditionalPaymentTab";
 
