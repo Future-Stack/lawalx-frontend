@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import GoLiveBanner from "./banners/GoLiveBanner";
-import DownloadAppBanner from "./banners/DownloadAppBanner";
-import TrialBanner from "./banners/TrialBanner";
+// import DownloadAppBanner from "./banners/DownloadAppBanner";
+// import TrialBanner from "./banners/TrialBanner";
 import { useGetUserBannerDataQuery } from "@/redux/api/users/userBanner/userBanner.api";
 import { BannerType, Banner } from "@/redux/api/users/userBanner/userBanner.type";
 
@@ -32,8 +32,8 @@ const DashboardBannerSystem = () => {
         return (
             <div className="flex flex-col gap-0">
                 <GoLiveBanner />
-                <DownloadAppBanner />
-                <TrialBanner />
+                {/* <DownloadAppBanner /> */}
+                {/* <TrialBanner /> */}
             </div>
         );
     }
@@ -44,12 +44,12 @@ const DashboardBannerSystem = () => {
         switch (banner.type) {
             case BannerType.PROMOTION:
                 return <GoLiveBanner banner={banner} />;
-            case BannerType.ANNOUNCEMENT:
-                return <DownloadAppBanner banner={banner} />;
-            case BannerType.UPLOAD:
-                return <TrialBanner banner={banner} />;
+            // case BannerType.ANNOUNCEMENT:
+            //     return <DownloadAppBanner banner={banner} />;
+            // case BannerType.UPLOAD:
+            //     return <TrialBanner banner={banner} />;
             default:
-                return <DownloadAppBanner banner={banner} />;
+                return <GoLiveBanner banner={banner} />;
         }
     };
 
