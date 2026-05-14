@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React from 'react';
-import { X, ZoomIn, ZoomOut, MapPin, Monitor } from 'lucide-react';
+import { ZoomIn, ZoomOut, Monitor } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import "leaflet/dist/leaflet.css";
@@ -77,7 +78,6 @@ interface Props {
 const LeafletMapInner: React.FC<Props> = ({ lat, lng, device, onLocationSelect }) => {
     React.useEffect(() => {
         if (typeof window !== 'undefined') {
-            // @ts-ignore - _getIconUrl is an internal Leaflet property
             delete (L.Icon.Default.prototype as any)._getIconUrl;
             L.Icon.Default.mergeOptions({
                 iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
