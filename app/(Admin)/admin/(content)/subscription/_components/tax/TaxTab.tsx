@@ -186,14 +186,14 @@ const TaxTab = () => {
                             aria-label={
                               item.status ? "Disable tax" : "Enable tax"
                             }
-                            className="p-1.5 rounded-md text-[#667085] hover:text-headings hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer disabled:opacity-50"
+                            className="p-1.5 rounded-md bg-[#E6F4F1] text-muted hover:bg-[#d9eee9] transition-all cursor-pointer disabled:opacity-50"
                           >
                             {isUpdatingStatus ? (
-                              <Loader2 className="w-5 h-5 animate-spin opacity-70" />
+                              <Loader2 className="w-5 h-5 animate-spin text-muted" />
                             ) : item.status ? (
-                              <Circle className="w-5 h-5 opacity-70" />
+                              <Circle className="w-5 h-5 text-muted" />
                             ) : (
-                              <Ban className="w-5 h-5 opacity-70" />
+                              <Ban className="w-5 h-5 text-muted" />
                             )}
                           </button>
                           <button
