@@ -25,11 +25,13 @@ import {
   CloudDownload,
   Loader2,
   RotateCcw,
+  ArrowUpCircle,
+  Mail,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import TransactionSheet from "./TransactionSheet";
-import RefundDialog from "./RefundDialog";
-import SubscriptionTabLayout from "./SubscriptionTabLayout";
+import TransactionSheet from "../TransactionSheet";
+import RefundDialog from "./_components/RefundDialog";
+import SubscriptionTabLayout from "../SubscriptionTabLayout";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
@@ -359,6 +361,15 @@ const BillingTab = () => {
                       <Eye className="mr-2 h-4 w-4" />
                       View Details
                     </DropdownMenuItem>
+                    <DropdownMenuItem >
+                      <ArrowUpCircle className="mr-2 h-4 w-4" />
+                      change plan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Resend Receipt
+                    </DropdownMenuItem>
+                    
                     <DropdownMenuItem
                       onClick={() => handleViewInGateway(payment.paymentId)}
                       disabled={gatewayLoadingId === payment.paymentId}

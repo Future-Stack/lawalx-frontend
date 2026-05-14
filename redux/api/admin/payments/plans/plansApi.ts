@@ -1,20 +1,45 @@
 import { baseApi } from "../../../baseApi";
 
 // Types
+export interface YearlyDiscount {
+  hasYearlyDiscount: boolean;
+  discountType: string;
+  yearlyDiscountRate: number;
+  originalAnnualAmount: number;
+  discountAmount: number;
+  discountedAnnualAmount: number;
+  originalAnnualCurrency: string;
+  discountedAnnualCurrency: string;
+}
+
 export interface PlanItem {
   id: string;
   name: string;
   description: string;
-  price: string;
+  price: number;
   currency: string;
   deviceLimit: number;
   storageLimitGb: number;
-  fileLimit: number;
-  fileSizeLimitMb: number;
-  isAdvanceEnabled: boolean;
+  templateLimit: number;
+  photoLimit: number;
+  audioLimit: number;
+  videoLimit: number;
+  features: string[];
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  originalAmount: number;
+  originalCurrency: string;
+  billing: string;
+  yearlyDiscount: YearlyDiscount;
+}
+
+export interface ScreenSizeItem {
+  size: number;
+  price: number;
+  currency: string;
+  originalPrice: number;
+  originalCurrency: string;
 }
 
 export interface ApiResponse<T> {
@@ -27,6 +52,7 @@ export interface ApiResponse<T> {
 export type GetPlansResponse = ApiResponse<PlanItem[]>;
 export type GetSinglePlanResponse = ApiResponse<PlanItem>;
 export type UpdatePlanResponse = ApiResponse<PlanItem>;
+export type GetScreenSizesResponse = ApiResponse<ScreenSizeItem[]>;
 
 export interface UpdatePlanPayload {
   description?: string;
@@ -34,21 +60,30 @@ export interface UpdatePlanPayload {
   currency?: string;
   deviceLimit?: number;
   storageLimitGb?: number;
-  fileLimit?: number;
-  fileSizeLimitMb?: number;
-  isAdvanceEnabled?: boolean;
+  templateLimit?: number;
+  photoLimit?: number;
+  audioLimit?: number;
+  videoLimit?: number;
   isActive?: boolean;
 }
 
 // API
 export const plansApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getPlans: builder.query<GetPlansResponse, void>({
-      query: () => ({
+    getPlans: builder.query<GetPlansResponse, string | number | void>({
+      query: (screenSize) => ({
         url: `/plans`,
         method: "GET",
+        params: screenSize ? { screenSize } : {},
       }),
       providesTags: ["Subscription", "FinancialData"],
+    }),
+    getActiveScreenSizes: builder.query<GetScreenSizesResponse, void>({
+      query: () => ({
+        url: `/subscription-management/screen-size/active`,
+        method: "GET",
+      }),
+      providesTags: ["Subscription"],
     }),
     getSinglePlan: builder.query<GetSinglePlanResponse, string>({
       query: (id) => ({
@@ -71,6 +106,7 @@ export const plansApi = baseApi.injectEndpoints({
 export const {
   useGetPlansQuery,
   useLazyGetPlansQuery,
+  useGetActiveScreenSizesQuery,
   useGetSinglePlanQuery,
   useLazyGetSinglePlanQuery,
   useUpdatePlanMutation,

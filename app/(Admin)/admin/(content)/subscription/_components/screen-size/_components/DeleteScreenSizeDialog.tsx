@@ -1,14 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-
 import BaseDialog from "@/common/BaseDialog";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import {
+  useDeleteScreenSizeMutation,
+  ScreenSize,
+} from "@/redux/api/admin/payments/screenManagement/screenSizeApi";
+import { toast } from "sonner";
 
 interface DeleteScreenSizeDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  data: any;
+  data: ScreenSize | null;
 }
 
 const DeleteScreenSizeDialog = ({
@@ -16,6 +17,21 @@ const DeleteScreenSizeDialog = ({
   setOpen,
   data,
 }: DeleteScreenSizeDialogProps) => {
+  const [deleteScreenSize, { isLoading }] = useDeleteScreenSizeMutation();
+
+  const handleDelete = async () => {
+    if (!data?.id) return;
+
+    try {
+      await deleteScreenSize(data.id).unwrap();
+      toast.success("Screen size deleted successfully");
+      setOpen(false);
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to delete screen size");
+    }
+  };
+
   return (
     <BaseDialog
       open={open}
@@ -27,7 +43,7 @@ const DeleteScreenSizeDialog = ({
       <div className="flex flex-col items-center text-center space-y-6 pt-2 pb-4">
         {/* Warning Icon - Custom Square styling as per UI */}
         <div className="w-16 h-16 rounded-xl bg-[#FFF9E5] flex items-center justify-center relative">
-        <div className="absolute inset-0 opacity-10 bg-[#FFFBEB] blur-xl rounded-full" />
+          <div className="absolute inset-0 opacity-10 bg-[#FFFBEB] blur-xl rounded-full" />
           <AlertTriangle className="w-10 h-10 text-[#FBBF24]" />
         </div>
 
@@ -37,7 +53,8 @@ const DeleteScreenSizeDialog = ({
             Warning
           </h2>
           <p className="text-[#667085] text-[16px] max-w-[280px]">
-            Are you sure you want to delete this Screen Size
+            Are you sure you want to delete screen size{" "}
+            <span className="font-bold text-headings">{data?.size}</span>?
           </p>
         </div>
 
@@ -45,17 +62,20 @@ const DeleteScreenSizeDialog = ({
         <div className="flex w-full mt-4 max-w-[320px] rounded-xl border border-[#D0D5DD] dark:border-gray-800 overflow-hidden shadow-sm">
           <button
             onClick={() => setOpen(false)}
-            className="flex-1 py-3 bg-white dark:bg-gray-900 hover:bg-gray-50 text-[18px] font-bold text-headings transition-all cursor-pointer border-r border-[#D0D5DD] dark:border-gray-800"
+            disabled={isLoading}
+            className="flex-1 py-3 bg-white dark:bg-gray-900 hover:bg-gray-50 text-[18px] font-bold text-headings transition-all cursor-pointer border-r border-[#D0D5DD] dark:border-gray-800 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
-            onClick={() => setOpen(false)}
-            className="flex-1 py-3 bg-[#F04438] hover:bg-[#D92D20] text-[18px] font-bold text-white transition-all cursor-pointer relative"
+            onClick={handleDelete}
+            disabled={isLoading}
+            className="flex-1 py-3 bg-[#F04438] hover:bg-[#D92D20] text-[18px] font-bold text-white transition-all cursor-pointer relative flex items-center justify-center gap-2 disabled:opacity-50"
             style={{
               boxShadow: "inset 0px 4px 4px rgba(0, 0, 0, 0.1)",
             }}
           >
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Delete
           </button>
         </div>
