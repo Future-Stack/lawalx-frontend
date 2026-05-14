@@ -8,6 +8,7 @@ import {
   Trash2,
   Circle,
   Ban,
+  Loader2,
 } from "lucide-react";
 import {
   Table,
@@ -22,32 +23,37 @@ import { Button } from "@/components/ui/button";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
 import TaxDialog from "./_components/TaxDialog";
 import DeleteTaxDialog from "./_components/DeleteTaxDialog";
-
-interface TaxData {
-  id: string;
-  tax: string;
-  taxRate: string;
-  status: "Enable" | "Disabled";
-}
-
-const initialData: TaxData[] = [
-  { id: "1", tax: "California, USA", taxRate: "7.25%", status: "Disabled" },
-  { id: "2", tax: "United Kingdom", taxRate: "10.25%", status: "Disabled" },
-  { id: "3", tax: "Germany", taxRate: "9.25%", status: "Disabled" },
-  { id: "4", tax: "California, USA", taxRate: "8.25%", status: "Disabled" },
-  { id: "5", tax: "New York, USA", taxRate: "5.25%", status: "Disabled" },
-];
+import {
+  useGetTaxesQuery,
+  useUpdateTaxStatusMutation,
+  TaxRegion,
+} from "@/redux/api/admin/payments/tax/taxApi";
+import { toast } from "sonner";
 
 const TaxTab = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [data, setData] = useState<TaxData[]>(initialData);
+  const [page, setPage] = useState(1);
 
   // Modal states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<TaxData | null>(null);
+  const [selectedItem, setSelectedItem] = useState<TaxRegion | null>(null);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+
+  const { data: response, isLoading } = useGetTaxesQuery({
+    page,
+    limit: 10,
+    search: search || undefined,
+  });
+  const [updateTaxStatus, { isLoading: isUpdatingStatus }] =
+    useUpdateTaxStatusMutation();
+
+  const taxes = response?.data || [];
+  const filteredTaxes = taxes.filter((item) => {
+    if (statusFilter === "all") return true;
+    return statusFilter === "Enable" ? item.status : !item.status;
+  });
 
   const handleAdd = () => {
     setDialogMode("add");
@@ -55,28 +61,28 @@ const TaxTab = () => {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (item: TaxData) => {
+  const handleEdit = (item: TaxRegion) => {
     setDialogMode("edit");
     setSelectedItem(item);
     setIsDialogOpen(true);
   };
 
-  const handleDeleteClick = (item: TaxData) => {
+  const handleDeleteClick = (item: TaxRegion) => {
     setSelectedItem(item);
     setIsDeleteOpen(true);
   };
 
-  const toggleStatus = (id: string) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: item.status === "Enable" ? "Disabled" : "Enable",
-            }
-          : item,
-      ),
-    );
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      await updateTaxStatus({
+        id,
+        data: { isActive: !currentStatus },
+      }).unwrap();
+      toast.success("Tax status updated successfully");
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to update tax status");
+    }
   };
 
   return (
@@ -99,7 +105,10 @@ const TaxTab = () => {
               aria-label="Search tax entries"
               className="w-full bg-[#F9FAFB] dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-lg pl-10 pr-4 py-3 placeholder:text-[#667085] focus-visible:ring-0 focus:outline-none text-headings"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
           <div className="w-full md:w-[150px]">
@@ -111,86 +120,114 @@ const TaxTab = () => {
                 { label: "Disabled", value: "Disabled" },
               ]}
               value={statusFilter}
-              onChange={setStatusFilter}
+              onChange={(value) => {
+                setStatusFilter(value);
+                setPage(1);
+              }}
               showLabel={false}
             />
           </div>
         </div>
       }
     >
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent border-b border-[#F2F4F7] dark:border-gray-800">
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
-              Tax
-            </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
-              Tax Rate
-            </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
-              Status
-            </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4 text-right">
-              Action
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((item) => (
-            <TableRow
-              key={item.id}
-              className="border-b border-[#F2F4F7] dark:border-gray-800 last:border-0 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50"
-            >
-              <TableCell className="py-5 text-[14px] font-bold text-headings">
-                {item.tax}
-              </TableCell>
-              <TableCell className="py-5 text-[14px] font-bold text-headings">
-                {item.taxRate}
-              </TableCell>
-              <TableCell className="py-5">
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
-                    item.status === "Enable"
-                      ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                      : "bg-[#FEF3F2] text-[#B42318] border-[#FECDCA] dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                  }`}
-                >
-                  {item.status}
-                </span>
-              </TableCell>
-              <TableCell className="py-5 text-right">
-                <div className="flex items-center justify-end gap-2.5">
-                  <button
-                    onClick={() => toggleStatus(item.id)}
-                    aria-label={item.status === "Enable" ? "Disable tax" : "Enable tax"}
-                    className="p-1.5 rounded-md text-[#667085] hover:text-headings hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer"
+      <div className="relative min-h-[400px]">
+        {isLoading ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-[#00A3FF]" />
+            <p>Loading taxes...</p>
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-b border-[#F2F4F7] dark:border-gray-800">
+                <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+                  Tax
+                </TableHead>
+                <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+                  Tax Rate
+                </TableHead>
+                <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+                  Status
+                </TableHead>
+                <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4 text-right">
+                  Action
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTaxes.length > 0 ? (
+                filteredTaxes.map((item) => (
+                    <TableRow
+                      key={item.id}
+                      className="border-b border-[#F2F4F7] dark:border-gray-800 last:border-0 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50"
+                    >
+                      <TableCell className="py-5 text-[14px] font-bold text-headings">
+                        {item.region}
+                      </TableCell>
+                      <TableCell className="py-5 text-[14px] font-bold text-headings">
+                        {item.taxRate}%
+                      </TableCell>
+                      <TableCell className="py-5">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
+                            item.status
+                              ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                              : "bg-[#FEF3F2] text-[#B42318] border-[#FECDCA] dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                          }`}
+                        >
+                          {item.status ? "Enable" : "Disabled"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-5 text-right">
+                        <div className="flex items-center justify-end gap-2.5">
+                          <button
+                            onClick={() => toggleStatus(item.id, item.status)}
+                            disabled={isUpdatingStatus}
+                            aria-label={
+                              item.status ? "Disable tax" : "Enable tax"
+                            }
+                            className="p-1.5 rounded-md text-[#667085] hover:text-headings hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            {isUpdatingStatus ? (
+                              <Loader2 className="w-5 h-5 animate-spin opacity-70" />
+                            ) : item.status ? (
+                              <Circle className="w-5 h-5 opacity-70" />
+                            ) : (
+                              <Ban className="w-5 h-5 opacity-70" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleEdit(item)}
+                            aria-label="Edit tax"
+                            className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
+                          >
+                            <PencilLine className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(item)}
+                            aria-label="Delete tax"
+                            className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="py-12 text-center text-gray-500"
                   >
-                    {item.status === "Enable" ? (
-                      <Circle className="w-5 h-5 opacity-70" />
-                    ) : (
-                      <Ban className="w-5 h-5 opacity-70" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(item)}
-                    aria-label="Edit tax"
-                    className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
-                  >
-                    <PencilLine className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(item)}
-                    aria-label="Delete tax"
-                    className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                    No tax regions found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </div>
 
       <TaxDialog
         open={isDialogOpen}

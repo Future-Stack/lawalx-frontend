@@ -22,6 +22,8 @@ import ManageScreenSizeTab from "./_components/screen-size/ManageScreenSizeTab";
 import TaxTab from "./_components/tax/TaxTab";
 import { InvoicePreview } from "@/components/Admin/invoice";
 
+import AdditionalPaymentTab from "./_components/additional-payment/AdditionalPaymentTab";
+
 const SubscriptionPage = () => {
   const [activeTab, setActiveTab] = useState("Subscribers");
   //   const [sheetOpen, setSheetOpen] = useState(false); // Global sheet for "View Reports" button
@@ -33,6 +35,7 @@ const SubscriptionPage = () => {
     { label: "Manage screen size", icon: FileText },
     { label: "Coupons", icon: Ticket },
     { label: "Tax", icon: Globe },
+    { label: "Additional payment", icon: CreditCard },
   ];
 
   return (
@@ -78,6 +81,7 @@ const SubscriptionPage = () => {
           {activeTab === "Manage screen size" && <ManageScreenSizeTab />}
           {activeTab === "Tax" && <TaxTab />}
           {activeTab === "Coupons" && <CouponsTab />}
+          {activeTab === "Additional payment" && <AdditionalPaymentTab />}
         </div>
       </div>
 
