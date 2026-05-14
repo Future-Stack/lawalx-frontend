@@ -9,7 +9,7 @@ import { useGetAdminProfileQuery } from '@/redux/api/admin/profile&settings/admi
 import { useGetMyNotificationsQuery, useReadAllNotificationsMutation, useReadNotificationMutation } from "@/redux/api/users/notificationApi";
 import { formatDistanceToNow } from "date-fns";
 import { useGetPreferencesQuery, useUpdatePreferencesMutation } from '@/redux/api/admin/navbarApi';
-import { ChevronDown, Globe } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrency } from '@/redux/features/settings/settingsSlice';
 import { RootState } from '@/redux/store/store';
@@ -74,7 +74,7 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const { data: preferencesData } = useGetPreferencesQuery();
   const [updatePreferences] = useUpdatePreferencesMutation();
-  
+
   const currentCurrency = useSelector((state: RootState) => state.settings.currency);
 
   useEffect(() => {
@@ -120,7 +120,7 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
       }
     }
   };
-  
+
   const profileImage = profileData?.data?.profileImage || profileData?.data?.image_url;
   const resolvedImageUrl = getFullImageUrl(profileImage);
   const profileName = profileData?.data?.full_name || profileData?.data?.fullname || profileData?.data?.username || '';
