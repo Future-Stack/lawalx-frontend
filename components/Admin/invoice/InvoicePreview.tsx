@@ -115,21 +115,21 @@ const InvoicePreview = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] dark:bg-gray-900 p-8 font-inter overflow-y-auto custom-scrollbar">
+    <div className="min-h-screen bg-bgGray dark:bg-gray-900 p-8 font-inter overflow-y-auto custom-scrollbar">
       {/* Toolbar */}
       <div className="max-w-[900px] mx-auto flex justify-between items-center mb-8 no-print">
         <div className="flex items-center gap-4">
           <button className="p-2 hover:bg-gray-200 rounded-full transition-colors cursor-pointer">
-            <ChevronLeft className="w-8 h-8 text-[#171717]" />
+            <ChevronLeft className="w-8 h-8 text-Heading" />
           </button>
-          <h1 className="text-3xl font-bold text-[#171717]">Preview</h1>
+          <h1 className="text-3xl font-bold text-Heading">Preview</h1>
         </div>
 
         <div className="flex items-center gap-8">
           <button
             onClick={handleDownloadPDF}
             disabled={isDownloading}
-            className={`flex items-center gap-2 text-[#171717] hover:opacity-70 transition-opacity cursor-pointer ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+            className={`flex items-center gap-2 text-Heading hover:opacity-70 transition-opacity cursor-pointer ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
           >
             {isDownloading ? (
               <Loader2 className="w-6 h-6 animate-spin" />
@@ -138,13 +138,13 @@ const InvoicePreview = () => {
             )}
             <span className="text-lg font-medium">{isDownloading ? "Downloading..." : "PDF"}</span>
           </button>
-          <button className="flex items-center gap-2 text-[#171717] hover:opacity-70 transition-opacity cursor-pointer">
+          <button className="flex items-center gap-2 text-Heading hover:opacity-70 transition-opacity cursor-pointer">
             <Mail className="w-6 h-6" />
             <span className="text-lg font-medium">Email</span>
           </button>
           <button
             onClick={handlePrint}
-            className="flex items-center gap-2 text-[#171717] hover:opacity-70 transition-opacity cursor-pointer"
+            className="flex items-center gap-2 text-Headinghover:opacity-70 transition-opacity cursor-pointer"
           >
             <Printer className="w-6 h-6" />
             <span className="text-lg font-medium">Print Page</span>
@@ -156,7 +156,7 @@ const InvoicePreview = () => {
       <div ref={invoiceRef} className="max-w-[850px] mx-auto bg-white shadow-[0_4px_30px_rgba(0,0,0,0.06)] min-h-[1100px] p-[60px] flex flex-col border border-gray-100 mb-20">
         {/* Logo */}
         <div className="flex justify-center mb-14">
-          <div className="text-[#0FA6FF] text-[58px] font-semibold tracking-tight lowercase select-none">
+          <div className="text-bgBlue text-[58px] font-semibold tracking-tight lowercase select-none">
             tape
           </div>
         </div>
@@ -169,7 +169,7 @@ const InvoicePreview = () => {
           </div>
           <div className="space-y-2">
             <div className="text-[#777777] text-[14px] font-medium">Bill From :</div>
-            <div className="text-[#171717] text-[14px] font-bold">
+            <div className="text-Heading text-[14px] font-bold">
               Antopolis Designs and Technologies
             </div>
           </div>
@@ -184,7 +184,7 @@ const InvoicePreview = () => {
         </div>
 
         {/* Divider */}
-        <hr className="border-[#E5E5E5] mb-4" />
+        <hr className="border-qrBackground mb-4" />
 
         {/* Subject */}
         <div className="mb-6">
@@ -219,7 +219,7 @@ const InvoicePreview = () => {
                     <td className="border-r border-[#CCCCCC] p-3 font-medium text-[#3D3C3C] text-[12px]"></td>
                     <td className="border-r border-[#CCCCCC] p-3 font-medium text-[#3D3C3C] text-[12px]"></td>
                     <td className="border-r border-[#CCCCCC] p-3 font-medium text-[#3D3C3C] text-[12px]"></td>
-                    <td className="p-3 text-right pr-6 text-[#171717] text-[12px]">₦</td>
+                    <td className="p-3 text-right pr-6 text-Heading text-[12px]">₦</td>
                   </tr>
                 ))}
                 <tr className="border-b border-[#CCCCCC] h-14">

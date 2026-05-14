@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import {
   Search,
@@ -8,6 +6,7 @@ import {
   Trash2,
   Circle,
   Ban,
+  Loader2,
 } from "lucide-react";
 import {
   Table,
@@ -22,34 +21,36 @@ import { Button } from "@/components/ui/button";
 import ScreenSizeDialog from "./_components/ScreenSizeDialog";
 import DeleteScreenSizeDialog from "./_components/DeleteScreenSizeDialog";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
-
-interface ScreenSizeData {
-  id: string;
-  size: string;
-  price: string;
-  status: "Enable" | "Disabled";
-}
-
-const initialData: ScreenSizeData[] = [
-  { id: "1", size: "40", price: "$600", status: "Disabled" },
-  { id: "2", size: "44", price: "$800", status: "Enable" },
-  { id: "3", size: "48", price: "$950", status: "Enable" },
-  { id: "4", size: "56", price: "$15050", status: "Disabled" },
-  { id: "5", size: "48", price: "$600", status: "Disabled" },
-  { id: "6", size: "42", price: "$850", status: "Disabled" },
-  { id: "7", size: "40", price: "$9666", status: "Disabled" },
-];
+import {
+  useGetAllScreenSizesQuery,
+  useUpdateScreenSizeStatusMutation,
+  ScreenSize,
+} from "@/redux/api/admin/payments/screenManagement/screenSizeApi";
+import { toast } from "sonner";
 
 const ManageScreenSizeTab = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [data, setData] = useState<ScreenSizeData[]>(initialData);
+  const [page, setPage] = useState(1);
 
   // Modal states
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<ScreenSizeData | null>(null);
+  const [selectedItem, setSelectedItem] = useState<ScreenSize | null>(null);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+
+  // API Queries
+  const { data: response, isLoading } = useGetAllScreenSizesQuery({
+    page,
+    limit: 10,
+    search: search || undefined,
+    status: statusFilter === "all" ? undefined : statusFilter === "Enable",
+  });
+
+  const [updateStatus, { isLoading: isUpdatingStatus }] =
+    useUpdateScreenSizeStatusMutation();
+
+  const screenSizes = response?.data || [];
 
   const handleAdd = () => {
     setDialogMode("add");
@@ -57,28 +58,28 @@ const ManageScreenSizeTab = () => {
     setIsDialogOpen(true);
   };
 
-  const handleEdit = (item: ScreenSizeData) => {
+  const handleEdit = (item: ScreenSize) => {
     setDialogMode("edit");
     setSelectedItem(item);
     setIsDialogOpen(true);
   };
 
-  const handleDeleteClick = (item: ScreenSizeData) => {
+  const handleDeleteClick = (item: ScreenSize) => {
     setSelectedItem(item);
     setIsDeleteOpen(true);
   };
 
-  const toggleStatus = (id: string) => {
-    setData((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: item.status === "Enable" ? "Disabled" : "Enable",
-            }
-          : item,
-      ),
-    );
+  const toggleStatus = async (id: string, currentStatus: boolean) => {
+    try {
+      await updateStatus({
+        id,
+        data: { isActive: !currentStatus },
+      }).unwrap();
+      toast.success("Status updated successfully!");
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to update status");
+    }
   };
 
   return (
@@ -101,7 +102,10 @@ const ManageScreenSizeTab = () => {
               aria-label="Search screen sizes"
               className="w-full bg-[#F9FAFB] dark:bg-gray-900 border border-border rounded-lg pl-10 pr-4 py-3 placeholder:text-muted focus-visible:ring-0 focus:outline-none text-body"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
           <div className="w-full md:w-[200px]">
@@ -113,86 +117,126 @@ const ManageScreenSizeTab = () => {
                 { label: "Disabled", value: "Disabled" },
               ]}
               value={statusFilter}
-              onChange={setStatusFilter}
+              onChange={(val) => {
+                setStatusFilter(val);
+                setPage(1);
+              }}
               showLabel={false}
             />
           </div>
         </div>
       }
     >
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent border-b border-border">
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
-              Screen Size
-            </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
-              Price
-            </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
-              Status
-            </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4 text-right">
-              Action
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((item) => (
-            <TableRow
-              key={item.id}
-              className="border-b border-border last:border-0 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50"
-            >
-              <TableCell className="py-5 text-[14px] font-medium text-headings">
-                {item.size}
-              </TableCell>
-              <TableCell className="py-5 text-[14px] font-bold text-headings">
-                {item.price}
-              </TableCell>
-              <TableCell className="py-5">
-                <span
-                  className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
-                    item.status === "Enable"
-                      ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                      : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                  }`}
-                >
-                  {item.status}
-                </span>
-              </TableCell>
-              <TableCell className="py-5 text-right">
-                <div className="flex items-center justify-end gap-2.5">
-                  <button
-                    onClick={() => toggleStatus(item.id)}
-                    aria-label={item.status === "Enable" ? "Disable screen size" : "Enable screen size"}
-                    className="p-1.5 rounded-md text-[#667085] hover:text-headings hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer"
-                  >
-                    {item.status === "Enable" ? (
-                      <Circle className="w-5 h-5 opacity-70" />
-                    ) : (
-                      <Ban className="w-5 h-5 opacity-70" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(item)}
-                    aria-label="Edit screen size"
-                    className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
-                  >
-                    <PencilLine className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(item)}
-                    aria-label="Delete screen size"
-                    className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <div className="relative min-h-[400px]">
+        {isLoading ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 gap-4">
+            <Loader2 className="w-8 h-8 animate-spin text-[#00A3FF]" />
+            <p>Loading screen sizes...</p>
+          </div>
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent border-b border-border">
+                  <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+                    Screen Size
+                  </TableHead>
+                  <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+                    Price
+                  </TableHead>
+                  <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+                    Status
+                  </TableHead>
+                  <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4 text-right">
+                    Action
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {screenSizes.length > 0 ? (
+                  screenSizes.map((item) => (
+                    <TableRow
+                      key={item.id}
+                      className="border-b border-border last:border-0 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50"
+                    >
+                      <TableCell className="py-5 text-[14px] font-medium text-headings">
+                        {item.size}
+                      </TableCell>
+                      <TableCell className="py-5 text-[14px] font-bold text-headings">
+                        {item.currency === "USD" ? "$" : item.currency}
+                        {item.price}
+                      </TableCell>
+                      <TableCell className="py-5">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
+                            item.isActive
+                              ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                              : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                          }`}
+                        >
+                          {item.isActive ? "Enable" : "Disabled"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-5 text-right">
+                        <div className="flex items-center justify-end gap-2.5">
+                          <button
+                            onClick={() => toggleStatus(item.id, item.isActive)}
+                            disabled={isUpdatingStatus}
+                            aria-label={
+                              item.isActive
+                                ? "Disable screen size"
+                                : "Enable screen size"
+                            }
+                            className="p-1.5 rounded-md text-[#667085] hover:text-headings hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer disabled:opacity-50"
+                          >
+                            {isUpdatingStatus ? (
+                              <Loader2 className="w-5 h-5 animate-spin opacity-70" />
+                            ) : item.isActive ? (
+                              <Circle className="w-5 h-5 opacity-70" />
+                            ) : (
+                              <Ban className="w-5 h-5 opacity-70" />
+                            )}
+                          </button>
+                          <button
+                            onClick={() => handleEdit(item)}
+                            aria-label="Edit screen size"
+                            className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
+                          >
+                            <PencilLine className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(item)}
+                            aria-label="Delete screen size"
+                            className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="py-12 text-center text-gray-500"
+                    >
+                      No screen sizes found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+
+            {/* Pagination Placeholder (If needed in future) */}
+            {response?.meta && response.meta.totalPages > 1 && (
+              <div className="flex justify-center mt-6">
+                {/* Pagination logic here */}
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       <ScreenSizeDialog
         open={isDialogOpen}

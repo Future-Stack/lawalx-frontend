@@ -1,17 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
 import { useState, useEffect } from "react";
 import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
-import BaseSelect from "@/common/BaseSelect";
-import { Loader2, Monitor } from "lucide-react";
-import { useUpdatePlanMutation } from "@/redux/api/admin/payments/plans/plansApi";
+import { Loader2, Monitor, Plus, X } from "lucide-react";
+import {
+  PlanItem,
+  useUpdatePlanMutation,
+} from "@/redux/api/admin/payments/plans/plansApi";
 import { toast } from "sonner";
 
 interface EditPlanDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  initialData?: any;
+  initialData?: PlanItem | null;
 }
 
 const EditPlanDialog = ({
@@ -33,26 +33,39 @@ const EditPlanDialog = ({
     audio: "10",
     video: "5",
   });
+  const [features, setFeatures] = useState<string[]>([]);
+  const [newFeature, setNewFeature] = useState("");
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (open && initialData) {
       setPlanName(initialData.name || "");
-      setDescription(
-        initialData.description ||
-          "This plan currently has 120 active subscribers. Any changes you make will immediately affect their billing and feature access.",
-      );
-      setPrice(initialData.price || "256.25");
+      setDescription(initialData.description || "");
+      setPrice(initialData.price?.toString() || "0");
       setCurrency(initialData.currency || "USD");
-      setDevices(initialData.devices || "5");
-      setStorage(initialData.storage || "10");
-      setTemplates(initialData.templates || "1");
+      setDevices(initialData.deviceLimit?.toString() || "5");
+      setStorage(initialData.storageLimitGb?.toString() || "10");
+      setTemplates(initialData.templateLimit?.toString() || "1");
       setUploadLimits({
-        photo: initialData.limits?.photo || "5",
-        audio: initialData.limits?.audio || "10",
-        video: initialData.limits?.video || "5",
+        photo: initialData.photoLimit?.toString() || "5",
+        audio: initialData.audioLimit?.toString() || "10",
+        video: initialData.videoLimit?.toString() || "5",
       });
+      setFeatures(initialData.features || []);
+      setIsActive(initialData.isActive ?? true);
     }
   }, [open, initialData]);
+
+  const handleAddFeature = () => {
+    if (newFeature.trim()) {
+      setFeatures([...features, newFeature.trim()]);
+      setNewFeature("");
+    }
+  };
+
+  const handleRemoveFeature = (index: number) => {
+    setFeatures(features.filter((_, i) => i !== index));
+  };
 
   const handleSave = async () => {
     if (!initialData?.id) {
@@ -64,26 +77,27 @@ const EditPlanDialog = ({
       const payload = {
         description,
         price: parseFloat(price.toString().replace(/[^0-9.]/g, "")),
-        currency,
         deviceLimit: parseInt(devices),
         storageLimitGb: parseInt(storage),
-        templates: parseInt(templates),
+        templateLimit: parseInt(templates),
         photoLimit: parseInt(uploadLimits.photo),
         audioLimit: parseInt(uploadLimits.audio),
         videoLimit: parseInt(uploadLimits.video),
-        isActive: initialData.isActive,
+        features,
+        isActive,
       };
 
       await updatePlan({ id: initialData.id, data: payload }).unwrap();
       toast.success("Plan updated successfully!");
       setOpen(false);
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to update plan");
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to update plan");
     }
   };
 
   const inputClass =
-    "w-full bg-white dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-lg px-3.5 py-2.5 text-[16px] text-headings placeholder:text-[#667085] focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all shadow-sm";
+    "w-full bg-white dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-lg px-3.5 py-2.5 text-[16px] text-headings placeholder:text-[#667085] focus:outline-none focus:ring-1 focus:ring-[#00A3FF] transition-all shadow-sm";
 
   return (
     <BaseDialog
@@ -93,7 +107,7 @@ const EditPlanDialog = ({
       description=""
       maxWidth="xl"
       maxHeight="xl"
-      hideScrollbar={true}
+      hideScrollbar={false}
       className="p-0"
     >
       <div className="flex flex-col h-full bg-white dark:bg-gray-950">
@@ -117,282 +131,197 @@ const EditPlanDialog = ({
         </div>
 
         {/* Form Fields */}
-        <div className="p-6 space-y-4 flex-1 scrollbar-hide">
-          {/* Plan Name */}
+        <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+          <div className="flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
+            <div className="space-y-0.5">
+              <h4 className="text-[14px] font-bold text-headings">Plan Status</h4>
+              <p className="text-[12px] text-[#667085]">Determine if this plan is currently active.</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isActive}
+              onClick={() => setIsActive(!isActive)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer ${
+                isActive ? "bg-[#00A3FF]" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${
+                  isActive ? "translate-x-6" : "translate-x-1"
+                }`}
+              />
+            </button>
+          </div>
+
+          {/* Plan Name (Read Only as it's not in PATCH schema) */}
           <div className="space-y-1.5">
             <Label htmlFor="plan-name" className="text-[14px] text-[#404040]">
-              Name
+              Plan Name
             </Label>
             <input
               id="plan-name"
               title="Plan Name"
-              placeholder="Basic"
               value={planName}
-              onChange={(e) => setPlanName(e.target.value)}
-              className={inputClass}
+              disabled
+              className={`${inputClass} bg-gray-50 cursor-not-allowed`}
             />
           </div>
 
-          {/* Price */}
-          <div className="space-y-1.5">
-            <Label htmlFor="plan-price" className="text-[14px] text-[#404040]">
-              Price
-            </Label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#667085] text-[16px] font-medium">
-                $
-              </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Price */}
+            <div className="space-y-1.5">
+              <Label htmlFor="plan-price" className="text-[14px] text-[#404040]">
+                Price
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#667085] text-[16px] font-medium">
+                  {currency === "USD" ? "$" : currency}
+                </span>
+                <input
+                  id="plan-price"
+                  type="text"
+                  title="Plan Price"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className={`${inputClass} pl-8`}
+                />
+              </div>
+            </div>
+
+            {/* Devices */}
+            <div className="space-y-1.5">
+              <Label htmlFor="plan-devices" className="text-[14px] text-[#404040]">
+                Device Limit
+              </Label>
               <input
-                id="plan-price"
-                type="text"
-                title="Plan Price"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="256.25"
-                className={`${inputClass} pl-8`}
+                id="plan-devices"
+                type="number"
+                title="Device Limit"
+                value={devices}
+                onChange={(e) => setDevices(e.target.value)}
+                className={inputClass}
               />
             </div>
           </div>
 
           {/* Description */}
           <div className="space-y-1.5">
-            <Label
-              htmlFor="plan-description"
-              className="text-[14px] text-[#404040]"
-            >
+            <Label htmlFor="plan-description" className="text-[14px] text-[#404040]">
               Description
             </Label>
             <textarea
               id="plan-description"
               title="Plan Description"
-              placeholder="Description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className={`${inputClass} min-h-[100px] resize-none py-3`}
+              className={`${inputClass} min-h-[80px] resize-none py-3`}
             />
           </div>
 
-          {/* Devices & Storage Row */}
+          {/* Storage & Templates */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label
-                htmlFor="plan-devices"
-                className="text-[14px] text-[#404040]"
-              >
-                Devices
+              <Label htmlFor="plan-storage" className="text-[14px] text-[#404040]">
+                Storage (GB)
               </Label>
-              <BaseSelect
-                options={[
-                  { label: "5", value: "5" },
-                  { label: "10", value: "10" },
-                  { label: "20", value: "20" },
-                  { label: "50", value: "50" },
-                  { label: "100", value: "100" },
-                ]}
-                value={devices}
-                onChange={setDevices}
-                showLabel={false}
+              <input
+                id="plan-storage"
+                type="number"
+                title="Storage Limit"
+                value={storage}
+                onChange={(e) => setStorage(e.target.value)}
+                className={inputClass}
               />
             </div>
             <div className="space-y-1.5">
-              <Label
-                htmlFor="plan-storage"
-                className="text-[14px] text-[#404040]"
-              >
-                Storage
+              <Label htmlFor="plan-templates" className="text-[14px] text-[#404040]">
+                Template Limit
               </Label>
-              <div className="relative">
+              <input
+                id="plan-templates"
+                type="number"
+                title="Template Limit"
+                value={templates}
+                onChange={(e) => setTemplates(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          {/* Upload Limits */}
+          <div className="space-y-3 pt-2">
+            <Label className="text-[14px] font-bold text-headings">Upload Limits</Label>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="limit-photo" className="text-[12px] text-[#667085]">Photo</Label>
                 <input
-                  id="plan-storage"
-                  type="text"
-                  title="Storage Limit"
-                  value={storage}
-                  onChange={(e) => setStorage(e.target.value)}
-                  placeholder="10GB"
+                  id="limit-photo"
+                  type="number"
+                  value={uploadLimits.photo}
+                  onChange={(e) => setUploadLimits(prev => ({ ...prev, photo: e.target.value }))}
                   className={inputClass}
                 />
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg
-                      width="10"
-                      height="6"
-                      viewBox="0 0 10 6"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M1 5L5 1L9 5"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg
-                      width="10"
-                      height="6"
-                      viewBox="0 0 10 6"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M9 1L5 5L1 1"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
               </div>
-            </div>
-          </div>
-
-          {/* Templates */}
-          <div className="space-y-1.5">
-            <Label
-              htmlFor="plan-templates"
-              className="text-[14px] text-headings"
-            >
-              Templates
-            </Label>
-            <input
-              id="plan-templates"
-              title="Templates Limit"
-              placeholder="1"
-              value={templates}
-              onChange={(e) => setTemplates(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-
-          {/* Upload Limits Header */}
-          <div className="pt-2">
-            <h4 className="text-[14px] text-headings">Upload Limits</h4>
-          </div>
-
-          {/* Upload Limits - Photo & Audio */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="limit-photo"
-                className="text-[14px] font-medium text-[#667085]"
-              >
-                Photo
-              </Label>
-              <BaseSelect
-                options={[
-                  { label: "5", value: "5" },
-                  { label: "10", value: "10" },
-                  { label: "20", value: "20" },
-                ]}
-                value={uploadLimits.photo}
-                onChange={(val) =>
-                  setUploadLimits((prev) => ({ ...prev, photo: val }))
-                }
-                showLabel={false}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label
-                htmlFor="limit-audio"
-                className="text-[14px] font-medium text-[#667085]"
-              >
-                Audio
-              </Label>
-              <div className="relative">
+              <div className="space-y-1.5">
+                <Label htmlFor="limit-audio" className="text-[12px] text-[#667085]">Audio</Label>
                 <input
                   id="limit-audio"
-                  type="text"
-                  title="Audio Limit"
+                  type="number"
                   value={uploadLimits.audio}
-                  onChange={(e) =>
-                    setUploadLimits((prev) => ({
-                      ...prev,
-                      audio: e.target.value,
-                    }))
-                  }
-                  placeholder="10"
+                  onChange={(e) => setUploadLimits(prev => ({ ...prev, audio: e.target.value }))}
                   className={inputClass}
                 />
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg
-                      width="10"
-                      height="6"
-                      viewBox="0 0 10 6"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M1 5L5 1L9 5"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                  <button className="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg
-                      width="10"
-                      height="6"
-                      viewBox="0 0 10 6"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M9 1L5 5L1 1"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="limit-video" className="text-[12px] text-[#667085]">Video</Label>
+                <input
+                  id="limit-video"
+                  type="number"
+                  value={uploadLimits.video}
+                  onChange={(e) => setUploadLimits(prev => ({ ...prev, video: e.target.value }))}
+                  className={inputClass}
+                />
               </div>
             </div>
           </div>
 
-          {/* Upload Limits - Video & Templates (Again in screenshot?) */}
-          <div className="space-y-1.5">
-            <Label
-              htmlFor="limit-templates-2"
-              className="text-[14px] font-medium text-[#667085]"
-            >
-              Templates
-            </Label>
-            <input
-              id="limit-templates-2"
-              title="Templates Limit"
-              placeholder="1"
-              value={templates}
-              onChange={(e) => setTemplates(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-
-          <div className="space-y-1.5 pb-4">
-            <Label
-              htmlFor="limit-video"
-              className="text-[14px] font-medium text-[#667085]"
-            >
-              Video
-            </Label>
-            <input
-              id="limit-video"
-              title="Video Limit"
-              placeholder="5"
-              value={uploadLimits.video}
-              onChange={(e) =>
-                setUploadLimits((prev) => ({ ...prev, video: e.target.value }))
-              }
-              className={inputClass}
-            />
+          {/* Features Section */}
+          <div className="space-y-3 pt-2">
+            <Label className="text-[14px] font-bold text-headings">Features</Label>
+            <div className="flex gap-2">
+              <input
+                placeholder="Add a feature..."
+                value={newFeature}
+                onChange={(e) => setNewFeature(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddFeature())}
+                className={inputClass}
+              />
+              <button
+                type="button"
+                onClick={handleAddFeature}
+                className="p-2.5 bg-[#00A3FF] text-white rounded-lg hover:bg-[#00A3FF]/90 transition-all"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
+              {features.map((feature, index) => (
+                <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-[#F2F4F7] dark:border-gray-800">
+                  <span className="text-[14px] text-[#404040] dark:text-gray-300">{feature}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(index)}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              {features.length === 0 && (
+                <p className="text-[12px] text-gray-400 text-center py-2">No features added yet.</p>
+              )}
+            </div>
           </div>
         </div>
 
@@ -412,7 +341,7 @@ const EditPlanDialog = ({
               className="px-10 py-2.5 rounded-lg bg-[#00A3FF] text-white font-bold text-[14px] hover:bg-[#00A3FF]/90 transition-all cursor-pointer shadow-sm flex items-center gap-2"
             >
               {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
-              Save
+              Save Changes
             </button>
           </div>
         </div>

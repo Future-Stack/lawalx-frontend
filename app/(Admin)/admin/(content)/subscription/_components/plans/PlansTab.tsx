@@ -1,70 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-"use client";
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   useGetYearlyDiscountsQuery,
   useUpdateDiscountMutation,
   useUpdateDiscountStatusMutation,
 } from "@/redux/api/admin/payments/discount/discountApi";
+import {
+  PlanItem,
+  useGetPlansQuery,
+  useGetActiveScreenSizesQuery,
+} from "@/redux/api/admin/payments/plans/plansApi";
 import { toast } from "sonner";
 import PlanCard from "./_components/PlanCard";
 import EditPlanDialog from "./_components/EditPlanDialog";
 import BaseSelect from "@/common/BaseSelect";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
-
-const staticPlans = [
-  {
-    id: "basic",
-    name: "Basic",
-    price: "₦29,999/mo",
-    discount: "-10% Yearly",
-    devices: "5",
-    storage: "10 GB",
-    templates: "1",
-    limits: { photo: "5", audio: "10", video: "5" },
-    features: [
-      "5 Devices",
-      "10 GB Storage",
-      "Basic Analytics",
-      "Email Support",
-    ],
-  },
-  {
-    id: "business",
-    name: "Business",
-    price: "₦49,999/mo",
-    discount: "-10% Yearly",
-    devices: "20",
-    storage: "50 GB",
-    templates: "1",
-    limits: { photo: "5", audio: "10", video: "5" },
-    features: [
-      "20 Devices",
-      "50 GB Storage",
-      "Advanced Analytics",
-      "Priority Support",
-      "Content Creation Tools",
-    ],
-  },
-  {
-    id: "premium",
-    name: "Premium",
-    price: "₦59,999/mo",
-    discount: "-10% Yearly",
-    devices: "100",
-    storage: "500 GB",
-    templates: "1",
-    limits: { photo: "5", audio: "10", video: "5" },
-    features: [
-      "Unlimited Devices",
-      "Unlimited Storage",
-      "24/7 Dedicated Support",
-      "Custom Integrations",
-      "SLA Agreement",
-    ],
-  },
-];
+import { Loader2 } from "lucide-react";
 
 const PlansTab = () => {
   const { data: discountData } = useGetYearlyDiscountsQuery();
@@ -72,10 +22,25 @@ const PlansTab = () => {
   const [updateDiscountStatus] = useUpdateDiscountStatusMutation();
 
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PlanItem | null>(null);
   const [yearlyDiscount, setYearlyDiscount] = useState(false);
   const [discountPercentage, setDiscountPercentage] = useState("30");
-  const [screenSize, setScreenSize] = useState("42 inches");
+  const [screenSize, setScreenSize] = useState<string>("all");
+
+  // Fetch Screen Sizes
+  const { data: screenSizesData, isLoading: isLoadingScreens } =
+    useGetActiveScreenSizesQuery();
+  
+  const screenSizes = useMemo(
+    () => screenSizesData?.data || [],
+    [screenSizesData?.data],
+  );
+
+  // Fetch Plans based on Screen Size
+  const { data: plansData, isLoading: isLoadingPlans } = useGetPlansQuery(
+    screenSize === "all" ? "" : screenSize,
+  );
+  const plans = plansData?.data || [];
 
   const discountInfo = discountData?.data?.[0];
 
@@ -134,9 +99,14 @@ const PlansTab = () => {
     }
   };
 
-  const handleEdit = (plan: any) => {
+  const handleEdit = (plan: PlanItem) => {
     setSelectedPlan(plan);
     setEditModalOpen(true);
+  };
+
+  const formatPrice = (price: number, currency: string) => {
+    const symbol = currency === "USD" ? "$" : currency;
+    return `${symbol}${price.toLocaleString()}/mo`;
   };
 
   return (
@@ -156,24 +126,63 @@ const PlansTab = () => {
                 Select the screen sizes you need.
               </p>
             </div>
-            <BaseSelect
-              options={[
-                { label: "42 inches", value: "42 inches" },
-                { label: "55 inches", value: "55 inches" },
-                { label: "65 inches", value: "65 inches" },
-              ]}
-              value={screenSize}
-              onChange={setScreenSize}
-              showLabel={false}
-            />
+            {isLoadingScreens ? (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Loader2 className="w-4 h-4 animate-spin" /> Loading sizes...
+              </div>
+            ) : (
+              <BaseSelect
+                placeholder="Select Screen Size"
+                options={[
+                  { label: "None", value: "all" },
+                  ...screenSizes.map((s) => ({
+                    label: `${s.size} inches`,
+                    value: s.size.toString(),
+                  })),
+                ]}
+                value={screenSize}
+                onChange={setScreenSize}
+                showLabel={false}
+              />
+            )}
           </div>
         </div>
 
         {/* Plans Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {staticPlans.map((plan) => (
-            <PlanCard key={plan.id} {...plan} onEdit={() => handleEdit(plan)} />
-          ))}
+          {isLoadingPlans ? (
+            <div className="col-span-full py-12 flex flex-col items-center justify-center text-gray-500 gap-4">
+              <Loader2 className="w-8 h-8 animate-spin text-[#00A3FF]" />
+              <p>Fetching plans...</p>
+            </div>
+          ) : plans.length > 0 ? (
+            plans.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                name={plan.name}
+                price={formatPrice(plan.price, plan.currency)}
+                discount={
+                  plan.yearlyDiscount.hasYearlyDiscount
+                    ? `-${plan.yearlyDiscount.yearlyDiscountRate}% Yearly`
+                    : ""
+                }
+                devices={plan.deviceLimit.toString()}
+                storage={`${plan.storageLimitGb} GB`}
+                templates={plan.templateLimit.toString()}
+                limits={{
+                  photo: plan.photoLimit.toString(),
+                  audio: plan.audioLimit.toString(),
+                  video: plan.videoLimit.toString(),
+                }}
+                features={plan.features || []}
+                onEdit={() => handleEdit(plan)}
+              />
+            ))
+          ) : (
+            <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/20 rounded-[24px] border border-dashed">
+              No plans found for the selected screen size.
+            </div>
+          )}
         </div>
 
         {/* Yearly Discount Configuration Card */}
