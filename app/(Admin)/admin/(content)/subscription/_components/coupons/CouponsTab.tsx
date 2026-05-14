@@ -23,9 +23,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical, Search, Edit, Ban, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import CreateCouponDialog from "./CreateCouponDialog";
+import CreateCouponDialog from "./_components/CreateCouponDialog";
 import { toast } from "sonner";
-import SubscriptionTabLayout from "./SubscriptionTabLayout";
+import SubscriptionTabLayout from "../SubscriptionTabLayout";
 
 const CouponsTab = () => {
   const [page, setPage] = useState(1);

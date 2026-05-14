@@ -25,13 +25,26 @@ import {
   ArrowUpCircle,
   Search,
   Loader2,
+  CreditCard,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import TransactionSheet from "./TransactionSheet";
+import TransactionSheet from "../TransactionSheet";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
-import SubscriptionTabLayout from "./SubscriptionTabLayout";
+import SubscriptionTabLayout from "../SubscriptionTabLayout";
+import AdditionalPaymentDialog from "./_components/AdditionalPaymentDialog";
+
+export interface Subscriber {
+  userId: string;
+  userName: string;
+  email: string;
+  plan: string;
+  amount: number;
+  paymentCycle: string;
+  nextBilling: string;
+  subscriptionStatus: string;
+}
 
 const SubscribersTab = () => {
   const [page, setPage] = useState(1);
@@ -39,7 +52,9 @@ const SubscribersTab = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [planFilter, setPlanFilter] = useState("all");
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [additionalPaymentOpen, setAdditionalPaymentOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null);
 
   const currency = useSelector((state: RootState) => state.settings.currency);
 
@@ -50,9 +65,33 @@ const SubscribersTab = () => {
     plan: planFilter !== "all" ? planFilter.toUpperCase() : undefined,
   });
 
-  const subscribers = data?.data || [];
+  // Dummy data for testing purposes
+  const dummySubscribers = [
+    {
+      userId: "dummy-1",
+      userName: "Emon Ahmed",
+      email: "emon@example.com",
+      plan: "BUSINESS",
+      amount: 299,
+      paymentCycle: "Monthly",
+      nextBilling: "2026-06-14T00:00:00Z",
+      subscriptionStatus: "ACTIVE",
+    },
+    {
+      userId: "dummy-2",
+      userName: "Sakib Al Hasan",
+      email: "sakib@example.com",
+      plan: "PROFESSIONAL",
+      amount: 149,
+      paymentCycle: "Yearly",
+      nextBilling: "2027-05-14T00:00:00Z",
+      subscriptionStatus: "CANCELLED",
+    },
+  ];
+
+  const subscribers = data?.data && data.data.length > 0 ? data.data : dummySubscribers;
   const meta = data?.meta;
-  const totalSubscribers = meta?.total || 0;
+  const totalSubscribers = meta?.total || subscribers.length;
   const totalPages = meta?.totalPages || 1;
 
   const handlePreviousPage = () => {
@@ -78,6 +117,11 @@ const SubscribersTab = () => {
   const handleViewInvoices = (userId: string) => {
     setSelectedUserId(userId);
     setSheetOpen(true);
+  };
+
+  const handleAdditionalPayment = (subscriber: Subscriber) => {
+    setSelectedSubscriber(subscriber);
+    setAdditionalPaymentOpen(true);
   };
 
   return (
@@ -233,6 +277,11 @@ const SubscribersTab = () => {
                         >
                           <FileText className="mr-2 h-4 w-4" /> View Invoices
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                           onClick={() => handleAdditionalPayment(sub)}
+                        >
+                          <CreditCard className="mr-2 h-4 w-4" /> Additional payment
+                        </DropdownMenuItem>
                         <DropdownMenuItem>
                           <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
                         </DropdownMenuItem>
@@ -254,6 +303,13 @@ const SubscribersTab = () => {
         open={sheetOpen}
         setOpen={setSheetOpen}
         userId={selectedUserId}
+      />
+
+      {/* Additional Payment Dialog */}
+      <AdditionalPaymentDialog
+        open={additionalPaymentOpen}
+        setOpen={setAdditionalPaymentOpen}
+        subscriberData={selectedSubscriber}
       />
     </SubscriptionTabLayout>
   );

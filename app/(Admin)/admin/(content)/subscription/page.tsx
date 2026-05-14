@@ -12,16 +12,16 @@ import {
   FileText,
   Globe,
 } from "lucide-react";
-import SubscribersTab from "./_components/SubscribersTab";
-import BillingTab from "./_components/BillingTab";
-import TransactionSheet from "./_components/TransactionSheet";
+import SubscribersTab from "./_components/subscribers/SubscribersTab";
+import BillingTab from "./_components/billings/BillingTab";
 import Breadcrumb from "@/common/BreadCrumb";
 import Link from "next/link";
-import PlansTab from "./_components/PlansTab";
-import CouponsTab from "./_components/CouponsTab";
-import ManageScreenSizeTab from "./_components/ManageScreenSizeTab";
-import TaxTab from "./_components/TaxTab";
-import { InvoicePreview } from "@/components/Admin/invoice";
+import PlansTab from "./_components/plans/PlansTab";
+import CouponsTab from "./_components/coupons/CouponsTab";
+import ManageScreenSizeTab from "./_components/screen-size/ManageScreenSizeTab";
+import TaxTab from "./_components/tax/TaxTab";
+
+import AdditionalPaymentTab from "./_components/additional-payment/AdditionalPaymentTab";
 
 const SubscriptionPage = () => {
   const [activeTab, setActiveTab] = useState("Subscribers");
@@ -34,6 +34,7 @@ const SubscriptionPage = () => {
     { label: "Manage screen size", icon: FileText },
     { label: "Coupons", icon: Ticket },
     { label: "Tax", icon: Globe },
+    { label: "Additional payment", icon: CreditCard },
   ];
 
   return (
@@ -79,6 +80,7 @@ const SubscriptionPage = () => {
           {activeTab === "Manage screen size" && <ManageScreenSizeTab />}
           {activeTab === "Tax" && <TaxTab />}
           {activeTab === "Coupons" && <CouponsTab />}
+          {activeTab === "Additional payment" && <AdditionalPaymentTab />}
         </div>
       </div>
 
