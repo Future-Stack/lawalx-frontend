@@ -24,22 +24,15 @@ import {
   RefreshCw,
   Maximize2,
   Database,
-  Plus,
-  Minus,
   X,
   AlertTriangle,
   Info,
 } from "lucide-react";
 import Link from "next/link";
-import { useGetGlobalDeviceDetailsQuery, useDeleteDeviceMutation } from "@/redux/api/admin/globalDevicesApi";
-import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
+import { useGetGlobalDeviceDetailsQuery, useDeleteDeviceMutation, useSyncDeviceMutation, useGetDeviceActivityLogsQuery } from "@/redux/api/admin/globalDevicesApi";
+import AdminLeafletMap from "@/components/Admin/map/AdminLeafletMap";
+import AdminPreviewDeviceModal from "@/components/Admin/modals/AdminPreviewDeviceModal";
 
-const containerStyle = {
-  width: "100%",
-  height: "450px",
-};
-
-// --- Helper Functions ---
 const getStatusBadgeStyle = (status: string) => {
   const styles: Record<string, string> = {
     Online: "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400",
@@ -87,17 +80,15 @@ export default function DeviceDetailsPage() {
 
   const { data: response, isLoading, isError, refetch } = useGetGlobalDeviceDetailsQuery(deviceId);
   const [deleteDevice, { isLoading: isDeleting }] = useDeleteDeviceMutation();
+  const [syncDevice, { isLoading: isSyncing }] = useSyncDeviceMutation();
+  const { data: activityLogsResponse } = useGetDeviceActivityLogsQuery(deviceId);
+  const activityLogs = activityLogsResponse?.data || [];
 
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isMarkerModalOpen, setIsMarkerModalOpen] = useState(false);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
-  // Google Maps Loader
-  const GoogleApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: GoogleApiKey,
-  });
 
   if (isLoading) {
     return (
@@ -139,73 +130,6 @@ export default function DeviceDetailsPage() {
     }
   };
 
-  // Custom Map Component for better organization
-  const MapDisplay = () => {
-    let lat = 0;
-    let lng = 0;
-
-    if (device?.location) {
-      if (typeof device.location === 'object') {
-        lat = device.location.lat ?? 0;
-        lng = device.location.lng ?? 0;
-      } else if (typeof device.location === 'string') {
-        const coordRegex = /^-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?$/;
-        if (coordRegex.test(device.location.trim())) {
-          const [latStr, lngStr] = device.location.split(',');
-          lat = parseFloat(latStr.trim()) || 0;
-          lng = parseFloat(lngStr.trim()) || 0;
-        }
-      }
-    }
-
-    const coordinates = { lat, lng };
-
-    return (
-      <div className="relative w-full h-[450px] bg-blue-50 dark:bg-gray-800 rounded-3xl overflow-hidden shadow-inner border border-gray-100 dark:border-gray-800">
-        {isLoaded ? (
-          <GoogleMap
-            mapContainerStyle={containerStyle}
-            center={coordinates}
-            zoom={12}
-            options={{
-              disableDefaultUI: true,
-              zoomControl: false,
-              styles: [
-                {
-                  featureType: "all",
-                  elementType: "labels.text.fill",
-                  stylers: [{ color: "#6c6c6c" }],
-                },
-              ],
-            }}
-          >
-            <Marker
-              position={coordinates}
-              icon={{
-                url: deviceMarkerIcon,
-                scaledSize: new google.maps.Size(40, 40),
-              }}
-              onClick={() => setIsMarkerModalOpen(true)}
-            />
-          </GoogleMap>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bgBlue"></div>
-          </div>
-        )}
-
-        {/* Map Controls */}
-        <div className="absolute top-6 left-6 flex flex-col gap-2 z-10">
-          <button className="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:bg-gray-50 transition-all border border-gray-100 dark:border-gray-700">
-            <Plus className="w-5 h-5 text-gray-600" />
-          </button>
-          <button className="p-2.5 bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:bg-gray-50 transition-all border border-gray-100 dark:border-gray-700">
-            <Minus className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="min-h-screen space-y-6 pb-12">
@@ -234,9 +158,19 @@ export default function DeviceDetailsPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white hover:bg-gray-50 transition-all shadow-sm active:scale-95">
-            <RefreshCw className="w-3.5 h-3.5" />
-            Force Sync
+          <button 
+            onClick={async () => {
+              try {
+                await syncDevice(deviceId).unwrap();
+              } catch (err) {
+                console.error("Failed to sync device:", err);
+              }
+            }}
+            disabled={isSyncing}
+            className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white hover:bg-gray-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+            {isSyncing ? "Syncing..." : "Force Sync"}
           </button>
 
           {/* <div className="relative">
@@ -285,7 +219,7 @@ export default function DeviceDetailsPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
                 <div className="space-y-8">
                   <InfoItem label="Owner" icon={User} value={device?.user?.full_name || device?.user?.username || "N/A"} />
-                  <InfoItem label="Email" value={device?.user?.email || "N/A"} />
+                  <InfoItem label="Email" value={device?.user?.account?.email || device?.user?.email || "N/A"} />
                 </div>
                 <div className="space-y-8">
                   <InfoItem label="Model" value={device?.model || "N/A"} />
@@ -317,16 +251,20 @@ export default function DeviceDetailsPage() {
                   <span>{typeof device?.location === 'string' ? device.location : "Active Coordinates"}</span>
                 </div>
                 <div className="text-[11px] font-bold text-gray-400">
-                  Time Zone: <span className="text-gray-900 dark:text-white">N/A</span>
+                  Time Zone: <span className="text-gray-900 dark:text-white">{device?.user?.timeZone || "N/A"}</span>
                 </div>
               </div>
 
-              <MapDisplay />
+              <AdminLeafletMap
+                lat={typeof device?.location === 'object' ? (device.location?.lat ?? 0) : 0}
+                lng={typeof device?.location === 'object' ? (device.location?.lng ?? 0) : 0}
+                onMarkerClick={() => setIsMarkerModalOpen(true)}
+              />
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 px-2 pb-4">
                 <InfoItem label="Network Type" value="WiFi" />
                 <InfoItem label="Signal Strength" value="Optimal" />
-                <InfoItem label="IP Address" value="192.168.1.45" />
+                <InfoItem label="IP Address" value={device?.ip || "N/A"} />
               </div>
             </div>
           </div>
@@ -339,10 +277,20 @@ export default function DeviceDetailsPage() {
             </div>
 
             <div className="p-6 space-y-3">
-              {/* No activity logs in current API response, showing a placeholder */}
-              <div className="py-12 text-center text-gray-400 italic text-xs">
-                No system events recorded in the current data format.
-              </div>
+              {activityLogs.length > 0 ? (
+                activityLogs.map((log) => (
+                  <LogCard
+                    key={log.id}
+                    action={log.description || log.actionType}
+                    details={JSON.stringify(log.metadata)}
+                    timestamp={log.timestamp}
+                  />
+                ))
+              ) : (
+                <div className="py-12 text-center text-gray-400 italic text-xs">
+                  No system events recorded.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -414,6 +362,44 @@ export default function DeviceDetailsPage() {
                   Clear Data
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Program Card */}
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden h-fit">
+            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Active Program</h2>
+              <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Currently assigned content</p>
+            </div>
+
+            <div className="p-6 pt-6 space-y-4">
+              {device?.program ? (
+                <div 
+                  className="group p-4 rounded-xl border bg-blue-50/40 dark:bg-blue-900/10 border-blue-100/50 dark:border-blue-800/30 flex items-center justify-between transition-all hover:scale-[1.01] hover:shadow-md cursor-pointer"
+                  onClick={() => setIsPreviewModalOpen(true)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700 flex-shrink-0">
+                      <Monitor className="w-4 h-4 text-blue-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">
+                        {device.program.name}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1 text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                        <span>{device.program.serene_size}</span>
+                      </div>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1.5">
+                        Updated: {new Date(device.program.updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-8 text-center text-gray-400 italic text-xs">
+                  No program assigned to this device.
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -506,6 +492,13 @@ export default function DeviceDetailsPage() {
           </button>
         </div>
       </PremiumModal>
+
+      {/* Program Preview Modal */}
+      <AdminPreviewDeviceModal
+        isOpen={isPreviewModalOpen}
+        onClose={() => setIsPreviewModalOpen(false)}
+        device={device}
+      />
 
     </div>
   );
