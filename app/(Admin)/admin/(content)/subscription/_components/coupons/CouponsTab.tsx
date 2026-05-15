@@ -112,7 +112,7 @@ const CouponsTab = () => {
       actionButton={
         <button
           onClick={() => setCreateModalOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out"
+          className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer"
         >
           Create New Coupon
         </button>
@@ -120,11 +120,11 @@ const CouponsTab = () => {
       filters={
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               placeholder="Search by code..."
               aria-label="Search coupons by code"
-              className="w-full bg-input border border-border rounded-lg pl-10 pr-4 py-3 placeholder:text-muted focus-visible:ring-0 focus:outline-none text-body"
+              className="w-full bg-navbarBg border border-border rounded-lg pl-10 pr-4 py-2.5 placeholder:text-gray-400 focus-visible:ring-0 focus:outline-none text-gray-900 dark:text-white"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -155,7 +155,7 @@ const CouponsTab = () => {
           </div>
           <div className="flex items-center gap-2">
             <button
-              className="flex items-center gap-2 px-4 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               disabled={page === 1 || isLoading}
               onClick={handlePreviousPage}
             >
@@ -165,7 +165,7 @@ const CouponsTab = () => {
               Page {page} of {totalPages}
             </span>
             <button
-              className="flex items-center gap-2 px-4 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               disabled={page === totalPages || isLoading}
               onClick={handleNextPage}
             >
@@ -191,20 +191,20 @@ const CouponsTab = () => {
         </div>
       ) : (
         <Table>
-          <TableHeader className="bg-cardBackground border-b border-border text-body">
+          <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Discount</TableHead>
-              <TableHead>Usage</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Expiry Date</TableHead>
+              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</TableHead>
+              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Code</TableHead>
+              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Discount</TableHead>
+              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Usage</TableHead>
+              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</TableHead>
+              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Expiry Date</TableHead>
               <TableHead className="w-[50px]"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {coupons.map((coupon) => (
-              <TableRow key={coupon.id}>
+              <TableRow key={coupon.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                 <TableCell className="font-medium text-headings">
                   {coupon.name}
                 </TableCell>

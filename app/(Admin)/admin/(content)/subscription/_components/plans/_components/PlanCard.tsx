@@ -44,9 +44,9 @@ const PlanCard = ({
       {/* Header */}
       <div className="flex justify-between items-start mb-2">
         <h3 className="text-[24px] font-bold text-headings">{name}</h3>
-        <span className="bg-[#D4183D] text-white text-[12px] px-3 py-1 rounded-full">
+       { discount && <span className="bg-[#D4183D] text-white text-[12px] px-3 py-1 rounded-full">
           {discount}
-        </span>
+        </span>}
       </div>
 
       {/* Price Badge */}

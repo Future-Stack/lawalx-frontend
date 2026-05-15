@@ -108,7 +108,7 @@ const AdditionalPaymentTab = () => {
       title="Payment History"
       actionButton={
         <Button
-          className="bg-white hover:bg-gray-50 text-headings border border-borderGray rounded-lg px-6 py-2 h-auto font-bold shadow-sm flex items-center gap-2"
+          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg px-4 py-2 h-auto text-sm font-medium shadow-customShadow flex items-center gap-2"
         >
           Download All
         </Button>
@@ -116,11 +116,11 @@ const AdditionalPaymentTab = () => {
       filters={
         <div className="flex flex-col lg:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               placeholder="Search by name, email, or Invoice ID..."
               aria-label="Search payments"
-              className="w-full bg-[#F9FAFB] dark:bg-gray-900 border border-border rounded-lg pl-10 pr-4 py-3 placeholder:text-muted focus-visible:ring-0 focus:outline-none text-body"
+              className="w-full bg-navbarBg border border-border rounded-lg pl-10 pr-4 py-2.5 placeholder:text-gray-400 focus-visible:ring-0 focus:outline-none text-gray-900 dark:text-white"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -157,24 +157,24 @@ const AdditionalPaymentTab = () => {
       }
     >
       <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent border-b border-border">
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+        <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+          <TableRow className="hover:bg-transparent border-b border-gray-200 dark:border-gray-700">
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
               Bill To
             </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
               Bill From
             </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
               Address
             </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
               Total Price
             </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
               Status
             </TableHead>
-            <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4 text-right">
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4 text-right">
               Action
             </TableHead>
           </TableRow>
@@ -183,7 +183,7 @@ const AdditionalPaymentTab = () => {
           {initialData.map((item) => (
             <TableRow
               key={item.id}
-              className="border-b border-border last:border-0 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50"
+              className="border-b border-gray-200 dark:border-gray-700 last:border-0 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
             >
               <TableCell className="py-5 text-[14px] font-bold text-headings">
                 {item.billTo}

@@ -91,7 +91,7 @@ const TaxTab = () => {
       actionButton={
         <Button
           onClick={handleAdd}
-          className="bg-white hover:bg-gray-50 text-headings border border-[#D0D5DD] rounded-lg px-6 py-2 h-auto font-bold shadow-sm flex items-center gap-2"
+          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg px-4 py-2 h-auto text-sm font-medium shadow-customShadow flex items-center gap-2"
         >
           <Plus className="w-5 h-5" /> Add
         </Button>
@@ -99,11 +99,11 @@ const TaxTab = () => {
       filters={
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#667085]" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               placeholder="Search by tax..."
               aria-label="Search tax entries"
-              className="w-full bg-[#F9FAFB] dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-lg pl-10 pr-4 py-3 placeholder:text-[#667085] focus-visible:ring-0 focus:outline-none text-headings"
+              className="w-full bg-navbarBg border border-border rounded-lg pl-10 pr-4 py-2.5 placeholder:text-gray-400 focus-visible:ring-0 focus:outline-none text-gray-900 dark:text-white"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -138,18 +138,18 @@ const TaxTab = () => {
           </div>
         ) : (
           <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-[#F2F4F7] dark:border-gray-800">
-                <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+            <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+              <TableRow className="hover:bg-transparent border-b border-gray-200 dark:border-gray-700">
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
                   Tax
                 </TableHead>
-                <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
                   Tax Rate
                 </TableHead>
-                <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4">
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
                   Status
                 </TableHead>
-                <TableHead className="text-[#667085] font-semibold text-[12px] uppercase tracking-wider py-4 text-right">
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4 text-right">
                   Action
                 </TableHead>
               </TableRow>
@@ -159,7 +159,7 @@ const TaxTab = () => {
                 filteredTaxes.map((item) => (
                     <TableRow
                       key={item.id}
-                      className="border-b border-[#F2F4F7] dark:border-gray-800 last:border-0 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/50"
+                      className="border-b border-gray-200 dark:border-gray-700 last:border-0 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
                     >
                       <TableCell className="py-5 text-[14px] font-bold text-headings">
                         {item.region}

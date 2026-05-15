@@ -114,9 +114,9 @@ const PlansTab = () => {
       title="All Plans"
       subtitle="Your plan has been upgraded successfully. New features are now available."
     >
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         {/* Screen Size Selector Card */}
-        <div className="bg-white dark:bg-gray-900 border border-[#F2F4F7] dark:border-gray-800 rounded-[24px] p-6 max-w-[280px]">
+        <div className="w-full max-w-full sm:max-w-[280px] bg-white dark:bg-gray-900 border border-[#F2F4F7] dark:border-gray-800 rounded-2xl sm:rounded-[24px] p-4 sm:p-6">
           <div className="space-y-4">
             <div>
               <h3 className="text-[16px] font-bold text-headings">
@@ -149,7 +149,7 @@ const PlansTab = () => {
         </div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {isLoadingPlans ? (
             <div className="col-span-full py-12 flex flex-col items-center justify-center text-gray-500 gap-4">
               <Loader2 className="w-8 h-8 animate-spin text-[#00A3FF]" />
@@ -179,20 +179,20 @@ const PlansTab = () => {
               />
             ))
           ) : (
-            <div className="col-span-full py-12 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/20 rounded-[24px] border border-dashed">
+            <div className="col-span-full py-10 sm:py-12 px-4 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/20 rounded-2xl sm:rounded-[24px] border border-dashed">
               No plans found for the selected screen size.
             </div>
           )}
         </div>
 
         {/* Yearly Discount Configuration Card */}
-        <div className="bg-[#FFF9F5] dark:bg-gray-900/40 border border-[#F2F4F7] dark:border-gray-800 rounded-[24px] p-8 space-y-8">
-          <div className="flex justify-between items-center">
-            <div className="space-y-1">
-              <h3 className="text-[18px] font-bold text-[#7A271A] dark:text-orange-400">
+        <div className="bg-[#FFF9F5] dark:bg-gray-900/40 border border-[#F2F4F7] dark:border-gray-800 rounded-2xl sm:rounded-[24px] p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+            <div className="space-y-1 min-w-0 flex-1">
+              <h3 className="text-base sm:text-[18px] font-bold text-[#7A271A] dark:text-orange-400">
                 Yearly Discount
               </h3>
-              <p className="text-[#7A271A]/70 dark:text-orange-300/70 text-[14px]">
+              <p className="text-[#7A271A]/70 dark:text-orange-300/70 text-sm sm:text-[14px]">
                 Offer a discount for yearly billing.
               </p>
             </div>
@@ -201,7 +201,7 @@ const PlansTab = () => {
               role="switch"
               aria-checked={yearlyDiscount ? "true" : "false"}
               onClick={handleToggleDiscount}
-              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200 cursor-pointer ${
+              className={`relative inline-flex h-7 w-12 shrink-0 self-start sm:self-center items-center rounded-full transition-colors duration-200 cursor-pointer ${
                 yearlyDiscount ? "bg-[#00A3FF]" : "bg-gray-300"
               }`}
             >
@@ -286,7 +286,7 @@ const PlansTab = () => {
               <button
                 type="button"
                 onClick={handleSaveDiscount}
-                className="px-8 py-3 bg-[#00A3FF] text-white rounded-xl font-bold hover:bg-[#00A3FF]/90 transition-all shadow-sm cursor-pointer"
+                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-[#00A3FF] text-white rounded-xl font-bold hover:bg-[#00A3FF]/90 transition-all shadow-sm cursor-pointer"
               >
                 Update
               </button>
