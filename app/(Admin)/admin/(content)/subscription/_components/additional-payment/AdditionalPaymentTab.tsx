@@ -5,6 +5,7 @@ import {
   Search,
   Eye,
   CloudDownload,
+  Loader2,
 } from "lucide-react";
 import {
   Table,
@@ -17,91 +18,40 @@ import {
 import BaseSelect from "@/common/BaseSelect";
 import { Button } from "@/components/ui/button";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
-import InvoicePreview from "./_components/InvoicePreview";
-
-interface PaymentHistoryData {
-  id: string;
-  billTo: string;
-  billFrom: string;
-  address: string;
-  totalPrice: string;
-  status: "Paid" | "Unpaid";
-}
-
-const initialData: PaymentHistoryData[] = [
-  {
-    id: "1",
-    billTo: "TechCorp Inc.",
-    billFrom: "Tape",
-    address: "Antopolis Designs and Technologies",
-    totalPrice: "$299.00",
-    status: "Unpaid",
-  },
-  {
-    id: "2",
-    billTo: "TechCorp Inc.",
-    billFrom: "Tape",
-    address: "Antopolis Designs and Technologies",
-    totalPrice: "$299.00",
-    status: "Paid",
-  },
-  {
-    id: "3",
-    billTo: "TechCorp Inc.",
-    billFrom: "Tape",
-    address: "Antopolis Designs and Technologies",
-    totalPrice: "$299.00",
-    status: "Unpaid",
-  },
-  {
-    id: "4",
-    billTo: "TechCorp Inc.",
-    billFrom: "Tape",
-    address: "Antopolis Designs and Technologies",
-    totalPrice: "$299.00",
-    status: "Paid",
-  },
-  {
-    id: "5",
-    billTo: "TechCorp Inc.",
-    billFrom: "Floyd Miles",
-    address: "Antopolis Designs and Technologies",
-    totalPrice: "$299.00",
-    status: "Paid",
-  },
-  {
-    id: "6",
-    billTo: "TechCorp Inc.",
-    billFrom: "Jerome Bell",
-    address: "Antopolis Designs and Technologies",
-    totalPrice: "$299.00",
-    status: "Paid",
-  },
-];
+import {
+  ADDITIONAL_PAYMENT_ROWS,
+  type PaymentHistoryRow,
+} from "../../_data/additionalPaymentMock";
+import { downloadInvoicePdf } from "./_utils/downloadInvoicePdf";
+import InvoiceViewModal from "./_components/InvoiceViewModal";
+import { toast } from "sonner";
 
 const AdditionalPaymentTab = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("this-month");
-  const [isInvoiceOpen, setIsInvoiceOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<PaymentHistoryData | null>(
-    null,
-  );
-  const [invoiceAction, setInvoiceAction] = useState<"preview" | "download">(
-    "preview",
-  );
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [viewRow, setViewRow] = useState<PaymentHistoryRow | null>(null);
 
-  const handleViewInvoice = (item: PaymentHistoryData) => {
-    setSelectedInvoice(item);
-    setInvoiceAction("preview");
-    setIsInvoiceOpen(true);
+  const handleDownloadInvoice = async (item: PaymentHistoryRow) => {
+    try {
+      setDownloadingId(item.id);
+      await downloadInvoicePdf({
+        ...item,
+        subject: item.address,
+      });
+      toast.success("Invoice downloaded");
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not generate PDF. Please try again.");
+    } finally {
+      setDownloadingId(null);
+    }
   };
 
-  const handleDownloadInvoice = (item: PaymentHistoryData) => {
-    setSelectedInvoice(item);
-    setInvoiceAction("download");
-    setIsInvoiceOpen(true);
-  };
+  const invoiceModalData = viewRow
+    ? { ...viewRow, subject: viewRow.address }
+    : null;
 
   return (
     <SubscriptionTabLayout
@@ -180,7 +130,7 @@ const AdditionalPaymentTab = () => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {initialData.map((item) => (
+          {ADDITIONAL_PAYMENT_ROWS.map((item) => (
             <TableRow
               key={item.id}
               className="border-b border-gray-200 dark:border-gray-700 last:border-0 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
@@ -210,14 +160,21 @@ const AdditionalPaymentTab = () => {
               <TableCell className="py-5 text-right">
                 <div className="flex items-center justify-end gap-3">
                   <button
+                    type="button"
                     onClick={() => handleDownloadInvoice(item)}
-                    aria-label="Download invoice"
-                    className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer"
+                    disabled={downloadingId === item.id}
+                    aria-label="Download invoice PDF"
+                    className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer disabled:opacity-50"
                   >
-                    <CloudDownload className="w-5 h-5 opacity-70" />
+                    {downloadingId === item.id ? (
+                      <Loader2 className="w-5 h-5 opacity-70 animate-spin" />
+                    ) : (
+                      <CloudDownload className="w-5 h-5 opacity-70" />
+                    )}
                   </button>
                   <button
-                    onClick={() => handleViewInvoice(item)}
+                    type="button"
+                    onClick={() => setViewRow(item)}
                     aria-label="View invoice"
                     className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer"
                   >
@@ -230,12 +187,10 @@ const AdditionalPaymentTab = () => {
         </TableBody>
       </Table>
 
-      <InvoicePreview
-        open={isInvoiceOpen}
-        setOpen={setIsInvoiceOpen}
-        invoiceData={selectedInvoice}
-        defaultAction={invoiceAction}
-        onDefaultActionHandled={() => setInvoiceAction("preview")}
+      <InvoiceViewModal
+        open={viewRow !== null}
+        onClose={() => setViewRow(null)}
+        data={invoiceModalData}
       />
     </SubscriptionTabLayout>
   );
