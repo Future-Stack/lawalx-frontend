@@ -1,6 +1,6 @@
 export interface CheckoutPayload {
   planId: string;
-  billingCycle: "MONTHLY" | "YEARLY";
+  billingCycle: "MONTHLY" | "ANNUAL";
   screenSize: number;
   country: string;
   gateway: "stripe" | "paystack";

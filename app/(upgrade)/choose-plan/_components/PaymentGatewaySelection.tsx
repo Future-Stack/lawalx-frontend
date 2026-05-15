@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Monitor,
   Cloud,
@@ -25,6 +25,7 @@ import {
 import type { UserPlan } from "@/redux/api/users/plan/plan.type";
 import { formatAmount } from "@/lib/currencyUtils";
 import { formatPlanName } from "../_lib/planUi";
+import { useGetActiveTaxRegionsQuery } from "@/redux/api/users/tax/tax.api";
 
 interface PaymentGatewaySelectionProps {
   selectedPlan: UserPlan;
@@ -80,21 +81,32 @@ export default function PaymentGatewaySelection({
   const [selectedGateway, setSelectedGateway] = useState<"stripe" | "paystack">(
     "stripe",
   );
-  const [country, setCountry] = useState("Nigeria");
+  const [country, setCountry] = useState("");
   const [couponInput, setCouponInput] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
+  const { data: taxRes, isLoading: isTaxLoading } = useGetActiveTaxRegionsQuery();
+
+  const taxRegions = useMemo(() => taxRes?.data ?? [], [taxRes?.data]);
+
+  useEffect(() => {
+    if (country) return;
+    if (taxRegions.length > 0) {
+      setCountry(taxRegions[0].region);
+    }
+  }, [country, taxRegions]);
 
   const price = selectedPlan.price;
   const currency = selectedPlan.currency;
   const priceSuffix = isAnnual ? "/yr" : "/mo";
   const subtotal = price;
   const planTitle = formatPlanName(selectedPlan.name);
-  const taxRate = 0;
-  const taxAmount = 0;
   const discountedTotal = couponApplied
     ? Math.round(subtotal * (1 - COUPON_DISCOUNT))
     : subtotal;
-  const total = discountedTotal + taxAmount;
+  const selectedRegion = taxRegions.find((region) => region.region === country);
+  const taxRate = Number(selectedRegion?.taxRate ?? 0);
+  const taxAmount = Number(((discountedTotal * taxRate) / 100).toFixed(2));
+  const total = Number((discountedTotal + taxAmount).toFixed(2));
 
   const handleApplyCoupon = () => {
     if (!couponInput.trim()) return;
@@ -102,6 +114,7 @@ export default function PaymentGatewaySelection({
   };
 
   const handleComplete = () => {
+    if (!country) return;
     onComplete(selectedGateway, country);
   };
 
@@ -176,7 +189,7 @@ export default function PaymentGatewaySelection({
 
           <button
             onClick={handleComplete}
-            disabled={isLoading}
+            disabled={isLoading || !country}
             className="w-full mt-8 flex items-center justify-center gap-2 py-4 rounded-[12px] bg-primary-action text-white text-[16px] font-bold shadow-lg hover:cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {isLoading ? (
@@ -220,14 +233,18 @@ export default function PaymentGatewaySelection({
             <hr className="border-color my-5" />
 
             <Select value={country} onValueChange={setCountry}>
-              <SelectTrigger className="h-12 w-full rounded-xl border border-color bg-navbarBg text-[14px] font-medium text-headings">
+              <SelectTrigger
+                className="h-12 w-full rounded-xl border border-color bg-navbarBg text-[14px] font-medium text-headings"
+                disabled={isTaxLoading || taxRegions.length === 0}
+              >
                 <SelectValue placeholder="Country Any" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Nigeria">Nigeria</SelectItem>
-                <SelectItem value="Ghana">Ghana</SelectItem>
-                <SelectItem value="Kenya">Kenya</SelectItem>
-                <SelectItem value="South Africa">South Africa</SelectItem>
+                {taxRegions.map((region) => (
+                  <SelectItem key={region.id} value={region.region}>
+                    {region.region}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 

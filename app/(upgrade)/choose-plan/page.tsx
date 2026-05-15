@@ -11,6 +11,7 @@ import {
   useGetActivePlansQuery,
   useGetActiveScreenSizesQuery,
   useGetPlanByIdQuery,
+  useGetYearlyDiscountsQuery,
 } from "@/redux/api/users/plan/plan.api";
 import {
   formatScreenSizeLabel,
@@ -55,6 +56,7 @@ function ChoosePlanPageInner() {
   const { data: profileData } = useGetProfileQuery();
   const [createCheckout, { isLoading: isCreatingPayment }] =
     useCreateCheckoutMutation();
+  const { data: yearlyDiscountRes } = useGetYearlyDiscountsQuery();
 
   const { data: screenSizesRes, isLoading: isLoadingSizes } =
     useGetActiveScreenSizesQuery();
@@ -162,9 +164,11 @@ function ChoosePlanPageInner() {
   ) => {
     if (!checkoutPlan) return;
     try {
+      const checkoutBillingCycle: "MONTHLY" | "ANNUAL" =
+        billing === "YEARLY" ? "ANNUAL" : "MONTHLY";
       const payload = {
         planId: checkoutPlan.id,
-        billingCycle: billing,
+        billingCycle: checkoutBillingCycle,
         screenSize,
         country,
         gateway,
@@ -184,6 +188,10 @@ function ChoosePlanPageInner() {
 
   const screenSizeLabel =
     screenSize > 0 ? formatScreenSizeLabel(screenSize) : "";
+  const yearlyDiscountRate =
+    yearlyDiscountRes?.data?.[0]?.hasYearlyDiscount
+      ? yearlyDiscountRes.data[0].yearlyDiscountRate
+      : 0;
 
   return (
     <div className="min-h-screen px-4 py-10 sm:px-6 lg:px-10 bg-background text-foreground transition-colors duration-300">
@@ -239,7 +247,11 @@ function ChoosePlanPageInner() {
                   className={`text-[16px] font-medium leading-[24px] ${isAnnual ? "text-headings" : "text-muted"}`}
                 >
                   Annual
-                  <span className="text-bgGreen ml-1">(15% off)</span>
+                  {yearlyDiscountRate > 0 && (
+                    <span className="text-bgGreen ml-1">
+                      ({yearlyDiscountRate}% off)
+                    </span>
+                  )}
                 </span>
               </div>
 
