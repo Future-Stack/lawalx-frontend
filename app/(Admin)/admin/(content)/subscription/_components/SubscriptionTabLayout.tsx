@@ -19,42 +19,48 @@ const SubscriptionTabLayout = ({
   filters,
   children,
   pagination,
-  showDivider = true,
 }: SubscriptionTabLayoutProps) => {
+  const hasTopSection = Boolean(title || subtitle || actionButton || filters);
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 border border-borderGray p-5 rounded-[24px]">
-      {/* Header Section */}
-      {(title || actionButton) && (
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-3 px-1">
-          <div>
-            {title && (
-              <h2 className="text-[20px] font-semibold text-Heading">{title}</h2>
-            )}
-            {subtitle && (
-              <p className="text-muted text-[16px] mt-1">{subtitle}</p>
-            )}
-          </div>
-          {actionButton}
+    <div className="bg-navbarBg rounded-xl border border-border overflow-hidden animate-in fade-in duration-500">
+      {hasTopSection && (
+        <div className="p-6 border-b border-border">
+          {(title || actionButton || subtitle) && (
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                {title && (
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {title}
+                  </h2>
+                )}
+                {subtitle && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {subtitle}
+                  </p>
+                )}
+              </div>
+              {actionButton}
+            </div>
+          )}
+
+          {filters && (
+            <div className={title || actionButton || subtitle ? "mt-4" : ""}>
+              {filters}
+            </div>
+          )}
         </div>
       )}
 
-      {showDivider && (title || actionButton) && (
-        <hr className="border-borderGray w-[calc(100%+2.5rem)] -mx-5 mb-4" />
-      )}
-
-      {/* Main Content Container */}
-      <div className="rounded-[24px] bg-navbarBg overflow-hidden lg:p-6">
-        {/* Filters Section */}
-        {filters && <div className="mb-8">{filters}</div>}
-
-        {/* Content (Table, etc.) */}
-        <div className="overflow-x-auto">{children}</div>
-
-        {/* Pagination Section */}
-        {pagination && (
-          <div className="mt-6 pt-6 border-t border-border">{pagination}</div>
-        )}
+      <div className="overflow-x-auto scrollbar-hide px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
+        {children}
       </div>
+
+      {pagination && (
+        <div className="p-4 border-t border-border bg-navbarBg rounded-b-xl">
+          {pagination}
+        </div>
+      )}
     </div>
   );
 };
