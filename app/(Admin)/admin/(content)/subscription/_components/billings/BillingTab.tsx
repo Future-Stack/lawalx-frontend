@@ -190,18 +190,18 @@ const BillingTab = () => {
     <SubscriptionTabLayout
       title="Payment history"
       actionButton={
-        <button className="flex items-center gap-2 px-4 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out">
+        <button className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer">
           Download All
         </button>
       }
       filters={
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               placeholder="Search by name, email, or invoice..."
               aria-label="Search payment history"
-              className="w-full bg-input border border-border rounded-lg pl-10 pr-4 py-3 placeholder:text-muted focus-visible:ring-0 focus:outline-none text-body"
+              className="w-full bg-navbarBg border border-border rounded-lg pl-10 pr-4 py-2.5 placeholder:text-gray-400 focus-visible:ring-0 focus:outline-none text-gray-900 dark:text-white"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -253,7 +253,7 @@ const BillingTab = () => {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1 || isFetching}
-              className="flex items-center gap-2 px-4 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -263,7 +263,7 @@ const BillingTab = () => {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || isFetching}
-              className="flex items-center gap-2 px-4 py-2 border border-borderGray dark:border-gray-600 rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -272,14 +272,14 @@ const BillingTab = () => {
       }
     >
       <Table>
-        <TableHeader className="bg-cardBackground text-muted">
+        <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
           <TableRow>
-            <TableHead>Invoice</TableHead>
-            <TableHead>User</TableHead>
-            <TableHead>Payment Method</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Date</TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Invoice</TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">User</TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Payment Method</TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</TableHead>
             <TableHead className="w-[50px]"></TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -309,7 +309,7 @@ const BillingTab = () => {
           {payments.map((payment) => (
             <TableRow
               key={payment.paymentId}
-              className={isFetching ? "opacity-60 pointer-events-none" : ""}
+              className={`${isFetching ? "opacity-60 pointer-events-none" : ""} hover:bg-gray-50 dark:hover:bg-gray-700/50`}
             >
               <TableCell className="font-semibold text-headings">
                 {payment.invoice}
