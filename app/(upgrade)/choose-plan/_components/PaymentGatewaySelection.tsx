@@ -4,8 +4,6 @@ import { useState } from "react";
 import {
   Monitor,
   Cloud,
-  FileText,
-  LayoutTemplate,
   Info,
   CheckCircle2,
   ArrowLeft,
@@ -13,35 +11,37 @@ import {
   Image as ImageIcon,
   Music,
   Video,
+  Headphones,
+  Ruler,
 } from "lucide-react";
 import Image from "next/image";
-
-interface Plan {
-  title: string;
-  description: string;
-  monthlyPrice: number;
-  yearlyPrice: number;
-  buttonColor: string;
-  borderColor: string;
-  cardStyle: string;
-  devices: number;
-  storage: string;
-  templates: number;
-  photoLimit: number;
-  audioLimit: number;
-  videoLimit: number;
-  features: string[];
-}
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { UserPlan } from "@/redux/api/users/plan/plan.type";
+import { formatAmount } from "@/lib/currencyUtils";
+import { formatPlanName } from "../_lib/planUi";
 
 interface PaymentGatewaySelectionProps {
-  selectedPlan: Plan;
+  selectedPlan: UserPlan;
+  /** Screen size chosen on plan step (e.g. "40 inches") — shown in order summary per design */
+  selectedSize: string;
   isAnnual: boolean;
   onBack: () => void;
-  onComplete: (gateway: string) => void;
+  onComplete: (gateway: "stripe" | "paystack", country: string) => void;
   isLoading: boolean;
 }
 
-const gateways = [
+const gateways: Array<{
+  id: "stripe" | "paystack";
+  name: string;
+  description: string;
+  logo: string;
+}> = [
   {
     id: "stripe",
     name: "Stripe",
@@ -56,19 +56,54 @@ const gateways = [
   },
 ];
 
+const COUPON_DISCOUNT = 0.2;
+
+function formatMoney(amount: number, currency: string, withDecimals = false) {
+  if (withDecimals) {
+    const symbol = currency === "NGN" ? "₦" : "$";
+    return `${symbol}${amount.toLocaleString("en-NG", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+  }
+  return formatAmount(amount, currency);
+}
+
 export default function PaymentGatewaySelection({
   selectedPlan,
+  selectedSize,
   isAnnual,
   onBack,
   onComplete,
   isLoading,
 }: PaymentGatewaySelectionProps) {
-  const [selectedGateway, setSelectedGateway] = useState("stripe");
-  const price = isAnnual ? selectedPlan.yearlyPrice : selectedPlan.monthlyPrice;
-  // const priceLabel = isAnnual ? "/yr" : "/mo";
+  const [selectedGateway, setSelectedGateway] = useState<"stripe" | "paystack">(
+    "stripe",
+  );
+  const [country, setCountry] = useState("Nigeria");
+  const [couponInput, setCouponInput] = useState("");
+  const [couponApplied, setCouponApplied] = useState(false);
+
+  const price = selectedPlan.price;
+  const currency = selectedPlan.currency;
+  const priceSuffix = isAnnual ? "/yr" : "/mo";
   const subtotal = price;
-  const taxes = 0;
-  const total = subtotal + taxes;
+  const planTitle = formatPlanName(selectedPlan.name);
+  const taxRate = 0;
+  const taxAmount = 0;
+  const discountedTotal = couponApplied
+    ? Math.round(subtotal * (1 - COUPON_DISCOUNT))
+    : subtotal;
+  const total = discountedTotal + taxAmount;
+
+  const handleApplyCoupon = () => {
+    if (!couponInput.trim()) return;
+    setCouponApplied(true);
+  };
+
+  const handleComplete = () => {
+    onComplete(selectedGateway, country);
+  };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -140,14 +175,14 @@ export default function PaymentGatewaySelection({
           </div>
 
           <button
-            onClick={() => onComplete(selectedGateway)}
+            onClick={handleComplete}
             disabled={isLoading}
             className="w-full mt-8 flex items-center justify-center gap-2 py-4 rounded-[12px] bg-primary-action text-white text-[16px] font-bold shadow-lg hover:cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
           >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              `Complete Payment · ₦${total.toLocaleString("en-NG")}`
+              `Complete Payment · ${formatMoney(total, currency)}`
             )}
           </button>
 
@@ -160,51 +195,73 @@ export default function PaymentGatewaySelection({
           </button>
         </div>
 
-        {/* Right Side: Order Summary */}
+        {/* Right Side: Order Summary (matches design reference) */}
         <div className="lg:col-span-5">
           <div className="rounded-[24px] border border-color bg-navbarBg p-6 shadow-sm">
             <h2 className="text-[24px] font-bold text-headings mb-5">
               Order Summary
             </h2>
 
-            <div className="flex justify-between items-start mb-6">
+            <div className="flex justify-between items-start gap-4">
               <div>
                 <h3 className="text-[16px] font-bold text-headings">
-                  {selectedPlan.title} Plan
+                  {planTitle} Plan
                 </h3>
-                <p className="text-[14px] text-body mt-1">
+                <p className="text-[14px] text-muted mt-1">
                   {isAnnual ? "Yearly Billing" : "Monthly Billing"}
                 </p>
               </div>
-              <p className="text-[16px] font-bold text-headings">
-                ₦{price.toLocaleString("en-NG")}/mo
+              <p className="text-[16px] font-bold text-headings shrink-0 text-right">
+                {formatMoney(price, currency)}
+                {priceSuffix}
               </p>
             </div>
 
-            <div className="space-y-4 mb-4 pt-4 border-t border-color">
-              <div className="flex items-center gap-3 text-headings">
-                <Monitor className="w-5 h-5 text-primary-action" />
+            <hr className="border-color my-5" />
+
+            <Select value={country} onValueChange={setCountry}>
+              <SelectTrigger className="h-12 w-full rounded-xl border border-color bg-navbarBg text-[14px] font-medium text-headings">
+                <SelectValue placeholder="Country Any" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Nigeria">Nigeria</SelectItem>
+                <SelectItem value="Ghana">Ghana</SelectItem>
+                <SelectItem value="Kenya">Kenya</SelectItem>
+                <SelectItem value="South Africa">South Africa</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="mt-5 space-y-4">
+              <div className="flex items-center gap-3">
+                <Monitor className="w-5 h-5 shrink-0 text-primary-action" />
                 <span className="text-[14px] font-medium text-body">
-                  {selectedPlan.devices} Devices
+                  {selectedPlan.deviceLimit} Devices
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-headings">
-                <Cloud className="w-5 h-5 text-primary-action" />
+              <div className="flex items-center gap-3">
+                <Cloud className="w-5 h-5 shrink-0 text-primary-action" />
                 <span className="text-[14px] font-medium text-body">
-                  {selectedPlan.storage} Storage
+                  {selectedPlan.storageLimitGb} GB Storage
                 </span>
               </div>
-                <div className="flex items-center gap-3 text-headings">
-                <LayoutTemplate className="w-5 h-5 text-primary-action" />
+              <div className="flex items-center gap-3">
+                <Headphones className="w-5 h-5 shrink-0 text-primary-action" />
                 <span className="text-[14px] font-medium text-body">
-                  {selectedPlan.templates} Templates
+                  {selectedPlan.templateLimit} Templates
                 </span>
               </div>
-              <div className="pt-2">
+              <div className="flex items-center gap-3">
+                <Ruler className="w-5 h-5 shrink-0 text-primary-action" />
+                <span className="text-[14px] font-medium text-body">
+                  {selectedSize}
+                </span>
+              </div>
+
+              <div className="pt-1">
                 <p className="text-[12px] font-bold text-muted mb-2 uppercase tracking-wider">
                   UPLOAD LIMITS
                 </p>
-                <div className="flex items-center gap-6">
+                <div className="flex flex-wrap items-center gap-6">
                   <div className="flex items-center gap-1.5">
                     <ImageIcon className="w-4 h-4 text-primary-action" />
                     <span className="text-[13px] font-medium text-body">
@@ -225,78 +282,87 @@ export default function PaymentGatewaySelection({
                   </div>
                 </div>
               </div>
-            
             </div>
 
-            <div className="space-y-4 pt-6 ">
+            <hr className="border-color my-6" />
+
+            <div className="space-y-3">
               <div className="flex justify-between text-[14px]">
                 <span className="text-body">Subtotal</span>
                 <span className="text-body font-bold">
-                  ₦{subtotal.toLocaleString("en-NG")}
+                  {formatMoney(subtotal, currency)}
                 </span>
               </div>
               <div className="flex justify-between text-[14px]">
-                <span className="text-body">Taxes (0%)</span>
+                <span className="text-body">Taxes ({taxRate}%)</span>
                 <span className="text-body font-bold">
-                  ₦{taxes.toFixed(2)}
+                  {formatMoney(taxAmount, currency, true)}
                 </span>
-              </div>
-
-              <div className="pt-6 mt-2 border-t border-color flex justify-between items-start">
-                <span className="text-[24px] font-bold text-headings">
-                  Total
-                </span>
-                <div className="flex items-center justify-between gap-2">
-                 
-                  <span className="text-[24px] font-extrabold text-primary-action leading-[1.1] text-right">
-                    ₦
-                    {
-                      Math.round(total * 0.8)
-                        .toLocaleString("en-NG")
-                        .split(",")[0]
-                    }
-                    ,
-                    {
-                      Math.round(total * 0.8)
-                        .toLocaleString("en-NG")
-                        .split(",")[1]
-                    }
-                  </span>
-                   <span className="text-[16px] font-extrabold text-muted mt-2 line-through">
-                    ₦{subtotal.toLocaleString("en-NG")}
-                  </span>
-                </div>
               </div>
             </div>
 
-            <div className="mt-8 flex gap-3">
+            <div className="mt-6 pt-6 border-t border-color flex justify-between items-end gap-4">
+              <span className="text-[24px] font-bold text-headings leading-none">
+                Total
+              </span>
+              <div className="flex flex-col items-end gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+                <span className="text-[24px] font-extrabold text-primary-action leading-none">
+                  {formatMoney(total, currency)}
+                </span>
+                {couponApplied && (
+                  <span className="text-[15px] font-semibold text-muted line-through sm:translate-y-0.5">
+                    {formatMoney(subtotal, currency)}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:gap-3">
               <input
                 type="text"
-                placeholder="Coupon Applied - 20% Off"
-                className="flex-1 px-4 py-3 rounded-xl border border-color bg-input text-muted text-[15px] outline-none"
-                readOnly
+                value={
+                  couponApplied
+                    ? couponInput.trim() || "Coupon Applied - 20% Off"
+                    : couponInput
+                }
+                onChange={(e) => {
+                  if (!couponApplied) setCouponInput(e.target.value);
+                }}
+                readOnly={couponApplied}
+                placeholder="Enter coupon code"
+                className={`min-h-[48px] flex-1 rounded-xl px-4 py-3 text-[15px] outline-none transition-colors ${
+                  couponApplied
+                    ? "border border-violet-400 bg-violet-50 text-violet-900 placeholder:text-violet-600 dark:border-violet-500 dark:bg-violet-950/40 dark:text-violet-100"
+                    : "border border-color bg-input text-headings placeholder:text-muted"
+                }`}
               />
-              <button className="px-8 py-3 bg-cardBackground2 text-headings font-bold rounded-xl text-[15px] hover:opacity-80 hover:cursor-pointer transition-colors">
+              <button
+                type="button"
+                onClick={handleApplyCoupon}
+                disabled={couponApplied || !couponInput.trim()}
+                className="min-h-[48px] shrink-0 rounded-xl bg-sky-100 px-8 py-3 text-[15px] font-bold text-headings shadow-sm transition-colors hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
+              >
                 Apply
               </button>
             </div>
-            <div className="my-4">
-              <p className="text-muted text-[14px]">
-                Discount will be applied instantly at checkout.
-              </p>
-            </div>
+            <p className="mt-3 text-[13px] text-muted">
+              Discount will be applied instantly at checkout.
+            </p>
 
-            <div className="mt-2 p-4 bg-success-bg rounded-xl flex items-center gap-2 text-success text-[15px] font-medium border border-success">
-              <CheckCircle2 className="w-5 h-5" />
-              <span>Coupon Applied - 20% Off</span>
-            </div>
+            {couponApplied && (
+              <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-[15px] font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
+                <span>Coupon Applied - 20% Off</span>
+              </div>
+            )}
           </div>
 
           <div className="mt-6 p-5 bg-cardBackground2 rounded-xl flex gap-4 text-body text-[14px] leading-[22px]">
             <Info className="w-6 h-6 text-primary-action shrink-0" />
             <p>
-              Your subscription will automatically renew at ₦
-              {price.toLocaleString("en-NG")}/mo. You can cancel any time in{" "}
+              Your subscription will automatically renew at{" "}
+              {formatMoney(price, currency)}
+              {priceSuffix}. You can cancel any time in{" "}
               <span className="text-primary-action font-bold cursor-pointer hover:underline">
                 Billing Settings
               </span>
