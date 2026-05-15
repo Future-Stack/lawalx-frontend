@@ -5,6 +5,7 @@ import type {
   PlanApiResponse,
   PlanByIdParams,
   UserPlan,
+  YearlyDiscountConfig,
 } from "./plan.type";
 
 export const userPlanApi = baseApi.injectEndpoints({
@@ -35,6 +36,16 @@ export const userPlanApi = baseApi.injectEndpoints({
       }),
       providesTags: ["UserPlans"],
     }),
+    getYearlyDiscounts: builder.query<
+      PlanApiResponse<YearlyDiscountConfig[]>,
+      void
+    >({
+      query: () => ({
+        url: "/yearly-discount",
+        method: "GET",
+      }),
+      providesTags: ["UserPlans"],
+    }),
   }),
 });
 
@@ -42,4 +53,5 @@ export const {
   useGetActivePlansQuery,
   useGetPlanByIdQuery,
   useGetActiveScreenSizesQuery,
+  useGetYearlyDiscountsQuery,
 } = userPlanApi;
