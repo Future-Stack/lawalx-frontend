@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   CircleCheckBig,
   CloudDownload,
+  CreditCard,
   Copy,
   CornerDownLeft,
   ExternalLink,
@@ -43,6 +44,15 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
     });
   };
 
+  const copyText = async (value: string) => {
+    if (!value || value === "N/A") return;
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      // Non-blocking copy fallback: keep silent for now.
+    }
+  };
+
   const formatAmount = (amount: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -60,9 +70,16 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
     }
     return "bg-gray-100 text-gray-700 border-gray-200";
   };
+
+  const paymentMethodText = payment?.gateway
+    ? `${payment.gateway.charAt(0).toUpperCase()}${payment.gateway
+      .slice(1)
+      .toLowerCase()} payment`
+    : "N/A";
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto bg-navbarBg">
+      <SheetContent className="w-full sm:max-w-[540px] overflow-y-auto bg-navbarBg px-4 sm:px-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-8 h-8 animate-spin text-muted" />
@@ -86,7 +103,7 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                 </SheetTitle>
               </div>
               <SheetDescription className="text-body">
-                Invoice #{payment?.invoiceNumber || "N/A"}
+                Complete information for transaction {payment?.invoiceNumber || "N/A"}
               </SheetDescription>
             </SheetHeader>
 
@@ -97,31 +114,39 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                   <p className="text-sm text-muted">Total Amount</p>
                   <div className="text-2xl font-bold text-headings">
                     {formatAmount(
-                      payment?.amountPaid || 0,
+                      payment?.amount || 0,
                       payment?.currency || "USD",
                     )}
                   </div>
                 </div>
                 <div className="">
                   <CircleCheckBig
-                    className={`w-4 h-4 md:w-6 md:h-6 ${
-                      payment?.status?.toUpperCase() === "SUCCESS"
+                    className={`w-4 h-4 md:w-6 md:h-6 ${payment?.status?.toUpperCase() === "SUCCESS"
                         ? "text-green-600"
                         : "text-gray-400"
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
+
+              <div className="border-b border-border" />
 
               <div className="space-y-4">
                 <h4 className="font-medium text-sm text-headings border-b pb-2">
                   Transaction Information
                 </h4>
-                <div className="grid grid-cols-2 gap-y-4 text-sm">
+                <div className="grid grid-cols-[1fr_auto] gap-y-4 gap-x-3 text-sm">
                   <div className="text-muted">Transaction ID</div>
-                  <div className="text-right font-medium flex items-center justify-end gap-1 text-body">
-                    {payment?.transactionId || "N/A"}
-                    <Copy className="w-3 h-3 text-muted cursor-pointer" />
+                  <div className="text-right font-medium flex items-center justify-end gap-1 text-body break-all">
+                    {payment?.invoiceNumber || "N/A"}
+                    <button
+                      type="button"
+                      onClick={() => copyText(payment?.invoiceNumber || "N/A")}
+                      className="inline-flex items-center"
+                      aria-label="Copy transaction ID"
+                    >
+                      <Copy className="w-3 h-3 text-muted cursor-pointer" />
+                    </button>
                   </div>
 
                   <div className="text-muted">Date & Time</div>
@@ -145,15 +170,10 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                 <h4 className="font-medium text-sm text-headings border-b pb-2">
                   Customer Information
                 </h4>
-                <div className="grid grid-cols-2 gap-y-4 text-sm">
+                <div className="grid grid-cols-[1fr_auto] gap-y-4 gap-x-3 text-sm">
                   <div className="text-muted">Customer</div>
                   <div className="text-right font-medium text-body">
-                    {user?.username || user?.fullName || "N/A"}
-                  </div>
-
-                  <div className="text-muted">Email</div>
-                  <div className="text-right font-medium text-body text-xs">
-                    {user?.email || "N/A"}
+                    {user?.fullName || user?.username || "N/A"}
                   </div>
 
                   <div className="text-muted">Plan</div>
@@ -172,18 +192,31 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                 <h4 className="font-medium text-sm text-headings border-b pb-2">
                   Payment Details
                 </h4>
-                <div className="grid grid-cols-2 gap-y-4 text-sm">
+                <div className="grid grid-cols-[1fr_auto] gap-y-4 gap-x-3 text-sm">
+                  <div className="text-gray-500">Payment Method</div>
+                  <div className="text-right font-medium flex items-center justify-end gap-2 text-body">
+                    <CreditCard className="w-3.5 h-3.5 text-muted" />
+                    <span>{paymentMethodText}</span>
+                  </div>
+
                   <div className="text-gray-500">Gateway Ref</div>
-                  <div className="text-right font-medium flex items-center justify-end gap-1 text-body text-xs">
+                  <div className="text-right font-medium flex items-center justify-end gap-1 text-body text-xs break-all">
                     {payment?.transactionId || "N/A"}
-                    <Copy className="w-3 h-3 text-gray-400 cursor-pointer" />
+                    <button
+                      type="button"
+                      onClick={() => copyText(payment?.transactionId || "N/A")}
+                      className="inline-flex items-center"
+                      aria-label="Copy gateway reference"
+                    >
+                      <Copy className="w-3 h-3 text-gray-400 cursor-pointer" />
+                    </button>
                   </div>
 
                   <div className="text-gray-500">Gateway</div>
                   <div className="text-right font-medium flex items-center justify-end gap-1 text-body">
                     {payment?.gateway
                       ? payment.gateway.charAt(0).toUpperCase() +
-                        payment.gateway.slice(1).toLowerCase()
+                      payment.gateway.slice(1).toLowerCase()
                       : "N/A"}
                     <ExternalLink className="w-3 h-3 text-gray-400" />
                   </div>
@@ -199,10 +232,10 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                 <h4 className="font-medium text-sm text-headings">
                   Quick Actions
                 </h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <Button
                     variant="default"
-                    className="w-full text-xs bg-gray-300 h-9 shadow-customShadow hover:text-bgBlue border border-border"
+                    className="w-full text-xs bg-[#101A3A] hover:bg-[#001C55] text-white h-10 shadow-customShadow hover:opacity-90 border border-transparent"
                   >
                     <CloudDownload className="w-3 h-3 mr-1" />Download Invoice
                   </Button>
@@ -214,7 +247,7 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                   </Button> */}
                   <Button
                     variant="destructive"
-                    className="w-full text-xs h-9 shadow-customShadow hover:text-gray-100 bg-red-500"
+                    className="w-full text-xs h-10 shadow-customShadow hover:text-gray-100 bg-red-500"
                   >
                     <CornerDownLeft className="w-3 h-3 mr-1" /> Refund
                   </Button>

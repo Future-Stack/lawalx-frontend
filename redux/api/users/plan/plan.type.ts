@@ -48,6 +48,15 @@ export interface PlanApiResponse<T> {
   data: T;
 }
 
+export interface YearlyDiscountConfig {
+  id: string;
+  hasYearlyDiscount: boolean;
+  discountType: "PERCENTAGE" | "FIXED";
+  yearlyDiscountRate: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ActivePlansParams {
   billing: BillingCycle;
   screenSize: number;
