@@ -68,6 +68,22 @@ export interface PlanByIdParams {
   screenSize: number;
 }
 
+export interface VerifyCouponParams {
+  code: string;
+  planId: string;
+  billing: BillingCycle;
+  screenSize: number;
+}
+
+export interface CouponData {
+  coupon: {
+    code: string;
+    discount: number;
+  };
+  originalPrice: number;
+  discountPrice: number;
+}
+
 export function parseScreenSize(value: string | null | undefined): number {
   if (value == null || value === "") return 0;
   const n = parseInt(String(value).replace(/\D/g, ""), 10);

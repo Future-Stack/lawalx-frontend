@@ -114,7 +114,7 @@ const PlansTab = () => {
       title="All Plans"
       subtitle="Your plan has been upgraded successfully. New features are now available."
     >
-      <div className="space-y-6 sm:space-y-8">
+      <div className="space-y-6 sm:space-y-8 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
         {/* Screen Size Selector Card */}
         <div className="w-full max-w-full sm:max-w-[280px] bg-white dark:bg-gray-900 border border-[#F2F4F7] dark:border-gray-800 rounded-2xl sm:rounded-[24px] p-4 sm:p-6">
           <div className="space-y-4">

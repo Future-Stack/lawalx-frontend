@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 
 function parseBillingParam(raw: string | null): BillingCycle {
-  return raw === "MONTHLY" ? "MONTHLY" : "YEARLY";
+  return raw === "YEARLY" ? "YEARLY" : "MONTHLY";
 }
 
 function ChoosePlanPageInner() {
@@ -65,18 +65,12 @@ function ChoosePlanPageInner() {
     () => screenSizesRes?.data ?? [],
     [screenSizesRes?.data],
   );
-
-  useEffect(() => {
-    if (screenSize > 0) return;
-    const fromUrl = parseScreenSize(screenSizeParam);
-    if (fromUrl > 0) {
-      setScreenSize(fromUrl);
-      return;
-    }
-    if (screenSizes.length > 0) {
-      setScreenSize(screenSizes[0].size);
-    }
-  }, [screenSize, screenSizeParam, screenSizes]);
+  
+  const hasYearlyDiscount =
+    yearlyDiscountRes?.data?.[0]?.hasYearlyDiscount ?? false;
+  const yearlyDiscountRate = hasYearlyDiscount
+    ? yearlyDiscountRes?.data?.[0]?.yearlyDiscountRate ?? 0
+    : 0;
 
   const syncUrl = useCallback(
     (opts: {
@@ -105,6 +99,18 @@ function ChoosePlanPageInner() {
     },
     [billing, isCheckout, pathname, planIdParam, router, screenSize],
   );
+
+  useEffect(() => {
+    if (screenSize > 0) return;
+    const fromUrl = parseScreenSize(screenSizeParam);
+    if (fromUrl > 0) {
+      setScreenSize(fromUrl);
+      return;
+    }
+    if (screenSizes.length > 0) {
+      setScreenSize(screenSizes[0].size);
+    }
+  }, [screenSize, screenSizeParam, screenSizes]);
 
   const {
     data: plansRes,
@@ -188,10 +194,6 @@ function ChoosePlanPageInner() {
 
   const screenSizeLabel =
     screenSize > 0 ? formatScreenSizeLabel(screenSize) : "";
-  const yearlyDiscountRate =
-    yearlyDiscountRes?.data?.[0]?.hasYearlyDiscount
-      ? yearlyDiscountRes.data[0].yearlyDiscountRate
-      : 0;
 
   return (
     <div className="min-h-screen px-4 py-10 sm:px-6 lg:px-10 bg-background text-foreground transition-colors duration-300">
@@ -247,7 +249,7 @@ function ChoosePlanPageInner() {
                   className={`text-[16px] font-medium leading-[24px] ${isAnnual ? "text-headings" : "text-muted"}`}
                 >
                   Annual
-                  {yearlyDiscountRate > 0 && (
+                  {hasYearlyDiscount && yearlyDiscountRate > 0 && (
                     <span className="text-bgGreen ml-1">
                       ({yearlyDiscountRate}% off)
                     </span>
@@ -394,6 +396,7 @@ function ChoosePlanPageInner() {
           <PaymentGatewaySelection
             selectedPlan={checkoutPlan}
             selectedSize={screenSizeLabel}
+            selectedScreenSize={screenSize}
             isAnnual={isAnnual}
             onBack={handleBackToPlans}
             onComplete={handleCompletePayment}
