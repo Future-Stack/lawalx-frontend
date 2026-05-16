@@ -5,9 +5,11 @@ import {
   useUpdateDiscountStatusMutation,
 } from "@/redux/api/admin/payments/discount/discountApi";
 import {
+  BillingFilter,
   PlanItem,
   useGetPlansQuery,
   useGetActiveScreenSizesQuery,
+  useLazyGetSinglePlanQuery,
 } from "@/redux/api/admin/payments/plans/plansApi";
 import { toast } from "sonner";
 import PlanCard from "./_components/PlanCard";
@@ -26,6 +28,8 @@ const PlansTab = () => {
   const [yearlyDiscount, setYearlyDiscount] = useState(false);
   const [discountPercentage, setDiscountPercentage] = useState("30");
   const [screenSize, setScreenSize] = useState<string>("all");
+  const [billing, setBilling] = useState<BillingFilter>("MONTHLY");
+  const [getSinglePlan] = useLazyGetSinglePlanQuery();
 
   // Fetch Screen Sizes
   const { data: screenSizesData, isLoading: isLoadingScreens } =
@@ -36,9 +40,12 @@ const PlansTab = () => {
     [screenSizesData?.data],
   );
 
-  // Fetch Plans based on Screen Size
+  // Fetch Plans based on Screen Size + Billing
   const { data: plansData, isLoading: isLoadingPlans } = useGetPlansQuery(
-    screenSize === "all" ? "" : screenSize,
+    {
+      screenSize: screenSize === "all" ? undefined : screenSize,
+      billing,
+    },
   );
   const plans = plansData?.data || [];
 
@@ -99,9 +106,15 @@ const PlansTab = () => {
     }
   };
 
-  const handleEdit = (plan: PlanItem) => {
-    setSelectedPlan(plan);
-    setEditModalOpen(true);
+  const handleEdit = async (plan: PlanItem) => {
+    try {
+      const singlePlanRes = await getSinglePlan(plan.id).unwrap();
+      setSelectedPlan(singlePlanRes.data);
+      setEditModalOpen(true);
+    } catch (error) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to load plan details");
+    }
   };
 
   const formatPrice = (price: number, currency: string) => {
@@ -115,36 +128,62 @@ const PlansTab = () => {
       subtitle="Your plan has been upgraded successfully. New features are now available."
     >
       <div className="space-y-6 sm:space-y-8 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
-        {/* Screen Size Selector Card */}
-        <div className="w-full max-w-full sm:max-w-[280px] bg-white dark:bg-gray-900 border border-[#F2F4F7] dark:border-gray-800 rounded-2xl sm:rounded-[24px] p-4 sm:p-6">
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-[16px] font-bold text-headings">
-                Screen Size
-              </h3>
-              <p className="text-[#667085] text-[12px]">
-                Select the screen sizes you need.
-              </p>
-            </div>
-            {isLoadingScreens ? (
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Loader2 className="w-4 h-4 animate-spin" /> Loading sizes...
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-full lg:max-w-[580px]">
+          {/* Screen Size Selector Card */}
+          <div className="w-full bg-white dark:bg-gray-900 border border-[#F2F4F7] dark:border-gray-800 rounded-2xl sm:rounded-[24px] p-4 sm:p-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-[16px] font-bold text-headings">
+                  Screen Size
+                </h3>
+                <p className="text-[#667085] text-[12px]">
+                  Select the screen sizes you need.
+                </p>
               </div>
-            ) : (
+              {isLoadingScreens ? (
+                <div className="flex items-center gap-2 text-sm text-gray-500">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Loading sizes...
+                </div>
+              ) : (
+                <BaseSelect
+                  placeholder="Select Screen Size"
+                  options={[
+                    { label: "None", value: "all" },
+                    ...screenSizes.map((s) => ({
+                      label: `${s.size} inches`,
+                      value: s.size.toString(),
+                    })),
+                  ]}
+                  value={screenSize}
+                  onChange={setScreenSize}
+                  showLabel={false}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Billing Selector Card */}
+          <div className="w-full bg-white dark:bg-gray-900 border border-[#F2F4F7] dark:border-gray-800 rounded-2xl sm:rounded-[24px] p-4 sm:p-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-[16px] font-bold text-headings">
+                  Billing Type
+                </h3>
+                <p className="text-[#667085] text-[12px]">
+                  Filter plans by billing cycle.
+                </p>
+              </div>
               <BaseSelect
-                placeholder="Select Screen Size"
+                placeholder="Select Billing"
                 options={[
-                  { label: "None", value: "all" },
-                  ...screenSizes.map((s) => ({
-                    label: `${s.size} inches`,
-                    value: s.size.toString(),
-                  })),
+                  { label: "Monthly", value: "MONTHLY" },
+                  { label: "Yearly", value: "YEARLY" },
                 ]}
-                value={screenSize}
-                onChange={setScreenSize}
+                value={billing}
+                onChange={(value) => setBilling(value as BillingFilter)}
                 showLabel={false}
               />
-            )}
+            </div>
           </div>
         </div>
 
@@ -180,7 +219,7 @@ const PlansTab = () => {
             ))
           ) : (
             <div className="col-span-full py-10 sm:py-12 px-4 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/20 rounded-2xl sm:rounded-[24px] border border-dashed">
-              No plans found for the selected screen size.
+              No plans found for the selected filters.
             </div>
           )}
         </div>
