@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 
 function parseBillingParam(raw: string | null): BillingCycle {
-  return raw === "MONTHLY" ? "MONTHLY" : "YEARLY";
+  return raw === "YEARLY" ? "YEARLY" : "MONTHLY";
 }
 
 function ChoosePlanPageInner() {
@@ -65,18 +65,12 @@ function ChoosePlanPageInner() {
     () => screenSizesRes?.data ?? [],
     [screenSizesRes?.data],
   );
-
-  useEffect(() => {
-    if (screenSize > 0) return;
-    const fromUrl = parseScreenSize(screenSizeParam);
-    if (fromUrl > 0) {
-      setScreenSize(fromUrl);
-      return;
-    }
-    if (screenSizes.length > 0) {
-      setScreenSize(screenSizes[0].size);
-    }
-  }, [screenSize, screenSizeParam, screenSizes]);
+  
+  const hasYearlyDiscount =
+    yearlyDiscountRes?.data?.[0]?.hasYearlyDiscount ?? false;
+  const yearlyDiscountRate = hasYearlyDiscount
+    ? yearlyDiscountRes?.data?.[0]?.yearlyDiscountRate ?? 0
+    : 0;
 
   const syncUrl = useCallback(
     (opts: {
@@ -106,6 +100,18 @@ function ChoosePlanPageInner() {
     [billing, isCheckout, pathname, planIdParam, router, screenSize],
   );
 
+  useEffect(() => {
+    if (screenSize > 0) return;
+    const fromUrl = parseScreenSize(screenSizeParam);
+    if (fromUrl > 0) {
+      setScreenSize(fromUrl);
+      return;
+    }
+    if (screenSizes.length > 0) {
+      setScreenSize(screenSizes[0].size);
+    }
+  }, [screenSize, screenSizeParam, screenSizes]);
+
   const {
     data: plansRes,
     isLoading: isLoadingPlans,
@@ -126,7 +132,13 @@ function ChoosePlanPageInner() {
   );
 
   const checkoutPlan = planRes?.data ?? null;
-  const plans = plansRes?.data ?? [];
+  const plans = useMemo(() => {
+    const rawPlans = plansRes?.data ?? [];
+    const order: Record<string, number> = { basic: 1, business: 2, premium: 3 };
+    return [...rawPlans].sort(
+      (a, b) => (order[a.name?.toLowerCase()] || 99) - (order[b.name?.toLowerCase()] || 99)
+    );
+  }, [plansRes?.data]);
 
   const handleBillingToggle = () => {
     const next = isAnnual ? "MONTHLY" : "YEARLY";
@@ -161,6 +173,7 @@ function ChoosePlanPageInner() {
   const handleCompletePayment = async (
     gateway: "stripe" | "paystack",
     country: string,
+    couponCode?: string
   ) => {
     if (!checkoutPlan) return;
     try {
@@ -172,6 +185,7 @@ function ChoosePlanPageInner() {
         screenSize,
         country,
         gateway,
+        ...(couponCode && { couponCode }),
       };
 
       const res = await createCheckout(payload).unwrap();
@@ -188,10 +202,6 @@ function ChoosePlanPageInner() {
 
   const screenSizeLabel =
     screenSize > 0 ? formatScreenSizeLabel(screenSize) : "";
-  const yearlyDiscountRate =
-    yearlyDiscountRes?.data?.[0]?.hasYearlyDiscount
-      ? yearlyDiscountRes.data[0].yearlyDiscountRate
-      : 0;
 
   return (
     <div className="min-h-screen px-4 py-10 sm:px-6 lg:px-10 bg-background text-foreground transition-colors duration-300">
@@ -247,7 +257,7 @@ function ChoosePlanPageInner() {
                   className={`text-[16px] font-medium leading-[24px] ${isAnnual ? "text-headings" : "text-muted"}`}
                 >
                   Annual
-                  {yearlyDiscountRate > 0 && (
+                  {hasYearlyDiscount && yearlyDiscountRate > 0 && (
                     <span className="text-bgGreen ml-1">
                       ({yearlyDiscountRate}% off)
                     </span>
@@ -394,6 +404,7 @@ function ChoosePlanPageInner() {
           <PaymentGatewaySelection
             selectedPlan={checkoutPlan}
             selectedSize={screenSizeLabel}
+            selectedScreenSize={screenSize}
             isAnnual={isAnnual}
             onBack={handleBackToPlans}
             onComplete={handleCompletePayment}

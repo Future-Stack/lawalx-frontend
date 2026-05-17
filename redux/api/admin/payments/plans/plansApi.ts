@@ -53,6 +53,12 @@ export type GetPlansResponse = ApiResponse<PlanItem[]>;
 export type GetSinglePlanResponse = ApiResponse<PlanItem>;
 export type UpdatePlanResponse = ApiResponse<PlanItem>;
 export type GetScreenSizesResponse = ApiResponse<ScreenSizeItem[]>;
+export type BillingFilter = "MONTHLY" | "YEARLY";
+
+export interface GetPlansParams {
+  screenSize?: string | number;
+  billing?: BillingFilter;
+}
 
 export interface UpdatePlanPayload {
   description?: string;
@@ -70,11 +76,14 @@ export interface UpdatePlanPayload {
 // API
 export const plansApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getPlans: builder.query<GetPlansResponse, string | number | void>({
-      query: (screenSize) => ({
+    getPlans: builder.query<GetPlansResponse, GetPlansParams | void>({
+      query: (params) => ({
         url: `/plans`,
         method: "GET",
-        params: screenSize ? { screenSize } : {},
+        params: {
+          ...(params?.screenSize ? { screenSize: params.screenSize } : {}),
+          ...(params?.billing ? { billing: params.billing } : {}),
+        },
       }),
       providesTags: ["Subscription", "FinancialData"],
     }),

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -26,14 +27,18 @@ import type { UserPlan } from "@/redux/api/users/plan/plan.type";
 import { formatAmount } from "@/lib/currencyUtils";
 import { formatPlanName } from "../_lib/planUi";
 import { useGetActiveTaxRegionsQuery } from "@/redux/api/users/tax/tax.api";
+import { useVerifyCouponMutation } from "@/redux/api/users/plan/plan.api";
+import type { CouponData } from "@/redux/api/users/plan/plan.type";
+import { toast } from "sonner";
 
 interface PaymentGatewaySelectionProps {
   selectedPlan: UserPlan;
   /** Screen size chosen on plan step (e.g. "40 inches") — shown in order summary per design */
   selectedSize: string;
+  selectedScreenSize: number;
   isAnnual: boolean;
   onBack: () => void;
-  onComplete: (gateway: "stripe" | "paystack", country: string) => void;
+  onComplete: (gateway: "stripe" | "paystack", country: string, couponCode?: string) => void;
   isLoading: boolean;
 }
 
@@ -57,7 +62,6 @@ const gateways: Array<{
   },
 ];
 
-const COUPON_DISCOUNT = 0.2;
 
 function formatMoney(amount: number, currency: string, withDecimals = false) {
   if (withDecimals) {
@@ -73,6 +77,7 @@ function formatMoney(amount: number, currency: string, withDecimals = false) {
 export default function PaymentGatewaySelection({
   selectedPlan,
   selectedSize,
+  selectedScreenSize,
   isAnnual,
   onBack,
   onComplete,
@@ -84,6 +89,8 @@ export default function PaymentGatewaySelection({
   const [country, setCountry] = useState("");
   const [couponInput, setCouponInput] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
+  const [verifiedCouponData, setVerifiedCouponData] = useState<CouponData | null>(null);
+  const [verifyCoupon, { isLoading: isVerifyingCoupon }] = useVerifyCouponMutation();
   const { data: taxRes, isLoading: isTaxLoading } = useGetActiveTaxRegionsQuery();
 
   const taxRegions = useMemo(() => taxRes?.data ?? [], [taxRes?.data]);
@@ -98,24 +105,45 @@ export default function PaymentGatewaySelection({
   const price = selectedPlan.price;
   const currency = selectedPlan.currency;
   const priceSuffix = isAnnual ? "/yr" : "/mo";
-  const subtotal = price;
+  const subtotal = verifiedCouponData?.originalPrice ?? price;
   const planTitle = formatPlanName(selectedPlan.name);
-  const discountedTotal = couponApplied
-    ? Math.round(subtotal * (1 - COUPON_DISCOUNT))
+  const discountedTotal = verifiedCouponData
+    ? verifiedCouponData.discountPrice
     : subtotal;
   const selectedRegion = taxRegions.find((region) => region.region === country);
   const taxRate = Number(selectedRegion?.taxRate ?? 0);
   const taxAmount = Number(((discountedTotal * taxRate) / 100).toFixed(2));
   const total = Number((discountedTotal + taxAmount).toFixed(2));
 
-  const handleApplyCoupon = () => {
+  const handleApplyCoupon = async () => {
     if (!couponInput.trim()) return;
-    setCouponApplied(true);
+    try {
+      const billing = isAnnual ? "YEARLY" : "MONTHLY";
+      const normalizedCode = couponInput.trim().toUpperCase();
+      const res = await verifyCoupon({
+        code: normalizedCode,
+        planId: selectedPlan.id,
+        billing,
+        screenSize: selectedScreenSize,
+      }).unwrap();
+
+      if (res.success) {
+        setVerifiedCouponData(res.data);
+        setCouponApplied(true);
+        toast.success(res.message || "Coupon applied successfully");
+      } else {
+        toast.error(res.message || "Failed to verify coupon");
+      }
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Invalid coupon code");
+    }
   };
 
   const handleComplete = () => {
     if (!country) return;
-    onComplete(selectedGateway, country);
+    const couponCode = couponApplied && verifiedCouponData?.coupon?.code ? verifiedCouponData.coupon.code : undefined;
+    onComplete(selectedGateway, country, couponCode);
   };
 
   return (
@@ -310,6 +338,14 @@ export default function PaymentGatewaySelection({
                   {formatMoney(subtotal, currency)}
                 </span>
               </div>
+              {couponApplied && (
+                <div className="flex justify-between text-[14px] text-emerald-600 dark:text-emerald-400">
+                  <span>Discount</span>
+                  <span className="font-bold">
+                    -{formatMoney(verifiedCouponData?.coupon?.discount ?? 0, currency)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-[14px]">
                 <span className="text-body">Taxes ({taxRate}%)</span>
                 <span className="text-body font-bold">
@@ -339,7 +375,7 @@ export default function PaymentGatewaySelection({
                 type="text"
                 value={
                   couponApplied
-                    ? couponInput.trim() || "Coupon Applied - 20% Off"
+                    ? verifiedCouponData?.coupon?.code || "Coupon Applied"
                     : couponInput
                 }
                 onChange={(e) => {
@@ -356,10 +392,14 @@ export default function PaymentGatewaySelection({
               <button
                 type="button"
                 onClick={handleApplyCoupon}
-                disabled={couponApplied || !couponInput.trim()}
+                disabled={couponApplied || !couponInput.trim() || isVerifyingCoupon}
                 className="min-h-[48px] shrink-0 rounded-xl bg-sky-100 px-8 py-3 text-[15px] font-bold text-headings shadow-sm transition-colors hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
               >
-                Apply
+                {isVerifyingCoupon ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Apply"
+                )}
               </button>
             </div>
             <p className="mt-3 text-[13px] text-muted">
@@ -369,7 +409,9 @@ export default function PaymentGatewaySelection({
             {couponApplied && (
               <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-[15px] font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
                 <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                <span>Coupon Applied - 20% Off</span>
+                <span>
+                  Coupon Applied - {formatMoney(verifiedCouponData?.coupon?.discount ?? 0, currency)} Off
+                </span>
               </div>
             )}
           </div>

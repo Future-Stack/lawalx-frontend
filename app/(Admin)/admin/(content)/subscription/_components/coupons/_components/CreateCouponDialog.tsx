@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
 import BaseSelect from "@/common/BaseSelect";
-import { Sparkles, Gift, Loader2 } from "lucide-react";
+import { Sparkles, Gift, Loader2, CalendarDays } from "lucide-react";
 import {
   useCreateCouponMutation,
   useUpdateCouponMutation,
@@ -12,6 +12,32 @@ import {
 } from "@/redux/api/admin/payments/coupons/couponsApi";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+
+const APPLICABLE_PLAN_OPTIONS = [
+  { label: "Free Trial", value: "FREE_TRIAL" },
+  { label: "Basic", value: "BASIC" },
+  { label: "Business", value: "BUSINESS" },
+  { label: "Premium", value: "PREMIUM" },
+] as const;
+
+const formatDateToYMD = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const parseYMDToLocalDate = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+};
+
+const ymdToUtcISOString = (value: string) => {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(Date.UTC(year, month - 1, day)).toISOString();
+};
 
 interface CreateCouponDialogProps {
   open: boolean;
@@ -81,6 +107,15 @@ const CreateCouponDialog = ({
     );
   };
 
+  const selectedExpiryDate = expiryDate
+    ? parseYMDToLocalDate(expiryDate)
+    : undefined;
+
+  const handleExpiryDateSelect = (date?: Date) => {
+    if (!date) return;
+    setExpiryDate(formatDateToYMD(date));
+  };
+
   const handleSave = async () => {
     if (!name.trim()) {
       toast.error("Please enter a coupon name");
@@ -105,7 +140,7 @@ const CreateCouponDialog = ({
       return;
     }
 
-    const expiryISO = new Date(expiryDate).toISOString();
+    const expiryISO = ymdToUtcISOString(expiryDate);
 
     const payload = {
       name: name.trim(),
@@ -145,7 +180,7 @@ const CreateCouponDialog = ({
     >
       <div className="space-y-4 md:space-y-6 px-1">
         {/* Name & Code */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="coupon-name" className="text-headings font-medium">Name</Label>
             <input
@@ -182,7 +217,7 @@ const CreateCouponDialog = ({
         </div>
 
         {/* Discount */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-headings font-medium">Discount Type</Label>
             <BaseSelect
@@ -216,7 +251,7 @@ const CreateCouponDialog = ({
         </div>
 
         {/* Usage & Expiry */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="use-limit" className="text-headings font-medium">Use Limit</Label>
             <input
@@ -233,37 +268,75 @@ const CreateCouponDialog = ({
 
           <div className="space-y-2">
             <Label htmlFor="expiry-date" className="text-headings font-medium">Expiry Date</Label>
-            <input
-              id="expiry-date"
-              type="date"
-              title="Expiry Date"
-              placeholder="YYYY-MM-DD"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-              className={inputClass}
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  id="expiry-date"
+                  type="button"
+                  className={`${inputClass} flex items-center justify-between text-left`}
+                >
+                  <span className={expiryDate ? "text-headings" : "text-muted"}>
+                    {expiryDate
+                      ? selectedExpiryDate?.toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "Select expiry date"}
+                  </span>
+                  <CalendarDays className="h-4 w-4 text-muted shrink-0" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto rounded-md border border-border bg-white p-0 shadow-md dark:bg-[#171717] [&_[data-slot=calendar]]:!bg-white dark:[&_[data-slot=calendar]]:!bg-[#171717]"
+                align="start"
+              >
+                <Calendar
+                  className="rounded-md !bg-white dark:!bg-[#171717]"
+                  mode="single"
+                  selected={selectedExpiryDate}
+                  onSelect={handleExpiryDateSelect}
+                  disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                  autoFocus
+                />
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
         {/* Applicable Plans */}
         <div className="space-y-3">
           <Label className="text-headings font-medium">Applicable Plans</Label>
-          <div className="grid grid-cols-2 gap-3">
-            {["FREE_TRIAL", "STARTER", "BUSINESS", "ENTERPRISE"].map((plan) => (
-              <div key={plan} className="flex items-center space-x-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {APPLICABLE_PLAN_OPTIONS.map((plan) => {
+              const checked = applicablePlans.includes(plan.value);
+              return (
+              <label
+                key={plan.value}
+                htmlFor={`plan-${plan.value}`}
+                className={`flex items-center gap-3 rounded-lg border px-3 py-3 cursor-pointer transition-all ${
+                  checked
+                    ? "border-bgBlue bg-blue-50/60 dark:bg-blue-950/30 shadow-customShadow"
+                    : "border-border hover:border-bgBlue/40"
+                }`}
+              >
                 <Checkbox
-                  id={`plan-${plan}`}
-                  checked={applicablePlans.includes(plan)}
-                  onCheckedChange={() => handlePlanToggle(plan)}
+                  id={`plan-${plan.value}`}
+                  checked={checked}
+                  onCheckedChange={() => handlePlanToggle(plan.value)}
+                  className={`size-5 data-[state=checked]:bg-bgBlue data-[state=checked]:border-bgBlue ${
+                    checked ? "border-bgBlue" : ""
+                  }`}
                 />
-                <label
-                  htmlFor={`plan-${plan}`}
-                  className="text-sm font-medium text-headings cursor-pointer"
+                <span
+                  className={`text-sm font-semibold ${
+                    checked ? "text-bgBlue" : "text-headings"
+                  }`}
                 >
-                  {plan.replace("_", " ")}
-                </label>
-              </div>
-            ))}
+                  {plan.label}
+                </span>
+              </label>
+            )})}
           </div>
         </div>
 

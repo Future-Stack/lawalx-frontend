@@ -52,7 +52,7 @@ const SubscriptionTabLayout = ({
         </div>
       )}
 
-      <div className="overflow-x-auto scrollbar-hide px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
+      <div className="overflow-x-auto scrollbar-hide">
         {children}
       </div>
 
