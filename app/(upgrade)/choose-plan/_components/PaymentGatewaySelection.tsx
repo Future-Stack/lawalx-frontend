@@ -38,7 +38,7 @@ interface PaymentGatewaySelectionProps {
   selectedScreenSize: number;
   isAnnual: boolean;
   onBack: () => void;
-  onComplete: (gateway: "stripe" | "paystack", country: string) => void;
+  onComplete: (gateway: "stripe" | "paystack", country: string, couponCode?: string) => void;
   isLoading: boolean;
 }
 
@@ -142,7 +142,8 @@ export default function PaymentGatewaySelection({
 
   const handleComplete = () => {
     if (!country) return;
-    onComplete(selectedGateway, country);
+    const couponCode = couponApplied && verifiedCouponData?.coupon?.code ? verifiedCouponData.coupon.code : undefined;
+    onComplete(selectedGateway, country, couponCode);
   };
 
   return (

@@ -11,13 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { HelpCircle, MapPin, Globe, X } from "lucide-react";
+import { HelpCircle, MapPin, Globe, X, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function RequestCustomPlanPage() {
   const router = useRouter();
   const [budget, setBudget] = useState(60);
   const [timeline, setTimeline] = useState("");
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const getPrice = () => {
     if (budget >= 100) return 10000;
@@ -57,7 +58,39 @@ export default function RequestCustomPlanPage() {
           </div>
         </div>
 
-        <div className="space-y-8 pb-20 max-w-3xl mx-auto">
+        {isSubmitted ? (
+          <div className="mx-auto max-w-[540px] px-4 md:px-0 mt-8 mb-20">
+            <div className="rounded-[16px] border border-[#D4D4D4] bg-white p-8 md:p-12 flex flex-col items-center text-center shadow-sm">
+              <div className="flex h-[80px] w-[80px] items-center justify-center rounded-full border-[1.5px] border-[#22C55E]/40 bg-[#22C55E]/10 mb-6">
+                <Check className="h-8 w-8 text-[#22C55E]" strokeWidth={2.5} />
+              </div>
+              <h3 className="text-[20px] sm:text-[24px] font-bold text-[#111827] font-inter mb-3">
+                Request Submitted Successfully
+              </h3>
+              <p className="text-[14px] sm:text-[15px] font-normal text-[#4B5563] font-inter mb-8 leading-relaxed max-w-[400px]">
+                Your request for enterprise plan has been submitted successfully. Our Support team will contact you within 48 hours.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+                <button
+                  type="button"
+                  onClick={() => router.push("/dashboard")}
+                  className="w-full sm:w-[50%] flex items-center justify-center rounded-[10px] bg-[#20A4FF] px-4 py-3 text-white font-semibold text-[16px] shadow-customShadow transition hover:bg-[#20A4FF]/90 active:scale-[0.98] cursor-pointer"
+                >
+                  Go to Dashboard
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/support")}
+                  className="w-full sm:w-[50%] flex items-center justify-center rounded-[10px] border border-[#D4D4D4] bg-white px-4 py-3 text-[#111827] font-semibold text-[16px] transition hover:bg-gray-50 active:scale-[0.98] cursor-pointer"
+                >
+                  View Request
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+        <div className="space-y-8 pb-20 max-w-3xl mx-auto px-4 lg:px-0">
           {/* Company Information Section */}
           <div className="rounded-[16px] border border-[#D4D4D4] bg-[#FAFAFA] p-6 space-y-6">
             <h3 className="text-[24px] font-semibold text-Heading font-inter">
@@ -332,11 +365,15 @@ export default function RequestCustomPlanPage() {
               />
             </div>
             {/* Get My Quote Button - inside card */}
-            <button className="flex w-full flex-col items-center justify-center gap-[6px] rounded-[10px] bg-[#111827] px-4 py-3 text-white font-semibold text-[16px] shadow-customShadow transition hover:bg-slate-800 active:scale-[0.98] cursor-pointer">
+            <button
+              onClick={() => setIsSubmitted(true)}
+              className="flex w-full flex-col items-center justify-center gap-[6px] rounded-[10px] bg-[#111827] px-4 py-3 text-white font-semibold text-[16px] shadow-customShadow transition hover:bg-slate-800 active:scale-[0.98] cursor-pointer"
+            >
               Get My Quote
             </button>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

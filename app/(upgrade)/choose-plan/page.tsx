@@ -173,6 +173,7 @@ function ChoosePlanPageInner() {
   const handleCompletePayment = async (
     gateway: "stripe" | "paystack",
     country: string,
+    couponCode?: string
   ) => {
     if (!checkoutPlan) return;
     try {
@@ -184,6 +185,7 @@ function ChoosePlanPageInner() {
         screenSize,
         country,
         gateway,
+        ...(couponCode && { couponCode }),
       };
 
       const res = await createCheckout(payload).unwrap();
