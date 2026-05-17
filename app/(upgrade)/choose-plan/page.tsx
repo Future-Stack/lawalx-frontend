@@ -132,7 +132,13 @@ function ChoosePlanPageInner() {
   );
 
   const checkoutPlan = planRes?.data ?? null;
-  const plans = plansRes?.data ?? [];
+  const plans = useMemo(() => {
+    const rawPlans = plansRes?.data ?? [];
+    const order: Record<string, number> = { basic: 1, business: 2, premium: 3 };
+    return [...rawPlans].sort(
+      (a, b) => (order[a.name?.toLowerCase()] || 99) - (order[b.name?.toLowerCase()] || 99)
+    );
+  }, [plansRes?.data]);
 
   const handleBillingToggle = () => {
     const next = isAnnual ? "MONTHLY" : "YEARLY";
