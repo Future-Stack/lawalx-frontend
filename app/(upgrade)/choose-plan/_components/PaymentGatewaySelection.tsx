@@ -52,13 +52,13 @@ const gateways: Array<{
     id: "stripe",
     name: "Stripe",
     description: "Credit/Debit cards, Apple Pay, Google Pay",
-    logo: "/paymentMethods/Stripe_icon.png",
+    logo: "/paymentMethods/Stripe_icon_new.png",
   },
   {
     id: "paystack",
     name: "Paystack",
     description: "Safe payments using your Paystack account",
-    logo: "/paymentMethods/paystack_icon.png",
+    logo: "/paymentMethods/paystack_icon_new.png",
   },
 ];
 
