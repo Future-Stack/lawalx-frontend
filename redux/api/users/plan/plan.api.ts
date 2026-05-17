@@ -6,6 +6,8 @@ import type {
   PlanByIdParams,
   UserPlan,
   YearlyDiscountConfig,
+  VerifyCouponParams,
+  CouponData,
 } from "./plan.type";
 
 export const userPlanApi = baseApi.injectEndpoints({
@@ -46,6 +48,13 @@ export const userPlanApi = baseApi.injectEndpoints({
       }),
       providesTags: ["UserPlans"],
     }),
+    verifyCoupon: builder.mutation<PlanApiResponse<CouponData>, VerifyCouponParams>({
+      query: ({ code, planId, billing, screenSize }) => ({
+        url: "/coupon-managements/verify-coupon",
+        method: "GET",
+        params: { code, planId, billing, screenSize },
+      }),
+    }),
   }),
 });
 
@@ -54,4 +63,5 @@ export const {
   useGetPlanByIdQuery,
   useGetActiveScreenSizesQuery,
   useGetYearlyDiscountsQuery,
+  useVerifyCouponMutation,
 } = userPlanApi;
