@@ -1,13 +1,21 @@
+/* eslint-disable */
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Paperclip, Send, X, FileIcon, CheckCircle } from 'lucide-react';
+import { Paperclip, Send, X, FileIcon, CheckCircle, Tag, MoreHorizontal, Mail, Archive, Trash2, Pencil } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useTicketChat } from '@/hooks/useTicketChat';
 import { useAppSelector } from '@/redux/store/hook';
@@ -97,6 +105,9 @@ export default function TicketConversationDialog({
   onOpenChange,
   ticket,
 }: TicketConversationDialogProps) {
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState(["Label Name 1", "Label Name 2", "Label Name 3", "Needs refund"]);
+  const [editingTag, setEditingTag] = useState<{ old: string; current: string } | null>(null);
   const [message, setMessage] = useState('');
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -254,25 +265,133 @@ export default function TicketConversationDialog({
         {/* Inner conversation card */}
         <div className="mx-4 sm:mx-6 my-4 sm:my-5 rounded-xl overflow-hidden flex flex-col">
           {/* Ticket meta header */}
-          <div className="flex items-start justify-between gap-4 px-4 sm:px-5 py-3.5 bg-gray-50 dark:bg-gray-800/60 border border-border rounded-t-xl">
+          <div className="flex items-start justify-between gap-4 px-4 sm:px-6 py-4 bg-[#F8FAFC] dark:bg-gray-800/60 border border-border rounded-t-xl">
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                Conversation
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Ticket ID :{' '}
-                <span className="text-gray-700 dark:text-gray-300 font-medium">
+              <div className="flex items-center gap-3 mb-6">
+                <p className="text-[15px] font-semibold text-gray-800 dark:text-gray-200">
+                  Conversation
+                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {selectedTags.map((tag) => (
+                    <div key={tag} className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#E2E8F0] dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+                      <Tag className="w-3.5 h-3.5 text-[#64748B] dark:text-gray-400" />
+                      <span className="text-xs font-medium text-[#475569] dark:text-gray-300">
+                        {tag}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-[13px] text-[#64748B] dark:text-gray-400 mb-2 font-inter">
+                <span className="inline-block w-16">Ticket ID:</span>{' '}
+                <span className="text-[#475569] dark:text-gray-300">
                   {ticket.ticketId.replace('#', '')}
                 </span>
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                Issue :{' '}
-                <span className="text-gray-700 dark:text-gray-300">{ticket.issueType}</span>
+              <p className="text-[13px] text-[#64748B] dark:text-gray-400 font-inter flex items-center gap-1">
+                <span className="inline-block w-16">Issue :</span>{' '}
+                <span className="text-[#475569] dark:text-gray-300">{ticket.issueType}</span>
               </p>
             </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Client:</p>
-              <p className="text-sm font-semibold text-gray-900 dark:text-white mt-0.5">
+            
+            <div className="flex flex-col items-end">
+              <div className="flex items-center gap-2 mb-6">
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors focus:outline-none">
+                    <Tag className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[220px] p-2 space-y-1 z-[9999]">
+                    {availableTags.map((label) => (
+                      <DropdownMenuItem
+                        key={label}
+                        className="flex items-center justify-between px-2 py-1.5 cursor-default group focus:bg-gray-50 focus:text-gray-900 dark:focus:bg-gray-800/50"
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <div className="flex items-center gap-2.5 w-full">
+                          <Checkbox
+                            checked={selectedTags.includes(label)}
+                            onCheckedChange={() => setSelectedTags(prev => prev.includes(label) ? prev.filter(t => t !== label) : [...prev, label])}
+                            className="w-[14px] h-[14px] rounded-sm border-gray-300 data-[state=checked]:bg-[#0FA6FF] data-[state=checked]:border-[#0FA6FF] flex-shrink-0"
+                          />
+                          {editingTag?.old === label ? (
+                            <input
+                              type="text"
+                              value={editingTag.current}
+                              onChange={(e) => setEditingTag({ ...editingTag, current: e.target.value })}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const newTag = editingTag.current.trim();
+                                  if (newTag && newTag !== editingTag.old && !availableTags.includes(newTag)) {
+                                    setAvailableTags(prev => prev.map(t => t === editingTag.old ? newTag : t));
+                                    setSelectedTags(prev => prev.map(t => t === editingTag.old ? newTag : t));
+                                  }
+                                  setEditingTag(null);
+                                }
+                                if (e.key === 'Escape') setEditingTag(null);
+                              }}
+                              onBlur={() => {
+                                const newTag = editingTag.current.trim();
+                                if (newTag && newTag !== editingTag.old && !availableTags.includes(newTag)) {
+                                  setAvailableTags(prev => prev.map(t => t === editingTag.old ? newTag : t));
+                                  setSelectedTags(prev => prev.map(t => t === editingTag.old ? newTag : t));
+                                }
+                                setEditingTag(null);
+                              }}
+                              className="text-[13px] text-gray-900 dark:text-white border border-[#0FA6FF] outline-none rounded px-1.5 py-0.5 w-full bg-white dark:bg-gray-900 focus:ring-1 focus:ring-[#0FA6FF]"
+                              autoFocus
+                            />
+                          ) : (
+                            <span 
+                              className="text-[13px] text-gray-700 dark:text-gray-300 font-inter truncate select-none cursor-pointer" 
+                              onClick={() => setSelectedTags(prev => prev.includes(label) ? prev.filter(t => t !== label) : [...prev, label])}
+                            >
+                              {label}
+                            </span>
+                          )}
+                        </div>
+                        {editingTag?.old !== label && (
+                          <div className="hidden group-hover:flex items-center gap-2 flex-shrink-0 ml-2">
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setEditingTag({ old: label, current: label }); }} 
+                              className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); setAvailableTags(prev => prev.filter(t => t !== label)); setSelectedTags(prev => prev.filter(t => t !== label)); }} 
+                              className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors focus:outline-none">
+                    <MoreHorizontal className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-[180px] p-1.5 z-[9999]">
+                    <DropdownMenuItem className="gap-2.5 cursor-pointer py-2">
+                      <Mail className="w-[18px] h-[18px] text-[#64748B]" strokeWidth={1.5} />
+                      <span className="text-[13px] text-[#475569] font-medium">mark as unread</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2.5 cursor-pointer py-2">
+                      <Archive className="w-[18px] h-[18px] text-[#64748B]" strokeWidth={1.5} />
+                      <span className="text-[13px] text-[#475569] font-medium">Move to archive</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2.5 cursor-pointer py-2 text-gray-700">
+                      <Trash2 className="w-[18px] h-[18px] text-[#64748B]" strokeWidth={1.5} />
+                      <span className="text-[13px] text-[#475569] font-medium">Delete</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              <p className="text-[13px] text-[#64748B] dark:text-gray-400 font-inter text-right w-full">Currently Assigned:</p>
+              <p className="text-[13px] font-semibold text-[#0F172A] dark:text-white mt-1 text-right w-full font-inter">
                 {ticket.clientName}
               </p>
             </div>

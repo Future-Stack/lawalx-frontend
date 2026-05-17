@@ -57,19 +57,19 @@ const DeleteTaxDialog = ({
           </p>
         </div>
 
-        {/* Custom Joined Buttons as per UI */}
-        <div className="flex w-full mt-4 max-w-[320px] rounded-xl border border-[#D0D5DD] dark:border-gray-800 overflow-hidden shadow-sm">
+        {/* Separated Buttons as per new UI */}
+        <div className="flex justify-center gap-4 w-full mt-4 max-w-[320px]">
           <button
             onClick={() => setOpen(false)}
             disabled={isLoading}
-            className="flex-1 py-3 bg-white dark:bg-gray-950 hover:bg-gray-50 text-[18px] font-bold text-headings transition-all cursor-pointer border-r border-[#D0D5DD] dark:border-gray-800 disabled:opacity-50"
+            className="flex-1 py-2.5 bg-white border border-[#D0D5DD] dark:border-gray-700 dark:bg-transparent rounded-xl text-[16px] font-semibold text-[#344054] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
           >
             Cancel
           </button>
           <button
             onClick={handleDelete}
             disabled={isLoading}
-            className="flex-1 py-3 bg-[#F04438] hover:bg-[#D92D20] text-[18px] font-bold text-white transition-all cursor-pointer relative shadow-[inset_0_4px_4px_rgba(0,0,0,0.1)] flex items-center justify-center gap-2 disabled:opacity-50"
+            className="flex-1 py-2.5 bg-[#EF4444] rounded-xl text-[16px] font-semibold text-white hover:bg-[#DC2626] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Delete
