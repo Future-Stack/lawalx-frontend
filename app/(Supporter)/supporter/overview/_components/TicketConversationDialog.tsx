@@ -2,7 +2,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Paperclip, Send, X, FileIcon, CheckCircle, Tag, MoreHorizontal, Mail, Archive, Trash2, Pencil } from 'lucide-react';
+import { Paperclip, Send, X, FileIcon, CheckCircle, Tag, MoreHorizontal, Mail, Archive, Trash2, Pencil, Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -300,7 +300,7 @@ export default function TicketConversationDialog({
                   <DropdownMenuTrigger className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors focus:outline-none">
                     <Tag className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[220px] p-2 space-y-1 z-[9999]">
+                  <DropdownMenuContent align="end" className="w-[220px] p-2 space-y-1 z-[9999]" onCloseAutoFocus={(e) => e.preventDefault()}>
                     {availableTags.map((label) => (
                       <DropdownMenuItem
                         key={label}
@@ -328,14 +328,6 @@ export default function TicketConversationDialog({
                                   setEditingTag(null);
                                 }
                                 if (e.key === 'Escape') setEditingTag(null);
-                              }}
-                              onBlur={() => {
-                                const newTag = editingTag.current.trim();
-                                if (newTag && newTag !== editingTag.old && !availableTags.includes(newTag)) {
-                                  setAvailableTags(prev => prev.map(t => t === editingTag.old ? newTag : t));
-                                  setSelectedTags(prev => prev.map(t => t === editingTag.old ? newTag : t));
-                                }
-                                setEditingTag(null);
                               }}
                               className="text-[13px] text-gray-900 dark:text-white border border-[#0FA6FF] outline-none rounded px-1.5 py-0.5 w-full bg-white dark:bg-gray-900 focus:ring-1 focus:ring-[#0FA6FF]"
                               autoFocus
@@ -367,28 +359,26 @@ export default function TicketConversationDialog({
                         )}
                       </DropdownMenuItem>
                     ))}
+                    
+                    <div className="h-px bg-gray-200 dark:bg-gray-700 my-1.5" />
+                    
+                    <DropdownMenuItem 
+                      className="flex items-center gap-2 px-2 py-1.5 cursor-pointer text-gray-700 dark:text-gray-300 focus:bg-gray-50 focus:text-gray-900 dark:focus:bg-gray-800/50 outline-none"
+                      onSelect={(e) => {
+                        e.preventDefault();
+                        const newLabel = `New Label ${availableTags.length + 1}`;
+                        if (!availableTags.includes(newLabel)) {
+                           setAvailableTags([...availableTags, newLabel]);
+                        }
+                        setEditingTag({ old: newLabel, current: newLabel });
+                      }}
+                    >
+                      <Plus className="w-4 h-4 text-gray-500" />
+                      <span className="text-[13px] font-medium">Create New Label</span>
+                    </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
 
-                <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors focus:outline-none">
-                    <MoreHorizontal className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[180px] p-1.5 z-[9999]">
-                    <DropdownMenuItem className="gap-2.5 cursor-pointer py-2">
-                      <Mail className="w-[18px] h-[18px] text-[#64748B]" strokeWidth={1.5} />
-                      <span className="text-[13px] text-[#475569] font-medium">mark as unread</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2.5 cursor-pointer py-2">
-                      <Archive className="w-[18px] h-[18px] text-[#64748B]" strokeWidth={1.5} />
-                      <span className="text-[13px] text-[#475569] font-medium">Move to archive</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-2.5 cursor-pointer py-2 text-gray-700">
-                      <Trash2 className="w-[18px] h-[18px] text-[#64748B]" strokeWidth={1.5} />
-                      <span className="text-[13px] text-[#475569] font-medium">Delete</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </div>
               <p className="text-[13px] text-[#64748B] dark:text-gray-400 font-inter text-right w-full">Currently Assigned:</p>
               <p className="text-[13px] font-semibold text-[#0F172A] dark:text-white mt-1 text-right w-full font-inter">
