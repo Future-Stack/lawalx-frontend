@@ -32,15 +32,11 @@ import CommonLoader from "@/common/CommonLoader";
 import CreateScheduleDialog from "../schedules/_components/CreateScheduleDialog";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import DeviceLocation from "@/components/common/DeviceLocation";
-import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
-import { useEffect } from "react";
 import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 
 export default function Dashboard() {
   const { data: statsData } = useGetAllStatsQuery(undefined);
   const { data: devicesData } = useGetAllDevicesQuery();
-  const { data: userProfile } = useGetUserProfileQuery();
-  const userInfo = userProfile?.data;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
@@ -61,11 +57,6 @@ export default function Dashboard() {
   const totalDevices = statsData?.data?.totalDevices || 0;
   const onlineDevices = statsData?.data?.onlineDevices || 0;
   const offlineDevices = statsData?.data?.offlineDevices || 0;
-
-  function handleSaveSchedule(data: unknown): void {
-    console.log("Saved schedule:", data);
-    setIsScheduleModalOpen(false);
-  }
 
 
   return (
