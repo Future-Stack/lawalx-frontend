@@ -124,7 +124,7 @@ const PlansTab = () => {
   };
 
   const formatPrice = (price: number, currency: string) => {
-    const symbol = currency === "USD" ? "$" : currency;
+    const symbol = currency === "NGN" ? "₦" : currency === "USD" ? "$" : currency;
     return `${symbol}${price.toLocaleString()}/mo`;
   };
 

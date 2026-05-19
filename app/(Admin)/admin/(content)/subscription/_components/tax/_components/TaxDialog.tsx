@@ -81,7 +81,7 @@ const TaxDialog = ({
       title=""
       description=""
       maxWidth="xl"
-      className="p-0"
+      className="p-0 [&>div:first-child]:hidden"
     >
       <div className="flex flex-col h-full">
         {/* Header with Icon */}
