@@ -79,8 +79,10 @@ export interface PaymentInfo {
   date: string;
   plan: string;
   subscriptionId: string;
-  amountPaid: number;
+  amount: number;
   currency: string;
+  originalAmount: number;
+  originalCurrency: string;
   status: string;
   transactionId: string;
   gateway: string;

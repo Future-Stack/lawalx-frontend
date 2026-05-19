@@ -1,0 +1,318 @@
+"use client";
+
+import React, { useState } from "react";
+import { useGetSubscribersQuery } from "@/redux/api/admin/payments/subscriber/subscribersApi";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import BaseSelect from "@/common/BaseSelect";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  MoreVertical,
+  FileText,
+  XCircle,
+  ArrowUpCircle,
+  Search,
+  Loader2,
+  CreditCard,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import TransactionSheet from "../TransactionSheet";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store/store";
+import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
+import SubscriptionTabLayout from "../SubscriptionTabLayout";
+import AdditionalPaymentDialog from "./_components/AdditionalPaymentDialog";
+
+export interface Subscriber {
+  userId: string;
+  userName: string;
+  email: string;
+  plan: string;
+  amount: number;
+  paymentCycle: string;
+  nextBilling: string;
+  subscriptionStatus: string;
+}
+
+const SubscribersTab = () => {
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [planFilter, setPlanFilter] = useState("all");
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [additionalPaymentOpen, setAdditionalPaymentOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string>("");
+  const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null);
+
+  const currency = useSelector((state: RootState) => state.settings.currency);
+
+  const { data, isLoading, isError } = useGetSubscribersQuery({
+    page,
+    limit,
+    search: searchTerm || undefined,
+    plan: planFilter !== "all" ? planFilter.toUpperCase() : undefined,
+  });
+
+  // Dummy data for testing purposes
+  const dummySubscribers = [
+    {
+      userId: "dummy-1",
+      userName: "Emon Ahmed",
+      email: "emon@example.com",
+      plan: "BUSINESS",
+      amount: 299,
+      paymentCycle: "Monthly",
+      nextBilling: "2026-06-14T00:00:00Z",
+      subscriptionStatus: "ACTIVE",
+    },
+    {
+      userId: "dummy-2",
+      userName: "Sakib Al Hasan",
+      email: "sakib@example.com",
+      plan: "PROFESSIONAL",
+      amount: 149,
+      paymentCycle: "Yearly",
+      nextBilling: "2027-05-14T00:00:00Z",
+      subscriptionStatus: "CANCELLED",
+    },
+  ];
+
+  const subscribers = data?.data && data.data.length > 0 ? data.data : dummySubscribers;
+  const meta = data?.meta;
+  const totalSubscribers = meta?.total || subscribers.length;
+  const totalPages = meta?.totalPages || 1;
+
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const handleViewInvoices = (userId: string) => {
+    setSelectedUserId(userId);
+    setSheetOpen(true);
+  };
+
+  const handleAdditionalPayment = (subscriber: Subscriber) => {
+    setSelectedSubscriber(subscriber);
+    setAdditionalPaymentOpen(true);
+  };
+
+  return (
+    <SubscriptionTabLayout
+      title={`All Users (${totalSubscribers})`}
+      filters={
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
+          <div className="relative w-full md:flex-1">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              placeholder="Search by name, email, or user ID..."
+              aria-label="Search subscribers"
+              className="w-full bg-navbarBg border border-border rounded-lg pl-10 pr-4 py-2.5 placeholder:text-gray-400 focus-visible:ring-0 focus:outline-none text-gray-900 dark:text-white"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
+            />
+          </div>
+
+          <div className="w-full md:w-48 shrink-0">
+            <BaseSelect
+              placeholder="All Plans"
+              options={[
+                { label: "All Plans", value: "all" },
+                { label: "Starter", value: "starter" },
+                { label: "Professional", value: "professional" },
+                { label: "Business", value: "business" },
+              ]}
+              value={planFilter}
+              onChange={(value) => {
+                setPlanFilter(value);
+                setPage(1);
+              }}
+              showLabel={false}
+              className="w-full"
+            />
+          </div>
+        </div>
+      }
+      pagination={
+        <div className="flex items-center justify-between">
+          <div className="text-sm text-muted">
+            Showing {subscribers.length} of {totalSubscribers} users
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              disabled={page === 1 || isLoading}
+              onClick={handlePreviousPage}
+            >
+              Previous
+            </button>
+            <span className="text-sm text-muted">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              disabled={page === totalPages || isLoading}
+              onClick={handleNextPage}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      }
+    >
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-muted" />
+        </div>
+      ) : isError ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-red-500">
+            Error loading subscribers. Please try again.
+          </p>
+        </div>
+      ) : subscribers.length === 0 ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted">No subscribers found.</p>
+        </div>
+      ) : (
+        <>
+          <Table>
+            <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+              <TableRow>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">User</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Plan</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Payment Cycle</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Next Billing</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {subscribers.map((sub) => (
+                <TableRow key={sub.userId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <TableCell>
+                    <div>
+                      <div className="font-medium text-headings">
+                        {sub.userName}
+                      </div>
+                      <div className="text-sm text-muted">{sub.email}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="default"
+                      className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-none font-normal"
+                    >
+                      {sub.plan}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="font-semibold text-headings">
+                    {formatCurrency(sub.amount, currency)}
+                  </TableCell>
+                  <TableCell className="text-headings">
+                    {sub.paymentCycle}
+                  </TableCell>
+                  <TableCell className="text-muted">
+                    {formatDate(sub.nextBilling)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="default"
+                      className={`border-none font-normal ${
+                        sub.subscriptionStatus === "ACTIVE"
+                          ? "bg-green-100 text-green-700"
+                          : sub.subscriptionStatus === "CANCELLED"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {sub.subscriptionStatus}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="icon"
+                          aria-label="Subscriber options"
+                          className="h-8 w-8 text-muted hover:bg-gray-100"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => handleViewInvoices(sub.userId)}
+                        >
+                          <FileText className="mr-2 h-4 w-4" /> View Invoices
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                           onClick={() => handleAdditionalPayment(sub)}
+                        >
+                          <CreditCard className="mr-2 h-4 w-4" /> Additional payment
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-red-500 focus:text-red-500">
+                          <XCircle className="mr-2 h-4 w-4" /> Cancel Plan
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </>
+      )}
+
+      {/* Transaction Sheet */}
+      <TransactionSheet
+        open={sheetOpen}
+        setOpen={setSheetOpen}
+        userId={selectedUserId}
+      />
+
+      {/* Additional Payment Dialog */}
+      <AdditionalPaymentDialog
+        open={additionalPaymentOpen}
+        setOpen={setAdditionalPaymentOpen}
+        subscriberData={selectedSubscriber}
+      />
+    </SubscriptionTabLayout>
+  );
+};
+
+export default SubscribersTab;

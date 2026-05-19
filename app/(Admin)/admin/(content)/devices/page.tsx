@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon, ArrowUpRight, Eye, FileText } from 'lucide-react';
-import GoogleMapModal from '@/components/shared/modals/GoogleMapModal';
+import AdminLeafletMapModal from '@/components/Admin/modals/AdminLeafletMapModal';
 import { useDeleteDeviceMutation, useGetGlobalDeviceDetailsQuery, useGetGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -139,7 +139,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction }) => {
       >
         <Eye className="w-5 h-5" />
       </button>
-      <button
+      {/* <button
         onClick={(e) => {
           e.stopPropagation();
           onAction('Edit Device', device);
@@ -148,7 +148,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction }) => {
         title="Edit"
       >
         <Edit className="w-5 h-5" />
-      </button>
+      </button> */}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -275,11 +275,11 @@ export default function GlobalDevices() {
     if (data?.data?.stats) {
       const s = data.data.stats;
       return {
-        total: s.totalDevices,
-        online: s.onlineDevices,
-        offline: s.offlineDevices,
+        total: typeof s.totalDevices === 'object' ? (s.totalDevices?.count ?? 0) : (s.totalDevices ?? 0),
+        online: typeof s.onlineDevices === 'object' ? (s.onlineDevices?.count ?? 0) : (s.onlineDevices ?? 0),
+        offline: typeof s.offlineDevices === 'object' ? (s.offlineDevices?.count ?? 0) : (s.offlineDevices ?? 0),
         avgUptime: s.avgUptime,
-        trendText: `${s.onlinePercentage}% Online`
+        trendText: `${s.onlinePercentage ?? 0}% Online`
       };
     }
     const total = devicesInRange.length;
@@ -468,11 +468,11 @@ export default function GlobalDevices() {
             <p className="text-sm text-gray-500 dark:text-gray-400">Monitor and manage all connected devices across customers</p>
           </div>
           <div className="flex flex-nowrap gap-2">
-            <Dropdown
+            {/* <Dropdown
               value={timeRange}
               options={['Last 1 day', 'Last 7 days', 'Last 30 days', 'Last 1 year']}
               onChange={setTimeRange}
-            />
+            /> */}
             <button
               onClick={() => router.push('/admin/reports/device-report')}
               className="text-nowrap px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2 transition-colors cursor-pointer"
@@ -716,7 +716,7 @@ export default function GlobalDevices() {
         {renderModalContent()}
       </Modal>
 
-      <GoogleMapModal
+      <AdminLeafletMapModal
         isOpen={mapModalOpen}
         onClose={() => setMapModalOpen(false)}
         lat={selectedLocation.lat}

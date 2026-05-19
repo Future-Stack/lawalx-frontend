@@ -9,6 +9,11 @@ export type GlobalDeviceUser = {
   company_name: string | null;
   usedStorage?: number;
   totalStorage?: number;
+  account?: {
+    email: string;
+    [key: string]: any;
+  };
+  timeZone?: string;
 };
 
 export type GlobalDevice = {
@@ -84,6 +89,38 @@ export type GlobalDevicesExportResponse = {
   data: any[];
 };
 
+export type GlobalDeviceActivityLog = {
+  id: string;
+  userId: string;
+  resourceType: string;
+  resourceId: string;
+  actionType: string;
+  description: string;
+  metadata: any;
+  ipAddress: string | null;
+  timestamp: string;
+  createdAt: string;
+  updatedAt: string;
+  category: string;
+};
+
+export type GlobalDeviceActivityLogsResponse = {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: GlobalDeviceActivityLog[];
+};
+
+export type SyncDeviceResponse = {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: {
+    success: boolean;
+    message: string;
+  };
+};
+
 export interface GlobalDevicesQueryParams {
   page?: number;
   limit?: number;
@@ -155,6 +192,20 @@ const globalDevicesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, arg) => [{ type: "Device", id: arg.id }, { type: "Device", id: "LIST" }],
     }),
+    syncDevice: build.mutation<SyncDeviceResponse, string>({
+      query: (id) => ({
+        url: `/device/${id}/sync`,
+        method: "PATCH",
+      }),
+      invalidatesTags: (result, error, id) => [{ type: "Device", id }],
+    }),
+    getDeviceActivityLogs: build.query<GlobalDeviceActivityLogsResponse, string>({
+      query: (id) => ({
+        url: `/device/${id}/activity-logs`,
+        method: "GET",
+      }),
+      providesTags: (result, error, id) => [{ type: "Device", id }],
+    }),
   }),
 });
 
@@ -164,4 +215,6 @@ export const {
   useGetGlobalDeviceDetailsQuery,
   useDeleteDeviceMutation,
   useRenameDeviceMutation,
+  useSyncDeviceMutation,
+  useGetDeviceActivityLogsQuery,
 } = globalDevicesApi;

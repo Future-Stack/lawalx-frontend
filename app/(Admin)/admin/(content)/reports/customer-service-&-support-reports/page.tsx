@@ -342,8 +342,8 @@ const CustomerServiceReports = () => {
             <div className="text-3xl font-bold text-purple-700 dark:text-purple-300 mb-1">
               {statsLoading ? '...' : statsData?.data.totalTickets.value}
             </div>
-            <div className="text-xs text-purple-600 dark:text-purple-400">
-              {statsData?.data.totalTickets.change && statsData.data.totalTickets.change > 0 ? `+${statsData.data.totalTickets.change}%` : `${statsData?.data.totalTickets.change || 0}%`} change
+            <div className={`text-xs ${statsData?.data.totalTickets.change && statsData.data.totalTickets.change < 0 ? 'text-red-500' : 'text-purple-600 dark:text-purple-400'}`}>
+              {statsData?.data.totalTickets.change && statsData.data.totalTickets.change > 0 ? `+${statsData.data.totalTickets.change}%` : `${Math.abs(statsData?.data.totalTickets.change || 0)}%`} change
             </div>
           </div>
 
@@ -362,8 +362,8 @@ const CustomerServiceReports = () => {
             <div className="text-3xl font-bold mb-1">
               {statsLoading ? '...' : `${statsData?.data.avgResponseTime.value} ${statsData?.data.avgResponseTime.unit}`}
             </div>
-            <div className="text-xs text-green-500">
-              {statsData?.data.avgResponseTime.change && statsData.data.avgResponseTime.change > 0 ? `+${statsData.data.avgResponseTime.change}%` : `${statsData?.data.avgResponseTime.change || 0}%`} improvement
+            <div className={`text-xs ${statsData?.data.avgResponseTime.change && statsData.data.avgResponseTime.change < 0 ? 'text-red-500' : 'text-green-500'}`}>
+              {statsData?.data.avgResponseTime.change && statsData.data.avgResponseTime.change > 0 ? `+${statsData.data.avgResponseTime.change}%` : `${Math.abs(statsData?.data.avgResponseTime.change || 0)}%`} {statsData?.data.avgResponseTime.change && statsData.data.avgResponseTime.change < 0 ? 'regression' : 'improvement'}
             </div>
           </div>
 
@@ -372,8 +372,8 @@ const CustomerServiceReports = () => {
             <div className="text-3xl font-bold mb-1">
               {statsLoading ? '...' : `${statsData?.data.avgResolutionTime.value} ${statsData?.data.avgResolutionTime.unit}`}
             </div>
-            <div className="text-xs text-green-500">
-              {statsData?.data.avgResolutionTime.change && statsData.data.avgResolutionTime.change > 0 ? `+${statsData.data.avgResolutionTime.change}%` : `${statsData?.data.avgResolutionTime.change || 0}%`} improvement
+            <div className={`text-xs ${statsData?.data.avgResolutionTime.change && statsData.data.avgResolutionTime.change < 0 ? 'text-red-500' : 'text-green-500'}`}>
+              {statsData?.data.avgResolutionTime.change && statsData.data.avgResolutionTime.change > 0 ? `+${statsData.data.avgResolutionTime.change}%` : `${Math.abs(statsData?.data.avgResolutionTime.change || 0)}%`} {statsData?.data.avgResolutionTime.change && statsData.data.avgResolutionTime.change < 0 ? 'regression' : 'improvement'}
             </div>
           </div>
         </div>

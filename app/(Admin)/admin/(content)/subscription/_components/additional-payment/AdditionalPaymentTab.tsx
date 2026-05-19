@@ -1,0 +1,199 @@
+"use client";
+
+import { useState } from "react";
+import {
+  Search,
+  Eye,
+  CloudDownload,
+  Loader2,
+} from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import BaseSelect from "@/common/BaseSelect";
+import { Button } from "@/components/ui/button";
+import SubscriptionTabLayout from "../SubscriptionTabLayout";
+import {
+  ADDITIONAL_PAYMENT_ROWS,
+  type PaymentHistoryRow,
+} from "../../_data/additionalPaymentMock";
+import { downloadInvoicePdf } from "./_utils/downloadInvoicePdf";
+import InvoiceViewModal from "./_components/InvoiceViewModal";
+import { toast } from "sonner";
+
+const AdditionalPaymentTab = () => {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("this-month");
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [viewRow, setViewRow] = useState<PaymentHistoryRow | null>(null);
+
+  const handleDownloadInvoice = async (item: PaymentHistoryRow) => {
+    try {
+      setDownloadingId(item.id);
+      await downloadInvoicePdf({
+        ...item,
+        subject: item.address,
+      });
+      toast.success("Invoice downloaded");
+    } catch (e) {
+      console.error(e);
+      toast.error("Could not generate PDF. Please try again.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const invoiceModalData = viewRow
+    ? { ...viewRow, subject: viewRow.address }
+    : null;
+
+  return (
+    <SubscriptionTabLayout
+      title="Payment History"
+      actionButton={
+        <Button
+          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg px-4 py-2 h-auto text-sm font-medium shadow-customShadow flex items-center gap-2"
+        >
+          Download All
+        </Button>
+      }
+      filters={
+        <div className="flex flex-col lg:flex-row gap-4 items-center">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              placeholder="Search by name, email, or Invoice ID..."
+              aria-label="Search payments"
+              className="w-full bg-navbarBg border border-border rounded-lg pl-10 pr-4 py-2.5 placeholder:text-gray-400 focus-visible:ring-0 focus:outline-none text-gray-900 dark:text-white"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+            <div className="w-full sm:w-[160px]">
+              <BaseSelect
+                placeholder="All Status"
+                options={[
+                  { label: "All Status", value: "all" },
+                  { label: "Paid", value: "Paid" },
+                  { label: "Unpaid", value: "Unpaid" },
+                ]}
+                value={statusFilter}
+                onChange={setStatusFilter}
+                showLabel={false}
+              />
+            </div>
+            <div className="w-full sm:w-[160px]">
+              <BaseSelect
+                placeholder="This Month"
+                options={[
+                  { label: "This Month", value: "this-month" },
+                  { label: "Last Month", value: "last-month" },
+                  { label: "Last 6 Months", value: "last-6-months" },
+                ]}
+                value={timeFilter}
+                onChange={setTimeFilter}
+                showLabel={false}
+              />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <Table>
+        <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+          <TableRow className="hover:bg-transparent border-b border-gray-200 dark:border-gray-700">
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              Bill To
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              Bill From
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              Address
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              Total Price
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              Status
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4 text-right">
+              Action
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {ADDITIONAL_PAYMENT_ROWS.map((item) => (
+            <TableRow
+              key={item.id}
+              className="border-b border-gray-200 dark:border-gray-700 last:border-0 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+            >
+              <TableCell className="py-5 text-[14px] font-bold text-headings">
+                {item.billTo}
+              </TableCell>
+              <TableCell className="py-5 text-[14px] text-headings">
+                {item.billFrom}
+              </TableCell>
+              <TableCell className="py-5 text-[14px] text-headings">
+                {item.address}
+              </TableCell>
+              <TableCell className="py-5 text-[14px] font-bold text-headings">
+                {item.totalPrice}
+              </TableCell>
+              <TableCell className="py-5">
+                <span
+                  className={`px-3 py-1 rounded-full text-[12px] font-medium border ${item.status === "Paid"
+                      ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                      : "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800"
+                    }`}
+                >
+                  {item.status}
+                </span>
+              </TableCell>
+              <TableCell className="py-5 text-right">
+                <div className="flex items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadInvoice(item)}
+                    disabled={downloadingId === item.id}
+                    aria-label="Download invoice PDF"
+                    className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {downloadingId === item.id ? (
+                      <Loader2 className="w-5 h-5 opacity-70 animate-spin" />
+                    ) : (
+                      <CloudDownload className="w-5 h-5 opacity-70" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewRow(item)}
+                    aria-label="View invoice"
+                    className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer"
+                  >
+                    <Eye className="w-5 h-5 opacity-70" />
+                  </button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <InvoiceViewModal
+        open={viewRow !== null}
+        onClose={() => setViewRow(null)}
+        data={invoiceModalData}
+      />
+    </SubscriptionTabLayout>
+  );
+};
+
+export default AdditionalPaymentTab;
