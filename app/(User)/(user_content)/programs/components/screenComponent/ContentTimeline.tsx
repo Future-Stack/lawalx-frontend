@@ -7,8 +7,8 @@ import { useState, useEffect } from "react";
 import AddContentDialog from "./AddContentDialog";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import { Timeline } from "@/redux/api/users/programs/programs.type";
-import { useDeleteFileMutation } from "@/redux/api/users/content/content.api";
 import { toast } from "sonner";
+import { useDeleteTimelineItemMutation } from "@/redux/api/users/programs/programs.api";
 
 type FileData = {
   id: string;
@@ -36,7 +36,7 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   selectedId,
   onChange,
 }) => {
-  const [deleteFile] = useDeleteFileMutation();
+  const [deleteFile] = useDeleteTimelineItemMutation();
   const [items, setItems] = useState<Timeline[]>([]);
   const [isAddExistingOpen, setIsAddExistingOpen] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -68,17 +68,13 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   const handleRemove = async (item: Timeline) => {
     try {
       setDeletingId(item.id);
-      // Calling the deleteFile API with the file's ID from content.api
-      const res = await deleteFile({ id: item.fileId }).unwrap();
+      const res = await deleteFile({ timelineId: item.id }).unwrap();
       toast.success(res?.message || "File deleted successfully");
-
       const updatedItems = items.filter((i) => i.id !== item.id);
       setItems(updatedItems);
       onChange?.(updatedItems);
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to delete file");
-    } finally {
-      setDeletingId(null);
     }
   };
 
