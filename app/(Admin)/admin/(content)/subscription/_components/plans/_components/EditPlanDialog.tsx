@@ -108,7 +108,7 @@ const EditPlanDialog = ({
       maxWidth="xl"
       maxHeight="xl"
       hideScrollbar={false}
-      className="p-0"
+      className="p-0 [&>div:first-child]:hidden"
     >
       <div className="flex flex-col h-full bg-white dark:bg-gray-950">
         {/* Header with Icon */}
@@ -176,7 +176,7 @@ const EditPlanDialog = ({
               </Label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#667085] text-[16px] font-medium">
-                  {currency === "USD" ? "$" : currency}
+                  {currency === "NGN" ? "₦" : currency === "USD" ? "$" : currency}
                 </span>
                 <input
                   id="plan-price"

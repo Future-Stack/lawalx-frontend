@@ -8,6 +8,9 @@ import {
   ScreenSize,
 } from "@/redux/api/admin/payments/screenManagement/screenSizeApi";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store/store";
+import { getCurrencySymbol } from "@/lib/currencyUtils";
 
 interface ScreenSizeDialogProps {
   open: boolean;
@@ -24,6 +27,9 @@ const ScreenSizeDialog = ({
 }: ScreenSizeDialogProps) => {
   const [size, setSize] = useState("");
   const [price, setPrice] = useState("");
+
+  const currency = useSelector((state: RootState) => state.settings.currency);
+  const currencySymbol = getCurrencySymbol(currency);
 
   const [createScreenSize, { isLoading: isCreating }] =
     useCreateScreenSizeMutation();
@@ -77,7 +83,7 @@ const ScreenSizeDialog = ({
       title=""
       description=""
       maxWidth="xl"
-      className="p-0"
+      className="p-0 [&>div:first-child]:hidden"
     >
       <div className="flex flex-col h-full">
         {/* Header with Icon */}
@@ -130,7 +136,7 @@ const ScreenSizeDialog = ({
             </Label>
             <div className="relative">
               <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#667085] text-[16px] font-medium">
-                $
+                {currencySymbol}
               </span>
               <input
                 id="screen-price"

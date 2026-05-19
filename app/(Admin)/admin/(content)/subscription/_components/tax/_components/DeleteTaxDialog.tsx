@@ -38,6 +38,7 @@ const DeleteTaxDialog = ({
       title=""
       description=""
       maxWidth="sm"
+      className="[&>div:first-child]:hidden"
     >
       <div className="flex flex-col items-center text-center space-y-6 pt-2 pb-4">
         {/* Warning Icon - Custom Square styling as per UI */}

@@ -27,6 +27,9 @@ import {
   ScreenSize,
 } from "@/redux/api/admin/payments/screenManagement/screenSizeApi";
 import { toast } from "sonner";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store/store";
+import { getCurrencySymbol } from "@/lib/currencyUtils";
 
 const ManageScreenSizeTab = () => {
   const [search, setSearch] = useState("");
@@ -38,6 +41,9 @@ const ManageScreenSizeTab = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ScreenSize | null>(null);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
+
+  const globalCurrency = useSelector((state: RootState) => state.settings.currency);
+  const currencySymbol = getCurrencySymbol(globalCurrency);
 
   // API Queries
   const { data: response, isLoading } = useGetAllScreenSizesQuery({
@@ -163,7 +169,7 @@ const ManageScreenSizeTab = () => {
                         {item.size}
                       </TableCell>
                       <TableCell className="py-5 text-[14px] font-bold text-headings">
-                        {item.currency === "USD" ? "$" : item.currency}
+                        {currencySymbol}
                         {item.price}
                       </TableCell>
                       <TableCell className="py-5">
