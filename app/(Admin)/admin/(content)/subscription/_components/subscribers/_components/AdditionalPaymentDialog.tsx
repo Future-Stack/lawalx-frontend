@@ -5,6 +5,9 @@ import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
 import { Plus, Trash2, Paperclip } from "lucide-react";
 import { Subscriber } from "../SubscribersTab";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store/store";
+import { getCurrencySymbol } from "@/lib/currencyUtils";
 
 interface DetailItem {
   id: string;
@@ -35,6 +38,9 @@ const AdditionalPaymentDialog = ({
   );
   const [address, setAddress] = useState("Antopolis Designs and Technologies");
   const [subject, setSubject] = useState("");
+
+  const currency = useSelector((state: RootState) => state.settings.currency);
+  const currencySymbol = getCurrencySymbol(currency);
 
   const [items, setItems] = useState<DetailItem[]>([
     {
@@ -102,7 +108,7 @@ const AdditionalPaymentDialog = ({
       title=""
       description=""
       maxWidth="4xl"
-      className="p-0 bg-bgGray dark:bg-gray-950 overflow-hidden"
+      className="p-0 bg-bgGray dark:bg-gray-950 overflow-hidden [&>div:first-child]:hidden"
     >
       <div className="p-8 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
         {/* Top Grid */}
@@ -281,7 +287,7 @@ const AdditionalPaymentDialog = ({
                     <td className="py-4 px-3">
                       <div className="relative">
                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[12px] text-headings font-bold">
-                          $
+                          {currencySymbol}
                         </span>
                         <input
                           type="number"
@@ -302,7 +308,7 @@ const AdditionalPaymentDialog = ({
                     <td className="py-4 px-3">
                       <div className="relative">
                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[12px] text-headings font-bold">
-                          $
+                          {currencySymbol}
                         </span>
                         <input
                           type="number"
@@ -317,7 +323,7 @@ const AdditionalPaymentDialog = ({
                     <td className="py-4 px-3">
                       <div className="relative">
                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[12px] text-headings font-bold">
-                          $
+                          {currencySymbol}
                         </span>
                         <input
                           type="number"
@@ -334,7 +340,7 @@ const AdditionalPaymentDialog = ({
                     <td className="py-4 px-3">
                       <div className="relative">
                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[12px] text-headings font-bold">
-                          $
+                          {currencySymbol}
                         </span>
                         <input
                           type="number"

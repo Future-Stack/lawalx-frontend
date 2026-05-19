@@ -54,10 +54,8 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
   };
 
   const formatAmount = (amount: number, currency: string) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency || "USD",
-    }).format(amount);
+    const symbol = currency === "NGN" ? "₦" : currency === "USD" ? "$" : currency;
+    return `${symbol}${amount.toLocaleString()}`;
   };
 
   const getStatusColor = (status: string) => {
