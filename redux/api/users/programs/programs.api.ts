@@ -44,12 +44,19 @@ const programsAPI = baseApi.injectEndpoints({
       invalidatesTags: ["Programs"],
     }),
 
-    deleteTimelineItem: build.mutation<SuccessResponse, { id: string }>({
-      query: ({ id }) => ({
-        url: `/program/delete-timeline-item/${id}`,
+    // deleteTimelineItem: build.mutation<SuccessResponse, { id: string }>({
+    //   query: ({ id }) => ({
+    //     url: `/program/delete-timeline-item/${id}`,
+    //     method: "DELETE",
+    //   }),
+    //   invalidatesTags: ["Programs"],
+    // }),
+    deleteTimelineItem: build.mutation<SuccessResponse, { timelineId: string }>({
+      query: ({ timelineId }) => ({
+        url: `/program/timeline/${timelineId}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Programs"],
+      invalidatesTags: ["Programs", "Content"],
     }),
 
   }),

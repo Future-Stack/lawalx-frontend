@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Dropdown from "@/common/Dropdown";
 import Image from "next/image";
-import { useDeleteFileMutation, useDeleteFolderMutation, useGetAllContentDataQuery } from "@/redux/api/users/content/content.api";
+import { useGetAllContentDataQuery } from "@/redux/api/users/content/content.api";
 import { transformFile, transformFolder } from "@/lib/content-utils";
 import folderIcon from "@/public/icons/folder.svg";
 import { useCreateProgramMutation } from "@/redux/api/users/programs/programs.api";
@@ -46,14 +46,13 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
   const { data: devicesData, isLoading: isDevicesLoading } = useGetMyDevicesDataQuery(undefined);
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [deletedContentIds, setDeletedContentIds] = useState<Set<string>>(new Set());
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedType, setSelectedType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [isMounted, setIsMounted] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(false);
-  const [deleteContent] = useDeleteFileMutation();
-  const [deleteFolder] = useDeleteFolderMutation();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [programData, setProgramData] = useState<{
     name: string;
@@ -78,11 +77,22 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
   const transformedContent = useMemo(() => {
     if (!allContentData?.data) return [];
 
-    const folders = allContentData.data.folders.map((folder: any) => transformFolder(folder, isMounted));
-    const rootFiles = allContentData.data.rootFiles.map((file: any) => transformFile(file, isMounted));
+    const folders = allContentData.data.folders
+      .filter((folder: any) => !deletedContentIds.has(folder.id))
+      .map((folder: any) => {
+        const transFolder = transformFolder(folder, isMounted);
+        if (transFolder.children) {
+          transFolder.children = transFolder.children.filter((child: any) => !deletedContentIds.has(child.id));
+        }
+        return transFolder;
+      });
+
+    const rootFiles = allContentData.data.rootFiles
+      .filter((file: any) => !deletedContentIds.has(file.id))
+      .map((file: any) => transformFile(file, isMounted));
 
     return [...folders, ...rootFiles];
-  }, [allContentData, isMounted]);
+  }, [allContentData, isMounted, deletedContentIds]);
 
   const filteredContent = useMemo(() => {
     return transformedContent.filter((item) => {
@@ -114,6 +124,7 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     setCurrentStep(1);
     setSearchQuery("");
     setSelectedType("all");
+    setDeletedContentIds(new Set());
     setProgramData({
       name: "",
       description: "",
@@ -192,22 +203,22 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     const isExpanded = expandedFolders.has(item.id);
     console.log("item delete", item.id);
     
-    const deleteFile = async (id: any) => {
-      try {
-        setDeletingId(id);
-        const res = item.type === "folder"
-          ? await deleteFolder(id).unwrap()
-          : await deleteContent({ id }).unwrap();
-        console.log(res);
-
-        if (res.success) {
-          toast.success(res.message || "File deleted successfully");
-        }
-      } catch (error: any) {
-        toast.error(error?.data?.message || "Failed to delete file");
-      } finally {
+    const deleteFile = (id: any) => {
+      setDeletingId(id);
+      setTimeout(() => {
+        setDeletedContentIds((prev) => {
+          const next = new Set(prev);
+          next.add(id);
+          return next;
+        });
+        // Deselect the content item if it was selected
+        setProgramData((prev) => ({
+          ...prev,
+          content_ids: prev.content_ids.filter((contentId) => contentId !== id),
+        }));
         setDeletingId(null);
-      }
+        toast.success("Content removed from list");
+      }, 500);
     };
 
     return (

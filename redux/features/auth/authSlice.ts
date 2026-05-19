@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
@@ -28,7 +29,8 @@ const getUserFromToken = (token: string): User | null => {
       role: decoded.role || "user",
       name: decoded.name || decoded.userName || "",
     };
-  } catch (e) {
+  } catch (e: any) {
+    console.log(e);
     return null;
   }
 };
@@ -91,6 +93,12 @@ const authSlice = createSlice({
       // Remove cookies with explicit path
       Cookies.remove("token", { path: '/' });
       Cookies.remove("refreshToken", { path: '/' });
+
+      // Clear user-specific onboarding local storage items
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("is_new_user");
+        localStorage.removeItem("onboarding_step");
+      }
     },
     setToken: (state, action: PayloadAction<{ token: string }>) => {
       state.token = action.payload.token;

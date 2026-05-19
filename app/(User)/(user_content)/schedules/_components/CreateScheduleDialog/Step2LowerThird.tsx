@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { AudioLines, FilePlay, GalleryThumbnails, Music } from "lucide-react";
+import { AudioLines, FilePlay, GalleryThumbnails } from "lucide-react";
 import NextImage from "next/image";
 import BaseSelect from "@/common/BaseSelect";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
