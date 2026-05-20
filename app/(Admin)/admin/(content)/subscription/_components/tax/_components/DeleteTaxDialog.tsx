@@ -2,7 +2,10 @@
 
 import BaseDialog from "@/common/BaseDialog";
 import { AlertTriangle, Loader2 } from "lucide-react";
-import { TaxRegion, useDeleteTaxMutation } from "@/redux/api/admin/payments/tax/taxApi";
+import {
+  TaxRegion,
+  useDeleteTaxMutation,
+} from "@/redux/api/admin/payments/tax/taxApi";
 import { toast } from "sonner";
 
 interface DeleteTaxDialogProps {
@@ -11,11 +14,7 @@ interface DeleteTaxDialogProps {
   data: TaxRegion | null;
 }
 
-const DeleteTaxDialog = ({
-  open,
-  setOpen,
-  data,
-}: DeleteTaxDialogProps) => {
+const DeleteTaxDialog = ({ open, setOpen, data }: DeleteTaxDialogProps) => {
   const [deleteTax, { isLoading }] = useDeleteTaxMutation();
 
   const handleDelete = async () => {

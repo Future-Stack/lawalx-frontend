@@ -18,12 +18,7 @@ interface TaxDialogProps {
   data: TaxRegion | null;
 }
 
-const TaxDialog = ({
-  open,
-  setOpen,
-  mode,
-  data,
-}: TaxDialogProps) => {
+const TaxDialog = ({ open, setOpen, mode, data }: TaxDialogProps) => {
   const [region, setRegion] = useState("");
   const [taxRate, setTaxRate] = useState("");
   const [createTax, { isLoading: isCreating }] = useCreateTaxMutation();

@@ -23,6 +23,14 @@ import { selectCurrentUser } from '@/redux/features/auth/authSlice';
 import {
   useGetAssignedTicketDetailsQuery,
   useResolveTicketMutation,
+  useGetTagsQuery,
+  useGetTicketTagsQuery,
+  useCreateTagMutation,
+  useUpdateTagMutation,
+  useDeleteTagMutation,
+  useAttachTagToTicketMutation,
+  useRemoveTagFromTicketMutation,
+  SupporterTag
 } from '@/redux/api/supporter/supporterTicketApi';
 import { useUploadSupportFileMutation } from '@/redux/api/users/support/supportApi';
 import type { ChatAttachment, ChatMessage } from '@/types/chat';
@@ -105,9 +113,20 @@ export default function TicketConversationDialog({
   onOpenChange,
   ticket,
 }: TicketConversationDialogProps) {
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [availableTags, setAvailableTags] = useState(["Label Name 1", "Label Name 2", "Label Name 3", "Needs refund"]);
-  const [editingTag, setEditingTag] = useState<{ old: string; current: string } | null>(null);
+  const { data: tagsRes } = useGetTagsQuery(undefined, { skip: !open });
+  const availableTags = tagsRes?.data || [];
+
+  const { data: ticketTagsRes } = useGetTicketTagsQuery(ticket?.id || '', { skip: !open || !ticket?.id });
+  const selectedTags = ticketTagsRes?.data || [];
+
+  const [createTag] = useCreateTagMutation();
+  const [updateTag] = useUpdateTagMutation();
+  const [deleteTag] = useDeleteTagMutation();
+  const [attachTag] = useAttachTagToTicketMutation();
+  const [removeTag] = useRemoveTagFromTicketMutation();
+
+  const [editingTag, setEditingTag] = useState<{ id: string; current: string } | null>(null);
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [message, setMessage] = useState('');
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -125,6 +144,55 @@ export default function TicketConversationDialog({
       onOpenChange(false);
     } catch (err: any) {
       toast.error(err?.data?.message || 'Failed to resolve ticket');
+    }
+  };
+
+  const handleToggleTag = async (tagId: string, isSelected: boolean) => {
+    if (!ticket?.id) return;
+    try {
+      if (isSelected) {
+        await removeTag({ ticketId: ticket.id, tagId }).unwrap();
+      } else {
+        await attachTag({ ticketId: ticket.id, tagId }).unwrap();
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to update ticket tags');
+    }
+  };
+
+  const handleUpdateTag = async (id: string, newName: string) => {
+    try {
+      await updateTag({ id, name: newName }).unwrap();
+      setEditingTag(null);
+      toast.success('Tag updated successfully');
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to update tag');
+    }
+  };
+
+  const handleDeleteTag = async (id: string) => {
+    try {
+      await deleteTag(id).unwrap();
+      toast.success('Tag deleted successfully');
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to delete tag');
+    }
+  };
+
+  const handleCreateTag = async (name: string) => {
+    if (!name.trim()) return;
+    try {
+      setIsCreatingTag(true);
+      const res = await createTag({ name: name.trim() }).unwrap();
+      if (ticket?.id && res.data?.id) {
+        await attachTag({ ticketId: ticket.id, tagId: res.data.id }).unwrap();
+      }
+      setEditingTag(null);
+      toast.success('Tag created and attached successfully');
+    } catch (err: any) {
+      toast.error(err?.data?.message || 'Failed to create tag');
+    } finally {
+      setIsCreatingTag(false);
     }
   };
 
@@ -273,10 +341,10 @@ export default function TicketConversationDialog({
                 </p>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {selectedTags.map((tag) => (
-                    <div key={tag} className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#E2E8F0] dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+                    <div key={tag.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#E2E8F0] dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
                       <Tag className="w-3.5 h-3.5 text-[#64748B] dark:text-gray-400" />
                       <span className="text-xs font-medium text-[#475569] dark:text-gray-300">
-                        {tag}
+                        {tag.name}
                       </span>
                     </div>
                   ))}
@@ -301,81 +369,99 @@ export default function TicketConversationDialog({
                     <Tag className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-[220px] p-2 space-y-1 z-[9999]" onCloseAutoFocus={(e) => e.preventDefault()}>
-                    {availableTags.map((label) => (
-                      <DropdownMenuItem
-                        key={label}
-                        className="flex items-center justify-between px-2 py-1.5 cursor-default group focus:bg-gray-50 focus:text-gray-900 dark:focus:bg-gray-800/50"
-                        onSelect={(e) => e.preventDefault()}
-                      >
-                        <div className="flex items-center gap-2.5 w-full">
-                          <Checkbox
-                            checked={selectedTags.includes(label)}
-                            onCheckedChange={() => setSelectedTags(prev => prev.includes(label) ? prev.filter(t => t !== label) : [...prev, label])}
-                            className="w-[14px] h-[14px] rounded-sm border-gray-300 data-[state=checked]:bg-[#0FA6FF] data-[state=checked]:border-[#0FA6FF] flex-shrink-0"
-                          />
-                          {editingTag?.old === label ? (
-                            <input
-                              type="text"
-                              value={editingTag.current}
-                              onChange={(e) => setEditingTag({ ...editingTag, current: e.target.value })}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  const newTag = editingTag.current.trim();
-                                  if (newTag && newTag !== editingTag.old && !availableTags.includes(newTag)) {
-                                    setAvailableTags(prev => prev.map(t => t === editingTag.old ? newTag : t));
-                                    setSelectedTags(prev => prev.map(t => t === editingTag.old ? newTag : t));
-                                  }
-                                  setEditingTag(null);
-                                }
-                                if (e.key === 'Escape') setEditingTag(null);
-                              }}
-                              className="text-[13px] text-gray-900 dark:text-white border border-[#0FA6FF] outline-none rounded px-1.5 py-0.5 w-full bg-white dark:bg-gray-900 focus:ring-1 focus:ring-[#0FA6FF]"
-                              autoFocus
+                    {availableTags.map((tag) => {
+                      const isSelected = selectedTags.some(t => t.id === tag.id);
+                      return (
+                        <div
+                          key={tag.id}
+                          className="flex items-center justify-between px-2 py-1.5 group hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-sm transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5 w-full">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => handleToggleTag(tag.id, isSelected)}
+                              className="w-[14px] h-[14px] rounded-sm border-gray-300 data-[state=checked]:bg-[#0FA6FF] data-[state=checked]:border-[#0FA6FF] flex-shrink-0"
                             />
-                          ) : (
-                            <span 
-                              className="text-[13px] text-gray-700 dark:text-gray-300 font-inter truncate select-none cursor-pointer" 
-                              onClick={() => setSelectedTags(prev => prev.includes(label) ? prev.filter(t => t !== label) : [...prev, label])}
-                            >
-                              {label}
-                            </span>
+                            {editingTag?.id === tag.id ? (
+                              <input
+                                type="text"
+                                value={editingTag.current}
+                                onChange={(e) => setEditingTag({ ...editingTag, current: e.target.value })}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const newName = editingTag.current.trim();
+                                    if (newName && newName !== tag.name) {
+                                      handleUpdateTag(tag.id, newName);
+                                    } else {
+                                      setEditingTag(null);
+                                    }
+                                  }
+                                  if (e.key === 'Escape') setEditingTag(null);
+                                }}
+                                className="text-[13px] text-gray-900 dark:text-white border border-[#0FA6FF] outline-none rounded px-1.5 py-0.5 w-full bg-white dark:bg-gray-900 focus:ring-1 focus:ring-[#0FA6FF]"
+                                autoFocus
+                              />
+                            ) : (
+                              <span 
+                                className="text-[13px] text-gray-700 dark:text-gray-300 font-inter truncate select-none cursor-pointer" 
+                                onClick={() => handleToggleTag(tag.id, isSelected)}
+                              >
+                                {tag.name}
+                              </span>
+                            )}
+                          </div>
+                          {editingTag?.id !== tag.id && (
+                            <div className="hidden group-hover:flex items-center gap-2 flex-shrink-0 ml-2">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setEditingTag({ id: tag.id, current: tag.name }); }} 
+                                className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleDeleteTag(tag.id); }} 
+                                className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           )}
                         </div>
-                        {editingTag?.old !== label && (
-                          <div className="hidden group-hover:flex items-center gap-2 flex-shrink-0 ml-2">
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setEditingTag({ old: label, current: label }); }} 
-                              className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
-                            >
-                              <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); setAvailableTags(prev => prev.filter(t => t !== label)); setSelectedTags(prev => prev.filter(t => t !== label)); }} 
-                              className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
-                      </DropdownMenuItem>
-                    ))}
+                      );
+                    })}
                     
                     <div className="h-px bg-gray-200 dark:bg-gray-700 my-1.5" />
                     
-                    <DropdownMenuItem 
-                      className="flex items-center gap-2 px-2 py-1.5 cursor-pointer text-gray-700 dark:text-gray-300 focus:bg-gray-50 focus:text-gray-900 dark:focus:bg-gray-800/50 outline-none"
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        const newLabel = `New Label ${availableTags.length + 1}`;
-                        if (!availableTags.includes(newLabel)) {
-                           setAvailableTags([...availableTags, newLabel]);
-                        }
-                        setEditingTag({ old: newLabel, current: newLabel });
-                      }}
-                    >
-                      <Plus className="w-4 h-4 text-gray-500" />
-                      <span className="text-[13px] font-medium">Create New Label</span>
-                    </DropdownMenuItem>
+                    {editingTag?.id === 'new' ? (
+                      <div className="flex items-center gap-2 px-2 py-1.5">
+                        <input
+                          type="text"
+                          value={editingTag.current}
+                          onChange={(e) => setEditingTag({ ...editingTag, current: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleCreateTag(editingTag.current);
+                            }
+                            if (e.key === 'Escape') setEditingTag(null);
+                          }}
+                          placeholder="Tag name..."
+                          className="text-[13px] text-gray-900 dark:text-white border border-[#0FA6FF] outline-none rounded px-1.5 py-0.5 w-full bg-white dark:bg-gray-900 focus:ring-1 focus:ring-[#0FA6FF]"
+                          autoFocus
+                          disabled={isCreatingTag}
+                        />
+                      </div>
+                    ) : (
+                      <DropdownMenuItem 
+                        className="flex items-center gap-2 px-2 py-1.5 cursor-pointer text-gray-700 dark:text-gray-300 focus:bg-gray-50 focus:text-gray-900 dark:focus:bg-gray-800/50 outline-none"
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          setEditingTag({ id: 'new', current: '' });
+                        }}
+                      >
+                        <Plus className="w-4 h-4 text-gray-500" />
+                        <span className="text-[13px] font-medium">Create New Label</span>
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
 

@@ -30,12 +30,8 @@ const AdditionalPaymentDialog = ({
   setOpen,
   subscriberData,
 }: AdditionalPaymentDialogProps) => {
-  const [billTo, setBillTo] = useState(
-    subscriberData?.userName,
-  );
-  const [billFrom, setBillFrom] = useState(
-    "Tape",
-  );
+  const [billTo, setBillTo] = useState(subscriberData?.userName);
+  const [billFrom, setBillFrom] = useState("Tape");
   const [address, setAddress] = useState("Antopolis Designs and Technologies");
   const [subject, setSubject] = useState("");
 
