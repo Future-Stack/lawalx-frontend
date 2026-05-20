@@ -42,7 +42,9 @@ const ManageScreenSizeTab = () => {
   const [selectedItem, setSelectedItem] = useState<ScreenSize | null>(null);
   const [dialogMode, setDialogMode] = useState<"add" | "edit">("add");
 
-  const globalCurrency = useSelector((state: RootState) => state.settings.currency);
+  const globalCurrency = useSelector(
+    (state: RootState) => state.settings.currency,
+  );
   const currencySymbol = getCurrencySymbol(globalCurrency);
 
   // API Queries

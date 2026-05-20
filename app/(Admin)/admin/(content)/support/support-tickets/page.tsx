@@ -1,11 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { HomeIcon, ChevronRight, CloudDownload } from 'lucide-react';
-import SupportStatsGrid from './_components/SupportStatsGrid';
-import TicketsTable from './_components/TicketsTable';
-import { useLazyGetAllSupportTicketsQuery } from '@/redux/api/admin/support/adminSupportTicketApi';
+import React, { useState } from "react";
+import Link from "next/link";
+import { HomeIcon, ChevronRight, CloudDownload } from "lucide-react";
+import SupportStatsGrid from "./_components/SupportStatsGrid";
+import TicketsTable from "./_components/TicketsTable";
+import { useLazyGetAllSupportTicketsQuery } from "@/redux/api/admin/support/adminSupportTicketApi";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { addPdfHeader } from "@/lib/pdfUtils";
@@ -29,25 +30,41 @@ export default function SupportTickets2Page() {
       const doc = new jsPDF();
 
       // Branded header with logo
-      const startY = await addPdfHeader(doc, 'Support Tickets Report', `Exported: ${new Date().toLocaleString()}`);
+      const startY = await addPdfHeader(
+        doc,
+        "Support Tickets Report",
+        `Exported: ${new Date().toLocaleString()}`,
+      );
 
       // Define table columns
-      const tableColumn = ["Index", "Ticket ID", "Subject", "Issue Type", "Priority", "Status", "Assigned To", "Created At"];
+      const tableColumn = [
+        "Index",
+        "Ticket ID",
+        "Subject",
+        "Issue Type",
+        "Priority",
+        "Status",
+        "Assigned To",
+        "Created At",
+      ];
       const tableRows: any[] = [];
 
       tickets.forEach((ticket: any, index: number) => {
-        const assignedNames = ticket.assignments?.map((a: any) => a.user?.full_name || a.user?.username).join(', ') || 'Unassigned';
-        const issueTypes = ticket.issueType?.join(', ') || 'N/A';
-        
+        const assignedNames =
+          ticket.assignments
+            ?.map((a: any) => a.user?.full_name || a.user?.username)
+            .join(", ") || "Unassigned";
+        const issueTypes = ticket.issueType?.join(", ") || "N/A";
+
         const ticketData = [
           index + 1,
-          ticket.customId || ticket.id || 'N/A',
-          ticket.subject || 'N/A',
+          ticket.customId || ticket.id || "N/A",
+          ticket.subject || "N/A",
           issueTypes,
-          ticket.priority || 'N/A',
-          ticket.status || 'N/A',
+          ticket.priority || "N/A",
+          ticket.status || "N/A",
           assignedNames,
-          new Date(ticket.createdAt).toLocaleDateString()
+          new Date(ticket.createdAt).toLocaleDateString(),
         ];
         tableRows.push(ticketData);
       });
@@ -57,9 +74,9 @@ export default function SupportTickets2Page() {
         head: [tableColumn],
         body: tableRows,
         startY,
-        theme: 'striped',
+        theme: "striped",
         headStyles: { fillColor: [59, 130, 246], fontSize: 7 },
-        styles: { fontSize: 7, cellPadding: 2, overflow: 'linebreak' },
+        styles: { fontSize: 7, cellPadding: 2, overflow: "linebreak" },
         columnStyles: {
           0: { cellWidth: 10 },
           1: { cellWidth: 25 },
@@ -69,11 +86,13 @@ export default function SupportTickets2Page() {
           5: { cellWidth: 15 },
           6: { cellWidth: 30 },
           7: { cellWidth: 20 },
-        }
+        },
       });
 
       // Save PDF
-      doc.save(`support-tickets-report-${new Date().toISOString().split('T')[0]}.pdf`);
+      doc.save(
+        `support-tickets-report-${new Date().toISOString().split("T")[0]}.pdf`,
+      );
       toast.success("Tickets report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
@@ -95,30 +114,49 @@ export default function SupportTickets2Page() {
       const tickets = exportData.data || [];
       const wb = XLSX.utils.book_new();
       const wsData: any[] = [
-        ["Index", "Ticket ID", "Subject", "Description", "Issue Type", "Priority", "Status", "User Email", "Assigned To", "Admin Note", "Created At", "Last Updated"],
+        [
+          "Index",
+          "Ticket ID",
+          "Subject",
+          "Description",
+          "Issue Type",
+          "Priority",
+          "Status",
+          "User Email",
+          "Assigned To",
+          "Admin Note",
+          "Created At",
+          "Last Updated",
+        ],
         ...tickets.map((ticket: any, index: number) => {
-          const assignedNames = ticket.assignments?.map((a: any) => a.user?.full_name || a.user?.username).join(', ') || 'Unassigned';
-          const issueTypes = ticket.issueType?.join(', ') || 'N/A';
-          
+          const assignedNames =
+            ticket.assignments
+              ?.map((a: any) => a.user?.full_name || a.user?.username)
+              .join(", ") || "Unassigned";
+          const issueTypes = ticket.issueType?.join(", ") || "N/A";
+
           return [
             index + 1,
-            ticket.customId || ticket.id || 'N/A',
-            ticket.subject || 'N/A',
-            ticket.description || 'N/A',
+            ticket.customId || ticket.id || "N/A",
+            ticket.subject || "N/A",
+            ticket.description || "N/A",
             issueTypes,
-            ticket.priority || 'N/A',
-            ticket.status || 'N/A',
-            ticket.user?.account?.email || 'N/A',
+            ticket.priority || "N/A",
+            ticket.status || "N/A",
+            ticket.user?.account?.email || "N/A",
             assignedNames,
-            ticket.adminNote || 'N/A',
+            ticket.adminNote || "N/A",
             new Date(ticket.createdAt).toLocaleString(),
-            new Date(ticket.updatedAt).toLocaleString()
+            new Date(ticket.updatedAt).toLocaleString(),
           ];
-        })
+        }),
       ];
       const ws = XLSX.utils.aoa_to_sheet(wsData);
-      XLSX.utils.book_append_sheet(wb, ws, 'Tickets');
-      XLSX.writeFile(wb, `support-tickets-report-${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Tickets");
+      XLSX.writeFile(
+        wb,
+        `support-tickets-report-${new Date().toISOString().split("T")[0]}.xlsx`,
+      );
       toast.success("Tickets report exported successfully");
     } catch (error) {
       console.error("Excel export error:", error);
@@ -155,7 +193,7 @@ export default function SupportTickets2Page() {
         <div className="flex items-center gap-2 flex-shrink-0">
           <div className="relative">
             <button
-              onClick={() => setShowExportMenu(prev => !prev)}
+              onClick={() => setShowExportMenu((prev) => !prev)}
               className="px-4 py-2 shadow-customShadow cursor-pointer bg-navbarBg text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 flex items-center gap-2 transition-colors"
             >
               <CloudDownload className="w-4 h-4" />
@@ -172,14 +210,18 @@ export default function SupportTickets2Page() {
                     onClick={handleExportPDF}
                     className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
                   >
-                    <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
+                    <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">
+                      📄
+                    </span>
                     <span className="font-medium">Export as PDF</span>
                   </button>
                   <button
                     onClick={handleExportExcel}
                     className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
                   >
-                    <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
+                    <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">
+                      📊
+                    </span>
                     <span className="font-medium">Export as Excel</span>
                   </button>
                 </div>

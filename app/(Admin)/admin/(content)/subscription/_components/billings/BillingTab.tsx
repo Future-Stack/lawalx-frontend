@@ -274,12 +274,24 @@ const BillingTab = () => {
       <Table>
         <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
           <TableRow>
-            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Invoice</TableHead>
-            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">User</TableHead>
-            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Payment Method</TableHead>
-            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</TableHead>
-            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</TableHead>
-            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Date</TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              Invoice
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              User
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              Payment Method
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              Amount
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              Status
+            </TableHead>
+            <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              Date
+            </TableHead>
             <TableHead className="w-[50px]"></TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
@@ -361,15 +373,15 @@ const BillingTab = () => {
                       <Eye className="mr-2 h-4 w-4" />
                       View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem >
+                    <DropdownMenuItem>
                       <ArrowUpCircle className="mr-2 h-4 w-4" />
                       change plan
                     </DropdownMenuItem>
-                    <DropdownMenuItem >
+                    <DropdownMenuItem>
                       <Mail className="mr-2 h-4 w-4" />
                       Resend Receipt
                     </DropdownMenuItem>
-                    
+
                     <DropdownMenuItem
                       onClick={() => handleViewInGateway(payment.paymentId)}
                       disabled={gatewayLoadingId === payment.paymentId}
@@ -381,13 +393,15 @@ const BillingTab = () => {
                       )}
                       View in Gateway
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-red-500 focus:text-red-500"
-                      onClick={() => handleRefund(payment)}
-                    >
-                      <RotateCcw className="mr-2 h-4 w-4" />
-                      Refund
-                    </DropdownMenuItem>
+                    {payment.status !== "REFUNDED" && (
+                      <DropdownMenuItem
+                        className="text-red-500 focus:text-red-500"
+                        onClick={() => handleRefund(payment)}
+                      >
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Refund
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>

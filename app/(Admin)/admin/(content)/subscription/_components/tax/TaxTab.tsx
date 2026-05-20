@@ -157,63 +157,63 @@ const TaxTab = () => {
             <TableBody>
               {filteredTaxes.length > 0 ? (
                 filteredTaxes.map((item) => (
-                    <TableRow
-                      key={item.id}
-                      className="border-b border-gray-200 dark:border-gray-700 last:border-0 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                    >
-                      <TableCell className="py-5 text-[14px] font-bold text-headings">
-                        {item.region}
-                      </TableCell>
-                      <TableCell className="py-5 text-[14px] font-bold text-headings">
-                        {item.taxRate}%
-                      </TableCell>
-                      <TableCell className="py-5">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
-                            item.status
-                              ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                              : "bg-[#FEF3F2] text-[#B42318] border-[#FECDCA] dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
-                          }`}
+                  <TableRow
+                    key={item.id}
+                    className="border-b border-gray-200 dark:border-gray-700 last:border-0 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
+                    <TableCell className="py-5 text-[14px] font-bold text-headings">
+                      {item.region}
+                    </TableCell>
+                    <TableCell className="py-5 text-[14px] font-bold text-headings">
+                      {item.taxRate}%
+                    </TableCell>
+                    <TableCell className="py-5">
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
+                          item.status
+                            ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+                            : "bg-[#FEF3F2] text-[#B42318] border-[#FECDCA] dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                        }`}
+                      >
+                        {item.status ? "Enable" : "Disabled"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-5 text-right">
+                      <div className="flex items-center justify-end gap-2.5">
+                        <button
+                          onClick={() => toggleStatus(item.id, item.status)}
+                          disabled={isUpdatingStatus}
+                          aria-label={
+                            item.status ? "Disable tax" : "Enable tax"
+                          }
+                          className="p-1.5 rounded-md bg-[#E6F4F1] text-muted hover:bg-[#d9eee9] transition-all cursor-pointer disabled:opacity-50"
                         >
-                          {item.status ? "Enable" : "Disabled"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-5 text-right">
-                        <div className="flex items-center justify-end gap-2.5">
-                          <button
-                            onClick={() => toggleStatus(item.id, item.status)}
-                            disabled={isUpdatingStatus}
-                            aria-label={
-                              item.status ? "Disable tax" : "Enable tax"
-                            }
-                            className="p-1.5 rounded-md bg-[#E6F4F1] text-muted hover:bg-[#d9eee9] transition-all cursor-pointer disabled:opacity-50"
-                          >
-                            {isUpdatingStatus ? (
-                              <Loader2 className="w-5 h-5 animate-spin text-muted" />
-                            ) : item.status ? (
-                              <Circle className="w-5 h-5 text-muted" />
-                            ) : (
-                              <Ban className="w-5 h-5 text-muted" />
-                            )}
-                          </button>
-                          <button
-                            onClick={() => handleEdit(item)}
-                            aria-label="Edit tax"
-                            className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
-                          >
-                            <PencilLine className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(item)}
-                            aria-label="Delete tax"
-                            className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                          {isUpdatingStatus ? (
+                            <Loader2 className="w-5 h-5 animate-spin text-muted" />
+                          ) : item.status ? (
+                            <Circle className="w-5 h-5 text-muted" />
+                          ) : (
+                            <Ban className="w-5 h-5 text-muted" />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleEdit(item)}
+                          aria-label="Edit tax"
+                          className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
+                        >
+                          <PencilLine className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(item)}
+                          aria-label="Delete tax"
+                          className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               ) : (
                 <TableRow>
                   <TableCell
