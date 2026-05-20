@@ -47,6 +47,7 @@ export interface Ticket {
   createdAt: string;
   updatedAt: string;
   adminNote?: string;
+  ticketTags?: AdminTicketTag[];
   raw?: any;
 }
 
