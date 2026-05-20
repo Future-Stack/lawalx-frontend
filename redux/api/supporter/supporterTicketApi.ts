@@ -1,3 +1,5 @@
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../baseApi";
 
 // Response Types
@@ -78,6 +80,60 @@ export interface UploadSupportFileResponse {
   };
 }
 
+export interface SupporterTag {
+  id: string;
+  name: string;
+  key: string;
+  isGlobal: boolean;
+  ownerId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TicketTag {
+  id: string;
+  name: string;
+  key: string;
+  isGlobal: boolean;
+  addedBy: string;
+  createdAt: string;
+}
+
+export interface GetTagsResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: SupporterTag[];
+}
+
+export interface CreateTagResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: SupporterTag;
+}
+
+export interface UpdateTagResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: SupporterTag;
+}
+
+export interface GetTicketTagsResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: TicketTag[];
+}
+
+export interface GenericApiResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data?: unknown;
+}
+
 // API Injection
 export const supporterTicketApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -121,6 +177,58 @@ export const supporterTicketApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
+    getTags: builder.query<GetTagsResponse, void>({
+      query: () => ({
+        url: '/supporter/support/tags',
+        method: 'GET',
+      }),
+      providesTags: ['SupporterTag'],
+    }),
+    createTag: builder.mutation<CreateTagResponse, { name: string }>({
+      query: (body) => ({
+        url: '/supporter/support/tags',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['SupporterTag'],
+    }),
+    updateTag: builder.mutation<UpdateTagResponse, { id: string; name: string }>({
+      query: ({ id, ...body }) => ({
+        url: `/supporter/support/tags/${id}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['SupporterTag', 'TicketTag'],
+    }),
+    deleteTag: builder.mutation<GenericApiResponse, string>({
+      query: (id) => ({
+        url: `/supporter/support/tags/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['SupporterTag', 'TicketTag'],
+    }),
+    getTicketTags: builder.query<GetTicketTagsResponse, string>({
+      query: (ticketId) => ({
+        url: `/supporter/support/tickets/${ticketId}/tags`,
+        method: 'GET',
+      }),
+      providesTags: (result, error, arg) => [{ type: 'TicketTag', id: arg }],
+    }),
+    attachTagToTicket: builder.mutation<GenericApiResponse, { ticketId: string; tagId: string }>({
+      query: ({ ticketId, tagId }) => ({
+        url: `/supporter/support/tickets/${ticketId}/tags`,
+        method: 'POST',
+        body: { tagId },
+      }),
+      invalidatesTags: (result, error, { ticketId }) => [{ type: 'TicketTag', id: ticketId }],
+    }),
+    removeTagFromTicket: builder.mutation<GenericApiResponse, { ticketId: string; tagId: string }>({
+      query: ({ ticketId, tagId }) => ({
+        url: `/supporter/support/tickets/${ticketId}/tags/${tagId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: (result, error, { ticketId }) => [{ type: 'TicketTag', id: ticketId }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -131,4 +239,11 @@ export const {
   useGetAssignedTicketDetailsQuery,
   useResolveTicketMutation,
   useUpdateSupporterProfileMutation,
+  useGetTagsQuery,
+  useCreateTagMutation,
+  useUpdateTagMutation,
+  useDeleteTagMutation,
+  useGetTicketTagsQuery,
+  useAttachTagToTicketMutation,
+  useRemoveTagFromTicketMutation,
 } = supporterTicketApi;

@@ -54,7 +54,8 @@ const SubscribersTab = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [additionalPaymentOpen, setAdditionalPaymentOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null);
+  const [selectedSubscriber, setSelectedSubscriber] =
+    useState<Subscriber | null>(null);
 
   const currency = useSelector((state: RootState) => state.settings.currency);
 
@@ -89,7 +90,8 @@ const SubscribersTab = () => {
     },
   ];
 
-  const subscribers = data?.data && data.data.length > 0 ? data.data : dummySubscribers;
+  const subscribers =
+    data?.data && data.data.length > 0 ? data.data : dummySubscribers;
   const meta = data?.meta;
   const totalSubscribers = meta?.total || subscribers.length;
   const totalPages = meta?.totalPages || 1;
@@ -209,18 +211,33 @@ const SubscribersTab = () => {
           <Table>
             <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
               <TableRow>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">User</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Plan</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Payment Cycle</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Next Billing</TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  User
+                </TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  Plan
+                </TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  Amount
+                </TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  Payment Cycle
+                </TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  Next Billing
+                </TableHead>
+                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                  Status
+                </TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {subscribers.map((sub) => (
-                <TableRow key={sub.userId} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <TableRow
+                  key={sub.userId}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
                   <TableCell>
                     <div>
                       <div className="font-medium text-headings">
@@ -278,9 +295,10 @@ const SubscribersTab = () => {
                           <FileText className="mr-2 h-4 w-4" /> View Invoices
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                           onClick={() => handleAdditionalPayment(sub)}
+                          onClick={() => handleAdditionalPayment(sub)}
                         >
-                          <CreditCard className="mr-2 h-4 w-4" /> Additional payment
+                          <CreditCard className="mr-2 h-4 w-4" /> Additional
+                          payment
                         </DropdownMenuItem>
                         <DropdownMenuItem>
                           <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan

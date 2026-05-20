@@ -46,7 +46,7 @@ export default function AdminSidebar({ isCollapsed }: { isCollapsed: boolean }) 
       icon: CircleHelp,
       children: [
         { id: 'support-tickets', label: 'Support Tickets', href: '/admin/support/support-tickets', icon: Ticket },
-        { id: 'enterprise-requests', label: 'Enterprise Requests', href: '/admin/support/enterprise-requests', icon: Briefcase },
+        // { id: 'enterprise-requests', label: 'Enterprise Requests', href: '/admin/support/enterprise-requests', icon: Briefcase },
         { id: 'knowledge-base', label: 'Knowledge Base', href: '/admin/support/knowledge-base', icon: BookOpen },
         { id: 'banner', label: 'Banner', href: '/admin/support/banner', icon: ImageIcon },
         { id: 'supporter-employees', label: 'Supporter Employees', href: '/admin/support/supporter-employees', icon: UserCheck },

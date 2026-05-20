@@ -84,8 +84,9 @@ export default function TicketDetailsDialog({
       } else {
         toast.error(res.message || 'Failed to resolve ticket');
       }
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Something went wrong');
+    } catch (err) {
+      const error = err as { data?: { message?: string } };
+      toast.error(error?.data?.message || 'Something went wrong');
     }
   };
 
@@ -129,6 +130,22 @@ export default function TicketDetailsDialog({
                 >
                   {ticket.priority} Priority
                 </span>
+                
+                {/* Ticket Tags */}
+                {ticketDetails?.data?.ticketTags && ticketDetails.data.ticketTags.length > 0 && (
+                  <>
+                    <div className="w-px h-4 bg-gray-300 dark:bg-gray-600 mx-1" />
+                    {ticketDetails.data.ticketTags.map((t) => (
+                      <span
+                        key={t.tag.id}
+                        className="text-[11px] px-2 py-0.5 rounded-md font-medium text-blue-700 bg-blue-50 border border-blue-200 dark:text-blue-300 dark:bg-blue-900/30 dark:border-blue-800 flex items-center gap-1 shadow-sm"
+                      >
+                        <span className="opacity-70 text-blue-500">#</span>
+                        {t.tag.name}
+                      </span>
+                    ))}
+                  </>
+                )}
               </div>
 
               {/* Subject */}
