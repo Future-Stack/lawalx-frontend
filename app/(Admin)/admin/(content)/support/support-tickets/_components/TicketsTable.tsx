@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -161,6 +162,7 @@ export default function TicketsTable() {
         createdAt: new Date(t.createdAt).toLocaleDateString(),
         updatedAt: new Date(t.updatedAt).toLocaleDateString(),
         adminNote: t.adminNote || undefined,
+        ticketTags: t.ticketTags || [],
         raw: t,
       } as unknown as Ticket;
     });
@@ -322,6 +324,9 @@ export default function TicketsTable() {
                 Priority
               </TableHead>
               <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Tags
+              </TableHead>
+              <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                 Assigned To
               </TableHead>
               <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -336,14 +341,14 @@ export default function TicketsTable() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center text-sm text-gray-400">
+                <TableCell colSpan={9} className="py-12 text-center text-sm text-gray-400">
                   Loading tickets...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={9}
                   className="py-12 text-center text-sm text-gray-400 dark:text-gray-500"
                 >
                   No tickets found.
@@ -412,6 +417,30 @@ export default function TicketsTable() {
                   {/* Priority */}
                   <TableCell className="px-4 py-3">
                     <PriorityBadge priority={ticket.priority} />
+                  </TableCell>
+
+                  {/* Tags */}
+                  <TableCell className="px-4 py-3">
+                    {ticket.ticketTags && ticket.ticketTags.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 max-w-[150px]">
+                        {ticket.ticketTags.slice(0, 2).map((t) => (
+                          <span
+                            key={t.id}
+                            className="text-[10px] px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 whitespace-nowrap"
+                            title={t.name}
+                          >
+                            {t.name}
+                          </span>
+                        ))}
+                        {ticket.ticketTags.length > 2 && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 cursor-help" title={ticket.ticketTags.slice(2).map(t => t.name).join(', ')}>
+                            +{ticket.ticketTags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic">...</span>
+                    )}
                   </TableCell>
 
                   {/* Assigned To */}
