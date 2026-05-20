@@ -381,13 +381,15 @@ const BillingTab = () => {
                       )}
                       View in Gateway
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-red-500 focus:text-red-500"
-                      onClick={() => handleRefund(payment)}
-                    >
-                      <RotateCcw className="mr-2 h-4 w-4" />
-                      Refund
-                    </DropdownMenuItem>
+                    {payment.status !== "REFUNDED" && (
+                      <DropdownMenuItem
+                        className="text-red-500 focus:text-red-500"
+                        onClick={() => handleRefund(payment)}
+                      >
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Refund
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
