@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../../baseApi";
 
 // Enums & Types
@@ -73,6 +74,16 @@ export interface TicketAssignment {
   user: TicketAssignmentUser;
 }
 
+export interface AdminTicketTag {
+  id: string;
+  name: string;
+  key: string;
+}
+
+export interface AdminSingleTicketTag {
+  tag: AdminTicketTag;
+}
+
 export interface AdminSupportTicket {
   id: string;
   userId: string;
@@ -89,6 +100,7 @@ export interface AdminSupportTicket {
   customId: string;
   user: AdminTicketUser;
   assignments: TicketAssignment[];
+  ticketTags?: AdminTicketTag[];
 }
 
 export interface GetAllTicketsParams {
@@ -158,6 +170,7 @@ export interface AdminTicketDetailData {
   user?: { id?: string; username: string; image_url?: string | null };
   messages: AdminTicketMessage[];
   assignments: AdminTicketDetailAssignment[];
+  ticketTags?: AdminSingleTicketTag[];
 }
 
 export interface AdminTicketDetailResponse {

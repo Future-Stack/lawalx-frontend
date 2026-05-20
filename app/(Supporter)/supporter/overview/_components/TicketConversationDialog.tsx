@@ -341,11 +341,21 @@ export default function TicketConversationDialog({
                 </p>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {selectedTags.map((tag) => (
-                    <div key={tag.id} className="flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#E2E8F0] dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
-                      <Tag className="w-3.5 h-3.5 text-[#64748B] dark:text-gray-400" />
-                      <span className="text-xs font-medium text-[#475569] dark:text-gray-300">
+                    <div key={tag.id} className="group flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#E2E8F0] dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm transition-colors hover:bg-red-50 dark:hover:bg-red-900/20">
+                      <Tag className="w-3.5 h-3.5 text-[#64748B] dark:text-gray-400 group-hover:text-red-400 transition-colors" />
+                      <span className="text-xs font-medium text-[#475569] dark:text-gray-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                         {tag.name}
                       </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleTag(tag.id, true);
+                        }}
+                        className="ml-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors"
+                        aria-label={`Remove ${tag.name} tag`}
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
                     </div>
                   ))}
                 </div>
