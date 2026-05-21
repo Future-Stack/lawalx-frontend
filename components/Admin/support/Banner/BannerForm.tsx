@@ -124,14 +124,14 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
                                 <SelectValue placeholder="Select target users" />
                             </SelectTrigger>
                             <SelectContent className="bg-navbarBg border-border">
-                                <SelectItem value="ALL_USERS">All Users</SelectItem>
-                                <SelectItem value="STARTER">Starter</SelectItem>
+                                <SelectItem value="ALL_USERS">All Users</SelectItem> 
+                                <SelectItem value="BASIC">Basic</SelectItem>
                                 <SelectItem value="BUSINESS">Business</SelectItem>
-                                <SelectItem value="FREE_TRIAL">Free Trial</SelectItem>
+                                <SelectItem value="PREMIUM">Premium</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
-                </div>
+                </div> 
 
                 {/* 2. Content (Title, Description) - Now for both modes */}
                 <div className="space-y-4">
