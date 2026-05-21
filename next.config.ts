@@ -33,6 +33,19 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async rewrites() {
+    const backendUrl = process.env.BACKEND_URL;
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${backendUrl}/api/:path*`,
+      },
+      {
+        source: "/uploads/:path*",
+        destination: `${backendUrl}/uploads/:path*`,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
