@@ -54,8 +54,7 @@ const DeviceReportDashboard = () => {
         ['Metric', 'Value'],
         ['Total Devices', (stats.totalDevices || devices.length || 0).toLocaleString()],
         ['Online Devices', (stats.onlineDevices || 0).toLocaleString()],
-        ['Offline Devices', (stats.offlineDevices || 0).toLocaleString()],
-        ['Average Uptime', `${stats.averageUptime || 0}%`]
+        ['Offline Devices', (stats.offlineDevices || 0).toLocaleString()]
       ];
 
       autoTable(doc, {
@@ -177,12 +176,12 @@ const DeviceReportDashboard = () => {
     ];
 
     const regionsFromApi = (apiData.regionalStats || []).map((r: any) => ({
-      name: r.region || r.name,
-      base: r.totalDevices || r.base || 0,
-      online: r.onlineDevices || r.online || 0,
-      offline: r.offlineDevices || r.offline || 0,
-      onlineRate: (r.onlineDevices / r.totalDevices) || 0,
-      offlineRate: (r.offlineDevices / r.totalDevices) || 0
+      name: r.region || r.name || 'Unknown',
+      base: r.total || 0,
+      online: r.online || 0,
+      offline: r.offline || 0,
+      onlineRate: r.total ? (r.online / r.total) : 0,
+      offlineRate: r.total ? (r.offline / r.total) : 0
     }));
 
     return {
