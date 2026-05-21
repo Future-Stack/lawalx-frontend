@@ -21,10 +21,10 @@ export const userPlanApi = baseApi.injectEndpoints({
       providesTags: ["UserPlans"],
     }),
     getPlanById: builder.query<PlanApiResponse<UserPlan>, PlanByIdParams>({
-      query: ({ id, billing, screenSize }) => ({
+      query: ({ id, billing, screenSize, deviceQuantity }) => ({
         url: `/plans/${id}`,
         method: "GET",
-        params: { billing, screenSize },
+        params: { billing, screenSize, deviceQuantity },
       }),
       providesTags: (_result, _error, { id }) => [{ type: "UserPlans", id }],
     }),

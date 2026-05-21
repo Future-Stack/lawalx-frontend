@@ -2,11 +2,18 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Crown, Monitor, Database, Video, LayoutTemplate, ArrowLeft, Loader2 } from "lucide-react";
+import {
+  Crown,
+  Monitor,
+  Database,
+  Video,
+  LayoutTemplate,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { useGetProfileQuery } from "@/redux/api/users/settings/personalApi";
 import { useCreateCheckoutMutation } from "@/redux/api/users/payment/payment.api";
-import { toast } from "sonner";
 import {
   useGetActivePlansQuery,
   useGetActiveScreenSizesQuery,
@@ -28,6 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 function parseBillingParam(raw: string | null): BillingCycle {
   return raw === "YEARLY" ? "YEARLY" : "MONTHLY";
@@ -65,11 +73,11 @@ function ChoosePlanPageInner() {
     () => screenSizesRes?.data ?? [],
     [screenSizesRes?.data],
   );
-  
+
   const hasYearlyDiscount =
     yearlyDiscountRes?.data?.[0]?.hasYearlyDiscount ?? false;
   const yearlyDiscountRate = hasYearlyDiscount
-    ? yearlyDiscountRes?.data?.[0]?.yearlyDiscountRate ?? 0
+    ? (yearlyDiscountRes?.data?.[0]?.yearlyDiscountRate ?? 0)
     : 0;
 
   const syncUrl = useCallback(
@@ -78,13 +86,13 @@ function ChoosePlanPageInner() {
       planId?: string | null;
       billing?: BillingCycle;
       screen?: number;
+      deviceQuantity?: number | null;
     }) => {
       const params = new URLSearchParams();
       const nextBilling = opts.billing ?? billing;
       const nextScreen = opts.screen ?? screenSize;
       const nextStep = opts.step ?? (isCheckout ? "checkout" : "plans");
-      const nextPlanId =
-        opts.planId !== undefined ? opts.planId : planIdParam;
+      const nextPlanId = opts.planId !== undefined ? opts.planId : planIdParam;
 
       if (nextScreen > 0) params.set("screenSize", String(nextScreen));
       params.set("billing", nextBilling);
@@ -92,12 +100,29 @@ function ChoosePlanPageInner() {
       if (nextStep === "checkout" && nextPlanId) {
         params.set("step", "checkout");
         params.set("planId", nextPlanId);
+
+        // Preserve or update deviceQuantity
+        const nextDeviceQty =
+          opts.deviceQuantity !== undefined
+            ? opts.deviceQuantity
+            : searchParams.get("deviceQuantity");
+        if (nextDeviceQty) {
+          params.set("deviceQuantity", String(nextDeviceQty));
+        }
       }
 
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [billing, isCheckout, pathname, planIdParam, router, screenSize],
+    [
+      billing,
+      isCheckout,
+      pathname,
+      planIdParam,
+      router,
+      screenSize,
+      searchParams,
+    ],
   );
 
   useEffect(() => {
@@ -122,12 +147,17 @@ function ChoosePlanPageInner() {
     { skip: screenSize <= 0 || isCheckout },
   );
 
+  const deviceQuantityParam = searchParams.get("deviceQuantity");
+  const deviceQuantity = deviceQuantityParam
+    ? parseInt(deviceQuantityParam, 10)
+    : undefined;
+
   const {
     data: planRes,
     isLoading: isLoadingCheckoutPlan,
     isError: isCheckoutPlanError,
   } = useGetPlanByIdQuery(
-    { id: planIdParam!, billing, screenSize },
+    { id: planIdParam!, billing, screenSize, deviceQuantity },
     { skip: !isCheckout || !planIdParam || screenSize <= 0 },
   );
 
@@ -136,7 +166,9 @@ function ChoosePlanPageInner() {
     const rawPlans = plansRes?.data ?? [];
     const order: Record<string, number> = { basic: 1, business: 2, premium: 3 };
     return [...rawPlans].sort(
-      (a, b) => (order[a.name?.toLowerCase()] || 99) - (order[b.name?.toLowerCase()] || 99)
+      (a, b) =>
+        (order[a.name?.toLowerCase()] || 99) -
+        (order[b.name?.toLowerCase()] || 99),
     );
   }, [plansRes?.data]);
 
@@ -156,13 +188,19 @@ function ChoosePlanPageInner() {
     });
   };
 
-  const handleChoosePlan = async (plan: UserPlan) => {
+  const handleChoosePlan = async (plan: UserPlan, customQty?: number) => {
     if (!userData?.data && !profileData?.data) {
       toast.error("Please login to continue");
       return;
     }
     setChoosingPlanId(plan.id);
-    syncUrl({ step: "checkout", planId: plan.id, billing, screen: screenSize });
+    syncUrl({
+      step: "checkout",
+      planId: plan.id,
+      billing,
+      screen: screenSize,
+      deviceQuantity: customQty,
+    });
     setChoosingPlanId(null);
   };
 
@@ -173,7 +211,7 @@ function ChoosePlanPageInner() {
   const handleCompletePayment = async (
     gateway: "stripe" | "paystack",
     country: string,
-    couponCode?: string
+    couponCode?: string,
   ) => {
     if (!checkoutPlan) return;
     try {
@@ -186,6 +224,7 @@ function ChoosePlanPageInner() {
         country,
         gateway,
         ...(couponCode && { couponCode }),
+        ...(deviceQuantity !== undefined && { deviceQuantity }),
       };
 
       const res = await createCheckout(payload).unwrap();
@@ -196,7 +235,9 @@ function ChoosePlanPageInner() {
       }
     } catch (error: unknown) {
       const err = error as { data?: { message?: string } };
-      toast.error(err?.data?.message || "Something went wrong. Please try again.");
+      toast.error(
+        err?.data?.message || "Something went wrong. Please try again.",
+      );
     }
   };
 
@@ -308,6 +349,8 @@ function ChoosePlanPageInner() {
                     onChoose={handleChoosePlan}
                     isLoading={choosingPlanId === plan.id}
                     isSelected={planIdParam === plan.id}
+                    screenSize={screenSize}
+                    billing={billing}
                   />
                 ))}
               </div>
@@ -409,6 +452,7 @@ function ChoosePlanPageInner() {
             onBack={handleBackToPlans}
             onComplete={handleCompletePayment}
             isLoading={isCreatingPayment}
+            customDeviceQuantity={deviceQuantity}
           />
         )}
       </div>
