@@ -52,9 +52,7 @@ const SubscriptionTabLayout = ({
         </div>
       )}
 
-      <div className="overflow-x-auto scrollbar-hide">
-        {children}
-      </div>
+      <div className="overflow-x-auto scrollbar-hide">{children}</div>
 
       {pagination && (
         <div className="p-4 border-t border-border bg-navbarBg rounded-b-xl">

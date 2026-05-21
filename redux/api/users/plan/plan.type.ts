@@ -66,6 +66,7 @@ export interface PlanByIdParams {
   id: string;
   billing: BillingCycle;
   screenSize: number;
+  deviceQuantity?: number;
 }
 
 export interface VerifyCouponParams {

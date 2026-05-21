@@ -40,6 +40,7 @@ interface PaymentGatewaySelectionProps {
   onBack: () => void;
   onComplete: (gateway: "stripe" | "paystack", country: string, couponCode?: string) => void;
   isLoading: boolean;
+  customDeviceQuantity?: number;
 }
 
 const gateways: Array<{
@@ -82,6 +83,7 @@ export default function PaymentGatewaySelection({
   onBack,
   onComplete,
   isLoading,
+  customDeviceQuantity,
 }: PaymentGatewaySelectionProps) {
   const [selectedGateway, setSelectedGateway] = useState<"stripe" | "paystack">(
     "stripe",
@@ -280,7 +282,7 @@ export default function PaymentGatewaySelection({
               <div className="flex items-center gap-3">
                 <Monitor className="w-5 h-5 shrink-0 text-primary-action" />
                 <span className="text-[14px] font-medium text-body">
-                  {selectedPlan.deviceLimit} Devices
+                  {customDeviceQuantity ?? selectedPlan.deviceLimit} Devices
                 </span>
               </div>
               <div className="flex items-center gap-3">
