@@ -1,19 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Loader2, UploadCloud, X, FileSignature } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { useGetUserProfileQuery } from '@/redux/api/users/userProfileApi';
-import { useUpdateSupporterProfileMutation } from '@/redux/api/supporter/supporterTicketApi';
-import { toast } from 'sonner';
+import React, { useState, useEffect, useRef } from "react";
+import { Loader2, X, FileSignature } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
+import { useUpdateSupporterProfileMutation } from "@/redux/api/supporter/supporterTicketApi";
+import { toast } from "sonner";
 
 export default function EditProfileForm() {
-  const { data: profileData, isLoading: isProfileLoading } = useGetUserProfileQuery();
-  const [updateProfile, { isLoading: isUpdating }] = useUpdateSupporterProfileMutation();
-  
-  const [fullName, setFullName] = useState('');
+  const { data: profileData, isLoading: isProfileLoading } =
+    useGetUserProfileQuery();
+  const [updateProfile, { isLoading: isUpdating }] =
+    useUpdateSupporterProfileMutation();
+
+  const [fullName, setFullName] = useState("");
   const [signatureFile, setSignatureFile] = useState<File | null>(null);
   const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -30,27 +32,27 @@ export default function EditProfileForm() {
     setSignatureFile(null);
     setSignaturePreview(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   useEffect(() => {
     if (profileData?.success && profileData?.data) {
-      setFullName(profileData.data.full_name || '');
+      setFullName(profileData.data.full_name || "");
     }
   }, [profileData]);
 
   const handleSave = async () => {
     try {
       const formData = new FormData();
-      formData.append('full_name', fullName);
+      formData.append("full_name", fullName);
 
       const res = await updateProfile(formData).unwrap();
       if (res.success) {
-        toast.success(res.message || 'Profile updated successfully');
+        toast.success(res.message || "Profile updated successfully");
       }
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to update profile');
+      toast.error(err?.data?.message || "Failed to update profile");
     }
   };
 
@@ -91,7 +93,7 @@ export default function EditProfileForm() {
           </label>
           <Input
             type="text"
-            value={profile?.username || ''}
+            value={profile?.username || ""}
             readOnly
             className="bg-[#F4F7F9] dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 text-gray-500 cursor-not-allowed focus-visible:ring-0 h-11"
           />
@@ -101,12 +103,13 @@ export default function EditProfileForm() {
           <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
             Signature
           </label>
-          
-          <div 
+
+          <div
             className={`border-2 border-dashed rounded-xl p-6 transition-all flex flex-col items-center justify-center gap-3 relative
-              ${signaturePreview 
-                ? 'border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50' 
-                : 'border-gray-300 dark:border-gray-700 hover:border-[#1EA1F2] dark:hover:border-[#1EA1F2] bg-white dark:bg-gray-950 cursor-pointer'
+              ${
+                signaturePreview
+                  ? "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50"
+                  : "border-gray-300 dark:border-gray-700 hover:border-[#1EA1F2] dark:hover:border-[#1EA1F2] bg-white dark:bg-gray-950 cursor-pointer"
               }`}
             onClick={() => !signaturePreview && fileInputRef.current?.click()}
           >
@@ -122,9 +125,9 @@ export default function EditProfileForm() {
               <div className="w-full flex flex-col items-center">
                 <div className="relative w-full max-w-[240px] h-[100px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={signaturePreview} 
-                    alt="Signature preview" 
+                  <img
+                    src={signaturePreview}
+                    alt="Signature preview"
                     className="max-w-full max-h-full object-contain"
                   />
                   <button
@@ -161,13 +164,13 @@ export default function EditProfileForm() {
         </div>
 
         <div className="pt-4">
-          <Button 
+          <Button
             onClick={handleSave}
             disabled={isUpdating}
             className="w-full bg-[#1EA1F2] hover:bg-[#198CD6] text-white font-medium h-11 rounded-lg transition-colors flex items-center justify-center gap-2"
           >
             {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
-            {isUpdating ? 'Updating Profile...' : 'Save Changes'}
+            {isUpdating ? "Updating Profile..." : "Save Changes"}
           </Button>
         </div>
       </div>
