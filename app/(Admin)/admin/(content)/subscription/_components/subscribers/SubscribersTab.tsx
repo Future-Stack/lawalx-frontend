@@ -2,38 +2,15 @@
 
 import React, { useState } from "react";
 import { useGetSubscribersQuery } from "@/redux/api/admin/payments/subscriber/subscribersApi";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import BaseSelect from "@/common/BaseSelect";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  MoreVertical,
-  FileText,
-  XCircle,
-  ArrowUpCircle,
-  Search,
-  Loader2,
-  CreditCard,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+
+import { Search, Loader2 } from "lucide-react";
 import TransactionSheet from "../TransactionSheet";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
-import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
 import AdditionalPaymentDialog from "./_components/AdditionalPaymentDialog";
+import SubscribersTable from "./_components/SubscribersTable";
 
 export interface Subscriber {
   userId: string;
@@ -207,113 +184,13 @@ const SubscribersTab = () => {
           <p className="text-muted">No subscribers found.</p>
         </div>
       ) : (
-        <>
-          <Table>
-            <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-              <TableRow>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  User
-                </TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Plan
-                </TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Amount
-                </TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Payment Cycle
-                </TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Next Billing
-                </TableHead>
-                <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Status
-                </TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {subscribers.map((sub) => (
-                <TableRow
-                  key={sub.userId}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                >
-                  <TableCell>
-                    <div>
-                      <div className="font-medium text-headings">
-                        {sub.userName}
-                      </div>
-                      <div className="text-sm text-muted">{sub.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="default"
-                      className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-none font-normal"
-                    >
-                      {sub.plan}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-semibold text-headings">
-                    {formatCurrency(sub.amount, currency)}
-                  </TableCell>
-                  <TableCell className="text-headings">
-                    {sub.paymentCycle}
-                  </TableCell>
-                  <TableCell className="text-muted">
-                    {formatDate(sub.nextBilling)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="default"
-                      className={`border-none font-normal ${
-                        sub.subscriptionStatus === "ACTIVE"
-                          ? "bg-green-100 text-green-700"
-                          : sub.subscriptionStatus === "CANCELLED"
-                            ? "bg-red-100 text-red-700"
-                            : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {sub.subscriptionStatus}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="icon"
-                          aria-label="Subscriber options"
-                          className="h-8 w-8 text-muted hover:bg-gray-100"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleViewInvoices(sub.userId)}
-                        >
-                          <FileText className="mr-2 h-4 w-4" /> View Invoices
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleAdditionalPayment(sub)}
-                        >
-                          <CreditCard className="mr-2 h-4 w-4" /> Additional
-                          payment
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-500 focus:text-red-500">
-                          <XCircle className="mr-2 h-4 w-4" /> Cancel Plan
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </>
+        <SubscribersTable
+          subscribers={subscribers}
+          currency={currency}
+          formatDate={formatDate}
+          handleViewInvoices={handleViewInvoices}
+          handleAdditionalPayment={handleAdditionalPayment}
+        />
       )}
 
       {/* Transaction Sheet */}

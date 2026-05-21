@@ -107,6 +107,16 @@ const AdditionalPaymentDialog = ({
       className="p-0 bg-bgGray dark:bg-gray-950 overflow-hidden [&>div:first-child]:hidden"
     >
       <div className="p-8 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+        {/* Header Title */}
+        <div className="mb-2">
+          <h2 className="text-2xl font-bold text-headings">
+            Create Additional Payment Invoice
+          </h2>
+          <p className="text-sm text-muted mt-1">
+            Generate a custom payment invoice for specific services or features.
+          </p>
+        </div>
+
         {/* Top Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -265,7 +275,7 @@ const AdditionalPaymentDialog = ({
                         onChange={(e) =>
                           updateItem(item.id, "description", e.target.value)
                         }
-                        className="w-full h-[48px] bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 text-[12px] text-headings focus:outline-none focus:ring-1 focus:ring-bgBlue"
+                        className="w-full h-10 bg-transparent border-transparent px-2 text-[13px] text-muted focus:outline-none focus:border-transparent focus:ring-0"
                       />
                     </td>
                     <td className="py-4 px-3">
@@ -277,12 +287,12 @@ const AdditionalPaymentDialog = ({
                         onChange={(e) =>
                           updateItem(item.id, "qty", Number(e.target.value))
                         }
-                        className="w-full h-[48px] bg-[#E8E8E8] dark:bg-gray-800 border border-[#D0D5DD] rounded-lg px-2 text-center text-[12px] font-bold text-headings focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-full h-10 bg-white dark:bg-gray-900 border border-border rounded-md px-2 text-center text-[13px] font-semibold text-headings focus:outline-none focus:ring-1 focus:ring-bgBlue [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </td>
                     <td className="py-4 px-3">
                       <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[12px] text-headings font-bold">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-headings font-medium">
                           {currencySymbol}
                         </span>
                         <input
@@ -297,13 +307,13 @@ const AdditionalPaymentDialog = ({
                               Number(e.target.value),
                             )
                           }
-                          className="w-full h-[48px] bg-[#E8E8E8] dark:bg-gray-800 border border-[#D0D5DD] rounded-lg pl-6 pr-2 text-[12px] text-headings focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-full h-10 bg-white dark:bg-gray-900 border border-border rounded-md pl-8 pr-3 text-[13px] text-headings focus:outline-none focus:ring-1 focus:ring-bgBlue [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
                     </td>
                     <td className="py-4 px-3">
                       <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[12px] text-headings font-bold">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-headings font-medium">
                           {currencySymbol}
                         </span>
                         <input
@@ -312,13 +322,13 @@ const AdditionalPaymentDialog = ({
                           aria-label={`Cost for item ${index + 1}`}
                           value={item.cost || ""}
                           readOnly
-                          className="w-full h-[48px] bg-[#E8E8E8] dark:bg-gray-800 border border-[#D0D5DD] rounded-lg pl-6 pr-2 text-[12px] text-headings focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-full h-10 bg-white dark:bg-gray-900 border border-border rounded-md pl-8 pr-3 text-[13px] text-headings focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
                     </td>
                     <td className="py-4 px-3">
                       <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[12px] text-headings font-bold">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-headings font-medium">
                           {currencySymbol}
                         </span>
                         <input
@@ -329,13 +339,13 @@ const AdditionalPaymentDialog = ({
                           onChange={(e) =>
                             updateItem(item.id, "vat", Number(e.target.value))
                           }
-                          className="w-full h-[48px] bg-[#E8E8E8] dark:bg-gray-800 border border-[#D0D5DD] rounded-lg pl-6 pr-2 text-[12px] text-headings focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-full h-10 bg-white dark:bg-gray-900 border border-border rounded-md pl-8 pr-3 text-[13px] text-headings focus:outline-none focus:ring-1 focus:ring-bgBlue [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
                     </td>
                     <td className="py-4 px-3">
                       <div className="relative">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[12px] text-headings font-bold">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-headings font-medium">
                           {currencySymbol}
                         </span>
                         <input
@@ -344,7 +354,7 @@ const AdditionalPaymentDialog = ({
                           aria-label={`Total Price for item ${index + 1}`}
                           value={item.totalPrice || ""}
                           readOnly
-                          className="w-full h-[48px] bg-[#E8E8E8] dark:bg-gray-800 border border-[#D0D5DD] rounded-lg pl-6 pr-2 text-[12px] text-headings focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-full h-10 bg-white dark:bg-gray-900 border border-border rounded-md pl-8 pr-3 text-[13px] text-headings focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
                     </td>
