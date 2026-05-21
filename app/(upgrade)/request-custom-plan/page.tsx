@@ -100,10 +100,10 @@ export default function RequestCustomPlanPage() {
             <div className="flex flex-col md:flex-row gap-4 w-full">
               <div className="space-y-2 w-full">
                 <Label className="text-[16px] font-semibold text-[#404040] font-inter">
-                  Name
+                  Company Name
                 </Label>
                 <Input
-                  placeholder="Jon Smith"
+                  placeholder="Company Name"
                   className="h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
                 />
               </div>
@@ -170,7 +170,7 @@ export default function RequestCustomPlanPage() {
                 <div className="relative w-full">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#737373]" />
                   <Input
-                    placeholder="Enter your company name"
+                    placeholder="Enter your location"
                     className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] pl-10 pr-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
                   />
                 </div>
