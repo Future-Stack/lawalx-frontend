@@ -8,6 +8,7 @@ import { useLoginMutation } from '@/redux/api/users/authApi';
 import { useAppDispatch } from '@/redux/store/hook';
 import { setUser } from '@/redux/features/auth/authSlice';
 import { jwtDecode } from 'jwt-decode';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +32,7 @@ export default function LoginPage() {
         const role = (decoded.role || "ADMIN").toUpperCase();
 
         if (role !== "ADMIN" && role !== "SUPERADMIN") {
-          alert("not valid email or pass");
+          toast.error("Not valid email or password");
           return;
         }
 
@@ -39,11 +40,12 @@ export default function LoginPage() {
           token: accessToken,
           refreshToken
         }));
+        toast.success("Successfully logged in");
         router.push('/admin/dashboard');
       }
     } catch (error) {
       console.error("Admin login API call failed:", error);
-      alert("not valid email or pass");
+      toast.error("Not valid email or password");
     }
   };
 
