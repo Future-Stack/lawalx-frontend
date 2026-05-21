@@ -6,23 +6,10 @@ import {
   useUpdateCouponStatusMutation,
   CouponItem,
 } from "@/redux/api/admin/payments/coupons/couponsApi";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import BaseSelect from "@/common/BaseSelect";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical, Search, Edit, Ban, Loader2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+
+import { Search, Loader2 } from "lucide-react";
+import CouponsTable from "./_components/CouponsTable";
 import CreateCouponDialog from "./_components/CreateCouponDialog";
 import { toast } from "sonner";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
@@ -190,189 +177,15 @@ const CouponsTab = () => {
           <p className="text-muted">No coupons found.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="hidden lg:block">
-            <Table>
-              <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-                <TableRow>
-                  <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Name</TableHead>
-                  <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Code</TableHead>
-                  <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Discount</TableHead>
-                  <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Usage</TableHead>
-                  <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</TableHead>
-                  <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Expiry Date</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {coupons.map((coupon) => (
-                  <TableRow key={coupon.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <TableCell className="font-medium text-headings">
-                      {coupon.name}
-                    </TableCell>
-                    <TableCell className="font-bold text-headings">
-                      {coupon.code}
-                    </TableCell>
-                    <TableCell className="font-semibold text-headings">
-                      {coupon.discountType === "PERCENTAGE"
-                        ? `${coupon.discountValue}%`
-                        : `$${coupon.discountValue}`}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3 w-48">
-                        <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-bgBlue rounded-full"
-                            style={{
-                              width: `${
-                                coupon.useLimit > 0
-                                  ? (coupon.usedCount / coupon.useLimit) * 100
-                                  : 0
-                              }%`,
-                            }}
-                          />
-                        </div>
-                        <span className="text-xs text-muted font-medium whitespace-nowrap">
-                          {coupon.usedCount} / {coupon.useLimit}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="default"
-                        className={`font-normal border ${getStatusColor(coupon.status)}`}
-                      >
-                        {coupon.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-muted">
-                      {formatDate(coupon.expiryDate)}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className="h-8 w-8 text-muted hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
-                            disabled={isUpdatingStatus}
-                            aria-label="Coupon options"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-40">
-                          <DropdownMenuItem
-                            onClick={() => handleEditClick(coupon)}
-                            className="cursor-pointer"
-                          >
-                            <Edit className="mr-2 h-4 w-4" /> Edit coupon
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => handleStopCoupon(coupon)}
-                            className="cursor-pointer text-red-500 focus:text-red-500"
-                            disabled={isUpdatingStatus}
-                          >
-                            <Ban className="mr-2 h-4 w-4" />
-                            {coupon.status === "ACTIVE"
-                              ? "Stop Coupon"
-                              : "Activate Coupon"}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="lg:hidden space-y-4 p-4">
-            {coupons.map((coupon) => (
-              <div
-                key={coupon.id}
-                className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-medium text-headings text-lg">{coupon.name}</div>
-                    <div className="font-bold text-headings text-sm">{coupon.code}</div>
-                  </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="h-8 w-8 text-muted hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
-                        disabled={isUpdatingStatus}
-                        aria-label="Coupon options"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem
-                        onClick={() => handleEditClick(coupon)}
-                        className="cursor-pointer"
-                      >
-                        <Edit className="mr-2 h-4 w-4" /> Edit coupon
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleStopCoupon(coupon)}
-                        className="cursor-pointer text-red-500 focus:text-red-500"
-                        disabled={isUpdatingStatus}
-                      >
-                        <Ban className="mr-2 h-4 w-4" />
-                        {coupon.status === "ACTIVE"
-                          ? "Stop Coupon"
-                          : "Activate Coupon"}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted">Discount:</span>
-                  <span className="font-semibold text-headings">
-                    {coupon.discountType === "PERCENTAGE"
-                      ? `${coupon.discountValue}%`
-                      : `$${coupon.discountValue}`}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted">Usage:</span>
-                  <div className="flex items-center gap-3 w-32">
-                    <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-bgBlue rounded-full"
-                        style={{
-                          width: `${
-                            coupon.useLimit > 0
-                              ? (coupon.usedCount / coupon.useLimit) * 100
-                              : 0
-                          }%`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs text-muted font-medium whitespace-nowrap">
-                      {coupon.usedCount} / {coupon.useLimit}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted">Expiry Date:</span>
-                  <span className="text-muted">{formatDate(coupon.expiryDate)}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted">Status:</span>
-                  <Badge
-                    variant="default"
-                    className={`font-normal border ${getStatusColor(coupon.status)}`}
-                  >
-                    {coupon.status}
-                  </Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <CouponsTable
+          coupons={coupons}
+          isUpdatingStatus={isUpdatingStatus}
+          getStatusColor={getStatusColor}
+          formatDate={formatDate}
+          handleEditClick={handleEditClick}
+          handleStopCoupon={handleStopCoupon}
+        />
       )}
-
       <CreateCouponDialog open={createModalOpen} setOpen={setCreateModalOpen} />
 
       <CreateCouponDialog

@@ -134,8 +134,12 @@ const EditPlanDialog = ({
         <div className="p-6 space-y-6 flex-1 overflow-y-auto">
           <div className="flex justify-between items-center bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/30">
             <div className="space-y-0.5">
-              <h4 className="text-[14px] font-bold text-headings">Plan Status</h4>
-              <p className="text-[12px] text-[#667085]">Determine if this plan is currently active.</p>
+              <h4 className="text-[14px] font-bold text-headings">
+                Plan Status
+              </h4>
+              <p className="text-[12px] text-[#667085]">
+                Determine if this plan is currently active.
+              </p>
             </div>
             <button
               type="button"
@@ -171,12 +175,19 @@ const EditPlanDialog = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Price */}
             <div className="space-y-1.5">
-              <Label htmlFor="plan-price" className="text-[14px] text-[#404040]">
+              <Label
+                htmlFor="plan-price"
+                className="text-[14px] text-[#404040]"
+              >
                 Price
               </Label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#667085] text-[16px] font-medium">
-                  {currency === "NGN" ? "₦" : currency === "USD" ? "$" : currency}
+                  {currency === "NGN"
+                    ? "₦"
+                    : currency === "USD"
+                      ? "$"
+                      : currency}
                 </span>
                 <input
                   id="plan-price"
@@ -191,7 +202,10 @@ const EditPlanDialog = ({
 
             {/* Devices */}
             <div className="space-y-1.5">
-              <Label htmlFor="plan-devices" className="text-[14px] text-[#404040]">
+              <Label
+                htmlFor="plan-devices"
+                className="text-[14px] text-[#404040]"
+              >
                 Device Limit
               </Label>
               <input
@@ -207,7 +221,10 @@ const EditPlanDialog = ({
 
           {/* Description */}
           <div className="space-y-1.5">
-            <Label htmlFor="plan-description" className="text-[14px] text-[#404040]">
+            <Label
+              htmlFor="plan-description"
+              className="text-[14px] text-[#404040]"
+            >
               Description
             </Label>
             <textarea
@@ -222,7 +239,10 @@ const EditPlanDialog = ({
           {/* Storage & Templates */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="plan-storage" className="text-[14px] text-[#404040]">
+              <Label
+                htmlFor="plan-storage"
+                className="text-[14px] text-[#404040]"
+              >
                 Storage (GB)
               </Label>
               <input
@@ -235,7 +255,10 @@ const EditPlanDialog = ({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="plan-templates" className="text-[14px] text-[#404040]">
+              <Label
+                htmlFor="plan-templates"
+                className="text-[14px] text-[#404040]"
+              >
                 Template Limit
               </Label>
               <input
@@ -251,35 +274,67 @@ const EditPlanDialog = ({
 
           {/* Upload Limits */}
           <div className="space-y-3 pt-2">
-            <Label className="text-[14px] font-bold text-headings">Upload Limits</Label>
+            <Label className="text-[14px] font-bold text-headings">
+              Upload Limits
+            </Label>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="limit-photo" className="text-[12px] text-[#667085]">Photo</Label>
+                <Label
+                  htmlFor="limit-photo"
+                  className="text-[12px] text-[#667085]"
+                >
+                  Photo
+                </Label>
                 <input
                   id="limit-photo"
                   type="number"
                   value={uploadLimits.photo}
-                  onChange={(e) => setUploadLimits(prev => ({ ...prev, photo: e.target.value }))}
+                  onChange={(e) =>
+                    setUploadLimits((prev) => ({
+                      ...prev,
+                      photo: e.target.value,
+                    }))
+                  }
                   className={inputClass}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="limit-audio" className="text-[12px] text-[#667085]">Audio</Label>
+                <Label
+                  htmlFor="limit-audio"
+                  className="text-[12px] text-[#667085]"
+                >
+                  Audio
+                </Label>
                 <input
                   id="limit-audio"
                   type="number"
                   value={uploadLimits.audio}
-                  onChange={(e) => setUploadLimits(prev => ({ ...prev, audio: e.target.value }))}
+                  onChange={(e) =>
+                    setUploadLimits((prev) => ({
+                      ...prev,
+                      audio: e.target.value,
+                    }))
+                  }
                   className={inputClass}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="limit-video" className="text-[12px] text-[#667085]">Video</Label>
+                <Label
+                  htmlFor="limit-video"
+                  className="text-[12px] text-[#667085]"
+                >
+                  Video
+                </Label>
                 <input
                   id="limit-video"
                   type="number"
                   value={uploadLimits.video}
-                  onChange={(e) => setUploadLimits(prev => ({ ...prev, video: e.target.value }))}
+                  onChange={(e) =>
+                    setUploadLimits((prev) => ({
+                      ...prev,
+                      video: e.target.value,
+                    }))
+                  }
                   className={inputClass}
                 />
               </div>
@@ -288,13 +343,17 @@ const EditPlanDialog = ({
 
           {/* Features Section */}
           <div className="space-y-3 pt-2">
-            <Label className="text-[14px] font-bold text-headings">Features</Label>
+            <Label className="text-[14px] font-bold text-headings">
+              Features
+            </Label>
             <div className="flex gap-2">
               <input
                 placeholder="Add a feature..."
                 value={newFeature}
                 onChange={(e) => setNewFeature(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddFeature())}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), handleAddFeature())
+                }
                 className={inputClass}
               />
               <button
@@ -307,8 +366,13 @@ const EditPlanDialog = ({
             </div>
             <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
               {features.map((feature, index) => (
-                <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-[#F2F4F7] dark:border-gray-800">
-                  <span className="text-[14px] text-[#404040] dark:text-gray-300">{feature}</span>
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-[#F2F4F7] dark:border-gray-800"
+                >
+                  <span className="text-[14px] text-[#404040] dark:text-gray-300">
+                    {feature}
+                  </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveFeature(index)}
@@ -319,7 +383,9 @@ const EditPlanDialog = ({
                 </div>
               ))}
               {features.length === 0 && (
-                <p className="text-[12px] text-gray-400 text-center py-2">No features added yet.</p>
+                <p className="text-[12px] text-gray-400 text-center py-2">
+                  No features added yet.
+                </p>
               )}
             </div>
           </div>

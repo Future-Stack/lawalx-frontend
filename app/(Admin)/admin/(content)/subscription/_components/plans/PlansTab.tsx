@@ -34,24 +34,24 @@ const PlansTab = () => {
   // Fetch Screen Sizes
   const { data: screenSizesData, isLoading: isLoadingScreens } =
     useGetActiveScreenSizesQuery();
-  
+
   const screenSizes = useMemo(
     () => screenSizesData?.data || [],
     [screenSizesData?.data],
   );
 
   // Fetch Plans based on Screen Size + Billing
-  const { data: plansData, isLoading: isLoadingPlans } = useGetPlansQuery(
-    {
-      screenSize: screenSize === "all" ? undefined : screenSize,
-      billing,
-    },
-  );
+  const { data: plansData, isLoading: isLoadingPlans } = useGetPlansQuery({
+    screenSize: screenSize === "all" ? undefined : screenSize,
+    billing,
+  });
   const plans = useMemo(() => {
     const rawPlans = plansData?.data || [];
     const order: Record<string, number> = { basic: 1, business: 2, premium: 3 };
     return [...rawPlans].sort(
-      (a, b) => (order[a.name?.toLowerCase()] || 99) - (order[b.name?.toLowerCase()] || 99)
+      (a, b) =>
+        (order[a.name?.toLowerCase()] || 99) -
+        (order[b.name?.toLowerCase()] || 99),
     );
   }, [plansData?.data]);
 
@@ -124,7 +124,8 @@ const PlansTab = () => {
   };
 
   const formatPrice = (price: number, currency: string) => {
-    const symbol = currency === "NGN" ? "₦" : currency === "USD" ? "$" : currency;
+    const symbol =
+      currency === "NGN" ? "₦" : currency === "USD" ? "$" : currency;
     return `${symbol}${price.toLocaleString()}/mo`;
   };
 
