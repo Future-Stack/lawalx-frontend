@@ -27,7 +27,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     schedule,
     onEdit,
 }) => {
-    const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
+    const [updateSchedule] = useUpdateScheduleMutation();
     const [deleteSchedule] = useDeleteScheduleMutation();
     const [openDelete, setOpenDelete] = useState(false);
     const [scheduleToDelete, setScheduleToDelete] = useState<Schedule | null>(null);
@@ -39,8 +39,6 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
 
     const activeSchedule = fullScheduleData?.data || schedule;
     const effectiveLowerThird = activeSchedule?.lowerThird || (activeSchedule?.lowerThirds && activeSchedule.lowerThirds.length > 0 ? activeSchedule.lowerThirds[0] : undefined);
-    console.log("schedule preview dialog data", activeSchedule);
-    
 
     // Play/Pause state (mirrors schedule details page)
     const [localActive, setLocalActive] = useState(true);
@@ -322,12 +320,12 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
         }
 
         return (
-            <div className="relative aspect-video">
+            <div className="relative w-full h-full">
                 <Image
                     src={getUrl(file.url) || "/placeholder.png"}
                     alt={file.originalName || "Preview"}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     unoptimized
                     onLoad={() => setIsMediaReady(true)}
                 />

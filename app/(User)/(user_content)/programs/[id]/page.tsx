@@ -371,6 +371,7 @@ const ScreenCardDetails = () => {
               selectedContent={localTimeline[playingIndex]}
               previewUrl={previewUrl}
               localActive={localActive}
+              setLocalActive={setLocalActive}
               isFading={isFading}
               handleVideoEnded={handleMediaEnded}
               setIsPaused={setIsPaused}
