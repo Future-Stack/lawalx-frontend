@@ -1,13 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import { X, Camera, Maximize, Volume2, Sun, Play, Pause, Power, PowerOff, ListTree, Layout, Clock, Monitor, Database } from "lucide-react";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { X, Volume2, Play, ListTree, Layout, Clock, Monitor, Database, Music, PlayCircle, VolumeX, Pause } from "lucide-react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.api";
 import DeviceLocation from "@/components/common/DeviceLocation";
 
+const getBaseUrl = () => {
+  const fullUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+  return fullUrl.split("/api/v1")[0];
+};
+
+const getFileUrl = (url: string) => {
+  if (!url) return undefined;
+  if (url.startsWith("http")) return url;
+  const baseUrl = getBaseUrl();
+  return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
 import { TimelineItem } from "@/redux/api/users/devices/devices.type";
 import Image from "next/image";
+import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 
 interface Props {
   isOpen: boolean;
@@ -28,29 +41,21 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
   }, [detailData]);
   const videoRef = useRef<any>(null);
   const [volume, setVolume] = useState(75);
-  const [brightness, setBrightness] = useState(80);
+  const [brightness] = useState(80);
   const [currentTimelineIndex, setCurrentTimelineIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [videoProgress, setVideoProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-  const [isMetadataLoaded, setIsMetadataLoaded] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
 
-  const getBaseUrl = () => {
-    const fullUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
-    return fullUrl.split("/api/v1")[0];
-  };
-
-  const getFileUrl = (url: string) => {
-    if (!url) return undefined;
-    if (url.startsWith("http")) return url;
-    const baseUrl = getBaseUrl();
-    return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
+  const formatDuration = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   const currentDevice = useMemo(() => {
@@ -78,13 +83,12 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
 
   const nextIndex = (currentTimelineIndex + 1) % (timeline.length || 1);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (timeline.length > 0) {
       setCurrentTimelineIndex(nextIndex);
-      setVideoProgress(0);
       setCurrentTime(0);
     }
-  };
+  }, [timeline.length, nextIndex]);
 
   // Image/Audio Timer logic
   useEffect(() => {
@@ -101,7 +105,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
       const startTime = Date.now();
       const progressInterval = setInterval(() => {
         const elapsed = Date.now() - startTime;
-        setVideoProgress((elapsed / itemDuration) * 100);
         setCurrentTime(elapsed / 1000);
       }, 100);
 
@@ -110,7 +113,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
         clearInterval(progressInterval);
       };
     }
-  }, [currentItem, isPlaying, isOpen, currentTimelineIndex]);
+  }, [currentItem, isPlaying, isOpen, handleNext]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -121,8 +124,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
   const updateProgress = () => {
     const video = videoRef.current;
     if (!video || !video.duration) return;
-    const progress = (video.currentTime / video.duration) * 100;
-    setVideoProgress(progress);
     setCurrentTime(video.currentTime);
   };
 
@@ -130,7 +131,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     const video = videoRef.current;
     if (!video) return;
     setDuration(video.duration || 0);
-    setIsMetadataLoaded(true);
   };
 
   const handleTimeUpdate = () => {
@@ -155,9 +155,9 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     }
   }, [mediaUrl, currentItem]);
 
-  // Handle Playback based on isPlaying state
+  // Handle Audio Playback based on isPlaying state
   useEffect(() => {
-    if (videoRef.current && (currentItem?.file?.type === 'VIDEO' || currentItem?.file?.type === 'AUDIO')) {
+    if (videoRef.current && currentItem?.file?.type === 'AUDIO') {
       if (isPlaying) {
         videoRef.current.play().catch((err: any) => console.error("Playback failed", err));
       } else {
@@ -165,45 +165,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
       }
     }
   }, [isPlaying, mediaUrl, currentItem]);
-
-  const togglePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newProgress = Number(e.target.value);
-    setVideoProgress(newProgress);
-
-    if (videoRef.current && duration > 0) {
-      const seekTime = (newProgress / 100) * duration;
-      videoRef.current.currentTime = seekTime;
-    }
-  };
-
-  // const toggleLoop = () => {
-  //   if (videoRef.current) {
-  //     const newLoopState = !isLooping;
-  //     setIsLooping(newLoopState);
-  //     videoRef.current.loop = newLoopState;
-  //   }
-  // };
-
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoRef.current.requestFullscreen();
-      }
-    }
-  };
 
   const parseStorage = (storage: any, usedStorage?: number) => {
     if (usedStorage !== undefined) {
@@ -298,43 +259,130 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
               >
                 {currentItem?.file?.type === 'IMAGE' ? (
                   mediaUrl ? (
-                    <Image
-                      src={mediaUrl}
-                      alt={currentItem?.file?.originalName || "Device Media"}
-                      fill
-                      className="object-contain"
-                    />
+                    <div className="relative w-full h-full">
+                      <Image
+                        src={mediaUrl}
+                        alt={currentItem?.file?.originalName || "Device Media"}
+                        fill
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
                   ) : null
                 ) : currentItem?.file?.type === 'AUDIO' ? (
-                  <div className="flex flex-col items-center gap-4 text-white">
-                    <Volume2 className="w-16 h-16 text-bgBlue animate-pulse" />
-                    <p className="text-sm font-medium opacity-60">Playing Audio Sequence</p>
-                    <p className="text-xs font-mono">{currentItem?.file?.originalName}</p>
+                  <div className="relative w-full h-full bg-gradient-to-br from-indigo-950 via-slate-900 to-black overflow-hidden flex flex-col items-center justify-center p-6 text-center border border-white/10">
                     <audio
                       ref={videoRef}
                       key={mediaUrl}
-                      src={mediaUrl}
+                      src={mediaUrl || ""}
                       autoPlay={isPlaying}
-                      onEnded={handleNext}
-                      onTimeUpdate={handleTimeUpdate}
-                      onLoadedMetadata={handleLoadedMetadata}
-                      preload="metadata"
                       onPlay={() => setIsPlaying(true)}
                       onPause={() => setIsPlaying(false)}
+                      onTimeUpdate={handleTimeUpdate}
+                      onLoadedMetadata={handleLoadedMetadata}
+                      onEnded={handleNext}
+                      hidden
                     />
+
+                    {/* Decorative Background */}
+                    <div className="absolute inset-0 opacity-20 pointer-events-none">
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] bg-bgBlue rounded-full blur-[80px]" />
+                    </div>
+
+                    {/* Central Icon */}
+                    <div className="relative z-10 w-20 h-20 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center mb-4 shadow-2xl">
+                      <Music className="w-10 h-10 text-bgBlue animate-pulse" />
+                    </div>
+
+                    <div className="relative z-10 space-y-1 mb-12">
+                      <h4 className="text-white font-bold text-lg md:text-xl tracking-tight line-clamp-1">
+                        {currentItem?.file?.originalName || "Audio Content"}
+                      </h4>
+                      <div className="flex items-center justify-center gap-2 text-blue-400/80 font-medium text-xs">
+                        <PlayCircle className="w-3.5 h-3.5" />
+                        <span>Now Playing</span>
+                      </div>
+                    </div>
+
+                    {/* Custom Controls Bar */}
+                    <div className="absolute left-4 right-4 z-20 flex items-center gap-3 bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-2.5 shadow-2xl bottom-4">
+                      <button
+                        onClick={() => {
+                          if (videoRef.current) {
+                            if (isPlaying) videoRef.current.pause();
+                            else videoRef.current.play().catch(() => {});
+                          }
+                          setIsPlaying(!isPlaying);
+                        }}
+                        className="flex-shrink-0 p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-all outline-none cursor-pointer"
+                      >
+                        {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+                      </button>
+
+                      <span className="text-[10px] text-white/40 font-medium min-w-[30px] tabular-nums">
+                        {formatDuration(currentTime)}
+                      </span>
+
+                      <div className="flex-1 flex items-center min-w-0">
+                        <div
+                          className="h-1 w-full bg-white/10 rounded-full cursor-pointer group relative"
+                          onClick={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const percent = (e.clientX - rect.left) / rect.width;
+                            if (videoRef.current) {
+                              videoRef.current.currentTime = percent * duration;
+                            }
+                          }}
+                        >
+                          <div
+                            className="h-full bg-bgBlue rounded-full relative transition-all duration-100"
+                            style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] text-white/40 font-medium min-w-[30px] tabular-nums">
+                        {formatDuration(duration)}
+                      </span>
+
+                      {/* Volume Control */}
+                      <div className="flex-shrink-0 flex items-center gap-2 w-24 border-l border-white/10 pl-3 ml-1">
+                        <button
+                          onClick={() => setVolume(volume === 0 ? 75 : 0)}
+                          className="text-white/60 hover:text-white transition-colors"
+                        >
+                          {volume === 0 ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                        </button>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={volume}
+                          onChange={(e) => setVolume(parseFloat(e.target.value))}
+                          className="w-full h-0.5 rounded-lg appearance-none cursor-pointer accent-bgBlue"
+                          style={{
+                            background: `linear-gradient(to right, #006AFF ${volume}%, rgba(255, 255, 255, 0.2) ${volume}%)`
+                          }}
+                        />
+                      </div>
+                    </div>
                   </div>
                 ) : (
-                  <video
-                    ref={videoRef}
-                    key={mediaUrl}
-                    className="w-full h-full object-cover"
-                    src={mediaUrl}
-                    playsInline
-                    preload="metadata"
-                    onTimeUpdate={handleTimeUpdate}
-                    onLoadedMetadata={handleLoadedMetadata}
-                    onEnded={handleEnded}
-                  />
+                  <div className="w-full h-full">
+                    <BaseVideoPlayer
+                      key={mediaUrl}
+                      src={mediaUrl || ""}
+                      autoPlay={isPlaying}
+                      rounded="rounded-none"
+                      onEnded={handleEnded}
+                      onPlay={() => setIsPlaying(true)}
+                      onPause={() => setIsPlaying(false)}
+                      fillParent={true}
+                      volume={volume / 100}
+                      onVolumeChange={(v) => setVolume(Math.round(v * 100))}
+                    />
+                  </div>
                 )}
 
                 {/* Top Overlay Badge */}
@@ -349,48 +397,13 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                   )}
                 </div> */}
 
-                {/* Bottom Custom Toolbar */}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 py-4">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={togglePlayPause}
-                      className="shrink-0 text-white hover:scale-110 transition-transform cursor-pointer"
-                    >
-                      {isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current" />}
-                    </button>
-
-                    <div className="flex-1 flex items-center">
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        value={videoProgress}
-                        onChange={handleProgressChange}
-                        className="w-full h-1.5 cursor-pointer appearance-none rounded-full bg-white/20"
-                        style={{
-                          background: `linear-gradient(to right, #3b82f6 ${videoProgress}%, rgba(255,255,255,0.2) ${videoProgress}%)`,
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-3 text-white/90">
-                      <button className="p-1 hover:text-white transition-colors cursor-pointer">
-                        <Camera className="h-5 w-5" />
-                      </button>
-                      <button onClick={toggleFullscreen} className="p-1 hover:text-white transition-colors cursor-pointer">
-                        <Maximize className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* Bottom Controls Area */}
+              {/* Volume & Brightness Card commented out per request */}
+              {/* 
               <div className="flex flex-col sm:flex-row gap-4">
-                {/* Volume & Brightness Card */}
                 <div className="flex-1 bg-white dark:bg-input rounded-[20px] p-6 shadow-sm border border-border flex flex-col gap-6">
-                  {/* Volume Slider */}
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 min-w-[100px]">
                       <Volume2 className="h-5 w-5 text-[#737373]" />
@@ -414,7 +427,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                     </div>
                   </div>
 
-                  {/* Brightness Slider */}
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2 min-w-[100px]">
                       <Sun className="h-5 w-5 text-[#737373]" />
@@ -439,11 +451,36 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                   </div>
                 </div>
               </div>
+              */}
+
+              {/* Play/Pause & Active Program Section */}
+              <div className="bg-white dark:bg-input rounded-[20px] p-6 shadow-sm border border-border flex flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Layout className="w-5 h-5 text-bgBlue" />
+                  <div>
+                    <span className="text-xs text-[#737373] dark:text-gray-400 font-medium block">Active Program</span>
+                    <span className="text-lg font-bold text-headings">{currentDevice.program?.name || "N/A"}</span>
+                    <span className="text-xs text-[#737373] dark:text-gray-500 block mt-0.5">
+                      Resolution: {currentDevice.program?.serene_size || "1920x1080"}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
+                        py-3 px-3 cursor-pointer
+                        ${isPlaying ? "bg-bgBlue hover:bg-blue-500" : "bg-bgRed hover:bg-red-600"}`}
+                  title={isPlaying ? "Pause" : "Play"}
+                >
+                  {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                </button>
+              </div>
             </div>
 
-            {/* Right Column - Device Details */}
             <div className="w-full lg:w-[400px] flex flex-col gap-6">
-              <div className="bg-navbarBg rounded-[24px] p-6 shadow-sm border border-border flex flex-col gap-6 flex-1">
+              <div className="bg-navbarBg rounded-[24px] p-6 shadow-sm border border-border flex flex-col gap-6 h-fit">
                 <h3 className="text-xl font-bold text-headings">Device Details</h3>
 
                 <div className="flex flex-col gap-5">
@@ -521,68 +558,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                     </div>
                   </div>
                 </div>
-                <div className="h-px bg-gray-100 dark:bg-gray-800" />
-
-                {/* Program Summary */}
-                <div className="bg-blue-50/50 dark:bg-blue-900/10 rounded-xl p-4 border border-blue-100/50 dark:border-blue-800/20">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Layout className="w-4 h-4 text-bgBlue" />
-                    <span className="text-sm font-bold text-headings">Active Program</span>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-[#737373] dark:text-gray-400 font-medium">Name</span>
-                      <span className="text-sm font-semibold text-headings">{currentDevice.program?.name || "N/A"}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs text-[#737373] dark:text-gray-400 font-medium">Resolution</span>
-                      <span className="text-sm font-semibold text-headings">{currentDevice.program?.serene_size || "1920x1080"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Program Timeline (Compact) */}
-                {timeline.length > 0 && (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                      <ListTree className="w-4 h-4 text-bgBlue" />
-                      <span className="text-sm font-bold text-headings">Timeline Sequence</span>
-                    </div>
-                    <div className="max-h-[220px] overflow-y-auto pr-2 space-y-2 scrollbar-hide">
-                      {timeline.map((item: any, idx: number) => (
-                        <div
-                          key={item.id}
-                          onClick={() => {
-                            setCurrentTimelineIndex(idx);
-                            setVideoProgress(0);
-                            setIsPlaying(true);
-                          }}
-                          className={`flex items-center gap-3 p-2 rounded-lg border transition-all cursor-pointer ${idx === currentTimelineIndex
-                            ? "bg-bgBlue/5 border-bgBlue/30 ring-1 ring-bgBlue/20"
-                            : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 hover:border-bgBlue/20"
-                            }`}
-                        >
-                          <span className={`text-[10px] font-bold w-4 ${idx === currentTimelineIndex ? "text-bgBlue" : "text-[#737373]"}`}>
-                            {idx === currentTimelineIndex ? <Play className="w-3 h-3 fill-current" /> : idx + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-[11px] font-bold truncate ${idx === currentTimelineIndex ? "text-bgBlue" : "text-headings"}`}>
-                              {item.file?.originalName}
-                            </p>
-                            <div className="flex items-center gap-2 text-[9px] text-[#737373] font-semibold uppercase">
-                              <span className={idx === currentTimelineIndex ? "text-bgBlue/80" : "text-bgBlue"}>
-                                {(item.file?.type || "media").toLowerCase()}
-                              </span>
-                              <span>•</span>
-                              <span>{item.duration || item.file?.duration || 0}s</span>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
 
                 {/* Details List */}
@@ -624,21 +599,46 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
 
                 <div className="h-px bg-gray-100 dark:bg-gray-800 my-1" />
 
-                {/* Power Button Section */}
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[#737373] dark:text-gray-400 text-sm font-medium">Power Status</span>
-                    <button
-                      type="button"
-                      onClick={() => setIsPlaying(!isPlaying)}
-                      className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
-                            py-3 px-3 cursor-pointer
-                            ${isPlaying ? "bg-bgBlue hover:bg-blue-500" : "bg-bgRed hover:bg-red-600"}`}
-                    >
-                      {isPlaying ? <Power className="w-4 h-4" /> : <PowerOff className="w-4 h-4" />}
-                    </button>
+                {/* Timeline Sequence Section */}
+                {timeline.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <ListTree className="w-4 h-4 text-bgBlue" />
+                      <span className="text-sm font-bold text-headings">Timeline Sequence</span>
+                    </div>
+                    <div className="max-h-[300px] overflow-y-auto pr-2 space-y-2 scrollbar-hide">
+                      {timeline.map((item: any, idx: number) => (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            setCurrentTimelineIndex(idx);
+                            setIsPlaying(true);
+                          }}
+                          className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${idx === currentTimelineIndex
+                            ? "bg-bgBlue/5 border-bgBlue/30 ring-1 ring-bgBlue/20"
+                            : "bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 hover:border-bgBlue/20"
+                            }`}
+                        >
+                          <span className={`text-[11px] font-bold w-4 ${idx === currentTimelineIndex ? "text-bgBlue" : "text-[#737373]"}`}>
+                            {idx === currentTimelineIndex ? <Play className="w-3 h-3 fill-current" /> : idx + 1}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-[12px] font-bold truncate ${idx === currentTimelineIndex ? "text-bgBlue" : "text-headings"}`}>
+                              {item.file?.originalName}
+                            </p>
+                            <div className="flex items-center gap-2 text-[10px] text-[#737373] font-semibold uppercase">
+                              <span className={idx === currentTimelineIndex ? "text-bgBlue/80" : "text-bgBlue"}>
+                                {(item.file?.type || "media").toLowerCase()}
+                              </span>
+                              <span>•</span>
+                              <span>{item.duration || item.file?.duration || 0}s</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

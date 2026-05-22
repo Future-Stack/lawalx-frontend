@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Clock, FileText, Calendar, Trash2, PencilLine, Play, Pause, Music, Volume2, VolumeX, PlayCircle } from "lucide-react";
 import BaseDialog from "@/common/BaseDialog";
 import { Schedule } from "@/redux/api/users/schedules/schedules.type";
@@ -13,7 +13,6 @@ import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
 import Marquee from "react-fast-marquee";
 import { cn } from "@/lib/utils";
-
 
 interface SchedulePreviewDialogProps {
     open: boolean;
@@ -28,10 +27,10 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     schedule,
     onEdit,
 }) => {
-    const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
+    const [updateSchedule] = useUpdateScheduleMutation();
     const [deleteSchedule] = useDeleteScheduleMutation();
-    const [openDelete, setOpenDelete] = React.useState(false);
-    const [scheduleToDelete, setScheduleToDelete] = React.useState<Schedule | null>(null);
+    const [openDelete, setOpenDelete] = useState(false);
+    const [scheduleToDelete, setScheduleToDelete] = useState<Schedule | null>(null);
 
     const { data: fullScheduleData } = useGetSingleScheduleDataQuery(
         schedule?.id ? { id: schedule.id } : { id: "" },
@@ -42,19 +41,19 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     const effectiveLowerThird = activeSchedule?.lowerThird || (activeSchedule?.lowerThirds && activeSchedule.lowerThirds.length > 0 ? activeSchedule.lowerThirds[0] : undefined);
 
     // Play/Pause state (mirrors schedule details page)
-    const [localActive, setLocalActive] = React.useState(true);
+    const [localActive, setLocalActive] = useState(true);
 
-    // Sync localActive from API data - We default to TRUE for the preview experience
-    React.useEffect(() => {
-        if (activeSchedule) {
-            const status = activeSchedule.status?.toLowerCase();
-            // If the schedule is already marked as playing/publish, ensure we are in sync.
-            // Otherwise, we keep our default 'true' so the preview autoplays regardless of current DB status.
+    const activeScheduleId = activeSchedule?.id;
+    const activeScheduleStatus = activeSchedule?.status;
+
+    useEffect(() => {
+        if (activeScheduleStatus) {
+            const status = activeScheduleStatus.toLowerCase();
             if (status === "playing" || status === "publish") {
                 setLocalActive(true);
             }
         }
-    }, [activeSchedule?.id]); // Only sync once on mount or schedule swap
+    }, [activeScheduleId, activeScheduleStatus]);
 
     const handlePowerClick = async () => {
         if (!activeSchedule) return;
@@ -72,16 +71,16 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     };
 
     // Automation States for Professional Looping Preview
-    const [playingIndex, setPlayingIndex] = React.useState(0);
-    const [isFading, setIsFading] = React.useState(false);
-    const audioRef = React.useRef<HTMLAudioElement>(null);
-    const [isMediaReady, setIsMediaReady] = React.useState(false);
-    const [showSpinner, setShowSpinner] = React.useState(false);
+    const [playingIndex, setPlayingIndex] = useState(0);
+    const [isFading, setIsFading] = useState(false);
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const [isMediaReady, setIsMediaReady] = useState(false);
+    const [showSpinner, setShowSpinner] = useState(false);
 
     // Audio states for custom player
-    const [audioCurrentTime, setAudioCurrentTime] = React.useState(0);
-    const [audioDuration, setAudioDuration] = React.useState(0);
-    const [audioVolume, setAudioVolume] = React.useState(1);
+    const [audioCurrentTime, setAudioCurrentTime] = useState(0);
+    const [audioDuration, setAudioDuration] = useState(0);
+    const [audioVolume, setAudioVolume] = useState(1);
 
     const formatDuration = (time: number) => {
         const minutes = Math.floor(time / 60);
@@ -90,7 +89,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     };
 
     // Spinner delay logic: Only show spinner if media takes > 600ms to load
-    React.useEffect(() => {
+    useEffect(() => {
         if (!isMediaReady) {
             const timer = setTimeout(() => setShowSpinner(true), 600);
             return () => clearTimeout(timer);
@@ -99,7 +98,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
         }
     }, [isMediaReady, playingIndex]);
 
-    const allItems = React.useMemo(() => {
+    const allItems = useMemo(() => {
         if (!activeSchedule) return [];
         const files = (activeSchedule.files || []).map(f => ({ ...f, isFile: true }));
         const programs = (activeSchedule.programs || []).map(p => ({ ...p, isProgram: true }));
@@ -109,7 +108,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     const currentItem = allItems[playingIndex];
 
     // Sync audio playback and volume with localActive
-    React.useEffect(() => {
+    useEffect(() => {
         if (audioRef.current) {
             audioRef.current.volume = audioVolume;
             if (localActive) {
@@ -121,7 +120,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     }, [localActive, currentItem, audioVolume]); // Also trigger when content item changes or volume changes
 
     // Initial volume load
-    React.useEffect(() => {
+    useEffect(() => {
         if (open) {
             const savedVol = localStorage.getItem("plyr_volume");
             if (savedVol !== null) {
@@ -131,13 +130,13 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     }, [open]);
 
     // Volume persistence
-    React.useEffect(() => {
+    useEffect(() => {
         if (open) {
             localStorage.setItem("plyr_volume", String(audioVolume));
         }
     }, [audioVolume, open]);
 
-    const advance = React.useCallback(() => {
+    const advance = useCallback(() => {
         if (allItems.length <= 1) return;
         setIsFading(true);
         setTimeout(() => {
@@ -146,23 +145,23 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
         }, 500); // Synchronized with globals.css animation duration
     }, [allItems.length]);
 
-    React.useEffect(() => {
-        if (allItems.length <= 1 || !open) return;
+    useEffect(() => {
+        if (allItems.length <= 1 || !open || !localActive) return;
         const currentItem = allItems[playingIndex];
         if (!currentItem) return;
 
-        // Videos and Programs rely on player's onEnded callback
+        // Videos, Audio, and Programs rely on player's onEnded callback
         const item = currentItem as any;
-        if (item.isProgram || item.type === "VIDEO") return;
+        if (item.isProgram || item.type === "VIDEO" || item.type === "AUDIO") return;
 
         // Default to 7s for non-video items
         const duration = (currentItem as any).duration ? (currentItem as any).duration * 1000 : 7000;
         const timer = setTimeout(advance, Math.max(0, duration - 500));
         return () => clearTimeout(timer);
-    }, [playingIndex, allItems, advance, open]);
+    }, [playingIndex, allItems, advance, open, localActive]);
 
     // Reset index when schedule changes or dialog opens
-    React.useEffect(() => {
+    useEffect(() => {
         if (open) {
             setPlayingIndex(0);
             setIsFading(false);
@@ -181,9 +180,11 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     autoPlay={localActive}
                     rounded="rounded-none"
                     onEnded={advance}
+                    onPlay={() => setLocalActive(true)}
+                    onPause={() => setLocalActive(false)}
                     fillParent={true}
                     onReady={() => setIsMediaReady(true)}
-                    className={effectiveLowerThird?.text && effectiveLowerThird.position !== "Top" ? "plyr-has-ticker" : ""}
+                    className=""
                 />
             );
         }
@@ -198,9 +199,11 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     autoPlay={localActive}
                     rounded="rounded-none"
                     onEnded={advance}
+                    onPlay={() => setLocalActive(true)}
+                    onPause={() => setLocalActive(false)}
                     fillParent={true}
                     onReady={() => setIsMediaReady(true)}
-                    className={effectiveLowerThird?.text && effectiveLowerThird.position !== "Top" ? "plyr-has-ticker" : ""}
+                    className=""
                 />
             );
         }
@@ -248,7 +251,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     <div 
                         className={cn(
                             "absolute left-4 right-4 z-20 flex items-center gap-3 bg-black/60 backdrop-blur-xl border border-white/10 rounded-xl p-2.5 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-500",
-                            effectiveLowerThird?.text && effectiveLowerThird.position !== "Top" ? "bottom-16" : "bottom-4"
+                            "bottom-4"
                         )}
                     >
                         <button
@@ -317,12 +320,12 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
         }
 
         return (
-            <div className="relative aspect-video">
+            <div className="relative w-full h-full">
                 <Image
                     src={getUrl(file.url) || "/placeholder.png"}
                     alt={file.originalName || "Preview"}
                     fill
-                    className="object-cover"
+                    className="object-contain"
                     unoptimized
                     onLoad={() => setIsMediaReady(true)}
                 />
@@ -403,8 +406,8 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
             setOpen={setOpen}
             title={schedule?.name}
             description={schedule?.description || "View and manage this schedule's live playback settings."}
-            maxWidth="3xl"
-            maxHeight="xl"
+            maxWidth="4xl"
+            maxHeight="2xl"
 
             className="bg-navbarBg"
         >
@@ -522,10 +525,9 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     <button
                         type="button"
                         onClick={handlePowerClick}
-                        disabled={isUpdating}
                         aria-label={localActive ? "Stop Schedule" : "Start Schedule"}
                         className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
-                                    p-3 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
+                                    p-3 cursor-pointer
                                     ${localActive ? "bg-bgBlue hover:bg-blue-500" : "bg-bgRed hover:bg-red-600"}`}
                         title={localActive ? "Stop Schedule" : "Start Schedule"}
                     >

@@ -10,7 +10,7 @@ import Step2LowerThird from "./Step2LowerThird";
 import Step3ScreenSelection from "./Step3ScreenSelection";
 import Step4ScheduleSettings from "./Step4ScheduleSettings";
 import { ContentItem } from "@/types/content";
-import { FileText, Settings, TvMinimal, Video, X } from "lucide-react";
+import { FileText, Loader2, Settings, TvMinimal, Video, X } from "lucide-react";
 import { useCreateScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
 import { StoreMorningPromo, ContentType, DayOfWeek } from "@/redux/api/users/schedules/schedules.type";
 import dayjs from "dayjs";
@@ -34,7 +34,7 @@ const isUUID = (id: any): id is string => {
 };
 
 const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOpen }) => {
-    const [createSchedule] = useCreateScheduleMutation();
+    const [createSchedule, { isLoading: isCreating }] = useCreateScheduleMutation();
     const [currentStep, setCurrentStep] = useState(1);
     const [showLowerThird, setShowLowerThird] = useState(false);
 
@@ -108,14 +108,17 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     };
 
     const handleBack = () => {
+        if (isCreating) return;
         if (showLowerThird) {
             setShowLowerThird(false);
+            setStep2Data(prev => ({ ...prev, contentType: "all" }));
         } else if (currentStep > 1) {
             setCurrentStep(currentStep - 1);
         }
     };
 
     const handleCancel = () => {
+        if (isCreating) return;
         // Reset all data
         setCurrentStep(1);
         setShowLowerThird(false);
@@ -124,6 +127,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
         setStep3Data({ selectedScreens: [] });
         setLowerThirdData({ ...lowerThirdData, selectedContent: null });
         setStep4Data({ repeat: "run-once", selectedDays: [], selectedDates: [], playTime: "03:00", endTime: "05:00", startDate: "", endDate: "" });
+        setCreatedLowerThirdId(null);
         setOpen(false);
     };
 
@@ -182,8 +186,12 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     };
 
     const isNextDisabled = () => {
+        if (isCreating) return true;
         if (currentStep === 1) return !step1Data.name;
-        if (currentStep === 2 && !showLowerThird) return step2Data.selectedContent.length === 0;
+        if (currentStep === 2) {
+            if (showLowerThird) return !createdLowerThirdId;
+            return step2Data.selectedContent.length === 0;
+        }
         if (currentStep === 3) return step3Data.selectedScreens.length === 0;
         if (currentStep === 4) {
             const isRunOnce = step4Data.repeat === "run-once";
@@ -214,7 +222,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
     return (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
             {/* Darker full-screen backdrop - Click to close */}
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer" onClick={handleCancel} />
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer" onClick={() => !isCreating && handleCancel()} />
 
             {/* Modal Content container - Fully responsive scaling */}
             <div className="relative w-full md:max-w-4xl h-full md:h-auto md:max-h-[85vh] bg-navbarBg border-x md:border border-border rounded-none md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
@@ -228,7 +236,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                     </div>
                     <button
                         onClick={handleCancel}
-                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all cursor-pointer text-muted hover:text-red-500 group"
+                        disabled={isCreating}
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all cursor-pointer text-muted hover:text-red-500 group disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <X className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" />
                     </button>
@@ -268,7 +277,6 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                                         setStep2Data(prev => ({ ...prev, contentType: type }));
                                         if (type !== "lower-third") {
                                             setShowLowerThird(false);
-                                            setCreatedLowerThirdId(null); // Clear the created ID if they opt-out
                                         }
                                     }}
                                 />
@@ -288,7 +296,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                 <div className="p-4 md:p-6 border-t border-border flex items-center justify-between bg-navbarBg/80 backdrop-blur-md">
                     <button
                         onClick={handleCancel}
-                        className="px-4 md:px-6 py-2 md:py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow text-sm md:text-base"
+                        disabled={isCreating}
+                        className="px-4 md:px-6 py-2 md:py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Cancel
                     </button>
@@ -298,7 +307,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                         {(currentStep > 1 || showLowerThird) && (
                             <button
                                 onClick={handleBack}
-                                className="px-4 md:px-6 py-2 md:py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow text-sm md:text-base"
+                                disabled={isCreating}
+                                className="px-4 md:px-6 py-2 md:py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Back
                             </button>
@@ -308,9 +318,18 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                         <button
                             onClick={handleNext}
                             disabled={isNextDisabled()}
-                            className="px-6 md:px-8 py-2 md:py-2.5 rounded-xl bg-bgBlue text-white font-semibold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow transition-all cursor-pointer text-sm md:text-base whitespace-nowrap"
+                            className="px-6 md:px-8 py-2 md:py-2.5 rounded-xl bg-bgBlue text-white font-semibold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow transition-all cursor-pointer text-sm md:text-base whitespace-nowrap flex items-center justify-center gap-2 min-w-[120px]"
                         >
-                            {currentStep === 4 ? "Create Schedule" : "Next"}
+                            {isCreating && currentStep === 4 ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 animate-spin text-white" />
+                                    Creating...
+                                </>
+                            ) : currentStep === 4 ? (
+                                "Create Schedule"
+                            ) : (
+                                "Next"
+                            )}
                         </button>
                     </div>
                 </div>

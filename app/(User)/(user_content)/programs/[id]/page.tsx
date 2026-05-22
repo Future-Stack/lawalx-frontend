@@ -126,9 +126,11 @@ const ScreenCardDetails = () => {
       setPlayingIndex((prev) => (prev + 1) % localTimeline.length);
       setPlaybackVersion((prev) => prev + 1);
       setIsFading(false);
-      setIsPaused(false); // Ensure timer resumes on advance
+      if (localActive) {
+        setIsPaused(false); // Ensure timer resumes on advance
+      }
     }, 500);
-  }, [localTimeline]);
+  }, [localTimeline, localActive]);
 
   // Handle media completion (Video & Audio)
   const handleMediaEnded = useCallback(() => {
@@ -369,6 +371,7 @@ const ScreenCardDetails = () => {
               selectedContent={localTimeline[playingIndex]}
               previewUrl={previewUrl}
               localActive={localActive}
+              setLocalActive={setLocalActive}
               isFading={isFading}
               handleVideoEnded={handleMediaEnded}
               setIsPaused={setIsPaused}

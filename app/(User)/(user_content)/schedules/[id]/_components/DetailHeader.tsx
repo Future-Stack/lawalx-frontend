@@ -1,14 +1,15 @@
 import React from "react";
-import { ArrowLeft, Pause } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 interface DetailHeaderProps {
     isNew: boolean;
     name: string;
     onSave: () => void;
+    isSaving?: boolean;
 }
 
-const DetailHeader: React.FC<DetailHeaderProps> = ({ isNew, name, onSave }) => {
+const DetailHeader: React.FC<DetailHeaderProps> = ({ isNew, name, onSave, isSaving }) => {
     return (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border pb-6">
             <div className="flex items-center gap-4">
@@ -31,9 +32,17 @@ const DetailHeader: React.FC<DetailHeaderProps> = ({ isNew, name, onSave }) => {
                 </button> */}
                 <button
                     onClick={onSave}
-                    className="flex-1 sm:flex-none px-8 py-2.5 bg-bgBlue text-white rounded-lg font-semibold hover:bg-blue-500 transition cursor-pointer shadow-customShadow"
+                    disabled={isSaving}
+                    className="flex-1 sm:flex-none min-w-[120px] flex items-center justify-center gap-2 px-8 py-2.5 bg-bgBlue disabled:opacity-70 disabled:cursor-not-allowed text-white rounded-lg font-semibold hover:bg-blue-500 transition cursor-pointer shadow-customShadow"
                 >
-                    Save
+                    {isSaving ? (
+                        <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Saving...</span>
+                        </>
+                    ) : (
+                        "Save"
+                    )}
                 </button>
             </div>
         </div>
