@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
-import { X, Camera, Maximize, Volume2, Sun, Play, Pause, Power, PowerOff, ListTree, Layout, Clock, Monitor, Database } from "lucide-react";
+import { X, Volume2, Sun, Play, Power, PowerOff, ListTree, Layout, Clock, Monitor, Database } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.api";
 import DeviceLocation from "@/components/common/DeviceLocation";
@@ -166,45 +166,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
     }
   }, [isPlaying, mediaUrl, currentItem]);
 
-  const togglePlayPause = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newProgress = Number(e.target.value);
-    setVideoProgress(newProgress);
-
-    if (videoRef.current && duration > 0) {
-      const seekTime = (newProgress / 100) * duration;
-      videoRef.current.currentTime = seekTime;
-    }
-  };
-
-  // const toggleLoop = () => {
-  //   if (videoRef.current) {
-  //     const newLoopState = !isLooping;
-  //     setIsLooping(newLoopState);
-  //     videoRef.current.loop = newLoopState;
-  //   }
-  // };
-
-  const toggleFullscreen = () => {
-    if (videoRef.current) {
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        videoRef.current.requestFullscreen();
-      }
-    }
-  };
-
   const parseStorage = (storage: any, usedStorage?: number) => {
     if (usedStorage !== undefined) {
       const totalGB = typeof storage === 'number' ? storage : 10; // Fallback to 10GB
@@ -330,10 +291,22 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                     className="w-full h-full object-cover"
                     src={mediaUrl}
                     playsInline
-                    preload="metadata"
+                    muted
+                    autoPlay
+                    preload="auto"
                     onTimeUpdate={handleTimeUpdate}
                     onLoadedMetadata={handleLoadedMetadata}
                     onEnded={handleEnded}
+                    onPlay={(e) => {
+                      setIsPlaying(true);
+                      const vid = e.currentTarget;
+                      // Unmute and restore volume after autoplay starts
+                      setTimeout(() => {
+                        vid.muted = false;
+                        vid.volume = volume / 100;
+                      }, 50);
+                    }}
+                    onPause={() => setIsPlaying(false)}
                   />
                 )}
 
@@ -349,41 +322,6 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                   )}
                 </div> */}
 
-                {/* Bottom Custom Toolbar */}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 py-4">
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={togglePlayPause}
-                      className="shrink-0 text-white hover:scale-110 transition-transform cursor-pointer"
-                    >
-                      {isPlaying ? <Pause className="h-5 w-5 fill-current" /> : <Play className="h-5 w-5 fill-current" />}
-                    </button>
-
-                    <div className="flex-1 flex items-center">
-                      <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="0.1"
-                        value={videoProgress}
-                        onChange={handleProgressChange}
-                        className="w-full h-1.5 cursor-pointer appearance-none rounded-full bg-white/20"
-                        style={{
-                          background: `linear-gradient(to right, #3b82f6 ${videoProgress}%, rgba(255,255,255,0.2) ${videoProgress}%)`,
-                        }}
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-3 text-white/90">
-                      <button className="p-1 hover:text-white transition-colors cursor-pointer">
-                        <Camera className="h-5 w-5" />
-                      </button>
-                      <button onClick={toggleFullscreen} className="p-1 hover:text-white transition-colors cursor-pointer">
-                        <Maximize className="h-5 w-5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* Bottom Controls Area */}

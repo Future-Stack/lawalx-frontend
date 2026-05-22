@@ -194,7 +194,11 @@ const ProgramPreview = ({
                   alt={currentFileName}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 50vw"
-                  onLoad={() => setIsPaused(false)}
+                  onLoad={() => {
+                    if (localActive) {
+                      setIsPaused(false);
+                    }
+                  }}
                   className="absolute inset-0 w-full h-full object-contain"
                 />
               ) : (
@@ -218,19 +222,16 @@ const ProgramPreview = ({
         <button
           type="button"
           onClick={handlePowerClick}
-          disabled={isUpdating}
           aria-label={localActive ? "Turn Off Program" : "Turn On Program"}
           className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
-                      py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
+                      py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
                       ${localActive
               ? "bg-bgBlue hover:bg-blue-500"
               : "bg-bgRed hover:bg-red-600"
             }`}
           title={localActive ? "Turn Off" : "Turn On"}
         >
-          {isUpdating ? (
-            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-          ) : localActive ? (
+          {localActive ? (
             <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
           ) : (
             <Play className="w-4 h-4 sm:w-5 sm:h-5" />

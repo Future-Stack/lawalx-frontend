@@ -421,10 +421,9 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
           <button
             type="button"
             onClick={onPowerClick}
-            disabled={isUpdating}
             aria-label={localActive ? "Stop Schedule" : "Start Schedule"}
             className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
-                        py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
+                        py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
                         ${
                           localActive
                             ? "bg-bgBlue hover:bg-blue-500"

@@ -11,7 +11,7 @@ import {
 import clsx from "clsx";
 
 type DialogSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl" | "7xl";
-type DialogHeight = "sm" | "md" | "lg" | "xl";
+type DialogHeight = "sm" | "md" | "lg" | "xl" | "2xl";
 
 interface BaseDialogProps {
   open: boolean;
@@ -54,6 +54,7 @@ const heightMap: Record<DialogHeight, string> = {
   md: "max-h-[65vh]",
   lg: "max-h-[80vh]",
   xl: "max-h-[90vh]",
+  "2xl": "max-h-[95vh]",
 };
 
 const BaseDialog = ({
