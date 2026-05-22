@@ -54,7 +54,8 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
   };
 
   const formatAmount = (amount: number, currency: string) => {
-    const symbol = currency === "NGN" ? "₦" : currency === "USD" ? "$" : currency;
+    const symbol =
+      currency === "NGN" ? "₦" : currency === "USD" ? "$" : currency;
     return `${symbol}${amount.toLocaleString()}`;
   };
 
@@ -71,8 +72,8 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
 
   const paymentMethodText = payment?.gateway
     ? `${payment.gateway.charAt(0).toUpperCase()}${payment.gateway
-      .slice(1)
-      .toLowerCase()} payment`
+        .slice(1)
+        .toLowerCase()} payment`
     : "N/A";
 
   return (
@@ -101,7 +102,8 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                 </SheetTitle>
               </div>
               <SheetDescription className="text-body">
-                Complete information for transaction {payment?.invoiceNumber || "N/A"}
+                Complete information for transaction{" "}
+                {payment?.invoiceNumber || "N/A"}
               </SheetDescription>
             </SheetHeader>
 
@@ -119,10 +121,11 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                 </div>
                 <div className="">
                   <CircleCheckBig
-                    className={`w-4 h-4 md:w-6 md:h-6 ${payment?.status?.toUpperCase() === "SUCCESS"
+                    className={`w-4 h-4 md:w-6 md:h-6 ${
+                      payment?.status?.toUpperCase() === "SUCCESS"
                         ? "text-green-600"
                         : "text-gray-400"
-                      }`}
+                    }`}
                   />
                 </div>
               </div>
@@ -214,7 +217,7 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                   <div className="text-right font-medium flex items-center justify-end gap-1 text-body">
                     {payment?.gateway
                       ? payment.gateway.charAt(0).toUpperCase() +
-                      payment.gateway.slice(1).toLowerCase()
+                        payment.gateway.slice(1).toLowerCase()
                       : "N/A"}
                     <ExternalLink className="w-3 h-3 text-gray-400" />
                   </div>
@@ -235,7 +238,8 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                     variant="default"
                     className="w-full text-xs bg-[#101A3A] hover:bg-[#001C55] text-white h-10 shadow-customShadow hover:opacity-90 border border-transparent"
                   >
-                    <CloudDownload className="w-3 h-3 mr-1" />Download Invoice
+                    <CloudDownload className="w-3 h-3 mr-1" />
+                    Download Invoice
                   </Button>
                   {/* <Button
                     variant="outline"
