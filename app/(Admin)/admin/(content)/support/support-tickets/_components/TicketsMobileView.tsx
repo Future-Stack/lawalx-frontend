@@ -103,7 +103,7 @@ export default function TicketsMobileView({
                 {ticket.ticketTags.map((t) => (
                   <span
                     key={t.id}
-                    className="text-[10px] px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300"
+                    className="text-xs px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300"
                     title={t.name}
                   >
                     {t.name}

@@ -153,14 +153,14 @@ export default function TicketsDesktopView({
                       {ticket.ticketTags.slice(0, 2).map((t) => (
                         <span
                           key={t.id}
-                          className="text-[10px] px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 whitespace-nowrap"
+                          className="text-xs px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 whitespace-nowrap"
                           title={t.name}
                         >
                           {t.name}
                         </span>
                       ))}
                       {ticket.ticketTags.length > 2 && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 cursor-help" title={ticket.ticketTags.slice(2).map(t => t.name).join(', ')}>
+                        <span className="text-xs px-1.5 py-0.5 rounded border border-gray-200 bg-gray-50 text-gray-600 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 cursor-help" title={ticket.ticketTags.slice(2).map(t => t.name).join(', ')}>
                           +{ticket.ticketTags.length - 2}
                         </span>
                       )}
