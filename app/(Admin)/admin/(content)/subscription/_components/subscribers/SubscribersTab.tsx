@@ -42,33 +42,7 @@ const SubscribersTab = () => {
     search: searchTerm || undefined,
     plan: planFilter !== "all" ? planFilter.toUpperCase() : undefined,
   });
-
-  // Dummy data for testing purposes
-  const dummySubscribers = [
-    {
-      userId: "dummy-1",
-      userName: "Emon Ahmed",
-      email: "emon@example.com",
-      plan: "BUSINESS",
-      amount: 299,
-      paymentCycle: "Monthly",
-      nextBilling: "2026-06-14T00:00:00Z",
-      subscriptionStatus: "ACTIVE",
-    },
-    {
-      userId: "dummy-2",
-      userName: "Sakib Al Hasan",
-      email: "sakib@example.com",
-      plan: "PROFESSIONAL",
-      amount: 149,
-      paymentCycle: "Yearly",
-      nextBilling: "2027-05-14T00:00:00Z",
-      subscriptionStatus: "CANCELLED",
-    },
-  ];
-
-  const subscribers =
-    data?.data && data.data.length > 0 ? data.data : dummySubscribers;
+  const subscribers = data?.data && data.data.length > 0 ? data.data : [];
   const meta = data?.meta;
   const totalSubscribers = meta?.total || subscribers.length;
   const totalPages = meta?.totalPages || 1;
@@ -127,9 +101,9 @@ const SubscribersTab = () => {
               placeholder="All Plans"
               options={[
                 { label: "All Plans", value: "all" },
-                { label: "Starter", value: "starter" },
-                { label: "Professional", value: "professional" },
+                { label: "Basic", value: "basic" },
                 { label: "Business", value: "business" },
+                { label: "Premium", value: "premium" },
               ]}
               value={planFilter}
               onChange={(value) => {
