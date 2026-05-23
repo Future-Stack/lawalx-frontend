@@ -2,7 +2,7 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Paperclip, Send, X, FileIcon, CheckCircle, Tag, MoreHorizontal, Mail, Archive, Trash2, Pencil, Plus } from 'lucide-react';
+import { Paperclip, Send, X, FileIcon, CheckCircle, Tag, MoreHorizontal, Mail, Archive, Trash2, Pencil, Plus, AlertCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -370,6 +370,19 @@ export default function TicketConversationDialog({
                 <span className="inline-block w-16">Issue :</span>{' '}
                 <span className="text-[#475569] dark:text-gray-300">{ticket.issueType}</span>
               </p>
+              {ticketDetails?.data?.adminNote && (
+                <div className="mt-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-lg p-2.5 shadow-sm max-w-sm xl:max-w-md">
+                  <div className="flex gap-2">
+                    <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs font-semibold text-amber-800 dark:text-amber-400 mb-0.5">Admin Note</h4>
+                      <p className="text-xs text-amber-700 dark:text-amber-300/90 leading-relaxed whitespace-pre-wrap break-words">
+                        {ticketDetails.data.adminNote}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
             <div className="flex flex-col items-end">
@@ -484,7 +497,7 @@ export default function TicketConversationDialog({
           </div>
 
           {/* Messages */}
-          <div className="px-4 sm:px-5 py-4 custom-scrollbar space-y-4 bg-white dark:bg-gray-950 border-x border-border min-h-[220px] max-h-[260px] sm:max-h-[300px] overflow-y-auto">
+          <div className="px-4 sm:px-5 py-4 custom-scrollbar space-y-4 bg-white dark:bg-gray-950 border-x border-border min-h-[220px] max-h-[300px] sm:max-h-[360px] overflow-y-auto">
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-xs italic">
                 {isConnected ? 'No messages yet. Start the conversation!' : 'Connecting to chat...'}
