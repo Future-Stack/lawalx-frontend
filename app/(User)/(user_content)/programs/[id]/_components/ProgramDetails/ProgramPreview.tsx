@@ -8,6 +8,7 @@ interface ProgramPreviewProps {
   selectedContent: any;
   previewUrl: string | undefined;
   localActive: boolean;
+  setLocalActive: (active: boolean) => void;
   isFading: boolean;
   handleVideoEnded: () => void;
   setIsPaused: (paused: boolean) => void;
@@ -30,6 +31,7 @@ const ProgramPreview = ({
   selectedContent,
   previewUrl,
   localActive,
+  setLocalActive,
   isFading,
   handleVideoEnded,
   setIsPaused,
@@ -68,8 +70,8 @@ const ProgramPreview = ({
                 fillParent={true}
                 rounded="rounded-lg"
                 onEnded={handleVideoEnded}
-                onPlay={() => setIsPaused(false)}
-                onPause={() => setIsPaused(true)}
+                onPlay={() => setLocalActive(true)}
+                onPause={() => setLocalActive(false)}
                 volume={audioVolume}
                 onVolumeChange={setAudioVolume}
               />
@@ -81,8 +83,8 @@ const ProgramPreview = ({
                 key={`${previewUrl}-${playbackVersion}`}
                 src={previewUrl}
                 autoPlay={localActive}
-                onPlay={() => setIsPaused(false)}
-                onPause={() => setIsPaused(true)}
+                onPlay={() => setLocalActive(true)}
+                onPause={() => setLocalActive(false)}
                 onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
                 onLoadedMetadata={(e) => setAudioDuration(e.currentTarget.duration)}
                 onEnded={handleVideoEnded}
@@ -109,14 +111,15 @@ const ProgramPreview = ({
                 <button
                   onClick={() => {
                     if (audioRef.current) {
-                      if (!isPaused) audioRef.current.pause();
-                      else audioRef.current.play();
+                      if (localActive) audioRef.current.pause();
+                      else audioRef.current.play().catch(() => {});
                     }
+                    setLocalActive(!localActive);
                   }}
                   className="flex-shrink-0 p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all outline-none cursor-pointer"
-                  title={!isPaused ? "Pause" : "Play"}
+                  title={localActive ? "Pause" : "Play"}
                 >
-                  {!isPaused ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                  {localActive ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
                 </button>
 
                 <span className="text-[10px] text-white/40 font-medium min-w-[32px] tabular-nums text-center">
@@ -194,7 +197,11 @@ const ProgramPreview = ({
                   alt={currentFileName}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 50vw"
-                  onLoad={() => setIsPaused(false)}
+                  onLoad={() => {
+                    if (localActive) {
+                      setIsPaused(false);
+                    }
+                  }}
                   className="absolute inset-0 w-full h-full object-contain"
                 />
               ) : (
@@ -218,19 +225,16 @@ const ProgramPreview = ({
         <button
           type="button"
           onClick={handlePowerClick}
-          disabled={isUpdating}
           aria-label={localActive ? "Turn Off Program" : "Turn On Program"}
           className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
-                      py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
+                      py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
                       ${localActive
               ? "bg-bgBlue hover:bg-blue-500"
               : "bg-bgRed hover:bg-red-600"
             }`}
           title={localActive ? "Turn Off" : "Turn On"}
         >
-          {isUpdating ? (
-            <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-          ) : localActive ? (
+          {localActive ? (
             <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
           ) : (
             <Play className="w-4 h-4 sm:w-5 sm:h-5" />

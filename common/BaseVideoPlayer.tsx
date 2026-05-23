@@ -70,6 +70,8 @@ const BaseVideoPlayer = ({
   const [isBuffering, setIsBuffering] = useState(false);
   const [showSpinner, setShowSpinner] = useState(false);
   const hasStartedRef = useRef(false);
+  const isSeekingRef = useRef(false);
+  const pauseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Spinner delay logic: Only show spinner if media takes > 600ms to load/buffer
   useEffect(() => {
@@ -145,16 +147,36 @@ const BaseVideoPlayer = ({
         onVolumeChange?.(vol);
       };
 
+      const handleSeeking = () => {
+        isSeekingRef.current = true;
+      };
+      const handleSeeked = () => {
+        setTimeout(() => {
+          isSeekingRef.current = false;
+        }, 150);
+      };
       const handlePlaying = () => { 
         setReady(true); 
         setIsPlaying(true);
         setIsBuffering(false);
+        if (pauseTimerRef.current) {
+          clearTimeout(pauseTimerRef.current);
+          pauseTimerRef.current = null;
+        }
+        if (isSeekingRef.current) return;
         onPlayRef.current?.(); 
       };
       const handlePause   = () => {
         setIsPlaying(false);
         setIsBuffering(false);
-        onPauseRef.current?.();
+        if (pauseTimerRef.current) {
+          clearTimeout(pauseTimerRef.current);
+        }
+        pauseTimerRef.current = setTimeout(() => {
+          pauseTimerRef.current = null;
+          if (isSeekingRef.current) return;
+          onPauseRef.current?.();
+        }, 200); // 200ms delay to verify if pause was triggered by seek
       };
       const handleWaiting = () => {
         if (autoPlayRef.current) setIsBuffering(true);
@@ -176,6 +198,8 @@ const BaseVideoPlayer = ({
       player.on("pause",        handlePause);
       player.on("ended",        handleEnded);
       player.on("volumechange", handleVolumeChange);
+      player.on("seeking",      handleSeeking);
+      player.on("seeked",       handleSeeked);
 
       if (player.ready) handleReady();
 
@@ -187,6 +211,8 @@ const BaseVideoPlayer = ({
           player.off("pause",        handlePause);
           player.off("ended",        handleEnded);
           player.off("volumechange", handleVolumeChange);
+          player.off("seeking",      handleSeeking);
+          player.off("seeked",       handleSeeked);
         } catch {}
       };
     };
@@ -300,6 +326,9 @@ const BaseVideoPlayer = ({
         .plyr-has-ticker .plyr__controls {
           margin-bottom: 40px !important;
           background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5)) !important;
+        }
+        .plyr__control--overlaid {
+          display: none !important;
         }
       `}} />
       <div className={`${(fillParent || mediaType === "video") ? "absolute inset-0" : "relative h-full"} flex items-center justify-center`}>
@@ -587,6 +616,14 @@ export default BaseVideoPlayer;
 //             />
 //           ) : (
 //             <div className="w-full h-full bg-black" />
+//           )}
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default BaseVideoPlayer;
 //           )}
 //         </div>
 //       </div>

@@ -10,6 +10,8 @@ import { Device } from "@/redux/api/users/devices/devices.type";
 import { ContentItem } from "@/types/content";
 import { getUrl, formatBytes } from "@/lib/content-utils";
 import { toast } from "sonner";
+import dayjs from "dayjs";
+
 
 // Components
 import DetailHeader from "./_components/DetailHeader";
@@ -49,21 +51,8 @@ function mapContentType(ct: string): string {
   }
 }
 
-// Helper: map API recurrenceType to display label (for UI components)
-function getRepeatLabel(rt: string): string {
-  switch (rt?.toLowerCase()) {
-    case "once":
-      return "Run Once";
-    case "daily":
-      return "Daily";
-    case "weekly":
-      return "Weekly";
-    case "monthly":
-      return "Monthly";
-    default:
-      return rt;
-  }
-}
+
+
 
 // Helper: format time string (e.g. "09:00" → "09:00 AM")
 function formatTime(time: string): string {
@@ -162,8 +151,8 @@ export default function ScheduleDetailPage() {
 
   const startTime = localStartTime ?? (schedule?.startTime ? schedule.startTime.split("T")[1]?.substring(0, 5) : "09:00");
   const endTime = localEndTime ?? (schedule?.endTime ? schedule.endTime.split("T")[1]?.substring(0, 5) : "10:00");
-  const startDate = localStartDate ?? (schedule?.startDate ? schedule.startDate.split("T")[0] : new Date().toISOString().split("T")[0]);
-  const endDate = localEndDate ?? (schedule?.endDate ? schedule.endDate.split("T")[0] : "");
+  const startDate = localStartDate ?? (schedule?.startDate ? dayjs(schedule.startDate).format("YYYY-MM-DD") : dayjs().format("YYYY-MM-DD"));
+  const endDate = localEndDate ?? (schedule?.endDate ? dayjs(schedule.endDate).format("YYYY-MM-DD") : "");
 
   // Map API file data to ContentItem[] for ContentSection (handle all items)
   const allContent: ContentItem[] = localFile
@@ -320,8 +309,10 @@ export default function ScheduleDetailPage() {
       description: pDescription,
       contentType: apiContentType,
       recurrenceType: pRepeat.toLowerCase(),
-      startDate: pStartDate.includes("T") ? pStartDate : `${pStartDate}T00:00:00Z`,
-      endDate: pRepeat.toLowerCase() === "once" ? (pStartDate.includes("T") ? pStartDate : `${pStartDate}T23:59:59Z`) : (pEndDate.includes("T") ? pEndDate : `${pEndDate || pStartDate}T23:59:59Z`),
+      startDate: pStartDate ? dayjs(pStartDate).startOf('day').toISOString() : dayjs().startOf('day').toISOString(),
+      endDate: pRepeat.toLowerCase() === "once"
+        ? (pStartDate ? dayjs(pStartDate).endOf('day').toISOString() : dayjs().endOf('day').toISOString())
+        : (pEndDate ? dayjs(pEndDate).endOf('day').toISOString() : (pStartDate ? dayjs(pStartDate).endOf('day').toISOString() : dayjs().endOf('day').toISOString())),
       startTime: pStartTime.includes("T") ? pStartTime : `1970-01-01T${pStartTime}:00Z`,
       endTime: pEndTime.includes("T") ? pEndTime : `1970-01-01T${pEndTime}:00Z`,
       daysOfWeek: pDaysOfWeek,
@@ -369,9 +360,7 @@ export default function ScheduleDetailPage() {
     }
   };
 
-  // Video & thumbnail for preview
-  const videoUrl = content[0]?.type === "video" ? content[0].video || content[0].thumbnail : "";
-  const thumbnailUrl = content[0]?.thumbnail ?? "";
+
 
   const handlePowerClick = async () => {
     if (isNew) return;
@@ -462,7 +451,7 @@ export default function ScheduleDetailPage() {
           data: getPayload({ programs: nextPrograms, targets: nextTargets })
         }).unwrap();
         toast.success("Devices added successfully");
-      } catch (err: any) {
+      } catch {
         toast.error("Failed to add devices to schedule");
       }
     }
@@ -474,6 +463,7 @@ export default function ScheduleDetailPage() {
         isNew={isNew}
         name={name}
         onSave={handleSave}
+        isSaving={isUpdating}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

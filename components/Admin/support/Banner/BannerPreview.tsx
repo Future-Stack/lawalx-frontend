@@ -141,7 +141,6 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
                 {/* Image Container */}
                 <div className={`banner-image-container ${viewMode === 'mobile' ? 'mt-4 hidden' : ''}`}>
                   <div className="relative">
-                    <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-full transform scale-150"></div>
 
                     {data.image ? (
                       <div className={`${data.mediaPosition === 'LEFT' ? 'md:ml-2 lg:ml-4 xl:ml-10' : 'md:mr-2 lg:mr-4 xl:mr-10'} md:block hidden`}>
@@ -170,16 +169,10 @@ export default function BannerPreview({ data, mode = 'custom' }: BannerPreviewPr
                       </div>
                     )}
 
-                    {/* Floating Elements */}
-                    <div className="absolute top-0 right-0 w-8 h-8 bg-blue-400 rounded-full blur-md opacity-60 animate-pulse"></div>
-                    <div className="absolute bottom-4 left-4 w-6 h-6 bg-purple-400 rounded-full blur-md opacity-60 animate-bounce"></div>
                   </div>
                 </div>
               </div>
 
-              {/* Decorative Elements */}
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
             </div>
           ) : (
             /* PREBUILT MODE */
