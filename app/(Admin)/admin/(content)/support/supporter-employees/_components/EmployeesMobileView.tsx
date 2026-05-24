@@ -48,8 +48,8 @@ export default function EmployeesMobileView({
           return (
             <div key={emp.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4 shadow-sm">
               {/* Header: Avatar, Name, and Status */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="relative flex-shrink-0">
                     {emp.user.image_url ? (
                       <img
@@ -74,11 +74,11 @@ export default function EmployeesMobileView({
                       )}
                     />
                   </div>
-                  <div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                       {displayName}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                       {emp.user.account.email}
                     </div>
                   </div>
@@ -86,7 +86,7 @@ export default function EmployeesMobileView({
                 
                 <span
                   className={cn(
-                    'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border',
+                    'inline-flex flex-shrink-0 items-center px-2 py-0.5 rounded text-[10px] font-medium border',
                     online
                       ? 'text-green-600 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
                       : 'text-red-500 bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
