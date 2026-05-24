@@ -616,13 +616,13 @@ export default function GlobalDevices() {
                       className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 cursor-pointer hover:shadow-md transition-shadow"
                     >
                       {/* Header */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">{device.device}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">{device.model}</div>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{device.device}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{device.model}</div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(device.status)}`}>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${getStatusBadge(device.status)}`}>
                             {device.status}
                           </span>
                           <ActionMenu device={device} onAction={handleAction} />
@@ -630,14 +630,14 @@ export default function GlobalDevices() {
                       </div>
 
                       {/* Customer Info */}
-                      <div className="flex items-center justify-between text-sm">
-                        <div>
+                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
+                        <div className="min-w-0">
                           <span className="text-gray-500 dark:text-gray-400">Customer:</span>
-                          <span className="ml-2 text-gray-900 dark:text-white">{device.customer}</span>
+                          <span className="ml-2 text-gray-900 dark:text-white break-words">{device.customer}</span>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <span className="text-gray-500 dark:text-gray-400">Type:</span>
-                          <span className="ml-2 text-gray-900 dark:text-white">{device.type}</span>
+                          <span className="ml-2 text-gray-900 dark:text-white break-all">{device.type}</span>
                         </div>
                       </div>
 
@@ -659,14 +659,14 @@ export default function GlobalDevices() {
                       )}
 
                       {/* Storage and Last Sync */}
-                      <div className="flex items-center justify-between text-sm">
-                        <div>
+                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
+                        <div className="min-w-0">
                           <span className="text-gray-500 dark:text-gray-400">Storage:</span>
-                          <span className="ml-2 text-gray-900 dark:text-white">{device.storage}</span>
+                          <span className="ml-2 text-gray-900 dark:text-white break-words">{device.storage}</span>
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <span className="text-gray-500 dark:text-gray-400">Last Sync:</span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">{device.lastSync}</span>
+                          <span className="ml-2 text-gray-600 dark:text-gray-400 break-words">{device.lastSync}</span>
                         </div>
                       </div>
 
@@ -682,23 +682,23 @@ export default function GlobalDevices() {
           </div>
 
           {/* Pagination */}
-          <div className="p-4 border-t border-border flex justify-between items-center bg-navbarBg rounded-b-xl">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
+          <div className="p-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 bg-navbarBg rounded-b-xl">
+            <div className="text-xs sm:text-sm text-center sm:text-left text-gray-500 dark:text-gray-400">
               Showing {filteredDevices.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}-
               {Math.min(currentPage * itemsPerPage, filteredDevices.length)} of {filteredDevices.length} devices
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Previous
               </button>
               <button
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredDevices.length / itemsPerPage)))}
                 disabled={currentPage >= Math.ceil(filteredDevices.length / itemsPerPage)}
-                className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Next
               </button>
