@@ -13,6 +13,7 @@ import { useGetAllSupportersQuery, useDeleteSupporterHardMutation } from '@/redu
 import { usePresence } from '@/hooks/usePresence';
 import type { EmployeeData } from '@/redux/api/admin/support/adminSupporterApi';
 import EditEmployeeDialog from './EditEmployeeDialog';
+import AddEmployeeDialog from './AddEmployeeDialog';
 import { toast } from 'sonner';
 import EmployeesDesktopView from './EmployeesDesktopView';
 import EmployeesMobileView from './EmployeesMobileView';
@@ -45,6 +46,9 @@ export default function EmployeesTable() {
   // Edit state
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeData | null>(null);
+
+  // Add state
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   // ── Data fetching ─────────────────────────────────────────────────────────
   const { data, isLoading, isError } = useGetAllSupportersQuery();
@@ -109,6 +113,12 @@ export default function EmployeesTable() {
         <h2 className="text-base font-semibold text-gray-900 dark:text-white whitespace-nowrap">
           Support Employees List
         </h2>
+        <button
+          onClick={() => setIsAddDialogOpen(true)}
+          className="text-nowrap px-4 py-2 text-sm font-medium text-white bg-[#00A3FF] hover:bg-[#008EDB] rounded-lg shadow-sm transition-colors"
+        >
+          Add Supporter
+        </button>
       </div>
 
       {/* ── Table ──────────────────────────────────────────────────────── */}
@@ -196,6 +206,10 @@ export default function EmployeesTable() {
         employee={selectedEmployee}
         open={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
+      />
+      <AddEmployeeDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
       />
     </div>
   );
