@@ -265,22 +265,22 @@ const BillingTable = ({
             key={payment.paymentId}
             className={`${isFetching ? "opacity-60 pointer-events-none" : ""} bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm`}
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-headings text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="font-medium text-headings text-sm truncate">
                   Invoice:{" "}
                   <span className="font-semibold">{payment.invoice}</span>
                 </div>
-                <div className="text-sm mt-1">
-                  <span className="font-medium text-headings">
+                <div className="text-sm mt-1 min-w-0">
+                  <span className="font-medium text-headings truncate block">
                     {payment.user.name}
                   </span>
-                  <span className="text-muted block text-xs">
+                  <span className="text-muted block text-xs truncate">
                     {payment.user.email}
                   </span>
                 </div>
               </div>
-              <div className="flex gap-1">
+              <div className="flex gap-1 flex-shrink-0">
                 <Button
                   size="icon"
                   variant="ghost"
@@ -339,23 +339,27 @@ const BillingTable = ({
                 </DropdownMenu>
               </div>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Payment Method:</span>
-              <PaymentMethodBadge method={payment.paymentMethod} />
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
+              <span className="text-muted whitespace-nowrap">Payment Method:</span>
+              <div className="flex-shrink-0">
+                <PaymentMethodBadge method={payment.paymentMethod} />
+              </div>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Amount:</span>
-              <span className="font-semibold text-headings">
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
+              <span className="text-muted whitespace-nowrap">Amount:</span>
+              <span className="font-semibold text-headings break-all">
                 {formatCurrency(payment.amount, currency)}
               </span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Date:</span>
-              <span className="text-muted">{formatDate(payment.date)}</span>
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
+              <span className="text-muted whitespace-nowrap">Date:</span>
+              <span className="text-muted whitespace-nowrap">{formatDate(payment.date)}</span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Status:</span>
-              <StatusBadge status={payment.status} />
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
+              <span className="text-muted whitespace-nowrap">Status:</span>
+              <div className="flex-shrink-0">
+                <StatusBadge status={payment.status} />
+              </div>
             </div>
           </div>
         ))}

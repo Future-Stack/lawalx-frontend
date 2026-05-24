@@ -182,8 +182,8 @@ export default function SupportTicketTable() {
       </StickyScrollContainer>
 
       {/* Pagination */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-5 py-4 border-t border-border">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 py-4 border-t border-border">
+        <p className="text-xs sm:text-sm text-center sm:text-left text-gray-500 dark:text-gray-400">
           Showing {start} to {end} of{' '}
           <span className="font-semibold text-blue-600 dark:text-blue-400">
             {TOTAL_COUNT}
@@ -191,14 +191,14 @@ export default function SupportTicketTable() {
           Files
         </p>
 
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex items-center justify-center gap-1 flex-wrap">
           {/* Prev */}
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs sm:text-sm rounded-lg border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
-            <ChevronLeft className="w-3.5 h-3.5" />
+            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             Prev
           </button>
 
@@ -206,7 +206,7 @@ export default function SupportTicketTable() {
             p === '...' ? (
               <span
                 key={`ellipsis-${i}`}
-                className="px-2 text-sm text-gray-400 dark:text-gray-500"
+                className="px-1.5 sm:px-2 py-1 text-xs sm:text-sm text-gray-400 dark:text-gray-500"
               >
                 ...
               </span>
@@ -215,7 +215,7 @@ export default function SupportTicketTable() {
                 key={p}
                 onClick={() => setCurrentPage(p as number)}
                 className={cn(
-                  'w-8 h-8 rounded-lg text-sm font-medium transition-colors cursor-pointer',
+                  'w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer',
                   currentPage === p
                     ? 'bg-blue-600 text-white'
                     : 'border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -230,10 +230,10 @@ export default function SupportTicketTable() {
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs sm:text-sm rounded-lg border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             Next
-            <ChevronRight className="w-3.5 h-3.5" />
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>

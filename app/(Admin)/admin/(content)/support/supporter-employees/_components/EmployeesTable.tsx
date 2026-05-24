@@ -136,8 +136,8 @@ export default function EmployeesTable() {
       </div>
 
       {/* ── Pagination ────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 border-t border-border">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 py-4 border-t border-border">
+        <p className="text-xs sm:text-sm text-center sm:text-left text-gray-500 dark:text-gray-400">
           Showing{' '}
           <span className="font-semibold text-gray-700 dark:text-gray-300">
             {filtered.length === 0 ? 0 : start + 1}–{Math.min(start + ITEMS_PER_PAGE, filtered.length)}
@@ -147,21 +147,21 @@ export default function EmployeesTable() {
           supporters
         </p>
 
-        <div className="flex items-center gap-1 flex-wrap">
+        <div className="flex items-center justify-center gap-1 flex-wrap">
           {/* Prev */}
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-300 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Prev</span>
           </button>
 
           {/* Page numbers */}
           {pageNumbers.map((p, i) =>
             p === '...' ? (
-              <span key={`e-${i}`} className="px-2 py-1.5 text-sm text-gray-400 select-none">
+              <span key={`e-${i}`} className="px-1.5 sm:px-2 py-1 text-xs sm:text-sm text-gray-400 select-none">
                 ...
               </span>
             ) : (
@@ -169,7 +169,7 @@ export default function EmployeesTable() {
                 key={p}
                 onClick={() => setCurrentPage(p as number)}
                 className={cn(
-                  'min-w-[36px] px-2.5 py-1.5 text-sm rounded-lg border transition-colors',
+                  'min-w-[32px] sm:min-w-[36px] px-2 py-1 sm:px-2.5 sm:py-1.5 text-xs sm:text-sm rounded-lg border transition-colors cursor-pointer',
                   currentPage === p
                     ? 'bg-blue-600 text-white border-blue-600 font-semibold'
                     : 'text-gray-600 dark:text-gray-300 border-border hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -184,10 +184,10 @@ export default function EmployeesTable() {
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-300 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs sm:text-sm text-gray-600 dark:text-gray-300 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
           >
             <span>Next</span>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>

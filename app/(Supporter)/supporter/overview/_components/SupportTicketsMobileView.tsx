@@ -30,13 +30,13 @@ export default function SupportTicketsMobileView({
             key={ticket.id}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
           >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 break-all">
                 {ticket.ticketId}
               </span>
               <span
                 className={cn(
-                  'inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-medium',
+                  'inline-flex flex-shrink-0 items-center justify-center px-2 py-0.5 rounded text-[10px] font-medium',
                   STATUS_STYLES[ticket.status] || 'text-gray-600 border border-gray-300 bg-gray-50 dark:bg-gray-800 dark:text-gray-300'
                 )}
               >
@@ -44,13 +44,13 @@ export default function SupportTicketsMobileView({
               </span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-gray-900 dark:text-white">
+            <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+              <div className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1 min-w-[120px]">
                 {ticket.clientName}
               </div>
               <span
                 className={cn(
-                  'inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-medium',
+                  'inline-flex flex-shrink-0 items-center justify-center px-2 py-0.5 rounded text-[10px] font-medium',
                   PRIORITY_STYLES[ticket.priority] || 'text-gray-600 border border-gray-300 bg-gray-50 dark:bg-gray-800 dark:text-gray-300'
                 )}
               >
@@ -58,14 +58,14 @@ export default function SupportTicketsMobileView({
               </span>
             </div>
 
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-gray-600 dark:text-gray-400 break-all">
               <span className="font-medium mr-1 text-gray-800 dark:text-gray-200">Issue Type:</span>
               {ticket.issueType}
             </div>
 
             <div className="text-sm text-gray-600 dark:text-gray-400">
               <span className="font-medium mr-1 text-gray-800 dark:text-gray-200">Desc:</span>
-              <span className="line-clamp-2 inline">{ticket.description}</span>
+              <span className="line-clamp-2 inline break-all">{ticket.description}</span>
             </div>
 
             <div className="pt-3 border-t border-gray-100 dark:border-gray-700">

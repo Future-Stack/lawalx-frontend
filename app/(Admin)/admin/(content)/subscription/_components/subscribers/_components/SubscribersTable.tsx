@@ -155,12 +155,13 @@ const SubscribersTable = ({
             key={sub.userId}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
           >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-headings">{sub.userName}</div>
-                <div className="text-sm text-muted">{sub.email}</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="font-medium text-headings truncate">{sub.userName}</div>
+                <div className="text-sm text-muted truncate">{sub.email}</div>
               </div>
-              <DropdownMenu>
+              <div className="flex-shrink-0">
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     size="icon"
@@ -190,46 +191,51 @@ const SubscribersTable = ({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Plan:</span>
-              <Badge
-                variant="default"
-                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-none font-normal"
-              >
-                {sub.plan}
-              </Badge>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Amount:</span>
-              <span className="font-semibold text-headings">
+
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
+              <span className="text-muted whitespace-nowrap">Plan:</span>
+              <div className="flex-shrink-0">
+                <Badge
+                  variant="default"
+                  className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-none font-normal"
+                >
+                  {sub.plan}
+                </Badge>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
+              <span className="text-muted whitespace-nowrap">Amount:</span>
+              <span className="font-semibold text-headings break-all">
                 {formatCurrency(sub.amount, currency)}
               </span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Payment Cycle:</span>
-              <span className="text-headings">{sub.paymentCycle}</span>
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
+              <span className="text-muted whitespace-nowrap">Payment Cycle:</span>
+              <span className="text-headings whitespace-nowrap">{sub.paymentCycle}</span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Next Billing:</span>
-              <span className="text-headings">
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
+              <span className="text-muted whitespace-nowrap">Next Billing:</span>
+              <span className="text-headings whitespace-nowrap">
                 {formatDate(sub.nextBilling)}
               </span>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted">Status:</span>
-              <Badge
-                variant="default"
-                className={`border-none font-normal ${
-                  sub.subscriptionStatus === "ACTIVE"
-                    ? "bg-green-100 text-green-700"
-                    : sub.subscriptionStatus === "CANCELLED"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-gray-100 text-gray-700"
-                }`}
-              >
-                {sub.subscriptionStatus}
-              </Badge>
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
+              <span className="text-muted whitespace-nowrap">Status:</span>
+              <div className="flex-shrink-0">
+                <Badge
+                  variant="default"
+                  className={`border-none font-normal ${
+                    sub.subscriptionStatus === "ACTIVE"
+                      ? "bg-green-100 text-green-700"
+                      : sub.subscriptionStatus === "CANCELLED"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-gray-100 text-gray-700"
+                  }`}
+                >
+                  {sub.subscriptionStatus}
+                </Badge>
+              </div>
             </div>
           </div>
         ))}

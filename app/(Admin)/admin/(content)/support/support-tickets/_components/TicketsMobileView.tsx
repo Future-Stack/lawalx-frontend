@@ -31,12 +31,14 @@ export default function TicketsMobileView({
             key={ticket.id}
             className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 break-all">
                   {ticket.ticketId}
                 </span>
-                <StatusBadge status={ticket.status} />
+                <div className="flex-shrink-0">
+                  <StatusBadge status={ticket.status} />
+                </div>
               </div>
               <div className="flex items-center gap-1">
                 <button
@@ -56,7 +58,7 @@ export default function TicketsMobileView({
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
               <div
                 className={cn(
                   'w-7 h-7 rounded-md flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 overflow-hidden',
@@ -73,27 +75,29 @@ export default function TicketsMobileView({
                   ticket.company.iconText
                 )}
               </div>
-              <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
+              <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
                 {ticket.company.name}
               </span>
             </div>
 
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-gray-600 dark:text-gray-400 break-all">
               <span className="font-semibold text-gray-800 dark:text-gray-200 mr-1">Subject:</span>
               {ticket.subject}
             </div>
 
-            <div className="text-sm text-gray-600 dark:text-gray-400">
+            <div className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 break-all">
               <span className="font-semibold text-gray-800 dark:text-gray-200 mr-1">Desc:</span>
-              <span className="line-clamp-2 inline">{ticket.description}</span>
+              {ticket.description}
             </div>
 
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex flex-wrap items-center justify-between text-sm gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 dark:text-gray-400">Priority:</span>
-                <PriorityBadge priority={ticket.priority} />
+                <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">Priority:</span>
+                <div className="flex-shrink-0">
+                  <PriorityBadge priority={ticket.priority} />
+                </div>
               </div>
-              <span className="text-gray-500 dark:text-gray-400">
+              <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
                 {ticket.lastUpdated}
               </span>
             </div>
@@ -103,7 +107,7 @@ export default function TicketsMobileView({
                 {ticket.ticketTags.map((t) => (
                   <span
                     key={t.id}
-                    className="text-[10px] px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300"
+                    className="text-xs px-1.5 py-0.5 rounded border border-blue-200 bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300 max-w-full truncate"
                     title={t.name}
                   >
                     {t.name}
@@ -113,8 +117,8 @@ export default function TicketsMobileView({
             )}
 
             <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Assigned To:</span>
-              <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">Assigned To:</span>
+              <div className="flex items-center gap-2 min-w-0">
                 {ticket.assignedTo ? (
                   <>
                     <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 flex items-center justify-center border border-border">
