@@ -125,8 +125,8 @@ const BillingTab = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <div className="flex gap-3 w-full md:w-auto">
-            <div className="w-[180px]">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="w-full sm:w-[180px]">
               <BaseSelect
                 placeholder="All Status"
                 options={[
@@ -142,7 +142,7 @@ const BillingTab = () => {
                 showLabel={false}
               />
             </div>
-            <div className="w-[160px]">
+            <div className="w-full sm:w-[160px]">
               <BaseSelect
                 placeholder="All Time"
                 options={[
@@ -162,27 +162,27 @@ const BillingTab = () => {
         </div>
       }
       pagination={
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-muted">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          <div className="text-xs sm:text-sm text-muted text-center sm:text-left">
             {meta
               ? `Showing ${start}–${end} of ${meta.total} payments`
               : "Loading…"}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1 || isFetching}
-              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Previous
             </button>
-            <span className="text-sm text-muted px-1">
+            <span className="text-xs sm:text-sm text-muted px-1 whitespace-nowrap">
               {page} / {totalPages}
             </span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || isFetching}
-              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Next
             </button>
