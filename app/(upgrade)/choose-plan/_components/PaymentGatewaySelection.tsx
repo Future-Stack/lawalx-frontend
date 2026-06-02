@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -38,7 +37,11 @@ interface PaymentGatewaySelectionProps {
   selectedScreenSize: number;
   isAnnual: boolean;
   onBack: () => void;
-  onComplete: (gateway: "stripe" | "paystack", country: string, couponCode?: string) => void;
+  onComplete: (
+    gateway: "stripe" | "paystack",
+    country: string,
+    couponCode?: string,
+  ) => void;
   isLoading: boolean;
   customDeviceQuantity?: number;
 }
@@ -62,7 +65,6 @@ const gateways: Array<{
     logo: "/paymentMethods/paystack_icon_new.png",
   },
 ];
-
 
 function formatMoney(amount: number, currency: string, withDecimals = false) {
   if (withDecimals) {
@@ -91,9 +93,12 @@ export default function PaymentGatewaySelection({
   const [country, setCountry] = useState("");
   const [couponInput, setCouponInput] = useState("");
   const [couponApplied, setCouponApplied] = useState(false);
-  const [verifiedCouponData, setVerifiedCouponData] = useState<CouponData | null>(null);
-  const [verifyCoupon, { isLoading: isVerifyingCoupon }] = useVerifyCouponMutation();
-  const { data: taxRes, isLoading: isTaxLoading } = useGetActiveTaxRegionsQuery();
+  const [verifiedCouponData, setVerifiedCouponData] =
+    useState<CouponData | null>(null);
+  const [verifyCoupon, { isLoading: isVerifyingCoupon }] =
+    useVerifyCouponMutation();
+  const { data: taxRes, isLoading: isTaxLoading } =
+    useGetActiveTaxRegionsQuery();
 
   const taxRegions = useMemo(() => taxRes?.data ?? [], [taxRes?.data]);
 
@@ -144,7 +149,10 @@ export default function PaymentGatewaySelection({
 
   const handleComplete = () => {
     if (!country) return;
-    const couponCode = couponApplied && verifiedCouponData?.coupon?.code ? verifiedCouponData.coupon.code : undefined;
+    const couponCode =
+      couponApplied && verifiedCouponData?.coupon?.code
+        ? verifiedCouponData.coupon.code
+        : undefined;
     onComplete(selectedGateway, country, couponCode);
   };
 
@@ -344,7 +352,11 @@ export default function PaymentGatewaySelection({
                 <div className="flex justify-between text-[14px] text-emerald-600 dark:text-emerald-400">
                   <span>Discount</span>
                   <span className="font-bold">
-                    -{formatMoney(verifiedCouponData?.coupon?.discount ?? 0, currency)}
+                    -
+                    {formatMoney(
+                      verifiedCouponData?.coupon?.discount ?? 0,
+                      currency,
+                    )}
                   </span>
                 </div>
               )}
@@ -394,7 +406,9 @@ export default function PaymentGatewaySelection({
               <button
                 type="button"
                 onClick={handleApplyCoupon}
-                disabled={couponApplied || !couponInput.trim() || isVerifyingCoupon}
+                disabled={
+                  couponApplied || !couponInput.trim() || isVerifyingCoupon
+                }
                 className="min-h-[48px] shrink-0 rounded-xl bg-sky-100 px-8 py-3 text-[15px] font-bold text-headings shadow-sm transition-colors hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
               >
                 {isVerifyingCoupon ? (
@@ -412,7 +426,12 @@ export default function PaymentGatewaySelection({
               <div className="mt-4 flex items-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-[15px] font-medium text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-200">
                 <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
                 <span>
-                  Coupon Applied - {formatMoney(verifiedCouponData?.coupon?.discount ?? 0, currency)} Off
+                  Coupon Applied -{" "}
+                  {formatMoney(
+                    verifiedCouponData?.coupon?.discount ?? 0,
+                    currency,
+                  )}{" "}
+                  Off
                 </span>
               </div>
             )}
