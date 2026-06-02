@@ -2,6 +2,7 @@ import { baseApi } from "../../baseApi";
 import type {
   CheckoutApiResponse,
   CheckoutPayload,
+  EnterpriseCheckoutPayload,
   MySubscriptionApiResponse,
 } from "./payment.type";
 
@@ -22,9 +23,16 @@ export const userPaymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Subscription", "UserPlans"],
     }),
+    createEnterpriseCheckout: builder.mutation<CheckoutApiResponse, EnterpriseCheckoutPayload>({
+      query: (data) => ({
+        url: "/payment/enterprise-checkout",
+        method: "POST",
+        body: data,
+      }),
+    }),
   }),
 });
 
-export const { useGetMySubscriptionQuery, useCreateCheckoutMutation } =
+export const { useGetMySubscriptionQuery, useCreateCheckoutMutation, useCreateEnterpriseCheckoutMutation } =
   userPaymentApi;
 export const useCreatePaymentMutation = useCreateCheckoutMutation;
