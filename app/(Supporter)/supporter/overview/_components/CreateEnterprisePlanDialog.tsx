@@ -1,15 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -19,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useSubmitEnterpriseSubscriptionInfoMutation } from "@/redux/api/enterpriseRequests/enterpriseRequestsApi";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Monitor, Plus, X } from "lucide-react";
 import type { EnterpriseSubscriptionInfoPayload } from "@/redux/api/enterpriseRequests/enterpriseRequests.type";
 
 interface CreateEnterprisePlanDialogProps {
@@ -52,12 +45,30 @@ export default function CreateEnterprisePlanDialog({
     features: ["Dedicated support", "Unlimited scale", "Premium templates"],
   });
 
-  const [featuresText, setFeaturesText] = useState(
-    "Dedicated support\nUnlimited scale\nPremium templates",
-  );
+  const [newFeature, setNewFeature] = useState("");
 
-  const handleInputChange = (field: keyof typeof formData, value: any) => {
+  const handleInputChange = (
+    field: keyof typeof formData,
+    value: string | number | string[],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddFeature = () => {
+    if (newFeature.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        features: [...prev.features, newFeature.trim()],
+      }));
+      setNewFeature("");
+    }
+  };
+
+  const handleRemoveFeature = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      features: prev.features.filter((_, i) => i !== index),
+    }));
   };
 
   const handleSubmit = async () => {
@@ -65,7 +76,6 @@ export default function CreateEnterprisePlanDialog({
     try {
       const payload = {
         ...formData,
-        features: featuresText.split("\n").filter((f) => f.trim() !== ""),
         price: Number(formData.price),
         screenSize: Number(formData.screenSize),
         deviceLimit: Number(formData.deviceLimit),
@@ -78,7 +88,7 @@ export default function CreateEnterprisePlanDialog({
       const res = (await submitPlan({
         ticketId,
         data: payload,
-      }).unwrap()) as any;
+      }).unwrap()) as { success?: boolean; message?: string };
       if (res?.success) {
         toast.success(res?.message || "Enterprise plan created successfully");
         onSuccess();
@@ -86,31 +96,58 @@ export default function CreateEnterprisePlanDialog({
       } else {
         toast.error(res?.message || "Failed to create enterprise plan");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
       toast.error(
-        err?.data?.message || "An error occurred while creating the plan",
+        error?.data?.message || "An error occurred while creating the plan",
       );
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl p-6 bg-white dark:bg-gray-900 border-border max-h-[90vh] overflow-y-auto z-[9999]">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
-            Create Enterprise Plan
-          </DialogTitle>
-        </DialogHeader>
+  const inputClass =
+    "w-full bg-white dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-lg px-3.5 py-2.5 text-[16px] text-headings placeholder:text-[#667085] focus:outline-none focus:ring-1 focus:ring-[#00A3FF] transition-all shadow-sm";
 
-        <div className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-4">
+  return (
+    <BaseDialog
+      open={open}
+      setOpen={onOpenChange}
+      title=""
+      description=""
+      maxWidth="xl"
+      maxHeight="xl"
+      hideScrollbar={false}
+      className="p-0 [&>div:first-child]:hidden"
+    >
+      <div className="flex flex-col h-full bg-white dark:bg-gray-950">
+        {/* Header with Icon */}
+        <div className="p-6 pb-0">
+          <div className="flex flex-col gap-4">
+            <div className="w-12 h-12 rounded-full border border-[#7F56D933] bg-[#7F56D90D] flex items-center justify-center">
+              <div className="w-8 h-8 flex items-center justify-center">
+                <Monitor className="w-4 h-4 text-[#7F56D9]" />
+              </div>
+            </div>
+            <div>
+              <h2 className="text-[20px] font-bold text-Heading leading-tight">
+                Create Enterprise Plan
+              </h2>
+              <p className="text-[#667085] text-[14px] mt-1">
+                Configure the enterprise plan details, limits, and features.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Fields */}
+        <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Plan Name</Label>
+              <Label className="text-[14px] text-[#404040]">Plan Name</Label>
               <Select
                 value={formData.name}
                 onValueChange={(val) => handleInputChange("name", val)}
               >
-                <SelectTrigger className="bg-white dark:bg-gray-800">
+                <SelectTrigger className={inputClass}>
                   <SelectValue placeholder="Select plan" />
                 </SelectTrigger>
                 <SelectContent className="z-[99999]">
@@ -124,125 +161,159 @@ export default function CreateEnterprisePlanDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label>Price ($)</Label>
-              <Input
+              <Label className="text-[14px] text-[#404040]">Price ($)</Label>
+              <input
                 type="number"
                 value={formData.price}
                 onChange={(e) => handleInputChange("price", e.target.value)}
-                className="bg-white dark:bg-gray-800"
+                className={inputClass}
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Description</Label>
-            <Input
+            <Label className="text-[14px] text-[#404040]">Description</Label>
+            <textarea
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              className="bg-white dark:bg-gray-800"
+              className={`${inputClass} min-h-[80px] resize-none py-3`}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Screen Size</Label>
-              <Input
+              <Label className="text-[14px] text-[#404040]">Screen Size</Label>
+              <input
                 type="number"
                 value={formData.screenSize}
                 onChange={(e) => handleInputChange("screenSize", e.target.value)}
-                className="bg-white dark:bg-gray-800"
+                className={inputClass}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Device Limit</Label>
-              <Input
+              <Label className="text-[14px] text-[#404040]">Device Limit</Label>
+              <input
                 type="number"
                 value={formData.deviceLimit}
                 onChange={(e) => handleInputChange("deviceLimit", e.target.value)}
-                className="bg-white dark:bg-gray-800"
+                className={inputClass}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Storage Limit (GB)</Label>
-              <Input
+              <Label className="text-[14px] text-[#404040]">Storage Limit (GB)</Label>
+              <input
                 type="number"
                 value={formData.storageLimitGb}
                 onChange={(e) => handleInputChange("storageLimitGb", e.target.value)}
-                className="bg-white dark:bg-gray-800"
+                className={inputClass}
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Template Limit</Label>
-              <Input
+              <Label className="text-[14px] text-[#404040]">Template Limit</Label>
+              <input
                 type="number"
                 value={formData.templateLimit}
                 onChange={(e) => handleInputChange("templateLimit", e.target.value)}
-                className="bg-white dark:bg-gray-800"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Photo Limit</Label>
-              <Input
-                type="number"
-                value={formData.photoLimit}
-                onChange={(e) => handleInputChange("photoLimit", e.target.value)}
-                className="bg-white dark:bg-gray-800"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Audio Limit</Label>
-              <Input
-                type="number"
-                value={formData.audioLimit}
-                onChange={(e) => handleInputChange("audioLimit", e.target.value)}
-                className="bg-white dark:bg-gray-800"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Video Limit</Label>
-              <Input
-                type="number"
-                value={formData.videoLimit}
-                onChange={(e) => handleInputChange("videoLimit", e.target.value)}
-                className="bg-white dark:bg-gray-800"
+                className={inputClass}
               />
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Features (One per line)</Label>
-            <Textarea
-              value={featuresText}
-              onChange={(e) => setFeaturesText(e.target.value)}
-              className="min-h-[100px] bg-white dark:bg-gray-800"
-              placeholder="Dedicated support&#10;Unlimited scale"
-            />
+          <div className="space-y-3 pt-2">
+            <Label className="text-[14px] font-bold text-headings">Upload Limits</Label>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[12px] text-[#667085]">Photo</Label>
+                <input
+                  type="number"
+                  value={formData.photoLimit}
+                  onChange={(e) => handleInputChange("photoLimit", e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[12px] text-[#667085]">Audio</Label>
+                <input
+                  type="number"
+                  value={formData.audioLimit}
+                  onChange={(e) => handleInputChange("audioLimit", e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[12px] text-[#667085]">Video</Label>
+                <input
+                  type="number"
+                  value={formData.videoLimit}
+                  onChange={(e) => handleInputChange("videoLimit", e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
           </div>
 
-          <div className="flex justify-end pt-4 border-t border-border mt-6 gap-3">
+          <div className="space-y-3 pt-2">
+            <Label className="text-[14px] font-bold text-headings">Features</Label>
+            <div className="flex gap-2">
+              <input
+                placeholder="Add a feature..."
+                value={newFeature}
+                onChange={(e) => setNewFeature(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddFeature())}
+                className={inputClass}
+              />
+              <button
+                type="button"
+                onClick={handleAddFeature}
+                className="p-2.5 bg-[#00A3FF] text-white rounded-lg hover:bg-[#00A3FF]/90 transition-all"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-200">
+              {formData.features.map((feature, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-[#F2F4F7] dark:border-gray-800"
+                >
+                  <span className="text-[14px] text-[#404040] dark:text-gray-300">{feature}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(index)}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              {formData.features.length === 0 && (
+                <p className="text-[12px] text-gray-400 text-center py-2">No features added yet.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer Buttons */}
+        <div className="p-6 border-t border-[#F2F4F7] dark:border-gray-800 bg-[#FCFCFD] dark:bg-gray-900/20">
+          <div className="flex justify-between items-center gap-4">
             <button
-              type="button"
               onClick={() => onOpenChange(false)}
-              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
+              className="px-6 py-2.5 min-w-[100px] rounded-lg border border-[#D0D5DD] dark:border-gray-700 font-bold text-[14px] text-headings hover:bg-gray-50 transition-all cursor-pointer shadow-sm bg-white dark:bg-gray-900"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
-              type="button"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
+              className="px-10 py-2.5 rounded-lg bg-[#00A3FF] text-white font-bold text-[14px] hover:bg-[#00A3FF]/90 transition-all cursor-pointer shadow-sm flex items-center gap-2"
             >
-              {isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )}
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               Create Plan
             </button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </BaseDialog>
   );
 }

@@ -81,7 +81,10 @@ export default function SupportTicketsMobileView({
                   <circle cx="12" cy="12" r="3" />
                 </svg>
               </button>
-              {ticket.ticketTags?.some((t: any) => t.tag?.key === 'NEEDS_ENTERPRISE_PLAN') && (
+              {ticket.ticketTags?.some(
+                (t: { tag?: { key: string } }) =>
+                  t.tag?.key === "NEEDS_ENTERPRISE_PLAN",
+              ) && (
                 <button
                   onClick={() => openEnterprisePlan(ticket)}
                   title="View Enterprise Plan"

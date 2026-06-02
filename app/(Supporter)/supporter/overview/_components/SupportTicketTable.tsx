@@ -1,11 +1,16 @@
 /* eslint-disable */
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
-import TicketConversationDialog from './TicketConversationDialog';
-import EnterprisePlanDialog from './EnterprisePlanDialog';
-import { toast } from 'sonner';
+import { useState, useMemo } from "react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle,
+} from "lucide-react";
+import TicketConversationDialog from "./TicketConversationDialog";
+import EnterprisePlanDialog from "./EnterprisePlanDialog";
+import { toast } from "sonner";
 import {
   Table,
   TableBody,
@@ -13,23 +18,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import StickyScrollContainer from '@/components/shared/StickyScrollContainer';
-import SupportTicketsDesktopView from './SupportTicketsDesktopView';
-import SupportTicketsMobileView from './SupportTicketsMobileView';
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import StickyScrollContainer from "@/components/shared/StickyScrollContainer";
+import SupportTicketsDesktopView from "./SupportTicketsDesktopView";
+import SupportTicketsMobileView from "./SupportTicketsMobileView";
 
-import { useGetAssignedTicketsQuery, useResolveTicketMutation } from '@/redux/api/supporter/supporterTicketApi';
+import {
+  useGetAssignedTicketsQuery,
+  useResolveTicketMutation,
+} from "@/redux/api/supporter/supporterTicketApi";
 
-type Priority = 'High' | 'Medium' | 'Low' | string;
-type TicketStatus = 'open' | 'In progress' | 'Resolved' | string;
+type Priority = "High" | "Medium" | "Low" | string;
+type TicketStatus = "open" | "In progress" | "Resolved" | string;
 
 export interface SupporterTableTicket {
   id: string;
@@ -47,31 +55,40 @@ const ITEMS_PER_PAGE = 11;
 
 // Helper styles extracted to SupportTicketsHelpers.ts
 
-function buildPageNumbers(current: number, total: number): (number | '...')[] {
+function buildPageNumbers(current: number, total: number): (number | "...")[] {
   if (total <= 5) return Array.from({ length: total }, (_, i) => i + 1);
-  const pages: (number | '...')[] = [1];
-  if (current > 3) pages.push('...');
-  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
+  const pages: (number | "...")[] = [1];
+  if (current > 3) pages.push("...");
+  for (
+    let p = Math.max(2, current - 1);
+    p <= Math.min(total - 1, current + 1);
+    p++
+  ) {
     pages.push(p);
   }
-  if (current < total - 2) pages.push('...');
+  if (current < total - 2) pages.push("...");
   pages.push(total);
   return pages;
 }
 
 export default function SupportTicketTable() {
-  const { data: ticketsResponse, isLoading } = useGetAssignedTicketsQuery(undefined, {
-    pollingInterval: 3000, 
-    refetchOnFocus: true, 
-  });
+  const { data: ticketsResponse, isLoading } = useGetAssignedTicketsQuery(
+    undefined,
+    {
+      pollingInterval: 3000,
+      refetchOnFocus: true,
+    },
+  );
   const [resolveTicket] = useResolveTicketMutation();
 
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [conversationOpen, setConversationOpen] = useState(false);
   const [enterprisePlanOpen, setEnterprisePlanOpen] = useState(false);
-  const [activeTicket, setActiveTicket] = useState<SupporterTableTicket | null>(null);
+  const [activeTicket, setActiveTicket] = useState<SupporterTableTicket | null>(
+    null,
+  );
 
   const openConversation = (ticket: SupporterTableTicket) => {
     setActiveTicket(ticket);
@@ -88,11 +105,15 @@ export default function SupportTicketTable() {
     return ticketsResponse.data.map((t) => ({
       id: t.id,
       ticketId: t.customId || t.id,
-      clientName: t.user?.full_name || t.user?.username || 'Unknown',
+      clientName: t.user?.full_name || t.user?.username || "Unknown",
       priority: t.priority as Priority,
-      issueType: t.issueType?.[0]?.replace('_', ' ') || 'Support Request',
-      status: (t.status === 'InProgress' ? 'In progress' : t.status === 'Open' ? 'open' : t.status) as TicketStatus,
-      description: t.description || '',
+      issueType: t.issueType?.[0]?.replace("_", " ") || "Support Request",
+      status: (t.status === "InProgress"
+        ? "In progress"
+        : t.status === "Open"
+          ? "open"
+          : t.status) as TicketStatus,
+      description: t.description || "",
       ticketTags: t.ticketTags || [],
       raw: t,
     }));
@@ -100,9 +121,15 @@ export default function SupportTicketTable() {
 
   const filtered = useMemo(() => {
     return tickets.filter((t) => {
-      if (priorityFilter !== 'all' && t.priority !== priorityFilter) return false;
-      const mappedStatus = t.status === 'InProgress' ? 'In progress' : t.status === 'Open' ? 'open' : t.status;
-      if (statusFilter !== 'all' && mappedStatus !== statusFilter) return false;
+      if (priorityFilter !== "all" && t.priority !== priorityFilter)
+        return false;
+      const mappedStatus =
+        t.status === "InProgress"
+          ? "In progress"
+          : t.status === "Open"
+            ? "open"
+            : t.status;
+      if (statusFilter !== "all" && mappedStatus !== statusFilter) return false;
       return true;
     });
   }, [priorityFilter, statusFilter, tickets]);
@@ -113,7 +140,10 @@ export default function SupportTicketTable() {
   const end = Math.min(currentPage * ITEMS_PER_PAGE, TOTAL_COUNT);
 
   const paginatedTickets = useMemo(() => {
-    return filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+    return filtered.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE,
+    );
   }, [filtered, currentPage]);
 
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
@@ -195,10 +225,10 @@ export default function SupportTicketTable() {
       {/* Pagination */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 px-4 sm:px-5 py-4 border-t border-border">
         <p className="text-xs sm:text-sm text-center sm:text-left text-gray-500 dark:text-gray-400">
-          Showing {start} to {end} of{' '}
+          Showing {start} to {end} of{" "}
           <span className="font-semibold text-blue-600 dark:text-blue-400">
             {TOTAL_COUNT}
-          </span>{' '}
+          </span>{" "}
           Files
         </p>
 
@@ -214,7 +244,7 @@ export default function SupportTicketTable() {
           </button>
 
           {pageNumbers.map((p, i) =>
-            p === '...' ? (
+            p === "..." ? (
               <span
                 key={`ellipsis-${i}`}
                 className="px-1.5 sm:px-2 py-1 text-xs sm:text-sm text-gray-400 dark:text-gray-500"
@@ -226,15 +256,15 @@ export default function SupportTicketTable() {
                 key={p}
                 onClick={() => setCurrentPage(p as number)}
                 className={cn(
-                  'w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer',
+                  "w-7 h-7 sm:w-8 sm:h-8 rounded-lg text-xs sm:text-sm font-medium transition-colors cursor-pointer",
                   currentPage === p
-                    ? 'bg-blue-600 text-white'
-                    : 'border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    ? "bg-blue-600 text-white"
+                    : "border border-border text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800",
                 )}
               >
                 {p}
               </button>
-            )
+            ),
           )}
 
           {/* Next */}
@@ -260,7 +290,7 @@ export default function SupportTicketTable() {
       <EnterprisePlanDialog
         open={enterprisePlanOpen}
         onOpenChange={setEnterprisePlanOpen}
-        ticketId={activeTicket?.id || null}
+        ticket={activeTicket}
       />
     </div>
   );
