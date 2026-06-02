@@ -77,6 +77,12 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
         endDate: ""
     });
 
+    useEffect(() => {
+        if (currentStep === 2 && step2Data.contentType === "lower-third") {
+            setShowLowerThird(true);
+        }
+    }, [currentStep, step2Data.contentType]);
+
     const handleContentSelect = (content: ContentItem) => {
         const isSelected = step2Data.selectedContent.some(c => c.id === content.id);
         const newSelection = isSelected
@@ -137,10 +143,12 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
         
         // Map contentType to API enum
         let contentType: ContentType = "IMAGE_VIDEO";
-        if (activeContent[0]?.type === "audio") {
+        if (step2Data.contentType === "audio") {
             contentType = "AUDIO";
-        } else if (createdLowerThirdId) {
+        } else if (step2Data.contentType === "lower-third") {
             contentType = "LOWERTHIRD";
+        } else if (activeContent[0]?.type === "audio") {
+            contentType = "AUDIO";
         }
 
         // Format startTime / endTime as epoch-based ISO (1970-01-01T...Z)
@@ -167,7 +175,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             deviceIds: step3Data.selectedScreens.filter(isUUID),
             fileIds: selectedFiles.length > 0 ? selectedFiles : undefined,
             status: "playing",
-            lowerThirdIds: createdLowerThirdId && isUUID(createdLowerThirdId) ? [createdLowerThirdId] : undefined,
+            lowerThirdIds: step2Data.contentType === "lower-third" && createdLowerThirdId && isUUID(createdLowerThirdId) ? [createdLowerThirdId] : undefined,
         };
 
         console.log("=== SUBMITTING SCHEDULE PAYLOAD ===");
@@ -279,6 +287,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                                             setShowLowerThird(false);
                                         }
                                     }}
+                                    isAlreadyCreated={!!createdLowerThirdId}
                                 />
                             )}
 

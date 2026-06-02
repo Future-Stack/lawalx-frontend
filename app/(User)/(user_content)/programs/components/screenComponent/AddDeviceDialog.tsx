@@ -32,12 +32,6 @@ const AddDeviceDialog = ({ open, setOpen }: AddDeviceDialogProps) => {
     );
   };
 
-  const handleAddDevice = () => {
-    if (!newDevicePin.trim()) return;
-    console.log("Adding device with PIN:", newDevicePin);
-    setNewDevicePin("");
-  };
-
   const handleConfirm = () => {
     console.log("Selected devices:", selectedDevices);
     setOpen(false);
