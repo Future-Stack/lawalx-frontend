@@ -1,25 +1,36 @@
 /* eslint-disable */
-'use client';
+"use client";
 
-import { useRef, useEffect, useState } from 'react';
-import { Paperclip, Send, X, FileIcon, CheckCircle, Tag, MoreHorizontal, Mail, Archive, Trash2, Pencil, Plus, AlertCircle } from 'lucide-react';
+import { useRef, useEffect, useState } from "react";
+import {
+  Paperclip,
+  Send,
+  X,
+  FileIcon,
+  CheckCircle,
+  Tag,
+  Trash2,
+  Pencil,
+  Plus,
+  AlertCircle,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import { useTicketChat } from '@/hooks/useTicketChat';
-import { useAppSelector } from '@/redux/store/hook';
-import { selectCurrentUser } from '@/redux/features/auth/authSlice';
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
+import { useTicketChat } from "@/hooks/useTicketChat";
+import { useAppSelector } from "@/redux/store/hook";
+import { selectCurrentUser } from "@/redux/features/auth/authSlice";
 import {
   useGetAssignedTicketDetailsQuery,
   useResolveTicketMutation,
@@ -30,13 +41,15 @@ import {
   useDeleteTagMutation,
   useAttachTagToTicketMutation,
   useRemoveTagFromTicketMutation,
-  SupporterTag
-} from '@/redux/api/supporter/supporterTicketApi';
-import { useUploadSupportFileMutation } from '@/redux/api/users/support/supportApi';
-import type { ChatAttachment, ChatMessage } from '@/types/chat';
-import { toast } from 'sonner';
+  SupporterTag,
+} from "@/redux/api/supporter/supporterTicketApi";
+import { useUploadSupportFileMutation } from "@/redux/api/users/support/supportApi";
+import type { ChatAttachment, ChatMessage } from "@/types/chat";
+import { toast } from "sonner";
+import CreateEnterprisePlanDialog from "@/components/shared/Enterprise/CreateEnterprisePlanDialog";
+import { useGetEnterpriseSubscriptionInfoQuery } from "@/redux/api/enterpriseRequests/enterpriseRequestsApi";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? '';
+const BASE_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
 
 interface Ticket {
   id: string;
@@ -56,22 +69,22 @@ interface TicketConversationDialogProps {
 
 function formatTime(iso: string) {
   try {
-    return new Date(iso).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
+    return new Date(iso).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
       hour12: true,
     });
   } catch {
-    return '';
+    return "";
   }
 }
 
 function roleLabel(role?: string): string {
-  if (!role) return 'Support';
+  if (!role) return "Support";
   const r = role.toUpperCase();
-  if (r === 'USER') return 'Client';
-  if (r === 'SUPPORTER') return 'Supporter';
-  if (r === 'ADMIN' || r === 'SUPERADMIN') return 'Admin';
+  if (r === "USER") return "Client";
+  if (r === "SUPPORTER") return "Supporter";
+  if (r === "ADMIN" || r === "SUPERADMIN") return "Admin";
   return role;
 }
 
@@ -79,8 +92,16 @@ function isImageUrl(url: string) {
   return /\.(png|jpe?g|gif|webp|svg)$/i.test(url);
 }
 
-function AttachmentPreview({ att, isOwn }: { att: ChatAttachment; isOwn: boolean }) {
-  const fullUrl = att.fileUrl.startsWith('http') ? att.fileUrl : `${BASE_URL}/${att.fileUrl}`;
+function AttachmentPreview({
+  att,
+  isOwn,
+}: {
+  att: ChatAttachment;
+  isOwn: boolean;
+}) {
+  const fullUrl = att.fileUrl.startsWith("http")
+    ? att.fileUrl
+    : `${BASE_URL}/${att.fileUrl}`;
   const isImg = isImageUrl(att.fileUrl);
   return isImg ? (
     <a href={fullUrl} target="_blank" rel="noreferrer" className="block mt-1.5">
@@ -96,8 +117,8 @@ function AttachmentPreview({ att, isOwn }: { att: ChatAttachment; isOwn: boolean
       target="_blank"
       rel="noreferrer"
       className={cn(
-        'flex items-center gap-1 text-xs underline truncate max-w-[180px] mt-1',
-        isOwn ? 'text-indigo-500' : 'text-blue-600 dark:text-blue-400'
+        "flex items-center gap-1 text-xs underline truncate max-w-[180px] mt-1",
+        isOwn ? "text-indigo-500" : "text-blue-600 dark:text-blue-400",
       )}
     >
       <FileIcon className="w-3 h-3 flex-shrink-0" />
@@ -116,7 +137,9 @@ export default function TicketConversationDialog({
   const { data: tagsRes } = useGetTagsQuery(undefined, { skip: !open });
   const availableTags = tagsRes?.data || [];
 
-  const { data: ticketTagsRes } = useGetTicketTagsQuery(ticket?.id || '', { skip: !open || !ticket?.id });
+  const { data: ticketTagsRes } = useGetTicketTagsQuery(ticket?.id || "", {
+    skip: !open || !ticket?.id,
+  });
   const selectedTags = ticketTagsRes?.data || [];
 
   const [createTag] = useCreateTagMutation();
@@ -125,30 +148,99 @@ export default function TicketConversationDialog({
   const [attachTag] = useAttachTagToTicketMutation();
   const [removeTag] = useRemoveTagFromTicketMutation();
 
-  const [editingTag, setEditingTag] = useState<{ id: string; current: string } | null>(null);
+  const [editingTag, setEditingTag] = useState<{
+    id: string;
+    current: string;
+  } | null>(null);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
-  const [message, setMessage] = useState('');
-  const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
+  const [enterprisePlanCreationOpen, setEnterprisePlanCreationOpen] =
+    useState(false);
+  const [enterprisePlanTagId, setEnterprisePlanTagId] = useState<string | null>(
+    null,
+  );
+
+  const { data: enterprisePlanRes } = useGetEnterpriseSubscriptionInfoQuery(
+    ticket?.id || "",
+    {
+      skip: !open || !ticket?.id,
+    },
+  );
+
+  // Ref guard: prevent infinite loop when attachTag triggers re-fetches
+  const enterpriseSyncedRef = useRef(false);
+  useEffect(() => {
+    // Reset the guard whenever the ticket changes so each ticket gets one sync attempt
+    enterpriseSyncedRef.current = false;
+  }, [ticket?.id]);
+
+  useEffect(() => {
+    if (enterpriseSyncedRef.current) return;
+    if (
+      enterprisePlanRes?.success &&
+      availableTags.length > 0 &&
+      selectedTags.length >= 0
+    ) {
+      const hasEnterpriseTag = selectedTags.some(
+        (t) =>
+          t.key === "NEEDS_ENTERPRISE_PLAN" ||
+          t.name === "Needs_Enterprise_Plan",
+      );
+      if (!hasEnterpriseTag) {
+        const enterpriseTag = availableTags.find(
+          (t) =>
+            t.key === "NEEDS_ENTERPRISE_PLAN" ||
+            t.name === "Needs_Enterprise_Plan",
+        );
+        if (enterpriseTag && ticket?.id) {
+          enterpriseSyncedRef.current = true;
+          attachTag({ ticketId: ticket.id, tagId: enterpriseTag.id }).catch(
+            (err) => {
+              console.error("Failed to auto-sync enterprise tag", err);
+            },
+          );
+        }
+      } else {
+        // Tag already exists – no sync needed, mark as done
+        enterpriseSyncedRef.current = true;
+      }
+    }
+  }, [enterprisePlanRes, availableTags, selectedTags, ticket?.id]);
+
+  const [message, setMessage] = useState("");
+  const [pendingAttachments, setPendingAttachments] = useState<
+    ChatAttachment[]
+  >([]);
   const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentUser = useAppSelector(selectCurrentUser);
   const [uploadSupportFile] = useUploadSupportFileMutation();
-  const [resolveTicket, { isLoading: isResolving }] = useResolveTicketMutation();
+  const [resolveTicket, { isLoading: isResolving }] =
+    useResolveTicketMutation();
 
   const handleResolve = async () => {
     if (!ticket?.id) return;
     try {
       await resolveTicket(ticket.id).unwrap();
-      toast.success('Ticket marked as resolved');
+      toast.success("Ticket marked as resolved");
       onOpenChange(false);
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to resolve ticket');
+      toast.error(err?.data?.message || "Failed to resolve ticket");
     }
   };
 
   const handleToggleTag = async (tagId: string, isSelected: boolean) => {
     if (!ticket?.id) return;
+
+    if (!isSelected) {
+      const tag = availableTags.find((t) => t.id === tagId);
+      if (tag?.key === "NEEDS_ENTERPRISE_PLAN") {
+        setEnterprisePlanTagId(tagId);
+        setEnterprisePlanCreationOpen(true);
+        return;
+      }
+    }
+
     try {
       if (isSelected) {
         await removeTag({ ticketId: ticket.id, tagId }).unwrap();
@@ -156,7 +248,7 @@ export default function TicketConversationDialog({
         await attachTag({ ticketId: ticket.id, tagId }).unwrap();
       }
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to update ticket tags');
+      toast.error(err?.data?.message || "Failed to update ticket tags");
     }
   };
 
@@ -164,18 +256,18 @@ export default function TicketConversationDialog({
     try {
       await updateTag({ id, name: newName }).unwrap();
       setEditingTag(null);
-      toast.success('Tag updated successfully');
+      toast.success("Tag updated successfully");
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to update tag');
+      toast.error(err?.data?.message || "Failed to update tag");
     }
   };
 
   const handleDeleteTag = async (id: string) => {
     try {
       await deleteTag(id).unwrap();
-      toast.success('Tag deleted successfully');
+      toast.success("Tag deleted successfully");
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to delete tag');
+      toast.error(err?.data?.message || "Failed to delete tag");
     }
   };
 
@@ -188,17 +280,17 @@ export default function TicketConversationDialog({
         await attachTag({ ticketId: ticket.id, tagId: res.data.id }).unwrap();
       }
       setEditingTag(null);
-      toast.success('Tag created and attached successfully');
+      toast.success("Tag created and attached successfully");
     } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to create tag');
+      toast.error(err?.data?.message || "Failed to create tag");
     } finally {
       setIsCreatingTag(false);
     }
   };
 
   const { currentData: ticketDetails } = useGetAssignedTicketDetailsQuery(
-    ticket?.id || '',
-    { skip: !open || !ticket?.id, refetchOnMountOrArgChange: true }
+    ticket?.id || "",
+    { skip: !open || !ticket?.id, refetchOnMountOrArgChange: true },
   );
 
   // Build senderId → { name, role } map from ticket details
@@ -206,31 +298,39 @@ export default function TicketConversationDialog({
   if (ticketDetails?.data) {
     const d = ticketDetails.data;
     if (d.userId) {
-      senderLookup[d.userId] = { name: d.user?.username ?? 'Client', role: 'Client' };
+      senderLookup[d.userId] = {
+        name: d.user?.username ?? "Client",
+        role: "Client",
+      };
     }
   }
 
-  const initialMessages = (ticketDetails?.data?.messages ?? []).map((m: any) => ({
-    id: m.id,
-    ticketId: ticket?.id ?? '',
-    text: m.text,
-    senderId: m.sender?.id,
-    senderName: m.sender?.full_name || m.sender?.username || senderLookup[m.sender?.id]?.name,
-    senderRole: m.sender?.role || senderLookup[m.sender?.id]?.role,
-    createdAt: m.createdAt,
-    attachments: m.attachments ?? [],
-    sender: m.sender,
-  }));
+  const initialMessages = (ticketDetails?.data?.messages ?? []).map(
+    (m: any) => ({
+      id: m.id,
+      ticketId: ticket?.id ?? "",
+      text: m.text,
+      senderId: m.sender?.id,
+      senderName:
+        m.sender?.full_name ||
+        m.sender?.username ||
+        senderLookup[m.sender?.id]?.name,
+      senderRole: m.sender?.role || senderLookup[m.sender?.id]?.role,
+      createdAt: m.createdAt,
+      attachments: m.attachments ?? [],
+      sender: m.sender,
+    }),
+  );
 
   const { messages, sendMessage, isConnected } = useTicketChat(
     ticket ? ticket.id : null,
-    initialMessages
+    initialMessages,
   );
 
   useEffect(() => {
     if (open) {
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
       }, 80);
     }
   }, [open, messages]);
@@ -246,20 +346,24 @@ export default function TicketConversationDialog({
     try {
       for (const file of Array.from(files)) {
         const fd = new FormData();
-        fd.append('file', file);
+        fd.append("file", file);
         const res = await uploadSupportFile(fd).unwrap();
         if (res.success) {
           setPendingAttachments((prev) => [
             ...prev,
-            { tempFileId: res.data.tempFileId, fileUrl: res.data.fileUrl, fileName: res.data.fileName },
+            {
+              tempFileId: res.data.tempFileId,
+              fileUrl: res.data.fileUrl,
+              fileName: res.data.fileName,
+            },
           ]);
         }
       }
     } catch {
-      toast.error('File upload failed');
+      toast.error("File upload failed");
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -273,12 +377,12 @@ export default function TicketConversationDialog({
     // Backend only accepts one tempFileId per message
     const tempFileId = pendingAttachments[0]?.tempFileId;
     sendMessage(message, tempFileId);
-    setMessage('');
+    setMessage("");
     setPendingAttachments([]);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -288,14 +392,18 @@ export default function TicketConversationDialog({
 
   const getSenderDisplay = (msg: ChatMessage) => {
     const isOwn = msg.senderId === currentUser?.id;
-    if (isOwn) return { isOwn: true, displayName: 'You', displayRole: 'Supporter' };
+    if (isOwn)
+      return { isOwn: true, displayName: "You", displayRole: "Supporter" };
     const lookup = senderLookup[msg.senderId];
     const rLabel = lookup?.role ?? roleLabel(msg.senderRole);
     const name = lookup?.name ?? msg.senderName ?? rLabel;
     return { isOwn: false, displayName: name, displayRole: rLabel };
   };
 
-  const canSend = (message.trim().length > 0 || pendingAttachments.length > 0) && isConnected && !isUploading;
+  const canSend =
+    (message.trim().length > 0 || pendingAttachments.length > 0) &&
+    isConnected &&
+    !isUploading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -308,15 +416,17 @@ export default function TicketConversationDialog({
             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-gray-50 dark:bg-gray-800 rounded-full border border-gray-100 dark:border-gray-700">
               <span
                 className={cn(
-                  'inline-block w-1.5 h-1.5 rounded-full',
-                  isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400 dark:bg-gray-600'
+                  "inline-block w-1.5 h-1.5 rounded-full",
+                  isConnected
+                    ? "bg-green-500 animate-pulse"
+                    : "bg-gray-400 dark:bg-gray-600",
                 )}
               />
               <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                {isConnected ? 'Live' : 'Offline'}
+                {isConnected ? "Live" : "Offline"}
               </span>
             </div>
-            {ticket?.status !== 'Resolved' && (
+            {ticket?.status !== "Resolved" && (
               <button
                 type="button"
                 onClick={handleResolve}
@@ -324,7 +434,7 @@ export default function TicketConversationDialog({
                 className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors disabled:opacity-50 whitespace-nowrap ml-1"
               >
                 <CheckCircle className="w-3.5 h-3.5" />
-                {isResolving ? 'Resolving...' : 'Resolve'}
+                {isResolving ? "Resolving..." : "Resolve"}
               </button>
             )}
           </div>
@@ -341,7 +451,10 @@ export default function TicketConversationDialog({
                 </p>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {selectedTags.map((tag) => (
-                    <div key={tag.id} className="group flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#E2E8F0] dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm transition-colors hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <div
+                      key={tag.id}
+                      className="group flex items-center gap-1.5 px-2 py-1 rounded-md border border-[#E2E8F0] dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm transition-colors hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
                       <Tag className="w-3.5 h-3.5 text-[#64748B] dark:text-gray-400 group-hover:text-red-400 transition-colors" />
                       <span className="text-xs font-medium text-[#475569] dark:text-gray-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                         {tag.name}
@@ -361,21 +474,25 @@ export default function TicketConversationDialog({
                 </div>
               </div>
               <p className="text-[13px] text-[#64748B] dark:text-gray-400 mb-2 font-inter">
-                <span className="inline-block w-16">Ticket ID:</span>{' '}
+                <span className="inline-block w-16">Ticket ID:</span>{" "}
                 <span className="text-[#475569] dark:text-gray-300">
-                  {ticket.ticketId.replace('#', '')}
+                  {ticket.ticketId.replace("#", "")}
                 </span>
               </p>
               <p className="text-[13px] text-[#64748B] dark:text-gray-400 font-inter flex items-center gap-1">
-                <span className="inline-block w-16">Issue :</span>{' '}
-                <span className="text-[#475569] dark:text-gray-300">{ticket.issueType}</span>
+                <span className="inline-block w-16">Issue :</span>{" "}
+                <span className="text-[#475569] dark:text-gray-300">
+                  {ticket.issueType}
+                </span>
               </p>
               {ticketDetails?.data?.adminNote && (
                 <div className="mt-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/30 rounded-lg p-2.5 shadow-sm max-w-sm xl:max-w-md">
                   <div className="flex gap-2">
                     <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-500 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-semibold text-amber-800 dark:text-amber-400 mb-0.5">Admin Note</h4>
+                      <h4 className="text-xs font-semibold text-amber-800 dark:text-amber-400 mb-0.5">
+                        Admin Note
+                      </h4>
                       <p className="text-xs text-amber-700 dark:text-amber-300/90 leading-relaxed whitespace-pre-wrap break-words">
                         {ticketDetails.data.adminNote}
                       </p>
@@ -384,16 +501,22 @@ export default function TicketConversationDialog({
                 </div>
               )}
             </div>
-            
+
             <div className="flex flex-col items-end">
               <div className="flex items-center gap-2 mb-6">
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded transition-colors focus:outline-none">
                     <Tag className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-[220px] p-2 space-y-1 z-[9999]" onCloseAutoFocus={(e) => e.preventDefault()}>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-[220px] p-2 space-y-1 z-[9999]"
+                    onCloseAutoFocus={(e) => e.preventDefault()}
+                  >
                     {availableTags.map((tag) => {
-                      const isSelected = selectedTags.some(t => t.id === tag.id);
+                      const isSelected = selectedTags.some(
+                        (t) => t.id === tag.id,
+                      );
                       return (
                         <div
                           key={tag.id}
@@ -402,16 +525,23 @@ export default function TicketConversationDialog({
                           <div className="flex items-center gap-2.5 w-full">
                             <Checkbox
                               checked={isSelected}
-                              onCheckedChange={() => handleToggleTag(tag.id, isSelected)}
+                              onCheckedChange={() =>
+                                handleToggleTag(tag.id, isSelected)
+                              }
                               className="w-[14px] h-[14px] rounded-sm border-gray-300 data-[state=checked]:bg-[#0FA6FF] data-[state=checked]:border-[#0FA6FF] flex-shrink-0"
                             />
                             {editingTag?.id === tag.id ? (
                               <input
                                 type="text"
                                 value={editingTag.current}
-                                onChange={(e) => setEditingTag({ ...editingTag, current: e.target.value })}
+                                onChange={(e) =>
+                                  setEditingTag({
+                                    ...editingTag,
+                                    current: e.target.value,
+                                  })
+                                }
                                 onKeyDown={(e) => {
-                                  if (e.key === 'Enter') {
+                                  if (e.key === "Enter") {
                                     const newName = editingTag.current.trim();
                                     if (newName && newName !== tag.name) {
                                       handleUpdateTag(tag.id, newName);
@@ -419,53 +549,74 @@ export default function TicketConversationDialog({
                                       setEditingTag(null);
                                     }
                                   }
-                                  if (e.key === 'Escape') setEditingTag(null);
+                                  if (e.key === "Escape") setEditingTag(null);
                                 }}
                                 className="text-[13px] text-gray-900 dark:text-white border border-[#0FA6FF] outline-none rounded px-1.5 py-0.5 w-full bg-white dark:bg-gray-900 focus:ring-1 focus:ring-[#0FA6FF]"
                                 autoFocus
                               />
                             ) : (
-                              <span 
-                                className="text-[13px] text-gray-700 dark:text-gray-300 font-inter truncate select-none cursor-pointer" 
-                                onClick={() => handleToggleTag(tag.id, isSelected)}
+                              <span
+                                className="text-[13px] text-gray-700 dark:text-gray-300 font-inter truncate select-none cursor-pointer"
+                                onClick={() =>
+                                  handleToggleTag(tag.id, isSelected)
+                                }
                               >
                                 {tag.name}
                               </span>
                             )}
                           </div>
-                          {editingTag?.id !== tag.id && (
-                            <div className="hidden group-hover:flex items-center gap-2 flex-shrink-0 ml-2">
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); setEditingTag({ id: tag.id, current: tag.name }); }} 
-                                className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
-                              >
-                                <Pencil className="w-3.5 h-3.5" />
-                              </button>
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); handleDeleteTag(tag.id); }} 
-                                className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          )}
+                          {editingTag?.id !== tag.id &&
+                            ![
+                              "Needs_Refund",
+                              "Needs_Additional_Payment",
+                              "Needs_Enterprise_Plan",
+                            ].includes(tag.name) && (
+                              <div className="hidden group-hover:flex items-center gap-2 flex-shrink-0 ml-2">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setEditingTag({
+                                      id: tag.id,
+                                      current: tag.name,
+                                    });
+                                  }}
+                                  className="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteTag(tag.id);
+                                  }}
+                                  className="text-gray-400 hover:text-red-500 transition-colors focus:outline-none"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
                         </div>
                       );
                     })}
-                    
+
                     <div className="h-px bg-gray-200 dark:bg-gray-700 my-1.5" />
-                    
-                    {editingTag?.id === 'new' ? (
+
+                    {editingTag?.id === "new" ? (
                       <div className="flex items-center gap-2 px-2 py-1.5">
                         <input
                           type="text"
                           value={editingTag.current}
-                          onChange={(e) => setEditingTag({ ...editingTag, current: e.target.value })}
+                          onChange={(e) =>
+                            setEditingTag({
+                              ...editingTag,
+                              current: e.target.value,
+                            })
+                          }
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                            if (e.key === "Enter") {
                               handleCreateTag(editingTag.current);
                             }
-                            if (e.key === 'Escape') setEditingTag(null);
+                            if (e.key === "Escape") setEditingTag(null);
                           }}
                           placeholder="Tag name..."
                           className="text-[13px] text-gray-900 dark:text-white border border-[#0FA6FF] outline-none rounded px-1.5 py-0.5 w-full bg-white dark:bg-gray-900 focus:ring-1 focus:ring-[#0FA6FF]"
@@ -474,22 +625,25 @@ export default function TicketConversationDialog({
                         />
                       </div>
                     ) : (
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="flex items-center gap-2 px-2 py-1.5 cursor-pointer text-gray-700 dark:text-gray-300 focus:bg-gray-50 focus:text-gray-900 dark:focus:bg-gray-800/50 outline-none"
                         onSelect={(e) => {
                           e.preventDefault();
-                          setEditingTag({ id: 'new', current: '' });
+                          setEditingTag({ id: "new", current: "" });
                         }}
                       >
                         <Plus className="w-4 h-4 text-gray-500" />
-                        <span className="text-[13px] font-medium">Create New Label</span>
+                        <span className="text-[13px] font-medium">
+                          Create New Label
+                        </span>
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-
               </div>
-              <p className="text-[13px] text-[#64748B] dark:text-gray-400 font-inter text-right w-full">Currently Assigned:</p>
+              <p className="text-[13px] text-[#64748B] dark:text-gray-400 font-inter text-right w-full">
+                Currently Assigned:
+              </p>
               <p className="text-[13px] font-semibold text-[#0F172A] dark:text-white mt-1 text-right w-full font-inter">
                 {ticket.clientName}
               </p>
@@ -500,14 +654,20 @@ export default function TicketConversationDialog({
           <div className="px-4 sm:px-5 py-4 custom-scrollbar space-y-4 bg-white dark:bg-gray-950 border-x border-border min-h-[220px] max-h-[300px] sm:max-h-[360px] overflow-y-auto">
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-gray-400 dark:text-gray-500 text-xs italic">
-                {isConnected ? 'No messages yet. Start the conversation!' : 'Connecting to chat...'}
+                {isConnected
+                  ? "No messages yet. Start the conversation!"
+                  : "Connecting to chat..."}
               </div>
             ) : (
               messages.map((msg, index) => {
-                const { isOwn, displayName, displayRole } = getSenderDisplay(msg);
+                const { isOwn, displayName, displayRole } =
+                  getSenderDisplay(msg);
                 return isOwn ? (
                   /* Supporter (own) — right */
-                  <div key={msg.id ?? index} className="flex items-end gap-2.5 justify-end">
+                  <div
+                    key={msg.id ?? index}
+                    className="flex items-end gap-2.5 justify-end"
+                  >
                     <div className="min-w-0 max-w-[80%] sm:max-w-[75%]">
                       <div className="bg-[#F5F8FA] dark:bg-gray-800 rounded-2xl rounded-tr-sm px-3.5 py-2.5 shadow-sm">
                         {msg.text && (
@@ -525,12 +685,23 @@ export default function TicketConversationDialog({
                       </div>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 text-right mr-1">
                         {formatTime(msg.createdAt)}
-                        <span className="ml-1 text-gray-300 dark:text-gray-600">· {displayRole}</span>
+                        <span className="ml-1 text-gray-300 dark:text-gray-600">
+                          · {displayRole}
+                        </span>
                       </p>
                     </div>
                     <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0 shadow-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-indigo-500 dark:text-indigo-400">
-                        <path fillRule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clipRule="evenodd" />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-4 h-4 text-indigo-500 dark:text-indigo-400"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -553,14 +724,20 @@ export default function TicketConversationDialog({
                         {msg.attachments && msg.attachments.length > 0 && (
                           <div>
                             {msg.attachments.map((att, i) => (
-                              <AttachmentPreview key={i} att={att} isOwn={false} />
+                              <AttachmentPreview
+                                key={i}
+                                att={att}
+                                isOwn={false}
+                              />
                             ))}
                           </div>
                         )}
                       </div>
                       <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1 ml-1">
                         {formatTime(msg.createdAt)}
-                        <span className="ml-1 text-gray-300 dark:text-gray-600">· {displayRole}</span>
+                        <span className="ml-1 text-gray-300 dark:text-gray-600">
+                          · {displayRole}
+                        </span>
                       </p>
                     </div>
                   </div>
@@ -581,7 +758,9 @@ export default function TicketConversationDialog({
                     className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 dark:bg-gray-800 rounded-lg text-xs text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700"
                   >
                     <Paperclip className="w-3 h-3 flex-shrink-0" />
-                    <span className="max-w-[120px] truncate">{att.fileName}</span>
+                    <span className="max-w-[120px] truncate">
+                      {att.fileName}
+                    </span>
                     <button
                       onClick={() => removeAttachment(i)}
                       className="text-gray-400 hover:text-red-500 transition-colors"
@@ -607,7 +786,7 @@ export default function TicketConversationDialog({
                   <button
                     type="button"
                     onClick={() => {
-                      console.log('[SupporterChat] Clip icon clicked');
+                      console.log("[SupporterChat] Clip icon clicked");
                       fileInputRef.current?.click();
                     }}
                     disabled={isUploading}
@@ -617,7 +796,9 @@ export default function TicketConversationDialog({
                     <Paperclip className="w-5 h-5" />
                   </button>
                   {isUploading && (
-                    <span className="text-[10px] text-gray-400 animate-pulse">Uploading...</span>
+                    <span className="text-[10px] text-gray-400 animate-pulse">
+                      Uploading...
+                    </span>
                   )}
                 </div>
                 <button
@@ -625,8 +806,9 @@ export default function TicketConversationDialog({
                   onClick={handleSend}
                   disabled={!canSend || isUploading}
                   className={cn(
-                    'flex items-center gap-2 px-4 py-1.5 bg-[#1C73E0] cursor-pointer hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm',
-                    (!canSend || isUploading) && 'opacity-60 cursor-not-allowed'
+                    "flex items-center gap-2 px-4 py-1.5 bg-[#1C73E0] cursor-pointer hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm",
+                    (!canSend || isUploading) &&
+                      "opacity-60 cursor-not-allowed",
                   )}
                 >
                   Send
@@ -645,6 +827,23 @@ export default function TicketConversationDialog({
           </div>
         </div>
       </DialogContent>
+      <CreateEnterprisePlanDialog
+        open={enterprisePlanCreationOpen}
+        onOpenChange={setEnterprisePlanCreationOpen}
+        ticketId={ticket.id}
+        onSuccess={async () => {
+          if (enterprisePlanTagId && ticket.id) {
+            try {
+              await attachTag({
+                ticketId: ticket.id,
+                tagId: enterprisePlanTagId,
+              }).unwrap();
+            } catch (err: any) {
+              toast.error(err?.data?.message || "Failed to attach tag");
+            }
+          }
+        }}
+      />
     </Dialog>
   );
 }

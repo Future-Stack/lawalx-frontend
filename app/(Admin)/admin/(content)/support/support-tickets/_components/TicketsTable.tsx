@@ -22,6 +22,7 @@ import type { Ticket, TicketStatus, TicketPriority } from '@/redux/api/admin/sup
 import type { Employee } from '@/redux/api/admin/support/adminSupporterApi';
 import TicketsDesktopView from './TicketsDesktopView';
 import TicketsMobileView from './TicketsMobileView';
+import EnterprisePlanDialog from '@/components/shared/Enterprise/EnterprisePlanDialog';
 
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
@@ -124,6 +125,15 @@ export default function TicketsTable() {
   // Assign flow: step 1 → TeamWorkload, step 2 → AssignTicket
   const [workloadTicket, setWorkloadTicket] = useState<Ticket | null>(null);
   const [confirmData, setConfirmData] = useState<{ ticket: Ticket; employee: Employee } | null>(null);
+
+  // Enterprise Plan Dialog State
+  const [enterprisePlanOpen, setEnterprisePlanOpen] = useState(false);
+  const [activeEnterpriseTicket, setActiveEnterpriseTicket] = useState<Ticket | null>(null);
+
+  const handleOpenEnterprisePlan = (ticket: Ticket) => {
+    setActiveEnterpriseTicket(ticket);
+    setEnterprisePlanOpen(true);
+  };
 
   const handleOpenWorkload = (ticket: Ticket) => {
     setWorkloadTicket(ticket);
@@ -258,6 +268,7 @@ export default function TicketsTable() {
               setViewTicket={setViewTicket}
               setEditTicket={setEditTicket}
               handleOpenWorkload={handleOpenWorkload}
+              openEnterprisePlan={handleOpenEnterprisePlan}
             />
             
             <TicketsMobileView
@@ -266,6 +277,7 @@ export default function TicketsTable() {
               setViewTicket={setViewTicket}
               setEditTicket={setEditTicket}
               handleOpenWorkload={handleOpenWorkload}
+              openEnterprisePlan={handleOpenEnterprisePlan}
             />
           </div>
         </StickyScrollContainer>
@@ -352,6 +364,13 @@ export default function TicketsTable() {
         onBack={handleBackToWorkload}
         onClose={handleCloseAssignFlow}
         onConfirm={handleConfirmAssign}
+      />
+
+      <EnterprisePlanDialog
+        open={enterprisePlanOpen}
+        onOpenChange={setEnterprisePlanOpen}
+        ticket={activeEnterpriseTicket as any}
+        isAdmin={true}
       />
     </>
   );

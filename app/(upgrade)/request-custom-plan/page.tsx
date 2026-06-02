@@ -11,18 +11,43 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { HelpCircle, MapPin, Globe, X, Check } from "lucide-react";
+import { HelpCircle, MapPin, Globe, X, Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useSubmitEnterpriseRequestMutation } from "@/redux/api/enterpriseRequests/enterpriseRequestsApi";
+import { toast } from "sonner";
 
 export default function RequestCustomPlanPage() {
   const router = useRouter();
-  const [budget, setBudget] = useState(60);
-  const [timeline, setTimeline] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submitRequest, { isLoading }] = useSubmitEnterpriseRequestMutation();
 
-  const getPrice = () => {
-    if (budget >= 100) return 10000;
-    const segment = budget / 25;
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phoneNumber: "",
+    industryType: "",
+    companySize: "",
+    location: "",
+    website: "",
+    deviceScreenSize: "",
+    estimatedDevices: "",
+    storageRequirements: "",
+    implementationTimeline: "",
+    specifyTimeline: "",
+    estimatedBudget: 60,
+    additionalRequirements: "",
+  });
+
+  const handleInputChange = (
+    field: keyof typeof formData,
+    value: string | number,
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const getPrice = (b: number) => {
+    if (b >= 100) return 10000;
+    const segment = b / 25;
     const index = Math.floor(segment);
     const stops = [0, 500, 1000, 5000, 10000];
     const remainder = segment - index;
@@ -30,7 +55,63 @@ export default function RequestCustomPlanPage() {
       stops[index] + remainder * (stops[index + 1] - stops[index]),
     );
   };
-  const displayPrice = getPrice();
+  const displayPrice = getPrice(formData.estimatedBudget);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      let finalTimeline = formData.implementationTimeline;
+      if (finalTimeline === "others") {
+        finalTimeline = formData.specifyTimeline || "";
+      }
+
+      if (
+        !formData.name ||
+        !formData.email ||
+        !formData.phoneNumber ||
+        !formData.industryType ||
+        !formData.companySize ||
+        !formData.location ||
+        !formData.deviceScreenSize ||
+        !formData.estimatedDevices ||
+        !formData.storageRequirements ||
+        !finalTimeline ||
+        !formData.additionalRequirements
+      ) {
+        toast.error("Please fill in all required fields.");
+        return;
+      }
+
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phoneNumber: formData.phoneNumber,
+        industryType: formData.industryType,
+        companySize: formData.companySize,
+        location: formData.location,
+        website: formData.website || "",
+        deviceScreenSize: formData.deviceScreenSize,
+        estimatedDevices: Number(formData.estimatedDevices),
+        storageRequirements: formData.storageRequirements,
+        implementationTimeline: finalTimeline,
+        estimatedBudget: displayPrice,
+        additionalRequirements: formData.additionalRequirements,
+      };
+
+      const res = await submitRequest(payload).unwrap();
+      if (res?.success) {
+        setIsSubmitted(true);
+        toast.success(res?.message || "Request submitted successfully");
+      } else {
+        toast.error(res?.message || "Failed to submit request.");
+      }
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      toast.error(
+        error?.data?.message || "An error occurred. Please try again.",
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white py-10">
@@ -91,7 +172,10 @@ export default function RequestCustomPlanPage() {
             </div>
           </div>
         ) : (
-          <div className="space-y-8 pb-20 max-w-3xl mx-auto px-4 lg:px-0">
+          <form
+            onSubmit={onSubmit}
+            className="space-y-8 pb-20 max-w-3xl mx-auto px-4 lg:px-0"
+          >
             {/* Company Information Section */}
             <div className="rounded-[16px] border border-[#D4D4D4] bg-[#FAFAFA] p-6 space-y-6">
               <h3 className="text-[24px] font-semibold text-Heading font-inter">
@@ -101,18 +185,22 @@ export default function RequestCustomPlanPage() {
               <div className="flex flex-col md:flex-row gap-4 w-full">
                 <div className="space-y-2 w-full">
                   <Label className="text-[16px] font-semibold text-[#404040] font-inter">
-                    Company Name
+                    Company Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Company Name"
                     className="h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
                   />
                 </div>
                 <div className="space-y-2 w-full">
                   <Label className="text-[16px] font-semibold text-[#404040] font-inter">
-                    E-mail
+                    E-mail <span className="text-red-500">*</span>
                   </Label>
                   <Input
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="jonsmith@gmail.com"
                     type="email"
                     className="h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
@@ -125,6 +213,10 @@ export default function RequestCustomPlanPage() {
                   Your Phone Number <span className="text-red-500">*</span>
                 </Label>
                 <Input
+                  value={formData.phoneNumber}
+                  onChange={(e) =>
+                    handleInputChange("phoneNumber", e.target.value)
+                  }
                   placeholder="+21(256)2546325"
                   className="h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
                 />
@@ -133,10 +225,15 @@ export default function RequestCustomPlanPage() {
               <div className="flex flex-col md:flex-row gap-4 w-full">
                 <div className="space-y-2 w-full">
                   <Label className="text-[16px] font-semibold text-[#404040] font-inter">
-                    Industry Type
+                    Industry Type <span className="text-red-500">*</span>
                   </Label>
-                  <Select>
-                    <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-[#737373] bg-white">
+                  <Select
+                    value={formData.industryType}
+                    onValueChange={(val) =>
+                      handleInputChange("industryType", val)
+                    }
+                  >
+                    <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-body bg-white">
                       <SelectValue placeholder="Fintech" />
                     </SelectTrigger>
                     <SelectContent>
@@ -148,10 +245,15 @@ export default function RequestCustomPlanPage() {
                 </div>
                 <div className="space-y-2 w-full">
                   <Label className="text-[16px] font-semibold text-[#404040] font-inter">
-                    Company Size
+                    Company Size <span className="text-red-500">*</span>
                   </Label>
-                  <Select>
-                    <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-[#737373] bg-white">
+                  <Select
+                    value={formData.companySize}
+                    onValueChange={(val) =>
+                      handleInputChange("companySize", val)
+                    }
+                  >
+                    <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-body bg-white">
                       <SelectValue placeholder="0 - 50 Employee" />
                     </SelectTrigger>
                     <SelectContent>
@@ -173,6 +275,10 @@ export default function RequestCustomPlanPage() {
                   <div className="relative w-full">
                     <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#737373]" />
                     <Input
+                      value={formData.location}
+                      onChange={(e) =>
+                        handleInputChange("location", e.target.value)
+                      }
                       placeholder="Enter your location"
                       className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] pl-10 pr-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
                     />
@@ -185,6 +291,10 @@ export default function RequestCustomPlanPage() {
                   <div className="relative w-full">
                     <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#737373]" />
                     <Input
+                      value={formData.website}
+                      onChange={(e) =>
+                        handleInputChange("website", e.target.value)
+                      }
                       placeholder="https://tape.io"
                       className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] pl-10 pr-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
                     />
@@ -204,8 +314,13 @@ export default function RequestCustomPlanPage() {
                   Device Screen Size <span className="text-red-500">*</span>{" "}
                   <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
                 </Label>
-                <Select>
-                  <SelectTrigger className="w-full rounded-[10px] border border-[#D4D4D4] bg-white px-3 py-3 h-auto text-[16px] text-[#737373]">
+                <Select
+                  value={formData.deviceScreenSize}
+                  onValueChange={(val) =>
+                    handleInputChange("deviceScreenSize", val)
+                  }
+                >
+                  <SelectTrigger className="w-full rounded-[10px] border border-[#D4D4D4] bg-white px-3 py-3 h-auto text-[16px] text-body">
                     <SelectValue placeholder='24"' />
                   </SelectTrigger>
                   <SelectContent>
@@ -224,6 +339,10 @@ export default function RequestCustomPlanPage() {
                     <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
                   </Label>
                   <Input
+                    value={formData.estimatedDevices}
+                    onChange={(e) =>
+                      handleInputChange("estimatedDevices", e.target.value)
+                    }
                     placeholder="e.g. 100"
                     type="number"
                     className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -235,6 +354,10 @@ export default function RequestCustomPlanPage() {
                     <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
                   </Label>
                   <Input
+                    value={formData.storageRequirements}
+                    onChange={(e) =>
+                      handleInputChange("storageRequirements", e.target.value)
+                    }
                     placeholder="e.g. 500 GB"
                     type="text"
                     className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
@@ -249,8 +372,13 @@ export default function RequestCustomPlanPage() {
                     <span className="text-red-500">*</span>{" "}
                     <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
                   </Label>
-                  <Select value={timeline} onValueChange={setTimeline}>
-                    <SelectTrigger className="w-full rounded-[10px] border border-borderGray bg-white px-3 py-3 h-auto text-[16px] text-[#737373]">
+                  <Select
+                    value={formData.implementationTimeline}
+                    onValueChange={(val) =>
+                      handleInputChange("implementationTimeline", val)
+                    }
+                  >
+                    <SelectTrigger className="w-full rounded-[10px] border border-borderGray bg-white px-3 py-3 h-auto text-[16px] text-body">
                       <SelectValue placeholder="Select timeline" />
                     </SelectTrigger>
                     <SelectContent>
@@ -263,12 +391,16 @@ export default function RequestCustomPlanPage() {
                   </Select>
                 </div>
 
-                {timeline === "others" && (
+                {formData.implementationTimeline === "others" && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                     <Label className="text-[16px] font-semibold text-[#404040] font-inter">
                       Specify Timeline <span className="text-red-500">*</span>
                     </Label>
                     <Input
+                      value={formData.specifyTimeline}
+                      onChange={(e) =>
+                        handleInputChange("specifyTimeline", e.target.value)
+                      }
                       placeholder="e.g. 6 Months"
                       className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
                     />
@@ -291,7 +423,9 @@ export default function RequestCustomPlanPage() {
                     <div
                       className="absolute -top-[38px] -translate-x-1/2 flex flex-col items-center z-10 pointer-events-none transition-all duration-75"
                       style={{
-                        left: `calc(${budget}% + ${10 - budget * 0.2}px)`,
+                        left: `calc(${formData.estimatedBudget || 0}% + ${
+                          10 - (formData.estimatedBudget || 0) * 0.2
+                        }px)`,
                       }}
                     >
                       <div className="bg-[#111827] text-white text-[13px] font-bold py-1 px-3 rounded-[6px] shadow-lg whitespace-nowrap">
@@ -307,8 +441,13 @@ export default function RequestCustomPlanPage() {
                       min={0}
                       max={100}
                       step={1}
-                      value={budget}
-                      onChange={(e) => setBudget(Number(e.target.value))}
+                      value={formData.estimatedBudget}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "estimatedBudget",
+                          Number(e.target.value),
+                        )
+                      }
                       className="w-full h-2 appearance-none cursor-pointer rounded-full outline-none
                     [&::-webkit-slider-runnable-track]:rounded-full
                     [&::-webkit-slider-runnable-track]:h-2
@@ -329,7 +468,11 @@ export default function RequestCustomPlanPage() {
                     [&::-moz-range-thumb]:border-bgBlue
                     [&::-moz-range-thumb]:shadow-md"
                       style={{
-                        background: `linear-gradient(to right, #38BDF8 0%, #38BDF8 ${(budget / 100) * 100}%, #E2E8F0 ${(budget / 100) * 100}%, #E2E8F0 100%)`,
+                        background: `linear-gradient(to right, #38BDF8 0%, #38BDF8 ${
+                          ((formData.estimatedBudget || 0) / 100) * 100
+                        }%, #E2E8F0 ${
+                          ((formData.estimatedBudget || 0) / 100) * 100
+                        }%, #E2E8F0 100%)`,
                       }}
                     />
                   </div>
@@ -363,6 +506,10 @@ export default function RequestCustomPlanPage() {
                   <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
                 </Label>
                 <Textarea
+                  value={formData.additionalRequirements}
+                  onChange={(e) =>
+                    handleInputChange("additionalRequirements", e.target.value)
+                  }
                   id="additional-requirements"
                   placeholder="Tell us about any specific requirements, integration needs, or questions you have."
                   className="w-full min-h-[120px] rounded-[10px] border border-[#D4D4D4] p-3 text-[16px] placeholder:text-[#737373] bg-white resize-none"
@@ -370,13 +517,21 @@ export default function RequestCustomPlanPage() {
               </div>
               {/* Get My Quote Button - inside card */}
               <button
-                onClick={() => setIsSubmitted(true)}
-                className="flex w-full flex-col items-center justify-center gap-[6px] rounded-[10px] bg-[#111827] px-4 py-3 text-white font-semibold text-[16px] shadow-customShadow transition hover:bg-slate-800 active:scale-[0.98] cursor-pointer"
+                type="submit"
+                disabled={isLoading}
+                className="flex w-full flex-col items-center justify-center gap-[6px] rounded-[10px] bg-[#111827] px-4 py-3 text-white font-semibold text-[16px] shadow-customShadow transition hover:bg-slate-800 active:scale-[0.98] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Get My Quote
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <span>Submitting...</span>
+                  </div>
+                ) : (
+                  "Get My Quote"
+                )}
               </button>
             </div>
-          </div>
+          </form>
         )}
       </div>
     </div>

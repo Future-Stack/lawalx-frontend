@@ -4,6 +4,18 @@ export interface CheckoutPayload {
   screenSize: number;
   country: string;
   gateway: "stripe" | "paystack";
+  deviceQuantity?: number;
+  couponCode?: string;
+}
+
+export interface EnterpriseCheckoutPayload {
+  planId: string;
+  billingCycle: "MONTHLY" | "ANNUAL";
+  screenSize: number;
+  country: string;
+  gateway: "stripe" | "paystack";
+  deviceQuantity?: number;
+  couponCode?: string;
 }
 
 export interface CheckoutBreakdown {
@@ -67,9 +79,11 @@ export interface UserSubscription {
   status: string;
   deviceLimit: number;
   storageLimitGb: number;
-  fileLimit: number;
-  fileSizeLimitMb: number | null;
-  isAdvanceEnabled: boolean;
+  templateLimit: number;
+  photoLimit: number;
+  audioLimit: number;
+  videoLimit: number;
+  features: string[];
   createdAt: string;
   plan: SubscriptionPlanSummary;
   payments: SubscriptionPayment[];
