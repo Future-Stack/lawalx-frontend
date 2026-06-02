@@ -25,7 +25,6 @@ interface ContentPreviewProps {
   setPlayingIndex: (index: number) => void;
   lowerThird?: LowerThirdPayload;
   localActive?: boolean;
-  onPowerClick?: () => void;
   isUpdating?: boolean;
 }
 
@@ -43,7 +42,6 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
   setPlayingIndex,
   lowerThird,
   localActive = false,
-  onPowerClick
 }) => {
   const [isFading, setIsFading] = useState(false);
   const [isMediaReady, setIsMediaReady] = useState(false);
@@ -131,7 +129,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (localActive && !isPaused) {
+    if (!isPaused) {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch((error) => {
@@ -142,7 +140,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     } else {
       audio.pause();
     }
-  }, [localActive, isPaused, playingIndex, content?.audio]);
+  }, [isPaused, playingIndex, content?.audio]);
 
   const advance = useCallback(() => {
     if (!items || items.length < 1) return;
@@ -155,13 +153,13 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
   }, [items, playingIndex, setPlayingIndex]);
 
   useEffect(() => {
-    if (!items || items.length <= 1 || !localActive) return;
+    if (!items || items.length <= 1 || isPaused) return;
     const currentItem = items[playingIndex];
     if (currentItem?.type === "video" || currentItem?.type === "audio") return;
     const displayDuration = parseInt(currentItem?.duration || "7");
     const timer = setTimeout(advance, Math.max(0, displayDuration * 1000 - 500));
     return () => clearTimeout(timer);
-  }, [playingIndex, items, localActive, advance]);
+  }, [playingIndex, items, isPaused, advance]);
 
   return (
     <div className="lg:col-span-5 space-y-6">
@@ -208,7 +206,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                     key={`${videoSrc}-${playbackVersion}`}
                     src={videoSrc}
                     poster={thumbnailSrc}
-                    autoPlay={localActive}
+                    autoPlay={!isPaused}
                     muted={false}
                     fillParent={true}
                     rounded="rounded-lg"
@@ -218,14 +216,10 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                     }}
                     onPlay={() => {
                       setIsPaused(false);
-                      if (!localActive && !isTransitioningRef.current) {
-                        onPowerClick?.();
-                      }
                     }}
                     onPause={() => {
-                      setIsPaused(true);
-                      if (localActive && !isTransitioningRef.current) {
-                        onPowerClick?.();
+                      if (!isTransitioningRef.current) {
+                        setIsPaused(true);
                       }
                     }}
                     onReady={() => setIsMediaReady(true)}
@@ -240,17 +234,13 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                     ref={audioRef}
                     key={`${content.audio}-${playbackVersion}`}
                     src={content.audio}
-                    autoPlay={localActive}
+                    autoPlay={!isPaused}
                     onPlay={() => {
                       setIsPaused(false);
-                      if (!localActive && !isTransitioningRef.current) {
-                        onPowerClick?.();
-                      }
                     }}
                     onPause={() => {
-                      setIsPaused(true);
-                      if (localActive && !isTransitioningRef.current) {
-                        onPowerClick?.();
+                      if (!isTransitioningRef.current) {
+                        setIsPaused(true);
                       }
                     }}
                     onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
@@ -368,7 +358,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                         animationDelay: `${i * 0.15}s`,
                         animationDuration: `${0.8 + Math.random()}s`,
                         transform: `scaleY(${scale})`,
-                        animationPlayState: localActive ? "running" : "paused",
+                        animationPlayState: !isPaused ? "running" : "paused",
                       }}
                     />
                   ))}
@@ -454,21 +444,21 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
             {scheduleTime || "Mon, Tue, Wed, Thu, Fri • 09:00 AM"}
           </span>
 
-          {/* Power Button — same as programs page */}
+          {/* Play/Pause Button — purely frontend preview control */}
           <button
             type="button"
-            onClick={onPowerClick}
-            aria-label={localActive ? "Stop Schedule" : "Start Schedule"}
+            onClick={() => setIsPaused((prev) => !prev)}
+            aria-label={!isPaused ? "Pause Preview" : "Play Preview"}
             className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
                         py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
                         ${
-                          localActive
+                          !isPaused
                             ? "bg-bgBlue hover:bg-blue-500"
                             : "bg-bgRed hover:bg-red-600"
                         }`}
-            title={localActive ? "Stop Schedule" : "Start Schedule"}
+            title={!isPaused ? "Pause Preview" : "Play Preview"}
           >
-            {localActive ? (
+            {!isPaused ? (
               <Pause className="w-4 h-4 sm:w-5 sm:h-5" />
             ) : (
               <Play className="w-4 h-4 sm:w-5 sm:h-5" />
