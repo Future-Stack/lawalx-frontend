@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface EnterpriseSubscriptionInfoPayload {
   name: "FREE_TRIAL" | "BASIC" | "BUSINESS" | "PREMIUM" | "ENTERPRISE" | string;
   description: string;
@@ -86,6 +87,6 @@ export interface SubmitEnterpriseRequestResponse {
   message: string;
   data: {
     enterpriseRequest: EnterpriseRequest;
-    ticket: any; // We can leave ticket as any or generic for now, or define if needed
+    ticket: any; 
   };
 }

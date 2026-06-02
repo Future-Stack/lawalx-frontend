@@ -79,9 +79,11 @@ export interface UserSubscription {
   status: string;
   deviceLimit: number;
   storageLimitGb: number;
-  fileLimit: number;
-  fileSizeLimitMb: number | null;
-  isAdvanceEnabled: boolean;
+  templateLimit: number;
+  photoLimit: number;
+  audioLimit: number;
+  videoLimit: number;
+  features: string[];
   createdAt: string;
   plan: SubscriptionPlanSummary;
   payments: SubscriptionPayment[];
