@@ -362,20 +362,7 @@ export default function ScheduleDetailPage() {
 
 
 
-  const handlePowerClick = async () => {
-    if (isNew) return;
-    const nextActive = !localActive;
-    setLocalActive(nextActive);
-    try {
-      await updateSchedule({
-        id: id as string,
-        data: { ...getPayload(), status: nextActive ? "playing" : "stopped" },
-      }).unwrap();
-    } catch (err: any) {
-      setLocalActive(!nextActive); // revert on failure
-      toast.error(err?.data?.message || err?.error || "Failed to update schedule status");
-    }
-  };
+
 
   const handleSave = async () => {
     if (isNew) {
@@ -533,7 +520,6 @@ export default function ScheduleDetailPage() {
           setPlayingIndex={setPlayingIndex}
           lowerThird={schedule?.lowerThird || (schedule?.lowerThirds && schedule.lowerThirds.length > 0 ? schedule.lowerThirds[0] : undefined)}
           localActive={localActive}
-          onPowerClick={handlePowerClick}
           isUpdating={isUpdating}
         />
       </div>
