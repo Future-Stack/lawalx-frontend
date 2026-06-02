@@ -43,6 +43,7 @@ interface Step2LowerThirdProps {
     onChange: (data: any) => void;
     onLowerThirdCreated?: (id: string) => void;
     onContentTypeChange?: (type: string) => void;
+    isAlreadyCreated?: boolean;
 }
 
 const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
@@ -50,10 +51,19 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
     onChange,
     onLowerThirdCreated,
     onContentTypeChange,
+    isAlreadyCreated,
 }) => {
     const [createLowerThird, { isLoading }] = useCreateLowerThirdMutation();
+    const [isAdded, setIsAdded] = React.useState(false);
+
+    React.useEffect(() => {
+        if (isAlreadyCreated) {
+            setIsAdded(true);
+        }
+    }, [isAlreadyCreated]);
 
     const updateConfig = (key: string, value: any) => {
+        setIsAdded(false);
         onChange({
             ...data,
             lowerThirdConfig: {
@@ -63,19 +73,32 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
         });
     };
 
+    const getPixelSize = (size: string): number => {
+        const strSize = String(size);
+        if (strSize === "Small" || strSize === "14") return 14;
+        if (strSize === "Medium" || strSize === "16") return 16;
+        if (strSize === "20") return 20;
+        if (strSize === "Large" || strSize === "24") return 24;
+        const parsed = parseInt(strSize, 10);
+        return isNaN(parsed) ? 16 : parsed;
+    };
+
     const handleCreateLowerThird = async () => {
         const { lowerThirdConfig } = data;
 
         // Map UI values to backend types
         const mapFontSize = (size: string): "Small" | "Medium" | "Large" => {
-            if (size === "14") return "Small";
-            if (size === "16" || size === "20") return "Medium";
+            const strSize = String(size);
+            if (strSize === "14" || strSize === "Small" || strSize === "small") return "Small";
+            if (strSize === "16" || strSize === "20" || strSize === "Medium" || strSize === "medium") return "Medium";
             return "Large";
         };
 
         const mapAnimation = (dir: string, enabled: boolean): "Left_to_Light" | "Right_to_Left" | "Fade" | "None" => {
             if (!enabled) return "None";
-            if (dir === "left-to-right") return "Right_to_Left";
+            const normalized = String(dir).toLowerCase();
+            if (normalized === "left-to-right" || normalized === "left_to_light" || normalized === "right") return "Left_to_Light";
+            if (normalized === "right-to-left" || normalized === "right_to_left" || normalized === "left") return "Right_to_Left";
             return "Left_to_Light";
         };
 
@@ -84,7 +107,10 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
             return "Bottom";
         };
 
-        const mapSpeed = (speed: string): number => {
+        const mapSpeed = (speed: any): number => {
+            if (typeof speed === "number") return speed;
+            const parsed = parseInt(speed, 10);
+            if (!isNaN(parsed)) return parsed;
             if (speed === "slow") return 20;
             if (speed === "medium") return 40;
             return 60;
@@ -108,8 +134,10 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
             const response = await createLowerThird(payload).unwrap();
             if (response.success) {
                 toast.success("Lower Third created successfully!");
-                if (onLowerThirdCreated && (response as any).data?.id) {
-                    onLowerThirdCreated((response as any).data.id);
+                const createdId = (response as any).data?.id || (response as any).id || (response as any).data;
+                if (onLowerThirdCreated && createdId) {
+                    onLowerThirdCreated(createdId);
+                    setIsAdded(true);
                 }
             }
         } catch (error: any) {
@@ -191,15 +219,18 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                 >
                                     <Marquee
                                         speed={
-                                            data.lowerThirdConfig.speed === "slow"
-                                                ? 20
-                                                : data.lowerThirdConfig.speed === "medium"
-                                                    ? 40
-                                                    : 60
+                                            typeof data.lowerThirdConfig.speed === "number"
+                                                ? data.lowerThirdConfig.speed
+                                                : data.lowerThirdConfig.speed === "slow"
+                                                    ? 20
+                                                    : data.lowerThirdConfig.speed === "medium"
+                                                        ? 40
+                                                        : 60
                                         }
                                         direction={
-                                            data.lowerThirdConfig.animationDirection ===
-                                                "left-to-right"
+                                            String(data.lowerThirdConfig.animationDirection).toLowerCase() === "left-to-right" ||
+                                            String(data.lowerThirdConfig.animationDirection).toLowerCase() === "left_to_light" ||
+                                            String(data.lowerThirdConfig.animationDirection).toLowerCase() === "right"
                                                 ? "right"
                                                 : "left"
                                         }
@@ -210,7 +241,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                             className="font-semibold px-4"
                                             style={{
                                                 color: data.lowerThirdConfig.textColor,
-                                                fontSize: `${data.lowerThirdConfig.fontSize}px`,
+                                                fontSize: `${getPixelSize(data.lowerThirdConfig.fontSize)}px`,
                                                 fontFamily: data.lowerThirdConfig.fontFamily,
                                             }}
                                         >
@@ -254,15 +285,18 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                 >
                                     <Marquee
                                         speed={
-                                            data.lowerThirdConfig.speed === "slow"
-                                                ? 20
-                                                : data.lowerThirdConfig.speed === "medium"
-                                                    ? 40
-                                                    : 60
+                                            typeof data.lowerThirdConfig.speed === "number"
+                                                ? data.lowerThirdConfig.speed
+                                                : data.lowerThirdConfig.speed === "slow"
+                                                    ? 20
+                                                    : data.lowerThirdConfig.speed === "medium"
+                                                        ? 40
+                                                        : 60
                                         }
                                         direction={
-                                            data.lowerThirdConfig.animationDirection ===
-                                                "left-to-right"
+                                            String(data.lowerThirdConfig.animationDirection).toLowerCase() === "left-to-right" ||
+                                            String(data.lowerThirdConfig.animationDirection).toLowerCase() === "left_to_light" ||
+                                            String(data.lowerThirdConfig.animationDirection).toLowerCase() === "right"
                                                 ? "right"
                                                 : "left"
                                         }
@@ -273,7 +307,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                             className="font-semibold px-4"
                                             style={{
                                                 color: data.lowerThirdConfig.textColor,
-                                                fontSize: `${data.lowerThirdConfig.fontSize}px`,
+                                                fontSize: `${getPixelSize(data.lowerThirdConfig.fontSize)}px`,
                                                 fontFamily: data.lowerThirdConfig.fontFamily,
                                             }}
                                         >
@@ -479,7 +513,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                             ) : (
                                 <GalleryThumbnails className="w-5 h-5" />
                             )}
-                            {isLoading ? "Creating..." : "Add Text Section"}
+                            {isLoading ? "Creating..." : isAdded ? "Added ✓" : "Add Text Section"}
                         </button>
                     </div>
                 </div>

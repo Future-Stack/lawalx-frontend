@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { User, FileIcon } from 'lucide-react';
 import type { ChatMessage } from '@/types/chat';
+import Image from 'next/image';
 
 interface MessageListProps {
   messages: ChatMessage[];
@@ -81,7 +83,7 @@ const MessageList: React.FC<MessageListProps> = ({
                         const isImg = isImageUrl(att.fileUrl);
                         return isImg ? (
                           <a key={i} href={fullUrl} target="_blank" rel="noreferrer" className="block">
-                            <img src={fullUrl} alt={att.fileName} className="max-w-[200px] max-h-[160px] rounded-lg object-cover" />
+                            <Image src={fullUrl} alt={att.fileName} className="max-w-[200px] max-h-[160px] rounded-lg object-cover" />
                           </a>
                         ) : (
                           <a key={i} href={fullUrl} target="_blank" rel="noreferrer" className={`flex items-center gap-1 text-xs underline truncate max-w-[220px] ${isOwn ? 'text-blue-200' : 'text-blue-600 dark:text-blue-400'}`}>

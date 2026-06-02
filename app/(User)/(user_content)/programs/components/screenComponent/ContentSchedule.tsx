@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Plus, ChevronDown, Clock, Video, Edit, Pause, Play, X, CalendarClock, Loader2 } from "lucide-react";
@@ -17,7 +18,7 @@ interface ContentScheduleProps {
 const ContentSchedule: React.FC<ContentScheduleProps> = ({ schedules }) => {
   const router = useRouter();
   const [updateSchedule, { isLoading: isUpdating }] = useUpdateScheduleMutation();
-  const [deleteSchedule, { isLoading: isDeleting }] = useDeleteScheduleMutation();
+  const [deleteSchedule] = useDeleteScheduleMutation();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [scheduleList, setScheduleList] = useState<Schedule[]>([]);

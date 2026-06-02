@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
@@ -60,7 +61,7 @@ const AssignedScreensSection: React.FC<AssignedScreensSectionProps> = ({
                 ))}
                 {assignedDevices.length === 0 && (
                     <div className="py-8 text-center border-t border-border">
-                        <p className="text-muted italic">No devices assigned yet. Click "Add Devices" to get started.</p>
+                        <p className="text-muted italic">No devices assigned yet. Click &quot;Add Devices&quot; to get started.</p>
                     </div>
                 )}
             </div>
