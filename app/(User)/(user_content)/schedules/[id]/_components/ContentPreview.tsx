@@ -43,8 +43,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
   setPlayingIndex,
   lowerThird,
   localActive = false,
-  onPowerClick,
-  isUpdating = false,
+  onPowerClick
 }) => {
   const [isFading, setIsFading] = useState(false);
   const [isMediaReady, setIsMediaReady] = useState(false);
@@ -84,11 +83,24 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     setIsMediaReady(false);
   }, [playingIndex, content?.id]);
 
+  const isTransitioningRef = useRef(false);
+  const prevContentIdRef = useRef(content?.id);
+
+  // Transition safety: ignore pause events when swapping items
+  useEffect(() => {
+    if (prevContentIdRef.current !== content?.id) {
+      isTransitioningRef.current = true;
+      prevContentIdRef.current = content?.id;
+      const timer = setTimeout(() => {
+        isTransitioningRef.current = false;
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [content?.id]);
+
   // Sync localActive with internal states (but let media events drive isPaused for accuracy)
   useEffect(() => {
-    if (!localActive) {
-      setIsPaused(true);
-    }
+    setIsPaused(!localActive);
   }, [localActive]);
 
   // 1. Initial Volume Sync from localStorage
@@ -110,7 +122,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
       audioRef.current.volume = audioVolume;
       try {
         localStorage.setItem("plyr_volume", audioVolume.toString());
-      } catch (e) {}
+      } catch {}
     }
   }, [audioVolume]);
 
@@ -119,7 +131,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     const audio = audioRef.current;
     if (!audio) return;
 
-    if (localActive) {
+    if (localActive && !isPaused) {
       const playPromise = audio.play();
       if (playPromise !== undefined) {
         playPromise.catch((error) => {
@@ -129,9 +141,8 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
       }
     } else {
       audio.pause();
-      setIsPaused(true);
     }
-  }, [localActive, playingIndex, content?.audio]);
+  }, [localActive, isPaused, playingIndex, content?.audio]);
 
   const advance = useCallback(() => {
     if (!items || items.length < 1) return;
@@ -141,7 +152,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
       setPlaybackVersion((prev) => prev + 1);
       setIsFading(false);
     }, 500);
-  }, [items.length, playingIndex, setPlayingIndex]);
+  }, [items, playingIndex, setPlayingIndex]);
 
   useEffect(() => {
     if (!items || items.length <= 1 || !localActive) return;
@@ -150,7 +161,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     const displayDuration = parseInt(currentItem?.duration || "7");
     const timer = setTimeout(advance, Math.max(0, displayDuration * 1000 - 500));
     return () => clearTimeout(timer);
-  }, [playingIndex, items.length, localActive, advance]);
+  }, [playingIndex, items, localActive, advance]);
 
   return (
     <div className="lg:col-span-5 space-y-6">
@@ -201,9 +212,22 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                     muted={false}
                     fillParent={true}
                     rounded="rounded-lg"
-                    onEnded={advance}
-                    onPlay={() => setIsPaused(false)}
-                    onPause={() => setIsPaused(true)}
+                    onEnded={() => {
+                      isTransitioningRef.current = true;
+                      advance();
+                    }}
+                    onPlay={() => {
+                      setIsPaused(false);
+                      if (!localActive && !isTransitioningRef.current) {
+                        onPowerClick?.();
+                      }
+                    }}
+                    onPause={() => {
+                      setIsPaused(true);
+                      if (localActive && !isTransitioningRef.current) {
+                        onPowerClick?.();
+                      }
+                    }}
                     onReady={() => setIsMediaReady(true)}
                     className={lowerThird?.text && lowerThird.position !== "Top" ? "plyr-has-ticker" : ""}
                   />
@@ -217,12 +241,25 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                     key={`${content.audio}-${playbackVersion}`}
                     src={content.audio}
                     autoPlay={localActive}
-                    onPlay={() => setIsPaused(false)}
-                    onPause={() => setIsPaused(true)}
+                    onPlay={() => {
+                      setIsPaused(false);
+                      if (!localActive && !isTransitioningRef.current) {
+                        onPowerClick?.();
+                      }
+                    }}
+                    onPause={() => {
+                      setIsPaused(true);
+                      if (localActive && !isTransitioningRef.current) {
+                        onPowerClick?.();
+                      }
+                    }}
                     onTimeUpdate={(e) => setAudioCurrentTime(e.currentTarget.currentTime)}
                     onDurationChange={(e) => setAudioDuration(e.currentTarget.duration)}
                     onCanPlay={() => setIsMediaReady(true)}
-                    onEnded={advance}
+                    onEnded={() => {
+                      isTransitioningRef.current = true;
+                      advance();
+                    }}
                     onError={() => setIsMediaReady(true)}
                     hidden
                   />
