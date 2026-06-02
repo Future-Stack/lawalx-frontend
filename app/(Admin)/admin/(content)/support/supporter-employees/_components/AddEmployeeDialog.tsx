@@ -91,8 +91,9 @@ export default function AddEmployeeDialog({
       await createEmployee(formData).unwrap();
       toast.success("Supporter created successfully");
       onOpenChange(false);
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to create employee");
+    } catch (err) {
+      const error = err as { data?: { message?: string } };
+      toast.error(error?.data?.message || "Failed to create employee");
     }
   };
 

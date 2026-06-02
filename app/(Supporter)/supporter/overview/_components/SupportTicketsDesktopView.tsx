@@ -15,12 +15,14 @@ interface SupportTicketsDesktopViewProps {
   paginatedTickets: SupporterTableTicket[];
   isLoading: boolean;
   openConversation: (ticket: SupporterTableTicket) => void;
+  openEnterprisePlan: (ticket: SupporterTableTicket) => void;
 }
 
 export default function SupportTicketsDesktopView({
   paginatedTickets,
   isLoading,
   openConversation,
+  openEnterprisePlan,
 }: SupportTicketsDesktopViewProps) {
   return (
     <div className="hidden lg:block">
@@ -118,14 +120,33 @@ export default function SupportTicketsDesktopView({
 
                 {/* Action */}
                 <TableCell className="px-4 py-3">
-                  <button
-                    onClick={() => openConversation(ticket)}
-                    className={cn(
-                      'px-4 py-1.5 rounded text-sm font-medium transition-colors whitespace-nowrap cursor-pointer border border-[#4881FF] text-[#4881FF] hover:bg-[#4881FF]/20'
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => openConversation(ticket)}
+                      title="View Ticket"
+                      className="p-1.5 rounded-md text-[#4881FF] hover:bg-[#4881FF]/10 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    </button>
+                    {ticket.ticketTags?.some((t: any) => t.tag?.key === 'NEEDS_ENTERPRISE_PLAN') && (
+                      <button
+                        onClick={() => openEnterprisePlan(ticket)}
+                        title="View Enterprise Plan"
+                        className="p-1.5 rounded-md text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                          <polyline points="14 2 14 8 20 8" />
+                          <line x1="16" y1="13" x2="8" y2="13" />
+                          <line x1="16" y1="17" x2="8" y2="17" />
+                          <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                      </button>
                     )}
-                  >
-                    Open
-                  </button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))

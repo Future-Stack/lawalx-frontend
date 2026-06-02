@@ -35,6 +35,7 @@ import {
 import { useUploadSupportFileMutation } from '@/redux/api/users/support/supportApi';
 import type { ChatAttachment, ChatMessage } from '@/types/chat';
 import { toast } from 'sonner';
+import CreateEnterprisePlanDialog from './CreateEnterprisePlanDialog';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? '';
 
@@ -127,6 +128,9 @@ export default function TicketConversationDialog({
 
   const [editingTag, setEditingTag] = useState<{ id: string; current: string } | null>(null);
   const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const [enterprisePlanCreationOpen, setEnterprisePlanCreationOpen] = useState(false);
+  const [enterprisePlanTagId, setEnterprisePlanTagId] = useState<string | null>(null);
+
   const [message, setMessage] = useState('');
   const [pendingAttachments, setPendingAttachments] = useState<ChatAttachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -149,6 +153,16 @@ export default function TicketConversationDialog({
 
   const handleToggleTag = async (tagId: string, isSelected: boolean) => {
     if (!ticket?.id) return;
+    
+    if (!isSelected) {
+      const tag = availableTags.find(t => t.id === tagId);
+      if (tag?.key === 'NEEDS_ENTERPRISE_PLAN') {
+        setEnterprisePlanTagId(tagId);
+        setEnterprisePlanCreationOpen(true);
+        return;
+      }
+    }
+
     try {
       if (isSelected) {
         await removeTag({ ticketId: ticket.id, tagId }).unwrap();
@@ -433,7 +447,7 @@ export default function TicketConversationDialog({
                               </span>
                             )}
                           </div>
-                          {editingTag?.id !== tag.id && (
+                          {editingTag?.id !== tag.id && !['Needs_Refund', 'Needs_Additional_Payment', 'Needs_Enterprise_Plan'].includes(tag.name) && (
                             <div className="hidden group-hover:flex items-center gap-2 flex-shrink-0 ml-2">
                               <button 
                                 onClick={(e) => { e.stopPropagation(); setEditingTag({ id: tag.id, current: tag.name }); }} 
@@ -645,6 +659,20 @@ export default function TicketConversationDialog({
           </div>
         </div>
       </DialogContent>
+      <CreateEnterprisePlanDialog
+        open={enterprisePlanCreationOpen}
+        onOpenChange={setEnterprisePlanCreationOpen}
+        ticketId={ticket.id}
+        onSuccess={async () => {
+          if (enterprisePlanTagId && ticket.id) {
+            try {
+              await attachTag({ ticketId: ticket.id, tagId: enterprisePlanTagId }).unwrap();
+            } catch (err: any) {
+              toast.error(err?.data?.message || 'Failed to attach tag');
+            }
+          }
+        }}
+      />
     </Dialog>
   );
 }

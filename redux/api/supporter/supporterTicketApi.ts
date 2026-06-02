@@ -28,6 +28,7 @@ export interface SupporterTicket {
   adminNote: string | null;
   customId: string;
   user: SupporterTicketUser;
+  ticketTags?: any[];
   messages?: any[];
 }
 

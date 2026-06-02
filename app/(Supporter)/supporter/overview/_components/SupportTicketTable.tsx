@@ -4,6 +4,7 @@
 import { useState, useMemo } from 'react';
 import { ChevronDown, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 import TicketConversationDialog from './TicketConversationDialog';
+import EnterprisePlanDialog from './EnterprisePlanDialog';
 import { toast } from 'sonner';
 import {
   Table,
@@ -38,6 +39,7 @@ export interface SupporterTableTicket {
   issueType: string;
   status: TicketStatus;
   description: string;
+  ticketTags?: any[];
   raw?: any;
 }
 
@@ -68,11 +70,17 @@ export default function SupportTicketTable() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [conversationOpen, setConversationOpen] = useState(false);
+  const [enterprisePlanOpen, setEnterprisePlanOpen] = useState(false);
   const [activeTicket, setActiveTicket] = useState<SupporterTableTicket | null>(null);
 
   const openConversation = (ticket: SupporterTableTicket) => {
     setActiveTicket(ticket);
     setConversationOpen(true);
+  };
+
+  const openEnterprisePlan = (ticket: SupporterTableTicket) => {
+    setActiveTicket(ticket);
+    setEnterprisePlanOpen(true);
   };
 
   const tickets = useMemo(() => {
@@ -85,6 +93,7 @@ export default function SupportTicketTable() {
       issueType: t.issueType?.[0]?.replace('_', ' ') || 'Support Request',
       status: (t.status === 'InProgress' ? 'In progress' : t.status === 'Open' ? 'open' : t.status) as TicketStatus,
       description: t.description || '',
+      ticketTags: t.ticketTags || [],
       raw: t,
     }));
   }, [ticketsResponse]);
@@ -172,11 +181,13 @@ export default function SupportTicketTable() {
             paginatedTickets={paginatedTickets}
             isLoading={isLoading}
             openConversation={openConversation}
+            openEnterprisePlan={openEnterprisePlan}
           />
           <SupportTicketsMobileView
             paginatedTickets={paginatedTickets}
             isLoading={isLoading}
             openConversation={openConversation}
+            openEnterprisePlan={openEnterprisePlan}
           />
         </div>
       </StickyScrollContainer>
@@ -243,6 +254,13 @@ export default function SupportTicketTable() {
         open={conversationOpen}
         onOpenChange={setConversationOpen}
         ticket={activeTicket}
+      />
+
+      {/* Enterprise Plan dialog */}
+      <EnterprisePlanDialog
+        open={enterprisePlanOpen}
+        onOpenChange={setEnterprisePlanOpen}
+        ticketId={activeTicket?.id || null}
       />
     </div>
   );
