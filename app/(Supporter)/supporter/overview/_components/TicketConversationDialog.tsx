@@ -35,7 +35,7 @@ import {
 import { useUploadSupportFileMutation } from '@/redux/api/users/support/supportApi';
 import type { ChatAttachment, ChatMessage } from '@/types/chat';
 import { toast } from 'sonner';
-import CreateEnterprisePlanDialog from './CreateEnterprisePlanDialog';
+import CreateEnterprisePlanDialog from "@/components/shared/Enterprise/CreateEnterprisePlanDialog";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? '';
 

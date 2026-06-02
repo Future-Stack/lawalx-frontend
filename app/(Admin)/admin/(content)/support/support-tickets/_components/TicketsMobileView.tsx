@@ -10,6 +10,7 @@ interface TicketsMobileViewProps {
   setViewTicket: (ticket: Ticket) => void;
   setEditTicket: (ticket: Ticket) => void;
   handleOpenWorkload: (ticket: Ticket) => void;
+  openEnterprisePlan: (ticket: Ticket) => void;
 }
 
 export default function TicketsMobileView({
@@ -18,6 +19,7 @@ export default function TicketsMobileView({
   setViewTicket,
   setEditTicket,
   handleOpenWorkload,
+  openEnterprisePlan,
 }: TicketsMobileViewProps) {
   return (
     <div className="xl:hidden space-y-4 p-4">
@@ -55,6 +57,34 @@ export default function TicketsMobileView({
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
+                {ticket.ticketTags?.some(
+                  (t: { name: string; key?: string }) =>
+                    t.key === "NEEDS_ENTERPRISE_PLAN" || t.name === "Needs_Enterprise_Plan"
+                ) && (
+                  <button
+                    onClick={() => openEnterprisePlan(ticket)}
+                    title="View Enterprise Plan"
+                    className="p-1.5 rounded-md text-green-600 hover:bg-green-50 dark:hover:bg-green-900/40 transition-colors"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                      <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
 

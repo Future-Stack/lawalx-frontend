@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -15,22 +16,23 @@ import {
   useGetEnterpriseSubscriptionInfoQuery,
   useUpdateEnterpriseSubscriptionInfoMutation,
   useDeleteEnterpriseSubscriptionInfoMutation,
+  useSendEnterpriseProposalMutation,
 } from "@/redux/api/enterpriseRequests/enterpriseRequestsApi";
 import { useRemoveTagFromTicketMutation } from "@/redux/api/supporter/supporterTicketApi";
 import { Loader2, Monitor, Plus, X, Trash2 } from "lucide-react";
 import type { EnterpriseSubscriptionInfoPayload } from "@/redux/api/enterpriseRequests/enterpriseRequests.type";
-import type { SupporterTableTicket } from "./SupportTicketTable";
-
 interface EnterprisePlanDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  ticket: SupporterTableTicket | null;
+  ticket: { id: string; ticketTags?: any[] } | null;
+  isAdmin?: boolean;
 }
 
 export default function EnterprisePlanDialog({
   open,
   onOpenChange,
   ticket,
+  isAdmin = false,
 }: EnterprisePlanDialogProps) {
   const ticketId = ticket?.id || null;
   const { data: planData, isLoading: isFetching } =
@@ -44,6 +46,8 @@ export default function EnterprisePlanDialog({
     useDeleteEnterpriseSubscriptionInfoMutation();
   const [removeTag, { isLoading: isRemovingTag }] =
     useRemoveTagFromTicketMutation();
+  const [sendProposal, { isLoading: isSendingProposal }] =
+    useSendEnterpriseProposalMutation();
 
   const [formData, setFormData] = useState<EnterpriseSubscriptionInfoPayload>({
     name: "ENTERPRISE",
@@ -97,22 +101,50 @@ export default function EnterprisePlanDialog({
   const handleSave = async () => {
     if (!ticketId) return;
     try {
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        features: formData.features,
-        price: Number(formData.price),
-        screenSize: Number(formData.screenSize),
-        deviceLimit: Number(formData.deviceLimit),
-        storageLimitGb: Number(formData.storageLimitGb),
-        templateLimit: Number(formData.templateLimit),
-        photoLimit: Number(formData.photoLimit),
-        audioLimit: Number(formData.audioLimit),
-        videoLimit: Number(formData.videoLimit),
-      };
+      const apiData = planData?.data;
+      const payload: Partial<typeof formData> = {};
+
+      if (formData.name !== apiData?.name) payload.name = formData.name;
+      if (formData.description !== apiData?.description)
+        payload.description = formData.description;
+
+      if (
+        JSON.stringify(formData.features) !==
+        JSON.stringify(apiData?.features || [])
+      ) {
+        payload.features = formData.features;
+      }
+
+      if (Number(formData.price) !== Number(apiData?.price || 0))
+        payload.price = Number(formData.price);
+      if (Number(formData.screenSize) !== Number(apiData?.screenSize || 0))
+        payload.screenSize = Number(formData.screenSize);
+      if (Number(formData.deviceLimit) !== Number(apiData?.deviceLimit || 0))
+        payload.deviceLimit = Number(formData.deviceLimit);
+      if (
+        Number(formData.storageLimitGb) !== Number(apiData?.storageLimitGb || 0)
+      )
+        payload.storageLimitGb = Number(formData.storageLimitGb);
+      if (
+        Number(formData.templateLimit) !== Number(apiData?.templateLimit || 0)
+      )
+        payload.templateLimit = Number(formData.templateLimit);
+      if (Number(formData.photoLimit) !== Number(apiData?.photoLimit || 0))
+        payload.photoLimit = Number(formData.photoLimit);
+      if (Number(formData.audioLimit) !== Number(apiData?.audioLimit || 0))
+        payload.audioLimit = Number(formData.audioLimit);
+      if (Number(formData.videoLimit) !== Number(apiData?.videoLimit || 0))
+        payload.videoLimit = Number(formData.videoLimit);
+
+      if (Object.keys(payload).length === 0) {
+        toast.info("No changes to update");
+        onOpenChange(false);
+        return;
+      }
+
       const res = (await updatePlan({
         ticketId,
-        data: payload,
+        data: payload as any,
       }).unwrap()) as { success?: boolean; message?: string };
       if (res?.success) {
         toast.success(res?.message || "Enterprise plan updated successfully");
@@ -159,6 +191,26 @@ export default function EnterprisePlanDialog({
       const error = err as { data?: { message?: string } };
       toast.error(
         error?.data?.message || "An error occurred while deleting the plan",
+      );
+    }
+  };
+
+  const handleSendProposal = async () => {
+    if (!ticketId) return;
+    try {
+      const res = (await sendProposal(ticketId).unwrap()) as {
+        success?: boolean;
+        message?: string;
+      };
+      if (res?.success) {
+        toast.success(res?.message || "Enterprise proposal sent successfully");
+      } else {
+        toast.error(res?.message || "Failed to send enterprise proposal");
+      }
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      toast.error(
+        error?.data?.message || "An error occurred while sending the proposal",
       );
     }
   };
@@ -218,7 +270,7 @@ export default function EnterprisePlanDialog({
                     <SelectTrigger className={inputClass}>
                       <SelectValue placeholder="Select plan" />
                     </SelectTrigger>
-                    <SelectContent className="z-[99999]">
+                    <SelectContent className="z-99999">
                       <SelectItem value="FREE_TRIAL">Free Trial</SelectItem>
                       <SelectItem value="BASIC">Basic</SelectItem>
                       <SelectItem value="BUSINESS">Business</SelectItem>
@@ -254,7 +306,7 @@ export default function EnterprisePlanDialog({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label className="text-[14px] text-[#404040]">
                     Screen Size
@@ -313,7 +365,7 @@ export default function EnterprisePlanDialog({
                 <Label className="text-[14px] font-bold text-headings">
                   Upload Limits
                 </Label>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1.5">
                     <Label className="text-[12px] text-[#667085]">Photo</Label>
                     <input
@@ -368,7 +420,8 @@ export default function EnterprisePlanDialog({
                   <button
                     type="button"
                     onClick={handleAddFeature}
-                    className="p-2.5 bg-[#00A3FF] text-white rounded-lg hover:bg-[#00A3FF]/90 transition-all"
+                    disabled={!newFeature.trim()}
+                    className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-headings text-[14px] font-medium rounded-lg transition-colors shrink-0"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
@@ -404,12 +457,12 @@ export default function EnterprisePlanDialog({
 
         {/* Footer Buttons */}
         <div className="p-6 border-t border-[#F2F4F7] dark:border-gray-800 bg-[#FCFCFD] dark:bg-gray-900/20">
-          <div className="flex justify-between items-center gap-4">
+          <div className="flex flex-col-reverse sm:flex-row justify-between items-stretch sm:items-center gap-4">
             <button
               type="button"
               onClick={handleDelete}
               disabled={isDeleting || isUpdating || isRemovingTag}
-              className="px-6 py-2.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-bold text-[14px] transition-all flex items-center gap-2"
+              className="px-6 py-2.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 font-bold text-[14px] transition-all flex justify-center items-center gap-2 w-full sm:w-auto"
             >
               {isDeleting || isRemovingTag ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -418,22 +471,34 @@ export default function EnterprisePlanDialog({
               )}
               Delete Plan
             </button>
-            <div className="flex gap-4">
-              <button
-                onClick={() => onOpenChange(false)}
-                className="px-6 py-2.5 min-w-[100px] rounded-lg border border-[#D0D5DD] dark:border-gray-700 font-bold text-[14px] text-headings hover:bg-gray-50 transition-all cursor-pointer shadow-sm bg-white dark:bg-gray-900"
-                disabled={isUpdating || isDeleting || isRemovingTag}
-              >
-                Cancel
-              </button>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <button
                 onClick={handleSave}
-                disabled={isUpdating || isDeleting || isRemovingTag}
-                className="px-10 py-2.5 rounded-lg bg-[#00A3FF] text-white font-bold text-[14px] hover:bg-[#00A3FF]/90 transition-all cursor-pointer shadow-sm flex items-center gap-2"
+                disabled={
+                  isUpdating || isDeleting || isRemovingTag || isSendingProposal
+                }
+                className="px-10 py-2.5 rounded-lg bg-[#00A3FF] text-white font-bold text-[14px] hover:bg-[#00A3FF]/90 transition-all cursor-pointer shadow-sm flex justify-center items-center gap-2 w-full sm:w-auto"
               >
                 {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
                 Save Changes
               </button>
+              {isAdmin && (
+                <button
+                  onClick={handleSendProposal}
+                  className="px-6 py-2.5 min-w-[140px] rounded-lg border border-[#00A3FF] text-[#00A3FF] font-bold text-[14px] hover:bg-blue-50 transition-all cursor-pointer shadow-sm bg-white dark:bg-gray-900 flex justify-center items-center gap-2 w-full sm:w-auto"
+                  disabled={
+                    isUpdating ||
+                    isDeleting ||
+                    isRemovingTag ||
+                    isSendingProposal
+                  }
+                >
+                  {isSendingProposal && (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  )}
+                  Send Proposal
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -9,7 +9,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import TicketConversationDialog from "./TicketConversationDialog";
-import EnterprisePlanDialog from "./EnterprisePlanDialog";
+import EnterprisePlanDialog from "@/components/shared/Enterprise/EnterprisePlanDialog";
 import { toast } from "sonner";
 import {
   Table,

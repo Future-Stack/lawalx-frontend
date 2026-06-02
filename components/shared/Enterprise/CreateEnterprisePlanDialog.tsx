@@ -180,7 +180,7 @@ export default function CreateEnterprisePlanDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-[14px] text-[#404040]">Screen Size</Label>
               <input
@@ -221,7 +221,7 @@ export default function CreateEnterprisePlanDialog({
 
           <div className="space-y-3 pt-2">
             <Label className="text-[14px] font-bold text-headings">Upload Limits</Label>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-[12px] text-[#667085]">Photo</Label>
                 <input
@@ -265,7 +265,8 @@ export default function CreateEnterprisePlanDialog({
               <button
                 type="button"
                 onClick={handleAddFeature}
-                className="p-2.5 bg-[#00A3FF] text-white rounded-lg hover:bg-[#00A3FF]/90 transition-all"
+                disabled={!newFeature.trim()}
+                className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-headings text-[14px] font-medium rounded-lg transition-colors shrink-0"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -295,10 +296,10 @@ export default function CreateEnterprisePlanDialog({
 
         {/* Footer Buttons */}
         <div className="p-6 border-t border-[#F2F4F7] dark:border-gray-800 bg-[#FCFCFD] dark:bg-gray-900/20">
-          <div className="flex justify-between items-center gap-4">
+          <div className="flex flex-col-reverse sm:flex-row justify-end items-stretch sm:items-center gap-3 sm:gap-4">
             <button
               onClick={() => onOpenChange(false)}
-              className="px-6 py-2.5 min-w-[100px] rounded-lg border border-[#D0D5DD] dark:border-gray-700 font-bold text-[14px] text-headings hover:bg-gray-50 transition-all cursor-pointer shadow-sm bg-white dark:bg-gray-900"
+              className="px-6 py-2.5 min-w-[100px] rounded-lg border border-[#D0D5DD] dark:border-gray-700 font-bold text-[14px] text-headings hover:bg-gray-50 transition-all cursor-pointer shadow-sm bg-white dark:bg-gray-900 w-full sm:w-auto flex justify-center"
               disabled={isSubmitting}
             >
               Cancel
@@ -306,7 +307,7 @@ export default function CreateEnterprisePlanDialog({
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-10 py-2.5 rounded-lg bg-[#00A3FF] text-white font-bold text-[14px] hover:bg-[#00A3FF]/90 transition-all cursor-pointer shadow-sm flex items-center gap-2"
+              className="px-10 py-2.5 rounded-lg bg-[#00A3FF] text-white font-bold text-[14px] hover:bg-[#00A3FF]/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
               Create Plan
