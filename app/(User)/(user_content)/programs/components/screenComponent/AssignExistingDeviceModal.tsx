@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
@@ -36,11 +37,11 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
         }
     }, [isOpen]);
 
-    const devices = (devicesData as DeviceListResponse)?.data || [];
+    const devices = (devicesData as DeviceListResponse)?.data;
 
     // Filter out devices already assigned to this program
     const availableDevices = useMemo(() => {
-        return devices.filter(d => !existingDeviceIds.includes(d.id));
+        return (devices || []).filter(d => !existingDeviceIds.includes(d.id));
     }, [devices, existingDeviceIds]);
 
     const filteredDevices = availableDevices.filter((device: Device) =>

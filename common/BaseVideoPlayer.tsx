@@ -5,7 +5,6 @@ import { useRef, useEffect, useState, useMemo } from "react";
 import dynamic from "next/dynamic";
 import "plyr-react/plyr.css";
 import type { APITypes } from "plyr-react";
-import { Loader2 } from "lucide-react";
 
 const Plyr = dynamic(() => import("plyr-react"), { ssr: false });
 
@@ -184,6 +183,10 @@ const BaseVideoPlayer = ({
       const handleEnded   = () => {
         setIsPlaying(false);
         setIsBuffering(false);
+        if (pauseTimerRef.current) {
+          clearTimeout(pauseTimerRef.current);
+          pauseTimerRef.current = null;
+        }
         onEndedRef.current?.();
       };
       const handleCanPlay = () => {

@@ -23,11 +23,11 @@ export default function SchedulesPage() {
     { label: "Name Z-A", value: "Z-A" },
   ];
 
-  const allSchedules = schedulesData?.data || [];
+  const allSchedules = useMemo(() => schedulesData?.data || [], [schedulesData]);
   console.log("all schedules", allSchedules);
 
   const filteredSchedules = useMemo(() => {
-    let result = [...allSchedules].filter((s) =>
+    const result = [...allSchedules].filter((s) =>
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (s.description && s.description.toLowerCase().includes(searchQuery.toLowerCase()))
     );

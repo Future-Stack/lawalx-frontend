@@ -10,7 +10,7 @@ import {
   Play,
   Pause,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Program, WorkoutStatus } from "@/redux/api/users/programs/programs.type";
 import { useUpdateSingleProgramMutation } from "@/redux/api/users/programs/programs.api";
@@ -59,14 +59,14 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
     return `${baseUrl}/${url.startsWith("/") ? url.slice(1) : url}`;
   };
 
-  const advance = () => {
+  const advance = useCallback(() => {
     if (!program.timeline || program.timeline.length <= 1) return;
     setIsFading(true);
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % program.timeline!.length);
       setIsFading(false);
     }, 500);
-  };
+  }, [program.timeline]);
 
   useEffect(() => {
     const timeline = program.timeline;
@@ -78,7 +78,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
     const duration = currentItem?.file?.duration ? currentItem.file.duration * 1000 : 7000;
     const timer = setTimeout(advance, Math.max(0, duration - 500));
     return () => clearTimeout(timer);
-  }, [currentIndex, program.timeline, localActive]);
+  }, [currentIndex, program.timeline, localActive, advance]);
 
   // Handle autoPlay based on localActive
   useEffect(() => {

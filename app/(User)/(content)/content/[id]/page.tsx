@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { use, useMemo, useState, useEffect } from "react";
@@ -54,9 +55,6 @@ const ContentDetailsPage = ({ params }: ContentDetailsPageProps) => {
     // 3. If we didn't find it in "all content", check if it's the folder we just fetched
     // (In case it's a deeply nested folder not visible in "all content")
     if (!foundItem && folderContentData?.data) {
-      // Note: Usually the API would return the folder object itself.
-      // If folderContentData only returns the contents, we might need another API for the folder meta.
-      // But for now, let's assume it was found in the initial search.
     }
 
     return foundItem;
