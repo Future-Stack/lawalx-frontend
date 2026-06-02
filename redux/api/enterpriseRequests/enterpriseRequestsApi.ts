@@ -1,5 +1,5 @@
 import { baseApi } from "../baseApi";
-import { SubmitEnterpriseRequestPayload, SubmitEnterpriseRequestResponse, EnterpriseSubscriptionInfoPayload } from "./enterpriseRequests.type";
+import { SubmitEnterpriseRequestPayload, SubmitEnterpriseRequestResponse, EnterpriseSubscriptionInfoPayload, EnterprisePlanDetails } from "./enterpriseRequests.type";
 
 export const enterpriseRequestsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -48,6 +48,15 @@ export const enterpriseRequestsApi = baseApi.injectEndpoints({
         method: "POST",
       }),
     }),
+    getEnterprisePlanById: builder.query<
+      { statusCode: number; success: boolean; message: string; data: EnterprisePlanDetails },
+      string
+    >({
+      query: (planId) => ({
+        url: `/enterprise-requests/plans/${planId}`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -58,4 +67,5 @@ export const {
   useGetEnterpriseSubscriptionInfoQuery,
   useDeleteEnterpriseSubscriptionInfoMutation,
   useSendEnterpriseProposalMutation,
+  useGetEnterprisePlanByIdQuery,
 } = enterpriseRequestsApi;

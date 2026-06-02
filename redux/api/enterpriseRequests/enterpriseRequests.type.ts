@@ -12,6 +12,34 @@ export interface EnterpriseSubscriptionInfoPayload {
   features: string[];
 }
 
+export interface EnterprisePlanDetails {
+  id: string;
+  ticketId: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  screenSize: number;
+  deviceLimit: number;
+  storageLimitGb: number;
+  templateLimit: number;
+  photoLimit: number;
+  audioLimit: number;
+  videoLimit: number;
+  features: string[];
+  isActive: boolean;
+  submittedById: string;
+  updatedById: string;
+  createdAt: string;
+  updatedAt: string;
+  computedPrice: number;
+  screenSizePrice: number;
+  deviceQuantity: number;
+  mainPrice: number;
+  originalPrice: number;
+  originalCurrency: string;
+}
+
 export interface SubmitEnterpriseRequestPayload {
   name: string;
   email: string;

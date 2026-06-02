@@ -4,6 +4,18 @@ export interface CheckoutPayload {
   screenSize: number;
   country: string;
   gateway: "stripe" | "paystack";
+  deviceQuantity?: number;
+  couponCode?: string;
+}
+
+export interface EnterpriseCheckoutPayload {
+  planId: string;
+  billingCycle: "MONTHLY" | "ANNUAL";
+  screenSize: number;
+  country: string;
+  gateway: "stripe" | "paystack";
+  deviceQuantity?: number;
+  couponCode?: string;
 }
 
 export interface CheckoutBreakdown {
