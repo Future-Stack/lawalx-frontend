@@ -3,8 +3,25 @@
 import { useEffect, useState } from "react";
 import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Upload, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Subscriber } from "../SubscribersTab";
+import CreateSignerDialog from "./CreateSignerDialog";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { getCurrencySymbol } from "@/lib/currencyUtils";
@@ -43,9 +60,10 @@ const AdditionalPaymentDialog = ({
   const [billFrom, setBillFrom] = useState("Tape");
   const [address, setAddress] = useState("");
   const [subject, setSubject] = useState("");
-  const [billingDate, setBillingDate] = useState("");
+  const [billingDate, setBillingDate] = useState<Date | undefined>(undefined);
   const [authorizedById, setAuthorizedById] = useState("");
   const [approvedById, setApprovedById] = useState("");
+  const [signerDialogOpen, setSignerDialogOpen] = useState(false);
   const [items, setItems] = useState<DetailItem[]>([emptyItem()]);
 
   const currency = useSelector((state: RootState) => state.settings.currency);
@@ -65,13 +83,14 @@ const AdditionalPaymentDialog = ({
   useEffect(() => {
     if (!open) return;
     setBillTo(subscriberData?.userName ?? "");
-    setAddress(subscriberData?.userName ?? "");
   }, [open, subscriberData]);
 
   const addNewItem = () => setItems((prev) => [...prev, emptyItem()]);
 
   const removeItem = (id: string) => {
-    setItems((prev) => (prev.length > 1 ? prev.filter((i) => i.id !== id) : prev));
+    setItems((prev) =>
+      prev.length > 1 ? prev.filter((i) => i.id !== id) : prev,
+    );
   };
 
   const updateItem = (
@@ -80,16 +99,14 @@ const AdditionalPaymentDialog = ({
     value: string | number,
   ) => {
     setItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
     );
   };
 
   const resetForm = () => {
     setBillFrom("Tape");
     setSubject("");
-    setBillingDate("");
+    setBillingDate(undefined);
     setAuthorizedById("");
     setApprovedById("");
     setItems([emptyItem()]);
@@ -123,7 +140,9 @@ const AdditionalPaymentDialog = ({
         userId: subscriberData.userId,
         subject: subject.trim(),
         billFrom: billFrom.trim() || undefined,
-        billingDate: billingDate || undefined,
+        billingDate: billingDate
+          ? format(billingDate, "yyyy-MM-dd")
+          : undefined,
         authorizedById,
         approvedById,
         details: validItems.map((i, index) => ({
@@ -152,9 +171,10 @@ const AdditionalPaymentDialog = ({
       title=""
       description=""
       maxWidth="4xl"
-      className="p-0 bg-bgGray dark:bg-gray-950 overflow-hidden [&>div:first-child]:hidden"
+      maxHeight="xl"
+      className="p-0 bg-bgGray dark:bg-gray-950 [&>div:first-child]:hidden"
     >
-      <div className="p-8 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div className="p-4 sm:p-8 space-y-6">
         {/* Header Title */}
         <div className="mb-2">
           <h2 className="text-2xl font-bold text-headings">
@@ -226,14 +246,38 @@ const AdditionalPaymentDialog = ({
             >
               Billing Date
             </Label>
-            <input
-              id="billing-date"
-              type="date"
-              aria-label="Billing Date"
-              value={billingDate}
-              onChange={(e) => setBillingDate(e.target.value)}
-              className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all"
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  id="billing-date"
+                  variant={"outline"}
+                  className={cn(
+                    "w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 h-[46px] text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all justify-start text-left font-normal",
+                    "hover:bg-gray-300 dark:hover:bg-gray-900 hover:text-headings dark:hover:text-headings",
+                    !billingDate && "text-muted-foreground",
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {billingDate ? (
+                    format(billingDate, "PPP")
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto p-0 z-[1100] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg"
+                align="start"
+              >
+                <div className="bg-white dark:bg-gray-900 rounded-md [&_[data-selected-single=true]]:!bg-bgBlue [&_[data-selected-single=true]]:!text-white [&_[data-today=true]:not([data-selected-single=true])]:bg-gray-100 dark:[&_[data-today=true]:not([data-selected-single=true])]:bg-gray-800">
+                  <Calendar
+                    mode="single"
+                    selected={billingDate}
+                    onSelect={setBillingDate}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
 
@@ -265,48 +309,64 @@ const AdditionalPaymentDialog = ({
             >
               Authorized By <span className="text-red-500">*</span>
             </Label>
-            <select
-              id="authorized-by"
-              aria-label="Authorized By"
+            <Select
               value={authorizedById}
-              onChange={(e) => setAuthorizedById(e.target.value)}
+              onValueChange={setAuthorizedById}
               disabled={isAuthorizedLoading}
-              className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all disabled:opacity-60"
             >
-              <option value="">
-                {isAuthorizedLoading ? "Loading signers..." : "Select signer"}
-              </option>
-              {authorizedSigners.map((signer) => (
-                <option key={signer.id} value={signer.id}>
-                  {signer.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 h-[46px] text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all disabled:opacity-60">
+                <SelectValue
+                  placeholder={
+                    isAuthorizedLoading ? "Loading signers..." : "Select signer"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent className="z-[1100] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg">
+                {authorizedSigners.map((signer) => (
+                  <SelectItem key={signer.id} value={signer.id}>
+                    {signer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
-            <Label
-              htmlFor="approved-by"
-              className="text-[14px] font-semibold text-headings"
-            >
-              Approved By <span className="text-red-500">*</span>
-            </Label>
-            <select
-              id="approved-by"
-              aria-label="Approved By"
+            <div className="flex justify-between items-center">
+              <Label
+                htmlFor="approved-by"
+                className="text-[14px] font-semibold text-headings"
+              >
+                Approved By <span className="text-red-500">*</span>
+              </Label>
+              <button
+                type="button"
+                onClick={() => setSignerDialogOpen(true)}
+                className="text-[13px] text-bgBlue font-medium hover:underline flex items-center gap-1 transition-all"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Upload Signer
+              </button>
+            </div>
+            <Select
               value={approvedById}
-              onChange={(e) => setApprovedById(e.target.value)}
+              onValueChange={setApprovedById}
               disabled={isApprovedLoading}
-              className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all disabled:opacity-60"
             >
-              <option value="">
-                {isApprovedLoading ? "Loading signers..." : "Select signer"}
-              </option>
-              {approvedSigners.map((signer) => (
-                <option key={signer.id} value={signer.id}>
-                  {signer.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 h-[46px] text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all disabled:opacity-60">
+                <SelectValue
+                  placeholder={
+                    isApprovedLoading ? "Loading signers..." : "Select signer"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent className="z-[1100] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-lg">
+                {approvedSigners.map((signer) => (
+                  <SelectItem key={signer.id} value={signer.id}>
+                    {signer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -444,6 +504,10 @@ const AdditionalPaymentDialog = ({
           </button>
         </div>
       </div>
+      <CreateSignerDialog
+        open={signerDialogOpen}
+        setOpen={setSignerDialogOpen}
+      />
     </BaseDialog>
   );
 };

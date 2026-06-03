@@ -115,7 +115,9 @@ export default function MyAdditionalPaymentTable() {
                       )}
                       <button
                         type="button"
-                        onClick={() => handleDownload(row.invoiceUrl, row.invoiceNumber)}
+                        onClick={() =>
+                          handleDownload(row.invoiceUrl, row.invoiceNumber)
+                        }
                         aria-label="Download invoice"
                         className="text-gray-400 hover:text-gray-600 cursor-pointer"
                       >

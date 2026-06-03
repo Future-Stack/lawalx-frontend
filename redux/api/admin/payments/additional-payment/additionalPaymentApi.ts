@@ -5,6 +5,8 @@ import type {
   AdditionalPaymentSignersResponse,
   CreateAdditionalPaymentDto,
   GetAdditionalPaymentsParams,
+  ApiResponse,
+  AdditionalPaymentSigner,
 } from "./additionalPayment.type";
 
 export const additionalPaymentApi = baseApi.injectEndpoints({
@@ -52,6 +54,19 @@ export const additionalPaymentApi = baseApi.injectEndpoints({
         method: "GET",
         params,
       }),
+      providesTags: ["AdditionalPaymentSigner"],
+    }),
+
+    createAdditionalPaymentSigner: builder.mutation<
+      ApiResponse<AdditionalPaymentSigner>,
+      FormData
+    >({
+      query: (body) => ({
+        url: "/additional-payments/signers",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["AdditionalPaymentSigner"],
     }),
 
     createAdditionalPayment: builder.mutation<
@@ -73,4 +88,5 @@ export const {
   useGetAdditionalPaymentByIdQuery,
   useGetAdditionalPaymentSignersQuery,
   useCreateAdditionalPaymentMutation,
+  useCreateAdditionalPaymentSignerMutation,
 } = additionalPaymentApi;
