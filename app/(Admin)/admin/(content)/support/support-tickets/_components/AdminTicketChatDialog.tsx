@@ -73,7 +73,7 @@ function MessageBubble({ msg, isOwn, displayRole, displayName }: BubbleProps) {
         {/* Bubble */}
         <div className="bg-blue-600 rounded-2xl rounded-tr-sm px-3.5 py-2.5 shadow-sm">
           {msg.text && (
-            <p className="text-xs text-white leading-relaxed">{msg.text}</p>
+            <p className="text-xs text-white leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
           )}
           {msg.attachments && msg.attachments.length > 0 && (
             <div className="mt-2 space-y-1.5">
@@ -106,7 +106,7 @@ function MessageBubble({ msg, isOwn, displayRole, displayName }: BubbleProps) {
             {displayName}
           </p>
           {msg.text && (
-            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{msg.text}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
           )}
           {msg.attachments && msg.attachments.length > 0 && (
             <div className="mt-2 space-y-1.5">
@@ -180,9 +180,10 @@ export default function AdminTicketChatDialog({
       await resolveTicket(ticket.id).unwrap();
       toast.success('Ticket marked as resolved');
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[AdminChat] resolve error:', err);
-      toast.error(err?.data?.message || 'Failed to resolve ticket');
+      const error = err as { data?: { message?: string } };
+      toast.error(error?.data?.message || 'Failed to resolve ticket');
     }
   };
 
@@ -213,13 +214,13 @@ export default function AdminTicketChatDialog({
   }
 
   // Build initial messages from REST response
-  const initialMessages = (ticketDetails?.data?.messages ?? []).map((m: any) => ({
+  const initialMessages = (ticketDetails?.data?.messages ?? []).map((m) => ({
     id: m.id,
     ticketId: ticket?.id ?? '',
     text: m.text,
-    senderId: m.sender?.id,
-    senderName: m.sender?.full_name || m.sender?.username || senderLookup[m.sender?.id]?.name,
-    senderRole: m.sender?.role || senderLookup[m.sender?.id]?.role,
+    senderId: m.sender?.id || '',
+    senderName: m.sender?.full_name || m.sender?.username || senderLookup[m.sender?.id || '']?.name,
+    senderRole: m.sender?.role || senderLookup[m.sender?.id || '']?.role,
     createdAt: m.createdAt,
     attachments: m.attachments ?? [],
     sender: m.sender,
