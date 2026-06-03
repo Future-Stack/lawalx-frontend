@@ -671,7 +671,7 @@ export default function TicketConversationDialog({
                     <div className="min-w-0 max-w-[80%] sm:max-w-[75%]">
                       <div className="bg-[#F5F8FA] dark:bg-gray-800 rounded-2xl rounded-tr-sm px-3.5 py-2.5 shadow-sm">
                         {msg.text && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words">
                             {msg.text}
                           </p>
                         )}
@@ -717,7 +717,7 @@ export default function TicketConversationDialog({
                           {displayName}
                         </p>
                         {msg.text && (
-                          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                          <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words">
                             {msg.text}
                           </p>
                         )}

@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Building2, Calendar, Clock, HelpCircle, ArrowLeft, Paperclip, FileIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { Building2, Calendar, Clock, HelpCircle, ArrowLeft, Paperclip, FileIcon, Loader2, Receipt } from 'lucide-react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -20,7 +22,6 @@ import {
 import TicketChatSection from './TicketChatSection';
 import AdminTicketChatDialog from './AdminTicketChatDialog';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 
 interface TicketDetailsDialogProps {
   ticket: Ticket | null;
@@ -89,6 +90,12 @@ export default function TicketDetailsDialog({
       toast.error(error?.data?.message || 'Something went wrong');
     }
   };
+
+  const hasAdditionalPaymentTag = ticket?.ticketTags?.some(
+    (t) => t.key === 'NEEDS_ADDITIONAL_PAYMENT' || t.name === 'Needs_Additional_Payment'
+  );
+
+  const targetUserId = ticketDetails?.data?.userId || ticket?.raw?.userId || ticket?.raw?.user?.id;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -261,6 +268,15 @@ export default function TicketDetailsDialog({
             Back to Ticket list
           </Button>
           <div className="flex items-center gap-2 flex-wrap">
+            {hasAdditionalPaymentTag && targetUserId && (
+              <Link
+                href={`/admin/subscription?action=additional_payment&userId=${targetUserId}`}
+                className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+              >
+                <Receipt className="w-4 h-4" />
+                Create Invoice
+              </Link>
+            )}
             <Button
               variant="outline"
               className="h-9 flex-1 sm:flex-none bg-navbarBg border-border text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"

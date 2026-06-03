@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Loader2, X, FileSignature } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
@@ -16,25 +16,6 @@ export default function EditProfileForm() {
     useUpdateSupporterProfileMutation();
 
   const [fullName, setFullName] = useState("");
-  const [signatureFile, setSignatureFile] = useState<File | null>(null);
-  const [signaturePreview, setSignaturePreview] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSignatureFile(file);
-      setSignaturePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const removeSignature = () => {
-    setSignatureFile(null);
-    setSignaturePreview(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
 
   useEffect(() => {
     if (profileData?.success && profileData?.data) {
@@ -51,7 +32,8 @@ export default function EditProfileForm() {
       if (res.success) {
         toast.success(res.message || "Profile updated successfully");
       }
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
       toast.error(err?.data?.message || "Failed to update profile");
     }
   };
@@ -99,69 +81,7 @@ export default function EditProfileForm() {
           />
         </div>
 
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
-            Signature
-          </label>
 
-          <div
-            className={`border-2 border-dashed rounded-xl p-6 transition-all flex flex-col items-center justify-center gap-3 relative
-              ${
-                signaturePreview
-                  ? "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50"
-                  : "border-gray-300 dark:border-gray-700 hover:border-[#1EA1F2] dark:hover:border-[#1EA1F2] bg-white dark:bg-gray-950 cursor-pointer"
-              }`}
-            onClick={() => !signaturePreview && fileInputRef.current?.click()}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              className="hidden"
-              onChange={handleSignatureUpload}
-            />
-
-            {signaturePreview ? (
-              <div className="w-full flex flex-col items-center">
-                <div className="relative w-full max-w-[240px] h-[100px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={signaturePreview}
-                    alt="Signature preview"
-                    className="max-w-full max-h-full object-contain"
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeSignature();
-                    }}
-                    className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white p-1 rounded-md transition-colors"
-                    title="Remove signature"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 mt-3 font-medium">
-                  {signatureFile?.name}
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="w-12 h-12 rounded-full bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
-                  <FileSignature className="w-6 h-6 text-[#1EA1F2]" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Click to upload your signature
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    SVG, PNG, JPG or GIF (max. 2MB)
-                  </p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
 
         <div className="pt-4">
           <Button

@@ -69,6 +69,7 @@ export default function EnterprisePlanDialog({
     if (planData?.data) {
       setFormData({
         ...planData.data,
+        price: planData.data.originalPrice ?? planData.data.mainPrice ?? planData.data.price,
         features: planData.data.features || [],
       });
     }
@@ -115,7 +116,8 @@ export default function EnterprisePlanDialog({
         payload.features = formData.features;
       }
 
-      if (Number(formData.price) !== Number(apiData?.price || 0))
+      const basePrice = (apiData?.originalPrice ?? apiData?.mainPrice ?? apiData?.price) || 0;
+      if (Number(formData.price) !== Number(basePrice))
         payload.price = Number(formData.price);
       if (Number(formData.screenSize) !== Number(apiData?.screenSize || 0))
         payload.screenSize = Number(formData.screenSize);

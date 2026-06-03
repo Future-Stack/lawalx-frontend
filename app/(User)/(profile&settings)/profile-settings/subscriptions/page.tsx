@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { useGetMySubscriptionQuery } from "@/redux/api/users/payment/payment.api";
 import { useRouter } from "next/navigation";
+import BillingHistoryTable from "./_components/BillingHistoryTable";
+import MyAdditionalPaymentTable from "./_components/MyAdditionalPaymentTable";
 
 function formatCurrency(amount: number, currency: string) {
   try {
@@ -25,19 +27,6 @@ function formatCurrency(amount: number, currency: string) {
   }
 }
 
-function formatDateTime(dateString: string) {
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "N/A";
-  return date.toLocaleString("en-US", {
-    month: "numeric",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
 function formatDate(dateString: string) {
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return "N/A";
@@ -48,6 +37,9 @@ export default function Subscriptions() {
   const router = useRouter();
   const [autoRenew, setAutoRenew] = React.useState(false);
   const [selectedMethod, setSelectedMethod] = React.useState("visa");
+  const [billingTab, setBillingTab] = React.useState<"billing" | "additional">(
+    "billing",
+  );
   const { data: mySubscriptionRes, isLoading } = useGetMySubscriptionQuery();
 
   const subscription = mySubscriptionRes?.data?.subscription ?? null;
@@ -346,85 +338,45 @@ export default function Subscriptions() {
         </button>
       </section>
 
-      {/* Billing History */}
+      {/* Billing History & Additional Payment */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg md:text-xl font-bold text-headings">
-            Billing History
-          </h2>
-          <button className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-xs font-medium text-body hover:bg-gray-50 cursor-pointer shadow-customShadow">
-            <Download className="w-3.5 h-3.5" /> Download All
-          </button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div className="inline-flex rounded-lg border border-border p-1 bg-gray-50 dark:bg-gray-800 w-fit">
+            <button
+              type="button"
+              onClick={() => setBillingTab("billing")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer ${
+                billingTab === "billing"
+                  ? "bg-white dark:bg-gray-900 text-bgBlue shadow-sm"
+                  : "text-muted hover:text-headings"
+              }`}
+            >
+              Billing History
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingTab("additional")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer ${
+                billingTab === "additional"
+                  ? "bg-white dark:bg-gray-900 text-bgBlue shadow-sm"
+                  : "text-muted hover:text-headings"
+              }`}
+            >
+              Additional Payment
+            </button>
+          </div>
+          {billingTab === "billing" && (
+            <button className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-xs font-medium text-body hover:bg-gray-50 cursor-pointer shadow-customShadow">
+              <Download className="w-3.5 h-3.5" /> Download All
+            </button>
+          )}
         </div>
 
-        <div className="border border-border rounded-xl overflow-hidden text-sm">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 dark:bg-gray-800 text-muted font-medium border-b border-border">
-              <tr>
-                <th className="px-6 py-3 w-10">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300 cursor-pointer"
-                  />
-                </th>
-                <th className="px-6 py-3">Invoice</th>
-                <th className="px-6 py-3">Amount</th>
-                <th className="px-6 py-3">Date</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {payments.length > 0 ? (
-                payments.map((row) => {
-                  const status = row.status === "SUCCESS" ? "Paid" : row.status;
-                  return (
-                    <tr
-                      key={row.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-900"
-                    >
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          className="rounded border-gray-300 cursor-pointer"
-                        />
-                      </td>
-                      <td className="px-6 py-4 font-medium text-headings">
-                        {row.transactionId || row.id}
-                      </td>
-                      <td className="px-6 py-4 text-muted">
-                        {formatCurrency(row.amount, row.currency)}
-                      </td>
-                      <td className="px-6 py-4 text-muted">
-                        {formatDateTime(row.createdAt)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                            status === "Paid"
-                              ? "bg-green-50 text-green-700 border-green-200"
-                              : "bg-orange-50 text-orange-700 border-orange-200"
-                          }`}
-                        >
-                          {status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-400 hover:text-gray-600 cursor-pointer">
-                        <Download className="w-4 h-4" />
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-6 text-center text-muted">
-                    No billing history found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {billingTab === "billing" ? (
+          <BillingHistoryTable payments={payments} />
+        ) : (
+          <MyAdditionalPaymentTable />
+        )}
       </section>
     </div>
   );
