@@ -1,22 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import BaseDialog from "@/common/BaseDialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Trash2, Paperclip } from "lucide-react";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 import { Subscriber } from "../SubscribersTab";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { getCurrencySymbol } from "@/lib/currencyUtils";
+import {
+  useCreateAdditionalPaymentMutation,
+  useGetAdditionalPaymentSignersQuery,
+} from "@/redux/api/admin/payments/additional-payment/additionalPaymentApi";
+import { toast } from "sonner";
 
 interface DetailItem {
   id: string;
   description: string;
   qty: number;
   unitPrice: number;
-  cost: number;
-  vat: number;
-  totalPrice: number;
 }
 
 interface AdditionalPaymentDialogProps {
@@ -25,76 +27,122 @@ interface AdditionalPaymentDialogProps {
   subscriberData: Subscriber | null;
 }
 
+const emptyItem = (): DetailItem => ({
+  id: Math.random().toString(36).slice(2, 11),
+  description: "",
+  qty: 0,
+  unitPrice: 0,
+});
+
 const AdditionalPaymentDialog = ({
   open,
   setOpen,
   subscriberData,
 }: AdditionalPaymentDialogProps) => {
-  const [billTo, setBillTo] = useState(subscriberData?.userName);
+  const [billTo, setBillTo] = useState("");
   const [billFrom, setBillFrom] = useState("Tape");
-  const [address, setAddress] = useState("Antopolis Designs and Technologies");
+  const [address, setAddress] = useState("");
   const [subject, setSubject] = useState("");
+  const [billingDate, setBillingDate] = useState("");
+  const [authorizedById, setAuthorizedById] = useState("");
+  const [approvedById, setApprovedById] = useState("");
+  const [items, setItems] = useState<DetailItem[]>([emptyItem()]);
 
   const currency = useSelector((state: RootState) => state.settings.currency);
   const currencySymbol = getCurrencySymbol(currency);
 
-  const [items, setItems] = useState<DetailItem[]>([
-    {
-      id: "1",
-      description: "",
-      qty: 0,
-      unitPrice: 0,
-      cost: 0,
-      vat: 0,
-      totalPrice: 0,
-    },
-  ]);
+  const { data: authorizedSignersRes, isLoading: isAuthorizedLoading } =
+    useGetAdditionalPaymentSignersQuery({ type: "AUTHORIZED_BY" });
+  const authorizedSigners = authorizedSignersRes?.data ?? [];
 
-  const addNewItem = () => {
-    const newItem: DetailItem = {
-      id: Math.random().toString(36).substr(2, 9),
-      description: "",
-      qty: 0,
-      unitPrice: 0,
-      cost: 0,
-      vat: 0,
-      totalPrice: 0,
-    };
-    setItems([...items, newItem]);
-  };
+  const { data: approvedSignersRes, isLoading: isApprovedLoading } =
+    useGetAdditionalPaymentSignersQuery({ type: "APPROVED_BY" });
+  const approvedSigners = approvedSignersRes?.data ?? [];
+
+  const [createAdditionalPayment, { isLoading: isCreating }] =
+    useCreateAdditionalPaymentMutation();
+
+  useEffect(() => {
+    if (!open) return;
+    setBillTo(subscriberData?.userName ?? "");
+    setAddress(subscriberData?.userName ?? "");
+  }, [open, subscriberData]);
+
+  const addNewItem = () => setItems((prev) => [...prev, emptyItem()]);
 
   const removeItem = (id: string) => {
-    if (items.length > 1) {
-      setItems(items.filter((item) => item.id !== id));
-    }
+    setItems((prev) => (prev.length > 1 ? prev.filter((i) => i.id !== id) : prev));
   };
 
   const updateItem = (
     id: string,
-    field: keyof DetailItem,
+    field: keyof Omit<DetailItem, "id">,
     value: string | number,
   ) => {
-    setItems(
-      items.map((item) => {
-        if (item.id === id) {
-          const updatedItem = { ...item, [field]: value };
-
-          // Auto calculate cost and total
-          if (field === "qty" || field === "unitPrice" || field === "vat") {
-            const qty = field === "qty" ? Number(value) : item.qty;
-            const unitPrice =
-              field === "unitPrice" ? Number(value) : item.unitPrice;
-            const vat = field === "vat" ? Number(value) : item.vat;
-
-            updatedItem.cost = qty * unitPrice;
-            updatedItem.totalPrice = updatedItem.cost + vat;
-          }
-
-          return updatedItem;
-        }
-        return item;
-      }),
+    setItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
     );
+  };
+
+  const resetForm = () => {
+    setBillFrom("Tape");
+    setSubject("");
+    setBillingDate("");
+    setAuthorizedById("");
+    setApprovedById("");
+    setItems([emptyItem()]);
+  };
+
+  const handleSend = async () => {
+    if (!subscriberData?.userId) {
+      toast.error("No subscriber selected.");
+      return;
+    }
+    if (!subject.trim()) {
+      toast.error("Subject is required.");
+      return;
+    }
+    if (!authorizedById || !approvedById) {
+      toast.error("Please select the authorized and approved signers.");
+      return;
+    }
+    const validItems = items.filter(
+      (i) => i.description.trim() && i.qty > 0 && i.unitPrice > 0,
+    );
+    if (validItems.length === 0) {
+      toast.error(
+        "Add at least one item with description, quantity and unit price.",
+      );
+      return;
+    }
+
+    try {
+      await createAdditionalPayment({
+        userId: subscriberData.userId,
+        subject: subject.trim(),
+        billFrom: billFrom.trim() || undefined,
+        billingDate: billingDate || undefined,
+        authorizedById,
+        approvedById,
+        details: validItems.map((i, index) => ({
+          item: String(index + 1).padStart(2, "0"),
+          description: i.description.trim(),
+          quantity: i.qty,
+          unitPrice: i.unitPrice,
+        })),
+      }).unwrap();
+
+      toast.success("Additional payment invoice submitted successfully");
+      resetForm();
+      setOpen(false);
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
+      toast.error(
+        err?.data?.message || "Failed to create additional payment invoice.",
+      );
+    }
   };
 
   return (
@@ -153,22 +201,40 @@ const AdditionalPaymentDialog = ({
           </div>
         </div>
 
-        {/* Address */}
-        <div className="space-y-2">
-          <Label
-            htmlFor="address"
-            className="text-[14px] font-semibold text-headings"
-          >
-            Address
-          </Label>
-          <input
-            id="address"
-            type="text"
-            aria-label="Address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all"
-          />
+        {/* Address + Billing Date */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label
+              htmlFor="address"
+              className="text-[14px] font-semibold text-headings"
+            >
+              Address
+            </Label>
+            <input
+              id="address"
+              type="text"
+              aria-label="Address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label
+              htmlFor="billing-date"
+              className="text-[14px] font-semibold text-headings"
+            >
+              Billing Date
+            </Label>
+            <input
+              id="billing-date"
+              type="date"
+              aria-label="Billing Date"
+              value={billingDate}
+              onChange={(e) => setBillingDate(e.target.value)}
+              className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all"
+            />
+          </div>
         </div>
 
         {/* Subject */}
@@ -177,7 +243,7 @@ const AdditionalPaymentDialog = ({
             htmlFor="subject"
             className="text-[14px] font-semibold text-headings"
           >
-            Subject
+            Subject <span className="text-red-500">*</span>
           </Label>
           <input
             id="subject"
@@ -190,39 +256,57 @@ const AdditionalPaymentDialog = ({
           />
         </div>
 
-        {/* File Uploads */}
+        {/* Signers */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-[14px] font-semibold text-headings">
-              Authorized By
+            <Label
+              htmlFor="authorized-by"
+              className="text-[14px] font-semibold text-headings"
+            >
+              Authorized By <span className="text-red-500">*</span>
             </Label>
-            <div className="relative">
-              <label className="flex items-center gap-2 w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-muted shadow-sm cursor-pointer hover:bg-gray-50 transition-all">
-                <Paperclip className="w-5 h-5" />
-                <span>Choose File</span>
-                <input
-                  type="file"
-                  aria-label="Upload Authorized File"
-                  className="hidden"
-                />
-              </label>
-            </div>
+            <select
+              id="authorized-by"
+              aria-label="Authorized By"
+              value={authorizedById}
+              onChange={(e) => setAuthorizedById(e.target.value)}
+              disabled={isAuthorizedLoading}
+              className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all disabled:opacity-60"
+            >
+              <option value="">
+                {isAuthorizedLoading ? "Loading signers..." : "Select signer"}
+              </option>
+              {authorizedSigners.map((signer) => (
+                <option key={signer.id} value={signer.id}>
+                  {signer.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="space-y-2">
-            <Label className="text-[14px] font-semibold text-headings">
-              Approved By
+            <Label
+              htmlFor="approved-by"
+              className="text-[14px] font-semibold text-headings"
+            >
+              Approved By <span className="text-red-500">*</span>
             </Label>
-            <div className="relative">
-              <label className="flex items-center gap-2 w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-muted shadow-sm cursor-pointer hover:bg-gray-50 transition-all">
-                <Paperclip className="w-5 h-5" />
-                <span>Choose File</span>
-                <input
-                  type="file"
-                  aria-label="Upload Approved File"
-                  className="hidden"
-                />
-              </label>
-            </div>
+            <select
+              id="approved-by"
+              aria-label="Approved By"
+              value={approvedById}
+              onChange={(e) => setApprovedById(e.target.value)}
+              disabled={isApprovedLoading}
+              className="w-full bg-white dark:bg-gray-900 border border-transparent rounded-lg px-4 py-3 text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all disabled:opacity-60"
+            >
+              <option value="">
+                {isApprovedLoading ? "Loading signers..." : "Select signer"}
+              </option>
+              {approvedSigners.map((signer) => (
+                <option key={signer.id} value={signer.id}>
+                  {signer.name}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
@@ -249,12 +333,6 @@ const AdditionalPaymentDialog = ({
                   <th className="pb-3 text-[12px] font-semibold text-headings uppercase tracking-wider w-[130px] px-3">
                     Cost
                   </th>
-                  <th className="pb-3 text-[12px] font-semibold text-headings uppercase tracking-wider w-[130px] px-3">
-                    Vat
-                  </th>
-                  <th className="pb-3 text-[12px] font-semibold text-headings uppercase tracking-wider w-[130px] px-3">
-                    Total Price
-                  </th>
                   <th className="pb-3 text-[12px] font-semibold text-headings uppercase tracking-wider w-[50px]"></th>
                 </tr>
               </thead>
@@ -275,7 +353,7 @@ const AdditionalPaymentDialog = ({
                         onChange={(e) =>
                           updateItem(item.id, "description", e.target.value)
                         }
-                        className="w-full h-10 bg-transparent border-transparent px-2 text-[13px] text-muted focus:outline-none focus:border-transparent focus:ring-0"
+                        className="w-full h-10 bg-white dark:bg-gray-900 border border-border rounded-md px-2 text-[13px] text-headings focus:outline-none focus:ring-1 focus:ring-bgBlue"
                       />
                     </td>
                     <td className="py-4 px-3">
@@ -320,39 +398,7 @@ const AdditionalPaymentDialog = ({
                           type="number"
                           placeholder="0.00"
                           aria-label={`Cost for item ${index + 1}`}
-                          value={item.cost || ""}
-                          readOnly
-                          className="w-full h-10 bg-white dark:bg-gray-900 border border-border rounded-md pl-8 pr-3 text-[13px] text-headings focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                      </div>
-                    </td>
-                    <td className="py-4 px-3">
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-headings font-medium">
-                          {currencySymbol}
-                        </span>
-                        <input
-                          type="number"
-                          placeholder="0.00"
-                          aria-label={`Vat for item ${index + 1}`}
-                          value={item.vat || ""}
-                          onChange={(e) =>
-                            updateItem(item.id, "vat", Number(e.target.value))
-                          }
-                          className="w-full h-10 bg-white dark:bg-gray-900 border border-border rounded-md pl-8 pr-3 text-[13px] text-headings focus:outline-none focus:ring-1 focus:ring-bgBlue [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                      </div>
-                    </td>
-                    <td className="py-4 px-3">
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-headings font-medium">
-                          {currencySymbol}
-                        </span>
-                        <input
-                          type="number"
-                          placeholder="0.00"
-                          aria-label={`Total Price for item ${index + 1}`}
-                          value={item.totalPrice || ""}
+                          value={item.qty * item.unitPrice || ""}
                           readOnly
                           className="w-full h-10 bg-white dark:bg-gray-900 border border-border rounded-md pl-8 pr-3 text-[13px] text-headings focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
@@ -389,9 +435,11 @@ const AdditionalPaymentDialog = ({
         <div className="flex justify-end pt-1">
           <button
             type="button"
-            onClick={() => setOpen(false)}
-            className="px-12 py-2 bg-white border-2 border-[#00A3FF] text-headings text-[18px] font-bold rounded-xl hover:bg-blue-50/50 transition-all shadow-[0_8px_20px_rgba(0,163,255,0.15)] active:scale-95"
+            onClick={handleSend}
+            disabled={isCreating}
+            className="px-12 py-2 bg-white border-2 border-[#00A3FF] text-headings text-[18px] font-bold rounded-xl hover:bg-blue-50/50 transition-all shadow-[0_8px_20px_rgba(0,163,255,0.15)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
           >
+            {isCreating && <Loader2 className="w-5 h-5 animate-spin" />}
             Send
           </button>
         </div>

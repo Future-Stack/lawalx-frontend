@@ -1,54 +1,88 @@
 "use client";
 
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import AdditionalPaymentTable from "./_components/AdditionalPaymentTable";
 import BaseSelect from "@/common/BaseSelect";
-import { Button } from "@/components/ui/button";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
-import {
-  ADDITIONAL_PAYMENT_ROWS,
-  type PaymentHistoryRow,
-} from "../../_data/additionalPaymentMock";
-import { downloadInvoicePdf } from "./_utils/downloadInvoicePdf";
-import InvoiceViewModal from "./_components/InvoiceViewModal";
+import { useGetAdditionalPaymentsQuery } from "@/redux/api/admin/payments/additional-payment/additionalPaymentApi";
+import type { AdditionalPaymentListRow } from "@/redux/api/admin/payments/additional-payment/additionalPayment.type";
+import { getUrl } from "@/lib/content-utils";
 import { toast } from "sonner";
 
+const STATUS_PARAM: Record<string, string | undefined> = {
+  all: "ALL",
+  paid: "SUCCESS",
+  unpaid: "PENDING",
+};
+
+const PERIOD_PARAM: Record<string, string | undefined> = {
+  all: undefined,
+  "last-30-days": "last 30 days",
+};
+
 const AdditionalPaymentTab = () => {
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [timeFilter, setTimeFilter] = useState("this-month");
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [viewRow, setViewRow] = useState<PaymentHistoryRow | null>(null);
+  const [timeFilter, setTimeFilter] = useState("all");
 
-  const handleDownloadInvoice = async (item: PaymentHistoryRow) => {
+  const { data, isLoading, isError } = useGetAdditionalPaymentsQuery({
+    page,
+    limit,
+    search: search || undefined,
+    status: STATUS_PARAM[statusFilter],
+    period: PERIOD_PARAM[timeFilter],
+  });
+
+  const rows = data?.data?.data ?? [];
+  const meta = data?.data?.meta;
+  const total = meta?.total ?? rows.length;
+  const totalPages = meta?.totalPages ?? 1;
+
+  const handleDownloadInvoice = async (item: AdditionalPaymentListRow) => {
+    const url = getUrl(item.downloadUrl || item.invoiceUrl);
+    if (!url) {
+      toast.error("Invoice file is not available yet.");
+      return;
+    }
     try {
-      setDownloadingId(item.id);
-      await downloadInvoicePdf({
-        ...item,
-        subject: item.address,
-      });
-      toast.success("Invoice downloaded");
-    } catch (e) {
-      console.error(e);
-      toast.error("Could not generate PDF. Please try again.");
-    } finally {
-      setDownloadingId(null);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Network response was not ok");
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `Invoice-${item.invoiceNumber}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Failed to download PDF:", error);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Invoice-${item.invoiceNumber}.pdf`;
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
-  const invoiceModalData = viewRow
-    ? { ...viewRow, subject: viewRow.address }
-    : null;
+  const handleViewInvoice = (item: AdditionalPaymentListRow) => {
+    const url = getUrl(item.invoiceUrl);
+    if (!url) {
+      toast.error("Invoice file is not available yet.");
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <SubscriptionTabLayout
-      title="Payment History"
-      actionButton={
-        <Button className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg px-4 py-2 h-auto text-sm font-medium shadow-customShadow flex items-center gap-2">
-          Download All
-        </Button>
-      }
+      title={`Payment History (${total})`}
       filters={
         <div className="flex flex-col lg:flex-row gap-4 items-center">
           <div className="relative flex-1 w-full">
@@ -58,7 +92,10 @@ const AdditionalPaymentTab = () => {
               aria-label="Search payments"
               className="w-full bg-navbarBg border border-border rounded-lg pl-10 pr-4 py-2.5 placeholder:text-gray-400 focus-visible:ring-0 focus:outline-none text-gray-900 dark:text-white"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
             />
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
@@ -67,42 +104,83 @@ const AdditionalPaymentTab = () => {
                 placeholder="All Status"
                 options={[
                   { label: "All Status", value: "all" },
-                  { label: "Paid", value: "Paid" },
-                  { label: "Unpaid", value: "Unpaid" },
+                  { label: "Paid", value: "paid" },
+                  { label: "Unpaid", value: "unpaid" },
                 ]}
                 value={statusFilter}
-                onChange={setStatusFilter}
+                onChange={(value) => {
+                  setStatusFilter(value);
+                  setPage(1);
+                }}
                 showLabel={false}
               />
             </div>
             <div className="w-full sm:w-[160px]">
               <BaseSelect
-                placeholder="This Month"
+                placeholder="All Time"
                 options={[
-                  { label: "This Month", value: "this-month" },
-                  { label: "Last Month", value: "last-month" },
-                  { label: "Last 6 Months", value: "last-6-months" },
+                  { label: "All Time", value: "all" },
+                  { label: "Last 30 Days", value: "last-30-days" },
                 ]}
                 value={timeFilter}
-                onChange={setTimeFilter}
+                onChange={(value) => {
+                  setTimeFilter(value);
+                  setPage(1);
+                }}
                 showLabel={false}
               />
             </div>
           </div>
         </div>
       }
+      pagination={
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+          <div className="text-xs sm:text-sm text-muted text-center sm:text-left">
+            Showing {rows.length} of {total} invoices
+          </div>
+          <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
+            <button
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              disabled={page === 1 || isLoading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </button>
+            <span className="text-xs sm:text-sm text-muted px-1 whitespace-nowrap">
+              Page {page} of {totalPages}
+            </span>
+            <button
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              disabled={page >= totalPages || isLoading}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      }
     >
-      <AdditionalPaymentTable
-        ADDITIONAL_PAYMENT_ROWS={ADDITIONAL_PAYMENT_ROWS}
-        downloadingId={downloadingId}
-        handleDownloadInvoice={handleDownloadInvoice}
-        setViewRow={setViewRow}
-      />
-      <InvoiceViewModal
-        open={viewRow !== null}
-        onClose={() => setViewRow(null)}
-        data={invoiceModalData}
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-muted" />
+        </div>
+      ) : isError ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-red-500">
+            Error loading additional payments. Please try again.
+          </p>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted">No additional payments found.</p>
+        </div>
+      ) : (
+        <AdditionalPaymentTable
+          rows={rows}
+          onDownload={handleDownloadInvoice}
+          onView={handleViewInvoice}
+        />
+      )}
     </SubscriptionTabLayout>
   );
 };
