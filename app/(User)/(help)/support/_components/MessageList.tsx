@@ -74,7 +74,7 @@ const MessageList: React.FC<MessageListProps> = ({
                     }`}
                 >
                   {msg.text && (
-                    <p className="text-sm leading-relaxed break-words">{msg.text}</p>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
                   )}
                   {msg.attachments && msg.attachments.length > 0 && (
                     <div className="mt-2 space-y-1.5">

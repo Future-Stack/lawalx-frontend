@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Paperclip, Send, X, FileIcon, CheckCircle } from 'lucide-react';
+import { Paperclip, Send, X, FileIcon, CheckCircle, Receipt } from 'lucide-react';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTicketChat } from '@/hooks/useTicketChat';
@@ -66,7 +67,7 @@ function MessageBubble({ msg, isOwn, displayRole, displayName }: BubbleProps) {
       <div className="min-w-0 max-w-[78%]">
         <div className="bg-blue-600 rounded-2xl rounded-tr-sm px-3.5 py-2.5 shadow-sm">
           {msg.text && (
-            <p className="text-xs text-white leading-relaxed">{msg.text}</p>
+            <p className="text-xs text-white leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
           )}
           {msg.attachments && msg.attachments.length > 0 && (
             <div className="mt-2 space-y-1.5">
@@ -96,7 +97,7 @@ function MessageBubble({ msg, isOwn, displayRole, displayName }: BubbleProps) {
             {displayName}
           </p>
           {msg.text && (
-            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{msg.text}</p>
+            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap break-words">{msg.text}</p>
           )}
           {msg.attachments && msg.attachments.length > 0 && (
             <div className="mt-2 space-y-1.5">
@@ -164,8 +165,9 @@ export default function TicketChatSection({
       await resolveTicket(ticket.id).unwrap();
       toast.success('Ticket marked as resolved');
       if (onClose) onClose();
-    } catch (err: any) {
-      toast.error(err?.data?.message || 'Failed to resolve ticket');
+    } catch (err: unknown) {
+      const error = err as { data?: { message?: string } };
+      toast.error(error?.data?.message || 'Failed to resolve ticket');
     }
   };
 
@@ -185,13 +187,13 @@ export default function TicketChatSection({
     }
   }
 
-  const initialMessages = (ticketDetails?.data?.messages ?? []).map((m: any) => ({
+  const initialMessages = (ticketDetails?.data?.messages ?? []).map((m) => ({
     id: m.id,
     ticketId: ticket?.id ?? '',
     text: m.text,
-    senderId: m.sender?.id,
-    senderName: m.sender?.full_name || m.sender?.username || senderLookup[m.sender?.id]?.name,
-    senderRole: m.sender?.role || senderLookup[m.sender?.id]?.role,
+    senderId: m.sender?.id || '',
+    senderName: m.sender?.full_name || m.sender?.username || senderLookup[m.sender?.id || '']?.name,
+    senderRole: m.sender?.role || senderLookup[m.sender?.id || '']?.role,
     createdAt: m.createdAt,
     attachments: m.attachments ?? [],
     sender: m.sender,
@@ -266,6 +268,10 @@ export default function TicketChatSection({
 
   const canSend = text.trim().length > 0 || pendingAttachments.length > 0;
 
+  const hasAdditionalPaymentTag = 
+    ticket?.ticketTags?.some((t) => t.key === 'NEEDS_ADDITIONAL_PAYMENT' || t.name === 'Needs_Additional_Payment') ||
+    ticketDetails?.data?.ticketTags?.some((t) => t.tag?.key === 'NEEDS_ADDITIONAL_PAYMENT' || t.tag?.name === 'Needs_Additional_Payment');
+
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-900 rounded-2xl overflow-hidden border border-border">
       {/* Header Info */}
@@ -287,17 +293,29 @@ export default function TicketChatSection({
           </div>
         </div>
 
-        {showResolveButton && ticket?.status !== 'Resolved' && (
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors disabled:opacity-50"
-            onClick={handleResolve}
-            disabled={isResolving}
-          >
-            <CheckCircle className="w-3.5 h-3.5" />
-            {isResolving ? 'Resolving...' : 'Mark as Resolve'}
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {hasAdditionalPaymentTag && ticketDetails?.data?.userId && (
+            <Link
+              href={`/admin/subscription?action=additional_payment&userId=${ticketDetails.data.userId}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+            >
+              <Receipt className="w-3.5 h-3.5" />
+              Create Invoice
+            </Link>
+          )}
+
+          {showResolveButton && ticket?.status !== 'Resolved' && (
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors disabled:opacity-50"
+              onClick={handleResolve}
+              disabled={isResolving}
+            >
+              <CheckCircle className="w-3.5 h-3.5" />
+              {isResolving ? 'Resolving...' : 'Resolve'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Messages */}
