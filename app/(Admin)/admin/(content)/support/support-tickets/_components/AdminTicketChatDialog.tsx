@@ -1,7 +1,8 @@
 'use client';
 
 import { useRef, useEffect, useState } from 'react';
-import { Paperclip, Send, X, FileIcon, CheckCircle } from 'lucide-react';
+import { Paperclip, Send, X, FileIcon, CheckCircle, Receipt } from 'lucide-react';
+import Link from 'next/link';
 import {
   Dialog,
   DialogContent,
@@ -312,6 +313,10 @@ export default function AdminTicketChatDialog({
 
   const canSend = text.trim().length > 0 || pendingAttachments.length > 0;
 
+  const hasAdditionalPaymentTag = 
+    ticket?.ticketTags?.some((t) => t.key === 'NEEDS_ADDITIONAL_PAYMENT' || t.name === 'Needs_Additional_Payment') ||
+    ticketDetails?.data?.ticketTags?.some((t) => t.tag?.key === 'NEEDS_ADDITIONAL_PAYMENT' || t.tag?.name === 'Needs_Additional_Payment');
+
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="p-0 gap-0 sm:max-w-2xl focus:outline-none overflow-hidden rounded-2xl">
@@ -332,17 +337,29 @@ export default function AdminTicketChatDialog({
                 {isConnected ? 'Live' : 'Connecting...'}
               </span>
             </div>
-            {ticket?.status !== 'Resolved' && (
-              <button
-                type="button"
-                className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors disabled:opacity-50 whitespace-nowrap ml-1"
-                onClick={handleResolve}
-                disabled={isResolving}
-              >
-                <CheckCircle className="w-3.5 h-3.5" />
-                {isResolving ? 'Resolving...' : 'Mark as Resolve'}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {hasAdditionalPaymentTag && ticketDetails?.data?.userId && (
+                <Link
+                  href={`/admin/subscription?action=additional_payment&userId=${ticketDetails.data.userId}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors"
+                >
+                  <Receipt className="w-3.5 h-3.5" />
+                  Create Invoice
+                </Link>
+              )}
+
+              {ticket?.status !== 'Resolved' && (
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition-colors disabled:opacity-50 whitespace-nowrap ml-1"
+                  onClick={handleResolve}
+                  disabled={isResolving}
+                >
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  {isResolving ? 'Resolving...' : 'Mark as Resolve'}
+                </button>
+              )}
+            </div>
           </div>
         </DialogHeader>
 

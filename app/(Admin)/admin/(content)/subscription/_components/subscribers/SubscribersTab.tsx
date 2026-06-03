@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useGetSubscribersQuery } from "@/redux/api/admin/payments/subscriber/subscribersApi";
 import BaseSelect from "@/common/BaseSelect";
 
@@ -24,6 +25,8 @@ export interface Subscriber {
 }
 
 const SubscribersTab = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
@@ -42,10 +45,26 @@ const SubscribersTab = () => {
     search: searchTerm || undefined,
     plan: planFilter !== "all" ? planFilter.toUpperCase() : undefined,
   });
-  const subscribers = data?.data && data.data.length > 0 ? data.data : [];
+  const subscribers = useMemo(() => {
+    return data?.data && data.data.length > 0 ? data.data : [];
+  }, [data?.data]);
   const meta = data?.meta;
   const totalSubscribers = meta?.total || subscribers.length;
   const totalPages = meta?.totalPages || 1;
+
+  useEffect(() => {
+    const action = searchParams.get("action");
+    const urlUserId = searchParams.get("userId");
+
+    if (action === "additional_payment" && urlUserId && subscribers.length > 0) {
+      const matchedSubscriber = subscribers.find((s: Subscriber) => s.userId === urlUserId);
+      if (matchedSubscriber) {
+        setSelectedSubscriber(matchedSubscriber);
+        setAdditionalPaymentOpen(true);
+        router.replace("/admin/subscription", { scroll: false });
+      }
+    }
+  }, [searchParams, subscribers, router]);
 
   const handlePreviousPage = () => {
     if (page > 1) {
