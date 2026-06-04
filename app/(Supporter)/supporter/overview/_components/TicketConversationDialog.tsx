@@ -459,16 +459,18 @@ export default function TicketConversationDialog({
                       <span className="text-xs font-medium text-[#475569] dark:text-gray-300 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
                         {tag.name}
                       </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleTag(tag.id, true);
-                        }}
-                        className="ml-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors"
-                        aria-label={`Remove ${tag.name} tag`}
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
+                      {tag.name !== "Needs_Enterprise_Plan" && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleTag(tag.id, true);
+                          }}
+                          className="ml-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 focus:outline-none transition-colors cursor-pointer"
+                          aria-label={`Remove ${tag.name} tag`}
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -525,10 +527,11 @@ export default function TicketConversationDialog({
                           <div className="flex items-center gap-2.5 w-full">
                             <Checkbox
                               checked={isSelected}
+                              disabled={isSelected && tag.name === "Needs_Enterprise_Plan"}
                               onCheckedChange={() =>
                                 handleToggleTag(tag.id, isSelected)
                               }
-                              className="w-[14px] h-[14px] rounded-sm border-gray-300 data-[state=checked]:bg-[#0FA6FF] data-[state=checked]:border-[#0FA6FF] flex-shrink-0"
+                              className="w-[14px] h-[14px] rounded-[3px] border-gray-300 data-[state=checked]:bg-[#0FA6FF] data-[state=checked]:border-[#0FA6FF] dark:data-[state=checked]:bg-[#0FA6FF] dark:data-[state=checked]:border-[#0FA6FF] flex-shrink-0 [&_svg]:hidden"
                             />
                             {editingTag?.id === tag.id ? (
                               <input
