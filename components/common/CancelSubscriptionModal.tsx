@@ -16,6 +16,8 @@ interface CancelSubscriptionModalProps {
   onClose: () => void;
   onConfirm: () => void;
   isLoading?: boolean;
+  title?: string;
+  description?: string;
 }
 
 export default function CancelSubscriptionModal({
@@ -23,6 +25,8 @@ export default function CancelSubscriptionModal({
   onClose,
   onConfirm,
   isLoading,
+  title,
+  description,
 }: CancelSubscriptionModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -34,10 +38,10 @@ export default function CancelSubscriptionModal({
 
           <DialogHeader className="p-0 space-y-2">
             <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white text-center">
-              Cancel Subscription?
+              {title || "Cancel Subscription?"}
             </DialogTitle>
             <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 text-center px-4">
-              Are you sure you want to cancel your subscription? Your access will remain active until the end of the current billing cycle.
+              {description || "Are you sure you want to cancel your subscription? Your access will remain active until the end of the current billing cycle."}
             </DialogDescription>
           </DialogHeader>
 

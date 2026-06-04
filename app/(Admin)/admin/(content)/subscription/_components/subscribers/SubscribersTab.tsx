@@ -12,6 +12,9 @@ import { RootState } from "@/redux/store/store";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
 import AdditionalPaymentDialog from "./_components/AdditionalPaymentDialog";
 import SubscribersTable from "./_components/SubscribersTable";
+import CancelSubscriptionModal from "@/components/common/CancelSubscriptionModal";
+import { useCancelSubscriptionMutation } from "@/redux/api/users/payment/payment.api";
+import { toast } from "sonner";
 
 export interface Subscriber {
   userId: string;
@@ -36,6 +39,8 @@ const SubscribersTab = () => {
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [selectedSubscriber, setSelectedSubscriber] =
     useState<Subscriber | null>(null);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
 
   const currency = useSelector((state: RootState) => state.settings.currency);
 
@@ -94,6 +99,23 @@ const SubscribersTab = () => {
   const handleAdditionalPayment = (subscriber: Subscriber) => {
     setSelectedSubscriber(subscriber);
     setAdditionalPaymentOpen(true);
+  };
+
+  const handleCancelPlanClick = (userId: string) => {
+    setSelectedUserId(userId);
+    setCancelModalOpen(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!selectedUserId) return;
+    try {
+      await cancelSubscription({ userId: selectedUserId }).unwrap();
+      toast.success("Subscription cancellation scheduled successfully");
+      setCancelModalOpen(false);
+    } catch (error) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to cancel subscription");
+    }
   };
 
   return (
@@ -183,6 +205,7 @@ const SubscribersTab = () => {
           formatDate={formatDate}
           handleViewInvoices={handleViewInvoices}
           handleAdditionalPayment={handleAdditionalPayment}
+          handleCancelPlan={handleCancelPlanClick}
         />
       )}
 
@@ -198,6 +221,15 @@ const SubscribersTab = () => {
         open={additionalPaymentOpen}
         setOpen={setAdditionalPaymentOpen}
         subscriberData={selectedSubscriber}
+      />
+
+      <CancelSubscriptionModal
+        isOpen={cancelModalOpen}
+        onClose={() => setCancelModalOpen(false)}
+        onConfirm={handleConfirmCancel}
+        isLoading={isCanceling}
+        title="Cancel User's Subscription?"
+        description="Are you sure you want to cancel this user's subscription? Their access will remain active until the end of their current billing cycle."
       />
     </SubscriptionTabLayout>
   );
