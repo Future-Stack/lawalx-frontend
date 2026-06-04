@@ -90,6 +90,61 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
         });
     }, [transformedContent, data.contentType, searchQuery]);
 
+    const selectableItems = useMemo(() => {
+        if (isLoading || !isMounted || filteredContent.length === 0) return [];
+
+        const itemMatchesFilter = (item: any) => {
+            if (item.type === "folder") return false;
+            const matchesType =
+                data.contentType === "all"
+                    ? true
+                    : data.contentType === "image-video"
+                        ? item.type === "image" || item.type === "video"
+                        : item.type === "audio";
+
+            const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+            return matchesType && matchesSearch;
+        };
+
+        const getFilteredSelectableItems = (items: any[]): any[] => {
+            const result: any[] = [];
+            items.forEach((item) => {
+                if (item.type !== "folder") {
+                    result.push(item);
+                } else if (item.children) {
+                    item.children.forEach((child: any) => {
+                        if (itemMatchesFilter(child)) {
+                            result.push(child);
+                        }
+                    });
+                }
+            });
+            return result;
+        };
+
+        return getFilteredSelectableItems(filteredContent);
+    }, [filteredContent, searchQuery, data.contentType, isLoading, isMounted]);
+
+    const allFilteredSelected = useMemo(() => {
+        if (selectableItems.length === 0) return false;
+        return selectableItems.every((item) => data.selectedContent.some((c) => c.id === item.id));
+    }, [selectableItems, data.selectedContent]);
+
+    const handleSelectAll = () => {
+        const selectableIds = selectableItems.map((item) => item.id);
+        if (selectableIds.length === 0) return;
+
+        if (allFilteredSelected) {
+            const newSelection = data.selectedContent.filter((c) => !selectableIds.includes(c.id));
+            onChange({ ...data, selectedContent: newSelection });
+        } else {
+            const currentIds = data.selectedContent.map((c) => c.id);
+            const itemsToAdd = selectableItems.filter((item) => !currentIds.includes(item.id));
+            const newSelection = [...data.selectedContent, ...itemsToAdd];
+            onChange({ ...data, selectedContent: newSelection });
+        }
+    };
+
     const renderContentItem = (item: any, depth = 0) => {
         const isSelected = data.selectedContent.some(c => c.id === item.id);
         const isExpanded = expandedFolders.has(item.id);
@@ -239,6 +294,28 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                     className="pl-10 bg-input border-borderGray text-headings h-11"
                 />
             </div>
+
+            {/* Select All Checkbox */}
+            {filteredContent.length > 0 && !isLoading && (
+                <div className="flex items-center justify-between px-1 py-1">
+                    <button
+                        type="button"
+                        onClick={handleSelectAll}
+                        className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-bgBlue dark:hover:text-bgBlue transition-colors cursor-pointer select-none"
+                    >
+                        <div
+                            className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                                allFilteredSelected
+                                    ? "bg-bgBlue border-bgBlue text-white"
+                                    : "border-gray-300 dark:border-gray-600 hover:border-bgBlue"
+                            }`}
+                        >
+                            {allFilteredSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
+                        </div>
+                        <span>Select All ({selectableItems.length})</span>
+                    </button>
+                </div>
+            )}
 
             {/* Content Grid */}
             <div className="max-h-[350px] overflow-y-auto space-y-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pr-1">
