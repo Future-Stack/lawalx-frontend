@@ -9,7 +9,9 @@ import {
   Plus,
   Loader2,
 } from "lucide-react";
-import { useGetMySubscriptionQuery } from "@/redux/api/users/payment/payment.api";
+import { useGetMySubscriptionQuery, useCancelSubscriptionMutation } from "@/redux/api/users/payment/payment.api";
+import CancelSubscriptionModal from "@/components/common/CancelSubscriptionModal";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import BillingHistoryTable from "./_components/BillingHistoryTable";
 import MyAdditionalPaymentTable from "./_components/MyAdditionalPaymentTable";
@@ -41,8 +43,22 @@ export default function Subscriptions() {
     "billing",
   );
   const { data: mySubscriptionRes, isLoading } = useGetMySubscriptionQuery();
+  const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
+  const [isCancelModalOpen, setIsCancelModalOpen] = React.useState(false);
 
-  const subscription = mySubscriptionRes?.data?.subscription ?? null;
+  const handleCancelPlan = async () => {
+    if (!mySubscriptionRes?.data?.userId) return;
+    try {
+      await cancelSubscription({ userId: mySubscriptionRes.data.userId }).unwrap();
+      toast.success("Subscription cancellation scheduled successfully");
+      setIsCancelModalOpen(false);
+    } catch (error) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to cancel subscription");
+    }
+  };
+
+  const subscription = mySubscriptionRes?.data ?? null;
   const payments = subscription?.payments ?? [];
   const latestPayment = payments[0];
   const planName = subscription?.plan?.name
@@ -223,7 +239,11 @@ export default function Subscriptions() {
                 {/* <button className="px-4 py-2 bg-white border border-border text-body text-sm font-medium rounded-lg hover:bg-gray-50 cursor-pointer shadow-customShadow">
                             Stop Plan
                         </button> */}
-                <button className="px-4 py-2 bg-[#F43F5E] text-white text-sm font-medium rounded-lg hover:bg-red-600 cursor-pointer shadow-customShadow">
+                <button 
+                  type="button"
+                  onClick={() => setIsCancelModalOpen(true)}
+                  className="px-4 py-2 bg-[#F43F5E] text-white text-sm font-medium rounded-lg hover:bg-red-600 cursor-pointer shadow-customShadow"
+                >
                   Cancel Plan
                 </button>
               </div>
@@ -348,7 +368,7 @@ export default function Subscriptions() {
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer ${
                 billingTab === "billing"
                   ? "bg-white dark:bg-gray-900 text-bgBlue shadow-sm"
-                  : "text-muted hover:text-headings"
+                  : "text-muted hover:text-gray-900 dark:hover:text-gray-100"
               }`}
             >
               Billing History
@@ -359,7 +379,7 @@ export default function Subscriptions() {
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer ${
                 billingTab === "additional"
                   ? "bg-white dark:bg-gray-900 text-bgBlue shadow-sm"
-                  : "text-muted hover:text-headings"
+                  : "text-muted hover:text-gray-900 dark:hover:text-gray-100"
               }`}
             >
               Additional Payment
@@ -378,6 +398,13 @@ export default function Subscriptions() {
           <MyAdditionalPaymentTable />
         )}
       </section>
+
+      <CancelSubscriptionModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleCancelPlan}
+        isLoading={isCanceling}
+      />
     </div>
   );
 }

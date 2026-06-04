@@ -30,9 +30,20 @@ export const userPaymentApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+    cancelSubscription: builder.mutation<MySubscriptionApiResponse, { userId: string }>({
+      query: ({ userId }) => ({
+        url: `/subscribers/cancel?userId=${userId}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Subscription"],
+    }),
   }),
 });
 
-export const { useGetMySubscriptionQuery, useCreateCheckoutMutation, useCreateEnterpriseCheckoutMutation } =
-  userPaymentApi;
+export const {
+  useGetMySubscriptionQuery,
+  useCreateCheckoutMutation,
+  useCreateEnterpriseCheckoutMutation,
+  useCancelSubscriptionMutation,
+} = userPaymentApi;
 export const useCreatePaymentMutation = useCreateCheckoutMutation;

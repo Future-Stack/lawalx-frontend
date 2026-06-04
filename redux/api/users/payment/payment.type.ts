@@ -84,20 +84,17 @@ export interface UserSubscription {
   audioLimit: number;
   videoLimit: number;
   features: string[];
+  screenSize: number;
+  deviceQuantity: number;
+  isAdvanceEnabled: boolean;
   createdAt: string;
   plan: SubscriptionPlanSummary;
   payments: SubscriptionPayment[];
-}
-
-export interface MySubscriptionData {
-  success: boolean;
-  message: string;
-  subscription: UserSubscription | null;
 }
 
 export interface MySubscriptionApiResponse {
   statusCode: number;
   success: boolean;
   message: string;
-  data: MySubscriptionData;
+  data: UserSubscription | null;
 }
