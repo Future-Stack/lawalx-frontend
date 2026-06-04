@@ -37,6 +37,14 @@ export const userPaymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Subscription"],
     }),
+    updateRecurring: builder.mutation<MySubscriptionApiResponse, { recurring: boolean }>({
+      query: (data) => ({
+        url: "/payment/my-subscription/recurring",
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Subscription"],
+    }),
   }),
 });
 
@@ -45,5 +53,6 @@ export const {
   useCreateCheckoutMutation,
   useCreateEnterpriseCheckoutMutation,
   useCancelSubscriptionMutation,
+  useUpdateRecurringMutation,
 } = userPaymentApi;
 export const useCreatePaymentMutation = useCreateCheckoutMutation;

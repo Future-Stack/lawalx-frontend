@@ -9,8 +9,9 @@ import {
   Plus,
   Loader2,
 } from "lucide-react";
-import { useGetMySubscriptionQuery, useCancelSubscriptionMutation } from "@/redux/api/users/payment/payment.api";
+import { useGetMySubscriptionQuery, useCancelSubscriptionMutation, useUpdateRecurringMutation } from "@/redux/api/users/payment/payment.api";
 import CancelSubscriptionModal from "@/components/common/CancelSubscriptionModal";
+import AutoRenewConfirmModal from "@/components/common/AutoRenewConfirmModal";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import BillingHistoryTable from "./_components/BillingHistoryTable";
@@ -37,14 +38,15 @@ function formatDate(dateString: string) {
 
 export default function Subscriptions() {
   const router = useRouter();
-  const [autoRenew, setAutoRenew] = React.useState(false);
   const [selectedMethod, setSelectedMethod] = React.useState("visa");
   const [billingTab, setBillingTab] = React.useState<"billing" | "additional">(
     "billing",
   );
   const { data: mySubscriptionRes, isLoading } = useGetMySubscriptionQuery();
   const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
+  const [updateRecurring, { isLoading: isUpdatingRecurring }] = useUpdateRecurringMutation();
   const [isCancelModalOpen, setIsCancelModalOpen] = React.useState(false);
+  const [isAutoRenewModalOpen, setIsAutoRenewModalOpen] = React.useState(false);
 
   const handleCancelPlan = async () => {
     if (!mySubscriptionRes?.data?.userId) return;
@@ -59,6 +61,18 @@ export default function Subscriptions() {
   };
 
   const subscription = mySubscriptionRes?.data ?? null;
+  const isAutoRenewEnabled = subscription?.recurring ?? false;
+
+  const handleToggleAutoRenew = async () => {
+    try {
+      await updateRecurring({ recurring: !isAutoRenewEnabled }).unwrap();
+      toast.success(`Subscription recurring ${!isAutoRenewEnabled ? 'enabled' : 'disabled'} successfully`);
+      setIsAutoRenewModalOpen(false);
+    } catch (error) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to update auto-renew setting");
+    }
+  };
   const payments = subscription?.payments ?? [];
   const latestPayment = payments[0];
   const planName = subscription?.plan?.name
@@ -79,7 +93,6 @@ export default function Subscriptions() {
 
   React.useEffect(() => {
     if (!subscription) return;
-    setAutoRenew(Boolean(subscription.recurring));
     if (
       subscription.gateway === "stripe" ||
       subscription.gateway === "paystack"
@@ -338,25 +351,28 @@ export default function Subscriptions() {
         </div>
       </section>
 
-      {/* Auto Renew */}
-      <section className="flex items-center justify-between pb-6 border-b border-border">
-        <div>
-          <h2 className="text-lg md:text-xl font-bold text-headings">
-            Auto Renew
-          </h2>
-          <p className="text-sm text-muted">
-            Your subscription will be renewed automatically
-          </p>
-        </div>
-        <button
-          onClick={() => setAutoRenew(!autoRenew)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${autoRenew ? "bg-bgBlue" : "bg-gray-200"}`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoRenew ? "translate-x-6" : "translate-x-1"}`}
-          />
-        </button>
-      </section>
+      {subscription && (
+        <section className="flex items-center justify-between pb-6 border-b border-border">
+          <div>
+            <h2 className="text-lg md:text-xl font-bold text-headings">
+              Auto Renew
+            </h2>
+            <p className="text-sm text-muted">
+              {isAutoRenewEnabled
+                ? "Your subscription will be renewed automatically"
+                : "Your subscription will not renew automatically"}
+            </p>
+          </div>
+          <button
+            onClick={() => setIsAutoRenewModalOpen(true)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${isAutoRenewEnabled ? "bg-bgBlue" : "bg-gray-200 dark:bg-gray-700"}`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAutoRenewEnabled ? "translate-x-6" : "translate-x-1"}`}
+            />
+          </button>
+        </section>
+      )}
 
       {/* Billing History & Additional Payment */}
       <section>
@@ -404,6 +420,13 @@ export default function Subscriptions() {
         onClose={() => setIsCancelModalOpen(false)}
         onConfirm={handleCancelPlan}
         isLoading={isCanceling}
+      />
+      <AutoRenewConfirmModal
+        isOpen={isAutoRenewModalOpen}
+        onClose={() => setIsAutoRenewModalOpen(false)}
+        onConfirm={handleToggleAutoRenew}
+        isLoading={isUpdatingRecurring}
+        isEnabling={!isAutoRenewEnabled}
       />
     </div>
   );
