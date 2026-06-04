@@ -42,7 +42,7 @@ export default function Subscriptions() {
   );
   const { data: mySubscriptionRes, isLoading } = useGetMySubscriptionQuery();
 
-  const subscription = mySubscriptionRes?.data?.subscription ?? null;
+  const subscription = mySubscriptionRes?.data ?? null;
   const payments = subscription?.payments ?? [];
   const latestPayment = payments[0];
   const planName = subscription?.plan?.name
