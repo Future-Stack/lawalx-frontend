@@ -368,7 +368,7 @@ export default function Subscriptions() {
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer ${
                 billingTab === "billing"
                   ? "bg-white dark:bg-gray-900 text-bgBlue shadow-sm"
-                  : "text-muted hover:text-headings"
+                  : "text-muted hover:text-gray-900 dark:hover:text-gray-100"
               }`}
             >
               Billing History
@@ -379,7 +379,7 @@ export default function Subscriptions() {
               className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer ${
                 billingTab === "additional"
                   ? "bg-white dark:bg-gray-900 text-bgBlue shadow-sm"
-                  : "text-muted hover:text-headings"
+                  : "text-muted hover:text-gray-900 dark:hover:text-gray-100"
               }`}
             >
               Additional Payment
