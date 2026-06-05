@@ -2,26 +2,29 @@
 
 import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { Download, Filter, Moon, Sun, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircle, Clock, RefreshCw, DollarSign, ChevronDown, Home, ChevronRight, FileSpreadsheet } from 'lucide-react';
+import { Download, Filter, Moon, Sun, TrendingUp, TrendingDown, AlertTriangle, CheckCircle, XCircle, Clock, RefreshCw, DollarSign, ChevronDown, Home, ChevronRight, FileSpreadsheet, CreditCard, Info } from 'lucide-react';
 import Dropdown from '@/components/shared/Dropdown';
 
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
-  useGetBillingOverviewQuery,
-  useGetTransactionReportQuery,
-  useGetRecentTransactionsQuery,
-  useGetPaymentMethodsQuery,
-  useGetTransactionVolumeQuery,
-  useGetAgingReportQuery,
-  useGetFailedPaymentsAnalysisQuery,
-  useGetDelinquencyReportQuery,
-  useGetRefundReportQuery,
-  useGetTaxReportQuery,
-  useGetDsoAnalysisQuery,
-  useLazyGetBillingExportAllQuery,
-} from '@/redux/api/admin/Billing & Payment Report/billingPaymentApi';
+  useGetSubscriptionBillingStatsQuery,
+  useGetSubscriptionBillingTrendQuery,
+  useGetSubscriptionBillingRecentTransactionsQuery,
+  useGetSubscriptionBillingTransactionSummaryQuery,
+  useGetFailedPaymentTrendsQuery,
+  useGetFailedPaymentReasonsQuery,
+  useGetTaxReportStatsQuery,
+  useGetTaxBreakdownQuery,
+  useGetTaxRegionAnalyticsQuery,
+  useGetRefundsStatsQuery,
+  useGetRefundsDetailsQuery,
+  useGetRefundsReasonsQuery,
+  useGetRefundsChargebackHealthQuery,
+  useGetRefundsImpactAnalysisQuery,
+} from '@/redux/api/admin/subscriptionBillingReport';
+
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { getCurrencySymbol, formatAmount as formatCurrency } from "@/lib/currencyUtils";
@@ -60,8 +63,8 @@ const generateBillingData = (range: number) => {
   }
 
   const kpiData = {
-    successRate: { value: Math.round(28100 * multiplier), change: -8.2 },
-    failedPayments: { value: Math.round(337200 * multiplier), change: -8.2 },
+    successRate: { value: Math.round(28100 * multiplier), change: -8.2, trend: 'increase' },
+    failedPayments: { value: Math.round(337200 * multiplier), count: Math.round(15 * multiplier), change: -8.2, trend: 'reduction' },
     overdueInvoices: { count: Math.round(7 * multiplier), amount: Math.round(870 * multiplier) },
     recoveryRate: { value: 77.8, recovered: `${Math.round(7 * multiplier)} of ${Math.round(9 * multiplier)}` },
     avgDSO: { value: 28, target: 30 }
@@ -177,50 +180,53 @@ const BillingDashboard = () => {
   const currency = useSelector((state: RootState) => state.settings.currency);
   const currencySymbol = getCurrencySymbol(currency);
 
-  const [timeRange, setTimeRange] = useState(30);
+  const [timeRange, setTimeRange] = useState<string>('last 30 days');
 
-  const timeRangeValue = useMemo(() => {
-    if (timeRange === 1) return '1d';
-    if (timeRange === 7) return '7d';
-    if (timeRange === 30) return '30d';
-    if (timeRange === 365) return '1y';
-    return '30d';
-  }, [timeRange]);
 
-  const { data: overviewData } = useGetBillingOverviewQuery({ timeRange: timeRangeValue });
-  const { data: transactionReportData } = useGetTransactionReportQuery({ timeRange: timeRangeValue });
-  const { data: recentTransactionsData } = useGetRecentTransactionsQuery({ timeRange: timeRangeValue });
-  const { data: paymentMethodsData } = useGetPaymentMethodsQuery({ timeRange: timeRangeValue });
-  const { data: transactionVolumeData } = useGetTransactionVolumeQuery({ timeRange: timeRangeValue });
-  const { data: agingReportData } = useGetAgingReportQuery({ timeRange: timeRangeValue });
-  const { data: failedPaymentsAnalysisData } = useGetFailedPaymentsAnalysisQuery({ timeRange: timeRangeValue });
-  const { data: delinquencyReportData } = useGetDelinquencyReportQuery({ timeRange: timeRangeValue });
-  const { data: refundReportData } = useGetRefundReportQuery({ timeRange: timeRangeValue });
-  const { data: taxReportData } = useGetTaxReportQuery({ timeRange: timeRangeValue });
-  const { data: dsoAnalysisData } = useGetDsoAnalysisQuery({ timeRange: timeRangeValue });
-  const [triggerExport] = useLazyGetBillingExportAllQuery();
+
+  // New subscription billing report API integrations
+  const { data: newStatsData } = useGetSubscriptionBillingStatsQuery({ timeRange });
+  const { data: newTrendData } = useGetSubscriptionBillingTrendQuery({ timeRange });
+  const { data: newRecentTxData } = useGetSubscriptionBillingRecentTransactionsQuery({ timeRange });
+  const { data: newSummaryData } = useGetSubscriptionBillingTransactionSummaryQuery({ timeRange });
+  const { data: failedTrendsData } = useGetFailedPaymentTrendsQuery({ timeRange });
+  const { data: failedReasonsData } = useGetFailedPaymentReasonsQuery({ timeRange });
+  const { data: taxStatsData } = useGetTaxReportStatsQuery({ timeRange });
+  const { data: taxBreakdownData } = useGetTaxBreakdownQuery({ timeRange });
+  const { data: taxRegionApiData } = useGetTaxRegionAnalyticsQuery({ timeRange });
+  const { data: refundsStatsData } = useGetRefundsStatsQuery({ timeRange });
+  const { data: refundsDetailsData } = useGetRefundsDetailsQuery({ timeRange, page: 1, limit: 100 });
+  const { data: refundsReasonsData } = useGetRefundsReasonsQuery({ timeRange });
+  const { data: refundsChargebackHealthData } = useGetRefundsChargebackHealthQuery({ timeRange });
+  const { data: refundsImpactData } = useGetRefundsImpactAnalysisQuery({ timeRange });
+
+
 
   const handleExport = async () => {
     try {
       toast.loading("Preparing PDF report...");
-      const result = await triggerExport({ timeRange: timeRangeValue });
+
+      const rawData = {
+        overview: {
+          successRate: { value: kpiData.successRate.value, trend: kpiData.successRate.trend },
+          failedPayments: { count: kpiData.failedPayments.count, amount: kpiData.failedPayments.value },
+          overdueInvoices: kpiData.overdueInvoices,
+          recoveryRate: kpiData.recoveryRate,
+          avgDSO: kpiData.avgDSO
+        },
+        recentTransactions: recentTransactions,
+        agingReport: { summary: agingData },
+        failedPaymentsAnalysis: { commonFailureReasons: commonFailureReasons },
+        delinquencyReport: { details: delinquentAccounts },
+        refundReport: { summary: refundSummary },
+        taxReport: { summary: taxSummary },
+        dsoAnalysis: { metrics: dsoMetrics }
+      };
+
       toast.dismiss();
 
-      if (result.error || !result.data || !result.data.success) {
-        console.error("Export error:", result.error);
-        const errorMsg = (result.error as any)?.data?.message || result.data?.message || "Failed to fetch export data";
-        toast.error(errorMsg);
-        return;
-      }
-
-      const rawData = result.data.data;
-      if (!rawData) {
-        toast.error("Export data is empty");
-        return;
-      }
-
       const doc = new jsPDF();
-      const timeRangeLabel = timeRanges.find(t => t.value === timeRange)?.label || 'All Time';
+      const timeRangeLabel = timeRanges.find(t => t.value === timeRange)?.label || timeRange || 'All Time';
 
       // Branded header with logo
       let currentY = await addPdfHeader(
@@ -243,7 +249,7 @@ const BillingDashboard = () => {
         ['Overdue Invoices Count', (overview.overdueInvoices?.count || 0).toLocaleString(), ''],
         ['Overdue Invoices Amount', `${currencySymbol}${(overview.overdueInvoices?.amount || 0).toLocaleString()}`, ''],
         ['Recovery Rate', `${overview.recoveryRate?.value || 0}%`, ''],
-        ['Avg DSO', `${overview.avgDSO?.value || 0} days`, overview.avgDSO?.status || ''],
+        // ['Avg DSO', `${overview.avgDSO?.value || 0} days`, overview.avgDSO?.status || ''],
       ];
 
       autoTable(doc, {
@@ -262,7 +268,7 @@ const BillingDashboard = () => {
       doc.setFontSize(14);
       doc.text('2. Recent Transactions', 14, currentY);
 
-      const transactions = rawData.recentTransactions || rawData.transactions || [];
+      const transactions = rawData.recentTransactions || [];
       const txRows = transactions.map((tx: any) => [
         tx.id || tx.transactionId || '-',
         tx.date || '-',
@@ -290,7 +296,7 @@ const BillingDashboard = () => {
       doc.text('3. Invoice Aging Summary', 14, currentY);
       const agingRows = (rawData.agingReport?.summary || []).map((item: any) => [
         item.range,
-        item.count,
+        item.invoices || 0,
         `${currencySymbol}${(item.amount || 0).toLocaleString()}`
       ]);
       autoTable(doc, {
@@ -328,7 +334,7 @@ const BillingDashboard = () => {
       const delRows = (rawData.delinquencyReport?.details || []).map((item: any) => [
         item.customer,
         `${currencySymbol}${item.balance}`,
-        `${item.daysOverdue} days`,
+        `${item.daysOverdue || item.daysPastDue} days`,
         item.status
       ]);
       autoTable(doc, {
@@ -369,18 +375,22 @@ const BillingDashboard = () => {
 
   const handleExportExcel = async () => {
     try {
-      const result = await triggerExport({ timeRange: timeRangeValue });
-      if (result.error || !result.data || !result.data.success) {
-        const errorMsg = (result.error as any)?.data?.message || result.data?.message || "Failed to fetch export data";
-        toast.error(errorMsg);
-        return;
-      }
-
-      const rawData = result.data.data;
-      if (!rawData) {
-        toast.error("Export data is empty");
-        return;
-      }
+      const rawData = {
+        overview: {
+          successRate: { value: kpiData.successRate.value, trend: kpiData.successRate.trend },
+          failedPayments: { count: kpiData.failedPayments.count, amount: kpiData.failedPayments.value },
+          overdueInvoices: kpiData.overdueInvoices,
+          recoveryRate: kpiData.recoveryRate,
+          avgDSO: kpiData.avgDSO
+        },
+        recentTransactions: recentTransactions,
+        agingReport: { summary: agingData },
+        failedPaymentsAnalysis: { commonFailureReasons: commonFailureReasons },
+        delinquencyReport: { details: delinquentAccounts },
+        refundReport: { summary: refundSummary },
+        taxReport: { summary: taxSummary },
+        dsoAnalysis: { metrics: dsoMetrics }
+      };
 
       const wb = XLSX.utils.book_new();
 
@@ -394,12 +404,12 @@ const BillingDashboard = () => {
         ['Overdue Invoices Count', overview.overdueInvoices?.count || 0, ''],
         ['Overdue Invoices Amount', `${currencySymbol}${overview.overdueInvoices?.amount || 0}`, ''],
         ['Recovery Rate', `${overview.recoveryRate?.value || 0}%`, ''],
-        ['Avg DSO', `${overview.avgDSO?.value || 0} days`, overview.avgDSO?.status || ''],
+        // ['Avg DSO', `${overview.avgDSO?.value || 0} days`, overview.avgDSO?.status || ''],
       ];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(overviewRows), 'Overview');
 
       // Transactions sheet
-      const transactions = rawData.recentTransactions || rawData.transactions || [];
+      const transactions = rawData.recentTransactions || [];
       const transactionsRows = [
         ['ID', 'Date', 'Customer', 'Amount', 'Status', 'Method', 'Invoice'],
         ...transactions.map((tx: any) => [
@@ -421,7 +431,7 @@ const BillingDashboard = () => {
         ...delinquent.map((item: any) => [
           item.customer,
           `${currencySymbol}${item.balance}`,
-          `${item.daysOverdue} days`,
+          `${item.daysOverdue || item.daysPastDue} days`,
           item.status
         ])
       ];
@@ -447,7 +457,7 @@ const BillingDashboard = () => {
       ];
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dsoRows), 'DSO Metrics');
 
-      XLSX.writeFile(wb, `billing-report-${timeRangeValue}-${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.writeFile(wb, `billing-report-${timeRange || 'all'}-${new Date().toISOString().split('T')[0]}.xlsx`);
       toast.success("Billing report exported successfully");
     } catch (error) {
       console.error("Excel export error:", error);
@@ -463,6 +473,7 @@ const BillingDashboard = () => {
     agingData,
     overdueInvoices,
     failedPaymentData,
+    failedPaymentTrends,
     recoveryRateData,
     delinquentAccounts,
     refundData,
@@ -472,95 +483,163 @@ const BillingDashboard = () => {
     taxRegionData,
     paymentMethods,
     transactionVolume,
+    transactionTotals,
     dunningEffectiveness,
     commonFailureReasons,
     delinquencySummary,
     refundSummary,
+    refundReasons,
+    chargebackHealth,
+    refundImpact,
     taxSummary,
     dsoMetrics,
     agingBucketAnalysis
   } = useMemo(() => {
-    const defaultData = generateBillingData(timeRange);
+    const numericRange = timeRange === 'last 1 day' ? 1 : timeRange === 'last 7 days' ? 7 : timeRange === 'last 1 year' ? 365 : 30;
+    const defaultData = generateBillingData(numericRange);
 
     // Mapping API data or using defaults
-    const kpi = overviewData?.data ? {
+    const kpi = {
       successRate: {
-        value: overviewData.data.successRate.value,
-        change: overviewData.data.successRate.change,
-        trend: overviewData.data.successRate.trend
+        value: newStatsData?.data?.successRate?.amount !== undefined ? newStatsData.data.successRate.amount : defaultData.kpiData.successRate.value,
+        change: newStatsData?.data?.successRate?.growth !== undefined ? newStatsData.data.successRate.growth : defaultData.kpiData.successRate.change,
+        trend: newStatsData?.data?.successRate?.growthLabel !== undefined ? newStatsData.data.successRate.growthLabel : defaultData.kpiData.successRate.trend
       },
       failedPayments: {
-        value: overviewData.data.failedPayments.amount,
-        count: overviewData.data.failedPayments.count,
-        change: overviewData.data.failedPayments.change,
-        trend: overviewData.data.failedPayments.trend
+        value: newStatsData?.data?.failedPayments?.amount !== undefined ? newStatsData.data.failedPayments.amount : defaultData.kpiData.failedPayments.value,
+        count: newStatsData?.data?.failedPayments?.percentage !== undefined ? newStatsData.data.failedPayments.percentage : defaultData.kpiData.failedPayments.count,
+        change: newStatsData?.data?.failedPayments?.growth !== undefined ? newStatsData.data.failedPayments.growth : defaultData.kpiData.failedPayments.change,
+        trend: newStatsData?.data?.failedPayments?.growthLabel !== undefined ? newStatsData.data.failedPayments.growthLabel : defaultData.kpiData.failedPayments.trend
       },
-      overdueInvoices: {
-        count: overviewData.data.overdueInvoices.count,
-        amount: overviewData.data.overdueInvoices.amount
-      },
-      recoveryRate: {
-        value: overviewData.data.recoveryRate.value,
-        recovered: `${overviewData.data.recoveryRate.recovered} of ${overviewData.data.recoveryRate.total}`
-      },
-      avgDSO: {
-        value: overviewData.data.avgDSO.value,
-        target: overviewData.data.avgDSO.target,
-        status: overviewData.data.avgDSO.status
-      }
-    } : defaultData.kpiData;
+      overdueInvoices: defaultData.kpiData.overdueInvoices,
+      recoveryRate: defaultData.kpiData.recoveryRate,
+      avgDSO: defaultData.kpiData.avgDSO
+    };
 
-    const tData = transactionReportData?.data?.monthlyData?.map((item: any) => ({
-      [defaultData.xAxisKey]: item.month,
+    const tData = newTrendData?.data?.chartData?.map((item: any) => ({
+      [defaultData.xAxisKey]: item.label,
       successful: item.successful,
       failed: item.failed,
       refunded: item.refunded
     })) || defaultData.transactionData;
 
-    const rtData = recentTransactionsData?.data?.length > 0 ? recentTransactionsData.data : defaultData.recentTransactions;
+    const trendTotals = newTrendData?.data?.summary ? {
+      total: newTrendData.data.summary.total,
+      successful: newTrendData.data.summary.successful,
+      failed: newTrendData.data.summary.failed,
+      refunded: newTrendData.data.summary.refunded
+    } : {
+      total: 0,
+      successful: 0,
+      failed: 0,
+      refunded: 0
+    };
 
-    const aging = agingReportData?.data?.summary?.map((item: any) => ({
-      range: item.range,
-      invoices: item.count,
-      amount: item.amount
-    })) || defaultData.agingData;
+    const rtData = newRecentTxData?.data && newRecentTxData.data.length > 0
+      ? newRecentTxData.data.map((txn: any) => ({
+        id: txn.transactionId || txn.id,
+        date: txn.date ? new Date(txn.date).toISOString().split('T')[0] : '-',
+        customer: txn.customer || '-',
+        amount: txn.amount,
+        status: txn.status === 'success' ? 'Successful' :
+          txn.status === 'failed' ? 'Failed' :
+            txn.status === 'pending' ? 'Pending' :
+              txn.status ? txn.status.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : '-',
+        method: txn.paymentMethod ? txn.paymentMethod.toUpperCase() : '-',
+        invoice: txn.invoice || '-'
+      }))
+      : defaultData.recentTransactions;
 
-    const fpData = failedPaymentsAnalysisData?.data?.failedVsRecovery?.map((item: any) => ({
-      [defaultData.xAxisKey]: item.label,
-      failed: item.failedAttempts,
-      recovered: item.recovered
-    })) || defaultData.failedPaymentData;
+    const aging = defaultData.agingData;
 
-    const rrData = failedPaymentsAnalysisData?.data?.recoveryRateTrend?.map((item: any) => ({
-      [defaultData.xAxisKey]: item.label,
-      rate: item.rate
-    })) || defaultData.recoveryRateData;
+    const fpData = failedTrendsData?.data?.chartData?.map((item: any) => ({
+      label: item.label,
+      failedPayments: item.failedPayments,
+    })) || defaultData.failedPaymentData.map((d: any) => ({ label: d[defaultData.xAxisKey], failedPayments: d.failed }));
 
-    const daData = delinquencyReportData?.data?.details?.length > 0 ? delinquencyReportData.data.details : defaultData.delinquentAccounts;
+    const fpReasons = failedReasonsData?.data?.reasons?.map((r: any) => ({
+      reason: r.label,
+      percentage: parseFloat(r.percentage) || 0,
+      count: r.count,
+      amount: r.amount,
+    })) || [
+      { reason: 'Insufficient Funds', percentage: 52, count: 0, amount: 0 },
+      { reason: 'Expired Card', percentage: 24, count: 0, amount: 0 },
+      { reason: 'Card Blocked', percentage: 14, count: 0, amount: 0 },
+      { reason: 'Incorrect CVV', percentage: 10, count: 0, amount: 0 },
+    ];
 
-    const refData = refundReportData?.data?.details?.length > 0 ? refundReportData.data.details : defaultData.refundData;
+    const rrData = defaultData.recoveryRateData;
 
-    const txJData = taxReportData?.data?.details?.length > 0 ? taxReportData.data.details : defaultData.taxByJurisdiction;
+    const daData = defaultData.delinquentAccounts;
 
-    const dTrendData = dsoAnalysisData?.data?.dsoTrend?.map((item: any) => ({
-      [defaultData.xAxisKey]: item.label,
-      actual: item.actual,
-      target: item.target
-    })) || defaultData.dsoTrendData;
+    const refData = refundsDetailsData?.data?.data && Array.isArray(refundsDetailsData.data.data)
+      ? refundsDetailsData.data.data.map((item: any) => ({
+          id: item.id ? (item.id.length > 8 ? item.id.substring(0, 8).toUpperCase() : item.id) : '-',
+          date: item.date || '-',
+          customer: item.customer || '-',
+          amount: item.amount || 0,
+          type: item.type ? (item.type.charAt(0).toUpperCase() + item.type.slice(1).toLowerCase()) : '-',
+          reason: item.reason || '-',
+          fee: item.platformFee !== undefined ? `${currencySymbol}${item.platformFee.toLocaleString()}` : '-',
+          status: item.status ? (item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase()) : '-'
+        }))
+      : defaultData.refundData;
 
-    const pPieData = delinquencyReportData?.data?.delinquencyByPlan?.length > 0
-      ? delinquencyReportData.data.delinquencyByPlan
-      : defaultData.planPieData;
+    const txJData = (taxBreakdownData?.data && Array.isArray(taxBreakdownData.data))
+      ? taxBreakdownData.data.map((item: any) => ({
+          jurisdiction: item.region,
+          transactions: item.transactions,
+          revenue: item.income,
+          rate: `${item.taxRate}%`,
+          collected: item.taxCollected,
+        }))
+      : defaultData.taxByJurisdiction;
 
-    const tRegData = taxReportData?.data?.taxCollectionByRegion?.length > 0
-      ? taxReportData.data.taxCollectionByRegion
+    const dTrendData = defaultData.dsoTrendData;
+
+    const pPieData = defaultData.planPieData;
+
+    const tRegData = (taxRegionApiData?.data && Array.isArray(taxRegionApiData.data))
+      ? taxRegionApiData.data.map((item: any) => ({
+          name: item.region,
+          value: item.value,
+        }))
       : defaultData.taxRegionData;
+
+    const methods = newSummaryData?.data?.paymentMethods
+      ? newSummaryData.data.paymentMethods.map((m: any) => ({
+        method: m.name ? m.name.toUpperCase() : '-',
+        percentage: m.percentage ? parseFloat(m.percentage) : 0
+      }))
+      : [];
+
+    const volume = newSummaryData?.data?.transactionVolume
+      ? {
+        transactionVolume: {
+          value: newSummaryData.data.transactionVolume.amount,
+          period: 'Total processed',
+          change: newSummaryData.data.transactionVolume.growth
+        }
+      }
+      : { transactionVolume: { value: 0, period: 'Total processed', change: 0 } };
+
+    const avgTx = newSummaryData?.data?.averageTransaction
+      ? {
+        averageTransaction: {
+          value: newSummaryData.data.averageTransaction.amount || newSummaryData.data.averageTransaction.perTransaction,
+          period: 'Per transaction',
+          change: newSummaryData.data.averageTransaction.growth
+        }
+      }
+      : { averageTransaction: { value: 0, period: 'Per transaction', change: 0 } };
 
     return {
       ...defaultData,
       kpiData: kpi,
       transactionData: tData,
       recentTransactions: rtData,
+      transactionTotals: trendTotals,
       agingData: aging,
       failedPaymentData: fpData,
       recoveryRateData: rrData,
@@ -570,23 +649,100 @@ const BillingDashboard = () => {
       dsoTrendData: dTrendData,
       planPieData: pPieData,
       taxRegionData: tRegData,
-      paymentMethods: paymentMethodsData?.data || [],
-      transactionVolume: transactionVolumeData?.data || {},
-      dunningEffectiveness: failedPaymentsAnalysisData?.data?.dunningEffectiveness || [],
-      commonFailureReasons: failedPaymentsAnalysisData?.data?.commonFailureReasons || [],
-      delinquencySummary: delinquencyReportData?.data?.summary || {},
-      refundSummary: refundReportData?.data?.summary || {},
-      taxSummary: taxReportData?.data?.summary || {},
-      dsoMetrics: dsoAnalysisData?.data?.metrics || {},
-      agingBucketAnalysis: dsoAnalysisData?.data?.agingBucketAnalysis || []
+      paymentMethods: methods,
+      transactionVolume: {
+        transactionVolume: volume.transactionVolume || {},
+        averageTransaction: avgTx.averageTransaction || {}
+      },
+      dunningEffectiveness: [
+        { category: 'First Attempt (Email)', successRate: 45, color: '#10b981', subText: 'Sent within 24 hours of failure' },
+        { category: 'Second Attempt (SMS)', successRate: 28, color: '#3b82f6', subText: 'Sent 3 days after first failure' },
+        { category: 'Third Attempt (Escalate)', successRate: 15, color: '#f59e0b', subText: 'Sent 7 days after second failure' }
+      ],
+      failedPaymentTrends: fpData,
+      commonFailureReasons: fpReasons,
+      delinquencySummary: {
+        delinquentAccounts: 3,
+        totalOutstanding: 156,
+        avgDaysPastDue: 45,
+        collectionAttempts: 8
+      },
+      refundSummary: refundsStatsData?.data?.data
+        ? {
+            totalRefunds: refundsStatsData.data.data.totalRefunds,
+            refundAmount: refundsStatsData.data.data.refundAmount,
+            chargebacks: refundsStatsData.data.data.chargebacks,
+            chargebackFees: refundsStatsData.data.data.chargebackFees
+          }
+        : {
+            totalRefunds: 0,
+            refundAmount: 0,
+            chargebacks: 0,
+            chargebackFees: 0
+          },
+      refundReasons: refundsReasonsData?.data?.reasons || [],
+      chargebackHealth: refundsChargebackHealthData?.data?.data
+        ? {
+            rate: refundsChargebackHealthData.data.data.chargebackRatePercent,
+            context: `${refundsChargebackHealthData.data.data.chargebacks} chargebacks / ${refundsChargebackHealthData.data.data.totalTransactions} transactions`,
+            status: refundsChargebackHealthData.data.data.status,
+            message: refundsChargebackHealthData.data.data.status === 'ALERT'
+              ? `Chargeback rate is above the ${refundsChargebackHealthData.data.data.thresholdPercent}% threshold!`
+              : `Chargeback rate is within the healthy ${refundsChargebackHealthData.data.data.thresholdPercent}% limit.`
+          }
+        : {
+            rate: 0,
+            context: 'No data',
+            status: 'HEALTHY',
+            message: 'Rate is within limits'
+          },
+      refundImpact: refundsImpactData?.data?.data
+        ? {
+            refundRate: refundsImpactData.data.data.refundRate,
+            refundRateSubtitle: refundsImpactData.data.data.refundRateSubtitle,
+            revenueImpact: refundsImpactData.data.data.revenueImpact,
+            avgRefundValue: refundsImpactData.data.data.avgRefundValue
+          }
+        : {
+            refundRate: 0,
+            refundRateSubtitle: 'No data',
+            revenueImpact: 0,
+            avgRefundValue: 0
+          },
+      taxSummary: taxStatsData?.data
+        ? {
+            taxCollected: taxStatsData.data.totalTaxCollected,
+            jurisdictions: taxStatsData.data.totalRegion,
+            taxableRevenue: taxStatsData.data.taxableRevenue,
+            avgTaxRate: `${taxStatsData.data.averageTaxRate}%`,
+          }
+        : {
+            taxCollected: 456,
+            jurisdictions: 6,
+            taxableRevenue: 3420,
+            avgTaxRate: '12.5%',
+          },
+      dsoMetrics: {
+        currentDso: 28,
+        bestPossibleDso: 25,
+        collectionEfficiency: '85%',
+        dsoStatus: 'Good'
+      },
+      agingBucketAnalysis: [
+        { label: 'Current (0-30 Days)', percentage: 70 },
+        { label: '31-60 Days', percentage: 18 },
+        { label: '61-90 Days', percentage: 8 },
+        { label: '90+ Days', percentage: 4 }
+      ]
     };
-  }, [timeRange, overviewData, transactionReportData, recentTransactionsData, paymentMethodsData, transactionVolumeData, agingReportData, failedPaymentsAnalysisData, delinquencyReportData, refundReportData, taxReportData, dsoAnalysisData]);
+  }, [timeRange, newStatsData, newTrendData, newRecentTxData, newSummaryData, failedTrendsData, failedReasonsData, taxStatsData, taxBreakdownData, taxRegionApiData, refundsStatsData, refundsDetailsData, refundsReasonsData, refundsChargebackHealthData, refundsImpactData]);
 
   const timeRanges = [
-    { value: 1, label: 'Last 1 day' },
-    { value: 7, label: 'Last 7 days' },
-    { value: 30, label: 'Last 30 days' },
-    { value: 365, label: 'Last 1 year' }
+    { value: '', label: '--' },
+    { value: 'last 1 day', label: 'last 1 day' },
+    { value: 'last 7 days', label: 'last 7 days' },
+    { value: 'last 30 days', label: 'last 30 days' },
+    { value: 'last 1 year', label: 'last 1 year' }
   ];
 
   const COLORS = ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#ec4899'];
@@ -602,9 +758,9 @@ const BillingDashboard = () => {
 
   const tabs = [
     { id: 'transactions', label: 'Transactions' },
-    { id: 'invoice-aging', label: 'Invoice Aging' },
+    // { id: 'invoice-aging', label: 'Invoice Aging' },
     { id: 'failed-payment', label: 'Failed Payment' },
-    { id: 'delinquency', label: 'Delinquency' },
+    // { id: 'delinquency', label: 'Delinquency' },
     { id: 'refund', label: 'Refund' },
     { id: 'tax', label: 'Tax' },
     // { id: 'dso', label: 'DSO' }
@@ -619,19 +775,19 @@ const BillingDashboard = () => {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="text-center p-4 bg-navbarBg rounded-xl border border-border">
-            <div className="text-3xl font-bold text-purple-600">{transactionReportData?.data?.totals?.total || 0}</div>
+            <div className="text-3xl font-bold text-purple-600">{transactionTotals?.total || 0}</div>
             <div className={`text-sm ${theme.textSecondary}`}>Total Transactions</div>
           </div>
           <div className="text-center p-4 bg-navbarBg rounded-xl border border-border">
-            <div className="text-3xl font-bold text-green-600">{transactionReportData?.data?.totals?.successful || 0}</div>
+            <div className="text-3xl font-bold text-green-600">{transactionTotals?.successful || 0}</div>
             <div className={`text-sm ${theme.textSecondary}`}>Successful</div>
           </div>
           <div className="text-center p-4 bg-navbarBg rounded-xl border border-border">
-            <div className="text-3xl font-bold text-red-600">{transactionReportData?.data?.totals?.failed || 0}</div>
+            <div className="text-3xl font-bold text-red-600">{transactionTotals?.failed || 0}</div>
             <div className={`text-sm ${theme.textSecondary}`}>Failed</div>
           </div>
           <div className="text-center p-4 bg-navbarBg rounded-xl border border-border">
-            <div className="text-3xl font-bold text-orange-600">{transactionReportData?.data?.totals?.refunded || 0}</div>
+            <div className="text-3xl font-bold text-orange-600">{transactionTotals?.refunded || 0}</div>
             <div className={`text-sm ${theme.textSecondary}`}>Refunded</div>
           </div>
         </div>
@@ -739,341 +895,328 @@ const BillingDashboard = () => {
     </div>
   );
 
-  const renderInvoiceAgingTab = () => (
-    <div className="space-y-6">
-      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Invoice Aging Report</h3>
-        <p className={`${theme.textSecondary} text-sm mb-6`}>Outstanding invoices categorized by age</p>
+  // const renderInvoiceAgingTab = () => (
+  //   <div className="space-y-6">
+  //     <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+  //       <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Invoice Aging Report</h3>
+  //       <p className={`${theme.textSecondary} text-sm mb-6`}>Outstanding invoices categorized by age</p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          {agingReportData?.data?.summary?.map((item: any, idx: number) => (
-            <div key={idx} className={`p-4 rounded-xl border border-border ${item.range === '90+ Days' ? 'bg-red-100 dark:bg-red-900/20' :
-              item.range === '61-90 Days' ? 'bg-red-50 dark:bg-red-800/20' :
-                item.range === '31-60 Days' ? 'bg-orange-50 dark:bg-orange-900/20' :
-                  'bg-yellow-50 dark:bg-yellow-900/20'
-              }`}>
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{item.range}</div>
-              <div className={`text-2xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{item.count} invoice{item.count !== 1 ? 's' : ''}</div>
-              <div className={`text-sm font-semibold ${item.range === '90+ Days' ? 'text-red-700 dark:text-red-400' :
-                item.range === '61-90 Days' ? 'text-red-600 dark:text-red-500' :
-                  item.range === '31-60 Days' ? 'text-orange-600 dark:text-orange-500' :
-                    'text-yellow-600 dark:text-yellow-500'
-                }`}>{currencySymbol}{item.amount.toLocaleString()} {item.label || 'outstanding'}</div>
-            </div>
-          ))}
-        </div>
+  //       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+  //         {agingReportData?.data?.summary?.map((item: any, idx: number) => (
+  //           <div key={idx} className={`p-4 rounded-xl border border-border ${item.range === '90+ Days' ? 'bg-red-100 dark:bg-red-900/20' :
+  //             item.range === '61-90 Days' ? 'bg-red-50 dark:bg-red-800/20' :
+  //               item.range === '31-60 Days' ? 'bg-orange-50 dark:bg-orange-900/20' :
+  //                 'bg-yellow-50 dark:bg-yellow-900/20'
+  //             }`}>
+  //             <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">{item.range}</div>
+  //             <div className={`text-2xl font-bold ${isDark ? 'text-gray-100' : 'text-gray-900'}`}>{item.count} invoice{item.count !== 1 ? 's' : ''}</div>
+  //             <div className={`text-sm font-semibold ${item.range === '90+ Days' ? 'text-red-700 dark:text-red-400' :
+  //               item.range === '61-90 Days' ? 'text-red-600 dark:text-red-500' :
+  //                 item.range === '31-60 Days' ? 'text-orange-600 dark:text-orange-500' :
+  //                   'text-yellow-600 dark:text-yellow-500'
+  //               }`}>{currencySymbol}{item.amount.toLocaleString()} {item.label || 'outstanding'}</div>
+  //           </div>
+  //         ))}
+  //       </div>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={agingData}>
-            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
-            <XAxis dataKey="range" stroke={isDark ? '#9ca3af' : '#6b7280'} />
-            <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`
-              }}
-            />
-            <Bar dataKey="amount" fill="#f59e0b" name={`Outstanding Amount (${currencySymbol})`} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+  //       <ResponsiveContainer width="100%" height={300}>
+  //         <BarChart data={agingData}>
+  //           <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
+  //           <XAxis dataKey="range" stroke={isDark ? '#9ca3af' : '#6b7280'} />
+  //           <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} />
+  //           <Tooltip
+  //             contentStyle={{
+  //               backgroundColor: isDark ? '#1f2937' : '#ffffff',
+  //               border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`
+  //             }}
+  //           />
+  //           <Bar dataKey="amount" fill="#f59e0b" name={`Outstanding Amount (${currencySymbol})`} />
+  //         </BarChart>
+  //       </ResponsiveContainer>
+  //     </div>
 
-      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Overdue Invoice Details</h3>
+  //     <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+  //       <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Overdue Invoice Details</h3>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className={`border-b ${theme.border}`}>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Invoice</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Customer</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Amount</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Due Date</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Days Overdue</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Category</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {overdueInvoices.map((invoice: any, idx: number) => (
-                <tr key={idx} className={`border-b ${theme.border} ${theme.hover}`}>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{invoice.invoice}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{invoice.customer}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{invoice.amount}</td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{invoice.dueDate}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{invoice.daysOverdue} days</td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{invoice.category}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${invoice.status === 'Critical' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'
-                      }`}>
-                      {invoice.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+  //       <div className="overflow-x-auto">
+  //         <table className="w-full">
+  //           <thead>
+  //             <tr className={`border-b ${theme.border}`}>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Invoice</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Customer</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Amount</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Due Date</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Days Overdue</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Category</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Status</th>
+  //             </tr>
+  //           </thead>
+  //           <tbody>
+  //             {overdueInvoices.map((invoice: any, idx: number) => (
+  //               <tr key={idx} className={`border-b ${theme.border} ${theme.hover}`}>
+  //                 <td className={`py-3 px-4 ${theme.text} text-sm`}>{invoice.invoice}</td>
+  //                 <td className={`py-3 px-4 ${theme.text} text-sm`}>{invoice.customer}</td>
+  //                 <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{invoice.amount}</td>
+  //                 <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{invoice.dueDate}</td>
+  //                 <td className={`py-3 px-4 ${theme.text} text-sm`}>{invoice.daysOverdue} days</td>
+  //                 <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{invoice.category}</td>
+  //                 <td className="py-3 px-4">
+  //                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${invoice.status === 'Critical' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'
+  //                     }`}>
+  //                     {invoice.status}
+  //                   </span>
+  //                 </td>
+  //               </tr>
+  //             ))}
+  //           </tbody>
+  //         </table>
+  //       </div>
 
-        <div className="mt-6 p-4 bg-blue-50 border border-border rounded-xl">
-          <div className="flex items-start">
-            <AlertTriangle className="text-blue-600 mr-3 mt-1 flex-shrink-0" size={20} />
-            <div>
-              <p className="text-sm text-blue-900 font-medium">Collection Priority: Focus on 90+ day overdue invoices first</p>
-              <p className="text-sm text-blue-700 mt-1">These accounts have the highest risk of becoming uncollectible. Consider automated reminders and personal outreach for invoices over 60 days past due.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  //       <div className="mt-6 p-4 bg-blue-50 border border-border rounded-xl">
+  //         <div className="flex items-start">
+  //           <AlertTriangle className="text-blue-600 mr-3 mt-1 flex-shrink-0" size={20} />
+  //           <div>
+  //             <p className="text-sm text-blue-900 font-medium">Collection Priority: Focus on 90+ day overdue invoices first</p>
+  //             <p className="text-sm text-blue-700 mt-1">These accounts have the highest risk of becoming uncollectible. Consider automated reminders and personal outreach for invoices over 60 days past due.</p>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   const renderFailedPaymentTab = () => (
     <div className="space-y-6">
       <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Failed Payments Analysis</h3>
-        <p className={`${theme.textSecondary} text-sm mb-6`}>Tracker for failed transaction attempts and recovery</p>
+        <h3 className={`text-lg font-semibold  ${theme.text}`}>Failed Payment & Dunning Effectiveness</h3>
+        <p className={`${theme.textSecondary} text-sm mb-6`}>Tracker for failed transaction attempts and common reason</p>
 
         <div className="grid grid-cols-1 gap-6">
           <div className="h-80 pb-6">
-            <h4 className={`font-semibold mb-4 ${theme.text}`}>Failed Payments vs Recovery</h4>
+            <h4 className={`font-semibold mb-4 ${theme.text}`}>Dunning Effectiveness Report</h4>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={failedPaymentData}>
-                <defs>
-                  <linearGradient id="colorFailed" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorRecovered" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey={xAxisKey} stroke={isDark ? '#9ca3af' : '#6b7280'} />
+              <BarChart data={failedPaymentTrends} barCategoryGap="30%">
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
+                <XAxis dataKey="label" stroke={isDark ? '#9ca3af' : '#6b7280'} tick={{ fontSize: 12 }} />
                 <YAxis stroke={isDark ? '#9ca3af' : '#6b7280'} />
-                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                    border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`
+                    border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`,
+                    color: isDark ? '#f3f4f6' : '#111827'
                   }}
                 />
-                <Area type="monotone" dataKey="failed" stroke="#ef4444" fillOpacity={1} fill="url(#colorFailed)" name="Failed Attempts" />
-                <Area type="monotone" dataKey="recovered" stroke="#10b981" fillOpacity={1} fill="url(#colorRecovered)" name="Recovered" />
-              </AreaChart>
+                <Legend />
+                <Bar dataKey="failedPayments" fill="#ef4444" name="Failed Payments" radius={[4, 4, 0, 0]} />
+              </BarChart>
             </ResponsiveContainer>
           </div>
-
-          {/* <div className="h-80 pb-6">
-            <h4 className={`font-semibold mb-4 ${theme.text}`}>Recovery Rate Trend</h4>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={recoveryRateData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#374151' : '#e5e7eb'} />
-                <XAxis dataKey={xAxisKey} stroke={isDark ? '#9ca3af' : '#6b7280'} />
-                <YAxis domain={[60, 100]} stroke={isDark ? '#9ca3af' : '#6b7280'} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: isDark ? '#1f2937' : '#ffffff',
-                    border: `1px solid ${isDark ? '#374151' : '#e5e7eb'}`
-                  }}
-                />
-                <Line type="monotone" dataKey="rate" stroke="#8b5cf6" strokeWidth={2} name="Recovery Rate %" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div> */}
         </div>
       </div>
 
       <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Dunning Effectiveness</h3>
+        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Dunning Strategy Performance</h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {dunningEffectiveness.map((item: any, idx: number) => (
-            <div key={idx} className="p-4 rounded-xl border" style={{ backgroundColor: `${item.color}15`, borderColor: `${item.color}40` }}>
-              <div className="flex justify-between items-center">
-                <div>
-                  <div className="font-semibold text-gray-900 dark:text-gray-100">{item.category}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">{item.subText}</div>
+        <div className="mt-2">
+          <h4 className={`font-semibold mb-4 ${theme.text}`}>Common Failure Reasons</h4>
+          <div className="space-y-5">
+            {commonFailureReasons.map((item: any, idx: number) => {
+              const barColors = ['#ef4444', '#f97316', '#f59e0b', '#8b5cf6'];
+              const color = barColors[idx % barColors.length];
+              return (
+                <div key={idx}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className={`text-sm ${theme.text}`}>{item.reason}</span>
+                    <span className={`text-sm font-semibold ${theme.text}`}>{item.percentage}%</span>
+                  </div>
+                  <div className={`w-full rounded-full h-2 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                    <div
+                      className="h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(item.percentage, 100)}%`, backgroundColor: color }}
+                    />
+                  </div>
+                  {/* {item.count > 0 && (
+                    <p className={`text-xs mt-1 ${theme.textSecondary}`}>{item.count} transaction{item.count !== 1 ? 's' : ''} · {currencySymbol}{(item.amount || 0).toLocaleString()}</p>
+                  )} */}
                 </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold" style={{ color: item.color }}>{item.successRate}%</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">success rate</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-6">
-          <h4 className={`font-semibold mb-3 ${theme.text}`}>Common Failure Reasons</h4>
-          <div className="space-y-2">
-            {commonFailureReasons.map((item: any, idx: number) => (
-              <div key={idx} className="flex justify-between items-center p-2 bg-navbarBg border border-border rounded-sm">
-                <span className={theme.text}>{item.reason}</span>
-                <span className="text-red-600 font-semibold">{item.percentage}%</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
     </div>
   );
 
-  const renderDelinquencyTab = () => (
-    <div className="space-y-6">
-      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Overdue & Delinquency Report</h3>
-        <p className={`${theme.textSecondary} text-sm mb-6`}>Accounts with payment issues and outstanding balances</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="p-4 bg-red-50 rounded-xl border border-red-200">
-            <div className="text-sm text-gray-600 mb-1">Delinquent Accounts</div>
-            <div className="text-3xl font-bold text-red-600">{delinquencySummary.delinquentAccounts || 0}</div>
-            <div className="text-sm text-red-600">Active delinquencies</div>
-          </div>
-          <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">
-            <div className="text-sm text-gray-600 mb-1">Total Outstanding</div>
-            <div className="text-3xl font-bold text-orange-600">{currencySymbol}{(delinquencySummary.totalOutstanding || 0).toLocaleString()}</div>
-            <div className="text-sm text-orange-600">Across {delinquencySummary.delinquentAccounts || 0} accounts</div>
-          </div>
-          <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-            <div className="text-sm text-gray-600 mb-1">Avg Days Past Due</div>
-            <div className="text-3xl font-bold text-yellow-600">{delinquencySummary.avgDaysPastDue || 0}</div>
-            <div className="text-sm text-yellow-600">Average delay</div>
-          </div>
-          <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <div className="text-sm text-gray-600 mb-1">Collection Attempts</div>
-            <div className="text-3xl font-bold text-blue-600">{delinquencySummary.collectionAttempts || 0}</div>
-            <div className="text-sm text-blue-600">Total this month</div>
-          </div>
-        </div>
-      </div>
+  // const renderDelinquencyTab = () => (
+  //   <div className="space-y-6">
+  //     <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+  //       <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Overdue & Delinquency Report</h3>
+  //       <p className={`${theme.textSecondary} text-sm mb-6`}>Accounts with payment issues and outstanding balances</p>
 
-      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Delinquent Account Details</h3>
+  //       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+  //         <div className="p-4 bg-red-50 rounded-xl border border-red-200">
+  //           <div className="text-sm text-gray-600 mb-1">Delinquent Accounts</div>
+  //           <div className="text-3xl font-bold text-red-600">{delinquencySummary.delinquentAccounts || 0}</div>
+  //           <div className="text-sm text-red-600">Active delinquencies</div>
+  //         </div>
+  //         <div className="p-4 bg-orange-50 rounded-xl border border-orange-200">
+  //           <div className="text-sm text-gray-600 mb-1">Total Outstanding</div>
+  //           <div className="text-3xl font-bold text-orange-600">{currencySymbol}{(delinquencySummary.totalOutstanding || 0).toLocaleString()}</div>
+  //           <div className="text-sm text-orange-600">Across {delinquencySummary.delinquentAccounts || 0} accounts</div>
+  //         </div>
+  //         <div className="p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+  //           <div className="text-sm text-gray-600 mb-1">Avg Days Past Due</div>
+  //           <div className="text-3xl font-bold text-yellow-600">{delinquencySummary.avgDaysPastDue || 0}</div>
+  //           <div className="text-sm text-yellow-600">Average delay</div>
+  //         </div>
+  //         <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
+  //           <div className="text-sm text-gray-600 mb-1">Collection Attempts</div>
+  //           <div className="text-3xl font-bold text-blue-600">{delinquencySummary.collectionAttempts || 0}</div>
+  //           <div className="text-sm text-blue-600">Total this month</div>
+  //         </div>
+  //       </div>
+  //     </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className={`border-b ${theme.border}`}>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Customer</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Plan</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Outstanding Balance</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Last Payment</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Days Past Due</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Collection Attempts</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Status</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {delinquentAccounts.map((account: any, idx: number) => (
-                <tr key={idx} className={`border-b ${theme.border} ${theme.hover}`}>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{account.customer}</td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{account.plan}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{account.balance}</td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{account.lastPayment}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{account.daysOverdue} days</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{account.attempts}</td>
-                  <td className="py-3 px-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${account.status === 'Critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                      {account.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Contact</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+  //     <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+  //       <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Delinquent Account Details</h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Delinquency by Plan Type</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={planPieData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {planPieData.map((entry: any, index: number) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
+  //       <div className="overflow-x-auto">
+  //         <table className="w-full">
+  //           <thead>
+  //             <tr className={`border-b ${theme.border}`}>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Customer</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Plan</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Outstanding Balance</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Last Payment</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Days Past Due</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Collection Attempts</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Status</th>
+  //               <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Action</th>
+  //             </tr>
+  //           </thead>
+  //           <tbody>
+  //             {delinquentAccounts.map((account: any, idx: number) => (
+  //               <tr key={idx} className={`border-b ${theme.border} ${theme.hover}`}>
+  //                 <td className={`py-3 px-4 ${theme.text} text-sm`}>{account.customer}</td>
+  //                 <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{account.plan}</td>
+  //                 <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{account.balance}</td>
+  //                 <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{account.lastPayment}</td>
+  //                 <td className={`py-3 px-4 ${theme.text} text-sm`}>{account.daysOverdue} days</td>
+  //                 <td className={`py-3 px-4 ${theme.text} text-sm`}>{account.attempts}</td>
+  //                 <td className="py-3 px-4">
+  //                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${account.status === 'Critical' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+  //                     }`}>
+  //                     {account.status}
+  //                   </span>
+  //                 </td>
+  //                 <td className="py-3 px-4">
+  //                   <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Contact</button>
+  //                 </td>
+  //               </tr>
+  //             ))}
+  //           </tbody>
+  //         </table>
+  //       </div>
+  //     </div>
 
-        <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Collection Actions Required</h3>
+  //     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+  //       <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+  //         <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Delinquency by Plan Type</h3>
+  //         <ResponsiveContainer width="100%" height={250}>
+  //           <PieChart>
+  //             <Pie
+  //               data={planPieData}
+  //               cx="50%"
+  //               cy="50%"
+  //               labelLine={false}
+  //               label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+  //               outerRadius={80}
+  //               fill="#8884d8"
+  //               dataKey="value"
+  //             >
+  //               {planPieData.map((entry: any, index: number) => (
+  //                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+  //               ))}
+  //             </Pie>
+  //             <Tooltip />
+  //           </PieChart>
+  //         </ResponsiveContainer>
+  //       </div>
 
-          <div className="space-y-4">
-            {(delinquencyReportData?.data?.actionsRequired || []).map((action: any, idx: number) => (
-              <div key={idx} className={`p-4 rounded-xl border ${action.priority.includes('Critical') ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'
-                }`}>
-                <div className="flex items-center mb-2">
-                  {action.priority.includes('Critical') ? <AlertTriangle className="text-red-600 mr-2" size={20} /> : <Clock className="text-yellow-600 mr-2" size={20} />}
-                  <span className="font-semibold text-gray-900">{action.priority}</span>
-                </div>
-                <p className="text-sm text-gray-700">{action.count} {action.message}</p>
-                <p className="text-xs text-gray-600 mt-1">{action.instruction}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+  //       <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+  //         <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Collection Actions Required</h3>
 
-      <div className={`p-4 bg-blue-50 border border-blue-200 rounded-xl`}>
-        <div className="flex items-start">
-          <AlertTriangle className="text-blue-600 mr-3 mt-1 flex-shrink-0" size={20} />
-          <div>
-            <p className="text-sm text-blue-900 font-medium">Recommended Action</p>
-            <p className="text-sm text-blue-700 mt-1">Accounts past 90 days should be escalated to senior management. Consider payment plan negotiations or service suspension for accounts with multiple failed collection attempts. Document all contact attempts for compliance.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  //         <div className="space-y-4">
+  //           {(delinquencyReportData?.data?.actionsRequired || []).map((action: any, idx: number) => (
+  //             <div key={idx} className={`p-4 rounded-xl border ${action.priority.includes('Critical') ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'
+  //               }`}>
+  //               <div className="flex items-center mb-2">
+  //                 {action.priority.includes('Critical') ? <AlertTriangle className="text-red-600 mr-2" size={20} /> : <Clock className="text-yellow-600 mr-2" size={20} />}
+  //                 <span className="font-semibold text-gray-900">{action.priority}</span>
+  //               </div>
+  //               <p className="text-sm text-gray-700">{action.count} {action.message}</p>
+  //               <p className="text-xs text-gray-600 mt-1">{action.instruction}</p>
+  //             </div>
+  //           ))}
+  //         </div>
+  //       </div>
+  //     </div>
+
+  //     <div className={`p-4 bg-blue-50 border border-blue-200 rounded-xl`}>
+  //       <div className="flex items-start">
+  //         <AlertTriangle className="text-blue-600 mr-3 mt-1 flex-shrink-0" size={20} />
+  //         <div>
+  //           <p className="text-sm text-blue-900 font-medium">Recommended Action</p>
+  //           <p className="text-sm text-blue-700 mt-1">Accounts past 90 days should be escalated to senior management. Consider payment plan negotiations or service suspension for accounts with multiple failed collection attempts. Document all contact attempts for compliance.</p>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   const renderRefundTab = () => (
-    <div className="space-y-6">
-      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Refund & Chargeback Report</h3>
-        <p className={`${theme.textSecondary} text-sm mb-6`}>Track refunds and customer-initiated disputes</p>
+    <div className="space-y-6 bg-navbarBg rounded-xl p-6 shadow-sm border border-border" >
+      <div>
+        <h3 className={`text-xl md:text-2xl font-bold ${theme.text}`}>Refund & Chargeback Report</h3>
+        <p className={`${theme.textSecondary} text-sm mt-1`}>Track refunds and customer-initiated disputes</p>
+      </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="text-center p-4 bg-orange-50 rounded-xl border border-orange-200">
-            <RefreshCw className="mx-auto text-orange-600 mb-2" size={32} />
-            <div className="text-3xl font-bold text-orange-600">{refundSummary.totalRefunds || 0}</div>
-            <div className="text-sm text-gray-600">Total Refunds</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Total Refunds */}
+        <div className={`bg-navbarBg rounded-xl p-5 shadow-sm border border-border flex justify-between items-center transition-all duration-200`}>
+          <div>
+            <div className={`text-xs ${theme.textSecondary} mb-1 font-medium`}>Total Refunds</div>
+            <div className={`text-3xl font-bold ${theme.text}`}>{refundSummary.totalRefunds || 0}</div>
           </div>
-          <div className="text-center p-4 bg-yellow-50 rounded-xl border border-yellow-200">
-            <DollarSign className="mx-auto text-yellow-600 mb-2" size={32} />
-            <div className="text-3xl font-bold text-yellow-600">{currencySymbol}{(refundSummary.refundAmount || 0).toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Refund Amount</div>
+          <RefreshCw className="text-orange-500 transition-colors duration-200" size={28} />
+        </div>
+
+        {/* Refund Amount */}
+        <div className={`bg-navbarBg rounded-xl p-5 shadow-sm border border-border flex justify-between items-center transition-all duration-200`}>
+          <div>
+            <div className={`text-xs ${theme.textSecondary} mb-1 font-medium`}>Refund Amount</div>
+            <div className={`text-3xl font-bold text-amber-500 dark:text-amber-400`}>{currencySymbol}{(refundSummary.refundAmount || 0).toLocaleString()}</div>
           </div>
-          <div className="text-center p-4 bg-red-50 rounded-xl border border-red-200">
-            <AlertTriangle className="mx-auto text-red-600 mb-2" size={32} />
-            <div className="text-3xl font-bold text-red-600">{refundSummary.chargebacks || 0}</div>
-            <div className="text-sm text-gray-600">Chargebacks</div>
+          <DollarSign className="text-amber-500 transition-colors duration-200" size={28} />
+        </div>
+
+        {/* Chargebacks */}
+        <div className={`bg-navbarBg rounded-xl p-5 shadow-sm border border-border flex justify-between items-center transition-all duration-200`}>
+          <div>
+            <div className={`text-xs ${theme.textSecondary} mb-1 font-medium`}>Chargebacks</div>
+            <div className={`text-3xl font-bold text-red-500 dark:text-red-400`}>{refundSummary.chargebacks || 0}</div>
           </div>
-          <div className="text-center p-4 bg-purple-50 rounded-xl border border-purple-200">
-            <DollarSign className="mx-auto text-purple-600 mb-2" size={32} />
-            <div className="text-3xl font-bold text-purple-600">{currencySymbol}{(refundSummary.chargebackFees || 0).toLocaleString()}</div>
-            <div className="text-sm text-gray-600">Chargeback Fees</div>
+          <AlertTriangle className="text-red-500 transition-colors duration-200" size={28} />
+        </div>
+
+        {/* Chargeback Fees */}
+        <div className={`bg-navbarBg rounded-xl p-5 shadow-sm border border-border flex justify-between items-center transition-all duration-200`}>
+          <div>
+            <div className={`text-xs ${theme.textSecondary} mb-1 font-medium`}>Chargeback Fees</div>
+            <div className={`text-3xl font-bold text-red-500 dark:text-red-400`}>{currencySymbol}{(refundSummary.chargebackFees || 0).toLocaleString()}</div>
           </div>
+          <CreditCard className="text-red-500 transition-colors duration-200" size={28} />
         </div>
       </div>
 
@@ -1097,149 +1240,171 @@ const BillingDashboard = () => {
             <tbody>
               {refundData.map((item: any) => (
                 <tr key={item.id} className={`border-b ${theme.border} ${theme.hover}`}>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.id}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm font-medium`}>{item.id}</td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.date}</td>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.customer}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{item.amount}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm font-semibold`}>{currencySymbol}{item.amount}</td>
                   <td className="py-3 px-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.type === 'Refund' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'
-                      }`}>
+                    <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${
+                      (item.type || '').toLowerCase() === 'refund'
+                        ? 'bg-amber-100/50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400'
+                        : 'bg-red-100/50 text-red-600 dark:bg-red-950/40 dark:text-red-400'
+                    }`}>
                       {item.type}
                     </span>
                   </td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.reason}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.fee}</td>
+                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.fee}</td>
                   <td className="py-3 px-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${item.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
+                    <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${
+                      (item.status || '').toLowerCase() === 'completed'
+                        ? 'bg-green-100/50 text-green-600 dark:bg-green-950/40 dark:text-green-400'
+                        : 'bg-amber-100/50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400'
+                    }`}>
                       {item.status}
                     </span>
                   </td>
                 </tr>
               ))}
+              {refundData.length === 0 && (
+                <tr>
+                  <td colSpan={8} className={`py-8 text-center text-sm ${theme.textSecondary}`}>
+                    No refund transactions found.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Refund Reasons</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className={theme.text}>Service dissatisfaction</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div className="bg-orange-600 h-2 rounded-full" style={{ width: '50%' }}></div>
-                </div>
-                <span className="text-sm font-semibold">50%</span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className={theme.text}>Billing error</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div className="bg-orange-600 h-2 rounded-full" style={{ width: '33%' }}></div>
-                </div>
-                <span className="text-sm font-semibold">33%</span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className={theme.text}>Technical issues</span>
-              <div className="flex items-center">
-                <div className="w-32 bg-gray-200 rounded-full h-2 mr-3">
-                  <div className="bg-orange-600 h-2 rounded-full" style={{ width: '17%' }}></div>
-                </div>
-                <span className="text-sm font-semibold">17%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-          <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Chargeback Rate</h3>
-          <div className="text-center py-4">
-            <div className="text-5xl font-bold text-yellow-600">{refundReportData?.data?.chargebackRate?.rate || 0}%</div>
-            <div className={`text-sm ${theme.textSecondary} mt-2`}>{refundReportData?.data?.chargebackRate?.context || 'No data'}</div>
-            <div className={`mt-4 p-3 ${refundReportData?.data?.chargebackRate?.status === 'Healthy' ? 'bg-green-50' : 'bg-red-50'} rounded-lg border border-border`}>
-              <p className={`text-sm ${refundReportData?.data?.chargebackRate?.status === 'Healthy' ? 'text-green-800' : 'text-red-800'}`}>
-                {refundReportData?.data?.chargebackRate?.message || 'Rate is within limits'}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className={`bg-navbarBg rounded-xl p-4 shadow-sm border border-border`}>
-          <h4 className={`font-semibold mb-2 ${theme.text}`}>Refund Rate</h4>
-          <div className="text-2xl font-bold text-orange-600">{refundReportData?.data?.refundRate?.rate || 0}%</div>
-          <div className={`text-sm ${theme.textSecondary}`}>{refundReportData?.data?.refundRate?.context || 'No data'}</div>
-        </div>
-        <div className={`bg-navbarBg rounded-xl p-4 shadow-sm border border-border`}>
-          <h4 className={`font-semibold mb-2 ${theme.text}`}>Revenue Impact</h4>
-          <div className="text-2xl font-bold text-red-600">{currencySymbol}{(refundReportData?.data?.revenueImpact || 0).toLocaleString()}</div>
-          <div className={`text-sm ${theme.textSecondary}`}>Lost revenue (inc. fees)</div>
-        </div>
-        <div className={`bg-navbarBg rounded-xl p-4 shadow-sm border border-border`}>
-          <h4 className={`font-semibold mb-2 ${theme.text}`}>Avg Refund Value</h4>
-          <div className="text-2xl font-bold text-purple-600">{currencySymbol}{(refundReportData?.data?.avgRefundValue || 0).toLocaleString()}</div>
-          <div className={`text-sm ${theme.textSecondary}`}>Per refund request</div>
-        </div>
-      </div>
-
-      <div className={`p-4 bg-blue-50 border border-blue-200 rounded-xl`}>
-        <div className="flex items-start">
-          <AlertTriangle className="text-blue-600 mr-3 mt-1 flex-shrink-0" size={20} />
+        <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border flex flex-col justify-between`}>
           <div>
-            <p className="text-sm text-blue-900 font-medium">Prevention Strategy</p>
-            <p className="text-sm text-blue-700 mt-1">Monitor refund reasons. Most refunds are due to service dissatisfaction - consider implementing customer success check-ins during the first 30 days. Chargeback should be investigated immediately to prevent future disputes.</p>
+            <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Refund Reasons</h3>
+            <div className="space-y-4">
+              {refundReasons.map((item: any, idx: number) => (
+                <div key={idx} className="flex justify-between items-center py-2 border-b border-border/50 last:border-0">
+                  <span className={`text-sm ${theme.text}`}>{item.reason}</span>
+                  <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+                    {item.percentage}%
+                  </span>
+                </div>
+              ))}
+              {refundReasons.length === 0 && (
+                <p className={`text-sm ${theme.textSecondary} text-center py-4`}>No reasons data available</p>
+              )}
+            </div>
           </div>
+        </div>
+
+        <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border flex flex-col justify-between`}>
+          <div>
+            <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Chargeback Rate</h3>
+            <div className="space-y-2">
+              <div className={`text-5xl font-bold ${theme.text}`}>{chargebackHealth.rate}%</div>
+              <div className={`text-xs ${theme.textSecondary}`}>{chargebackHealth.context}</div>
+              <div className={`text-sm font-semibold ${
+                chargebackHealth.status === 'Healthy' || chargebackHealth.status === 'HEALTHY'
+                  ? 'text-green-600 dark:text-green-400'
+                  : 'text-red-600 dark:text-red-400'
+              }`}>
+                {chargebackHealth.status === 'Healthy' || chargebackHealth.status === 'HEALTHY'
+                  ? 'Well below 1% threshold'
+                  : 'Above 1% threshold'}
+              </div>
+            </div>
+          </div>
+          <div className={`mt-4 p-3.5 transition-colors duration-200 rounded-lg border text-sm ${
+            chargebackHealth.status === 'Healthy' || chargebackHealth.status === 'HEALTHY'
+              ? 'bg-green-50/70 border-green-200/50 text-green-800 dark:bg-green-950/20 dark:border-green-900/30 dark:text-green-300'
+              : 'bg-red-50/70 border-red-200/50 text-red-800 dark:bg-red-950/20 dark:border-red-900/30 dark:text-red-300'
+          }`}>
+            Chargeback rate is healthy and within acceptable limits
+          </div>
+        </div>
+      </div>
+
+      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Refund Impact Analysis</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`bg-navbarBg rounded-xl p-5 border border-border transition-colors duration-200`}>
+            <div className={`text-xs ${theme.textSecondary} mb-1 font-medium`}>Refund Rate</div>
+            <div className={`text-3xl font-bold ${theme.text}`}>{refundImpact.refundRate}%</div>
+            <div className={`text-xs ${theme.textSecondary} mt-1`}>{refundImpact.refundRateSubtitle}</div>
+          </div>
+          <div className={`bg-navbarBg rounded-xl p-5 border border-border transition-colors duration-200`}>
+            <div className={`text-xs ${theme.textSecondary} mb-1 font-medium`}>Revenue Impact</div>
+            <div className={`text-3xl font-bold ${theme.text}`}>{currencySymbol}{refundImpact.revenueImpact.toLocaleString()}</div>
+            <div className={`text-xs ${theme.textSecondary} mt-1`}>Lost revenue (inc. fees)</div>
+          </div>
+          <div className={`bg-navbarBg rounded-xl p-5 border border-border transition-colors duration-200`}>
+            <div className={`text-xs ${theme.textSecondary} mb-1 font-medium`}>Avg Refund Value</div>
+            <div className={`text-3xl font-bold ${theme.text}`}>{currencySymbol}{refundImpact.avgRefundValue.toLocaleString()}</div>
+            <div className={`text-xs ${theme.textSecondary} mt-1`}>Per refund request</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Prevention Strategy Info Banner */}
+      <div className="flex items-start gap-3 px-4 py-3 rounded-xl border transition-colors duration-200 bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800/40">
+        <Info className="mt-0.5 flex-shrink-0 text-blue-500 dark:text-blue-400 transition-colors duration-200" size={18} />
+        <div>
+          <span className="text-sm font-semibold text-blue-700 dark:text-blue-300 transition-colors duration-200">Prevention Strategy: </span>
+          <span className="text-sm text-blue-600 dark:text-blue-400 transition-colors duration-200">Monitor refund reasons to identify service improvements. Most refunds are due to service dissatisfaction - consider implementing customer success check-ins during the first 30 days. Chargebacks should be investigated immediately to prevent future disputes.</span>
         </div>
       </div>
     </div>
   );
 
-  const renderTaxTab = () => (
-    <div className="space-y-6">
-      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Tax Report</h3>
-        <p className={`${theme.textSecondary} text-sm mb-6`}>Sales tax and GST breakdown by jurisdiction</p>
+  const renderTaxTab = () => {
+    const totalTransactions = taxByJurisdiction.reduce((s: number, i: any) => s + (i.transactions || 0), 0);
+    const totalRevenue = taxByJurisdiction.reduce((s: number, i: any) => s + (i.revenue || 0), 0);
+    const totalCollected = taxByJurisdiction.reduce((s: number, i: any) => s + (i.collected || 0), 0);
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <div className="text-sm text-gray-600 mb-1">Tax by Collected</div>
-            <div className="text-3xl font-bold text-blue-600">{currencySymbol}{(taxSummary.taxCollected || 0).toLocaleString()}</div>
-            <div className="text-sm text-blue-600">{taxSummary.period || 'This month'}</div>
+    return (
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* First card — purple highlighted */}
+          <div className="p-5 rounded-xl bg-purple-50 border border-purple-200 dark:bg-purple-900/30 dark:border-purple-700/40 transition-colors duration-200">
+            <div className="text-sm font-medium mb-2 text-purple-600 dark:text-purple-300 transition-colors duration-200">Total Tax Collected</div>
+            <div className="text-3xl font-bold mb-1 text-purple-700 dark:text-purple-200 transition-colors duration-200">{currencySymbol}{(taxSummary.taxCollected || 0).toLocaleString()}</div>
+            <div className="text-sm text-purple-500 dark:text-purple-400 transition-colors duration-200">This month</div>
           </div>
-          <div className="text-center p-4 bg-green-50 rounded-xl border border-green-200">
-            <div className="text-sm text-gray-600 mb-1">Jurisdictions</div>
-            <div className="text-3xl font-bold text-green-600">{taxSummary.jurisdictions || 0}</div>
-            <div className="text-sm text-green-600">Active regions</div>
+          {/* Jurisdictions */}
+          <div className={`p-5 rounded-xl border ${theme.border} bg-navbarBg`}>
+            <div className={`text-sm font-medium mb-2 ${theme.textSecondary}`}>Jurisdictions</div>
+            <div className={`text-3xl font-bold mb-1 ${theme.text}`}>{taxSummary.jurisdictions || 0}</div>
+            <div className={`text-sm ${theme.textSecondary}`}>Active tax regions</div>
           </div>
-          <div className="text-center p-4 bg-purple-50 rounded-xl border border-purple-200">
-            <div className="text-sm text-gray-600 mb-1">Taxable Revenue</div>
-            <div className="text-3xl font-bold text-purple-600">{currencySymbol}{(taxSummary.taxableRevenue || 0).toLocaleString()}</div>
-            <div className="text-sm text-purple-600">Total taxable</div>
+          {/* Taxable Revenue */}
+          <div className={`p-5 rounded-xl border ${theme.border} bg-navbarBg`}>
+            <div className={`text-sm font-medium mb-2 ${theme.textSecondary}`}>Taxable Revenue</div>
+            <div className={`text-3xl font-bold mb-1 ${theme.text}`}>{currencySymbol}{(taxSummary.taxableRevenue || 0).toLocaleString()}</div>
+            <div className={`text-sm ${theme.textSecondary}`}>Total taxable amount</div>
           </div>
-          <div className="text-center p-4 bg-orange-50 rounded-xl border border-orange-200">
-            <div className="text-sm text-gray-600 mb-1">Avg Tax Rate</div>
-            <div className="text-3xl font-bold text-orange-600">{taxSummary.avgTaxRate || '0.0%'}</div>
-            <div className="text-sm text-orange-600">Weighted average</div>
+          {/* Avg Tax Rate */}
+          <div className={`p-5 rounded-xl border ${theme.border} bg-navbarBg`}>
+            <div className={`text-sm font-medium mb-2 ${theme.textSecondary}`}>Avg Tax Rate</div>
+            <div className={`text-3xl font-bold mb-1 ${theme.text}`}>{taxSummary.avgTaxRate || '0.0%'}</div>
+            <div className={`text-sm ${theme.textSecondary}`}>Weighted average</div>
           </div>
         </div>
       </div>
 
+      {/* Tax Breakdown Table */}
       <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
         <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Tax Breakdown by Jurisdiction</h3>
-
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className={`border-b ${theme.border}`}>
                 <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Jurisdiction</th>
                 <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Transactions</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Taxable Revenue</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Income</th>
                 <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Tax Rate</th>
                 <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Tax Collected</th>
               </tr>
@@ -1247,17 +1412,33 @@ const BillingDashboard = () => {
             <tbody>
               {taxByJurisdiction.map((item: any, idx: number) => (
                 <tr key={idx} className={`border-b ${theme.border} ${theme.hover}`}>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.jurisdiction}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm`}>
+                    <div className="flex items-center gap-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={theme.textSecondary}><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                      {item.jurisdiction}
+                    </div>
+                  </td>
                   <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.transactions}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{item.revenue.toLocaleString()}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{(item.revenue || 0).toLocaleString()}</td>
                   <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.rate}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm font-semibold`}>{currencySymbol}{item.collected.toLocaleString()}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm font-semibold`}>{currencySymbol}{(item.collected || 0).toLocaleString()}</td>
                 </tr>
               ))}
+              {/* Total row */}
+              {taxByJurisdiction.length > 0 && (
+                <tr className="transition-colors duration-200 bg-gray-50 dark:bg-gray-800/60">
+                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text}`}>Total</td>
+                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text}`}>{totalTransactions}</td>
+                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text}`}>{currencySymbol}{totalRevenue.toLocaleString()}</td>
+                  <td className={`py-3 px-4 text-sm ${theme.textSecondary}`}>-</td>
+                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text}`}>{currencySymbol}{totalCollected.toLocaleString()}</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
@@ -1287,20 +1468,40 @@ const BillingDashboard = () => {
           <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Tax Compliance Status</h3>
 
           <div className="space-y-3">
-            {(taxReportData?.data?.complianceStatus || []).map((item: any, idx: number) => (
+            {(taxRegionApiData?.data && Array.isArray(taxRegionApiData.data) ? taxRegionApiData.data : []).map((item: any, idx: number) => (
               <div key={idx} className="flex justify-between items-center p-3 bg-green-50 rounded-xl border border-green-200">
                 <div className="flex items-center">
                   <CheckCircle className="text-green-600 mr-2" size={20} />
-                  <span className="font-medium text-gray-900">{item.region}</span>
+                  <div>
+                    <span className="font-medium text-gray-900">{item.region}</span>
+                    <p className="text-xs text-green-700">{item.percentage}% of total tax</p>
+                  </div>
                 </div>
-                <span className="text-sm text-green-700 font-semibold">{item.status}</span>
+                <div className="text-right">
+                  <span className="text-sm text-green-700 font-semibold">{currencySymbol}{(item.value || 0).toLocaleString()}</span>
+                  <p className="text-xs text-green-600">Compliant</p>
+                </div>
               </div>
             ))}
+            {(!taxRegionApiData?.data || (taxRegionApiData?.data as any[])?.length === 0) && (
+              <p className={`text-sm ${theme.textSecondary} text-center py-4`}>No compliance data available</p>
+            )}
           </div>
+        </div>
+
+      </div>
+
+      {/* Tax Compliance Info Banner */}
+      <div className="flex items-start gap-3 px-4 py-3 rounded-xl border transition-colors duration-200 bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800/40">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 flex-shrink-0 text-blue-500 dark:text-blue-400 transition-colors duration-200"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div>
+          <span className="text-sm font-semibold text-blue-700 dark:text-blue-300 transition-colors duration-200">Tax Compliance: </span>
+          <span className="text-sm text-blue-600 dark:text-blue-400 transition-colors duration-200">All jurisdictions are up to date. Automated tax calculation is active for all regions. Review upcoming remittance deadlines and ensure sufficient funds are allocated. Export detailed reports for your accounting team or tax professional.</span>
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   // const renderDSOTab = () => (
   //   <div className="space-y-6">
@@ -1398,9 +1599,9 @@ const BillingDashboard = () => {
             </div>
             <div className="flex items-center gap-3">
               <Dropdown
-                value={timeRanges.find(t => t.value === timeRange)?.label || ''}
+                value={timeRange || '--'}
                 options={timeRanges.map(t => t.label)}
-                onChange={(label) => setTimeRange(timeRanges.find(t => t.label === label)?.value || 30)}
+                onChange={(label) => setTimeRange(label === '--' ? '' : label)}
               />
               <div className="relative">
                 <button
@@ -1441,26 +1642,26 @@ const BillingDashboard = () => {
           <div className={`bg-navbarBg rounded-lg p-4 shadow-sm border border-border`}>
             <div className="flex items-center justify-between mb-2">
               <span className={`text-sm ${theme.textSecondary}`}>Success Rate</span>
-              <CheckCircle size={20} className="text-green-600" />
+              <CheckCircle size={30} className="text-green-500" />
             </div>
             <div className={`text-2xl font-bold ${theme.text}`}>{currencySymbol}{kpiData.successRate.value.toLocaleString()}</div>
-            <div className="flex items-center gap-1 text-sm text-red-600 mt-1">
-              <TrendingDown size={14} />
+            <div className={`flex items-center gap-1 text-sm mt-1 ${kpiData.successRate.trend === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
+              {kpiData.successRate.trend === 'increase' ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
               <span>{kpiData.successRate.change}%</span>
-              <span className={theme.textSecondary}>From Last Month</span>
+              <span className={theme.textSecondary}>{kpiData.successRate.trend === 'increase' ? 'Increase' : 'Reduction'}</span>
             </div>
           </div>
 
           <div className={`bg-navbarBg rounded-lg p-4 shadow-sm border border-border`}>
             <div className="flex items-center justify-between mb-2">
               <span className={`text-sm ${theme.textSecondary}`}>Failed Payments</span>
-              <XCircle size={20} className="text-red-600" />
+              <XCircle size={30} className="text-red-500" />
             </div>
             <div className={`text-2xl font-bold ${theme.text}`}>{currencySymbol}{kpiData.failedPayments.value.toLocaleString()}</div>
-            <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
-              <TrendingDown size={14} />
+            <div className={`flex items-center gap-1 text-sm mt-1 ${kpiData.failedPayments.trend === 'reduction' ? 'text-green-600' : 'text-red-600'}`}>
+              {kpiData.failedPayments.trend === 'reduction' ? <TrendingDown size={14} /> : <TrendingUp size={14} />}
               <span>{kpiData.failedPayments.change}%</span>
-              <span className={theme.textSecondary}>Reduction</span>
+              <span className={theme.textSecondary}>{kpiData.failedPayments.trend === 'reduction' ? 'Reduction' : 'Increase'}</span>
             </div>
           </div>
 
@@ -1511,9 +1712,9 @@ const BillingDashboard = () => {
         {/* Tab Content */}
         <div>
           {activeTab === 'transactions' && renderTransactionsTab()}
-          {activeTab === 'invoice-aging' && renderInvoiceAgingTab()}
+          {/* {activeTab === 'invoice-aging' && renderInvoiceAgingTab()} */}
           {activeTab === 'failed-payment' && renderFailedPaymentTab()}
-          {activeTab === 'delinquency' && renderDelinquencyTab()}
+          {/* {activeTab === 'delinquency' && renderDelinquencyTab()} */}
           {activeTab === 'refund' && renderRefundTab()}
           {activeTab === 'tax' && renderTaxTab()}
           {/* {activeTab === 'dso' && renderDSOTab()} */}
