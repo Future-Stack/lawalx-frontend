@@ -15,7 +15,7 @@ import {
 import { useGetAllContentDataQuery } from "@/redux/api/users/content/content.api";
 import { transformFile, transformFolder } from "@/lib/content-utils";
 import { useCreateProgramMutation } from "@/redux/api/users/programs/programs.api";
-import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { WorkoutStatus } from "@/redux/api/users/programs/programs.type";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import { toast } from "sonner";
@@ -39,7 +39,7 @@ interface CreateScreenModalProps {
 
 export default function CreateScreenModal({ isOpen, onClose, onSuccess }: CreateScreenModalProps) {
   const { data: allContentData, isLoading: isContentLoading } = useGetAllContentDataQuery(undefined);
-  const { data: devicesData, isLoading: isDevicesLoading } = useGetMyDevicesDataQuery(undefined);
+  const { data: devicesData, isLoading: isDevicesLoading } = useGetMyAllDevicesDataQuery(undefined);
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [deletedContentIds, setDeletedContentIds] = useState<Set<string>>(new Set());
