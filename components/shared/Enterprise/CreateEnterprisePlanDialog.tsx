@@ -310,7 +310,7 @@ export default function CreateEnterprisePlanDialog({
               className="px-10 py-2.5 rounded-lg bg-[#00A3FF] text-white font-bold text-[14px] hover:bg-[#00A3FF]/90 transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              Create Plan
+              Send to Admin
             </button>
           </div>
         </div>
