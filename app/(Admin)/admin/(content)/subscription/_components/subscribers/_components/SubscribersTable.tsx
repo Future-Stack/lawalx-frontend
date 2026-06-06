@@ -31,6 +31,7 @@ interface SubscribersTableProps {
   formatDate: (date: string) => string;
   handleViewInvoices: (userId: string) => void;
   handleAdditionalPayment: (subscriber: Subscriber) => void;
+  handleCancelPlan: (userId: string) => void;
 }
 
 const SubscribersTable = ({
@@ -39,6 +40,7 @@ const SubscribersTable = ({
   formatDate,
   handleViewInvoices,
   handleAdditionalPayment,
+  handleCancelPlan,
 }: SubscribersTableProps) => {
   return (
     <div className="overflow-x-auto scrollbar-hide">
@@ -138,7 +140,7 @@ const SubscribersTable = ({
                       <DropdownMenuItem>
                         <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-500 focus:text-red-500">
+                      <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleCancelPlan(sub.userId)}>
                         <XCircle className="mr-2 h-4 w-4" /> Cancel Plan
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -185,7 +187,7 @@ const SubscribersTable = ({
                   <DropdownMenuItem>
                     <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-500 focus:text-red-500">
+                  <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleCancelPlan(sub.userId)}>
                     <XCircle className="mr-2 h-4 w-4" /> Cancel Plan
                   </DropdownMenuItem>
                 </DropdownMenuContent>

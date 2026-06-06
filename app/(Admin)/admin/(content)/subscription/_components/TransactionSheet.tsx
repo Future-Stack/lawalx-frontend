@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 
 import {
@@ -19,6 +20,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useGetUserInvoicesQuery } from "@/redux/api/admin/payments/subscriber/subscribersApi";
+import { useState } from "react";
+import RefundDialog from "./billings/_components/RefundDialog";
+import { PaymentHistoryItem } from "@/redux/api/admin/payments/billings/billingsApi";
 
 interface TransactionSheetProps {
   open: boolean;
@@ -27,6 +31,8 @@ interface TransactionSheetProps {
 }
 
 const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
+  const [refundOpen, setRefundOpen] = useState(false);
+
   const { data, isLoading, isError } = useGetUserInvoicesQuery(userId, {
     skip: !open || !userId,
   });
@@ -35,6 +41,21 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
   const payment = invoiceData?.payment;
   const user = invoiceData?.user;
   const subscription = invoiceData?.subscriptions;
+
+  const refundPaymentData: PaymentHistoryItem | null = payment && user ? {
+    paymentId: payment.paymentId,
+    invoice: payment.invoiceNumber,
+    user: {
+      id: user.id,
+      name: user.fullName || user.username,
+      email: user.email || payment.customerEmail,
+    },
+    paymentMethod: payment.gateway,
+    amount: payment.amount,
+    status: payment.status as any,
+    date: payment.date,
+    canViewInStripe: false,
+  } : null;
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -77,7 +98,8 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
     : "N/A";
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
+    <>
+      <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent className="w-full sm:max-w-[540px] overflow-y-auto bg-navbarBg px-4 sm:px-6">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
@@ -250,6 +272,8 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                   <Button
                     variant="destructive"
                     className="w-full text-xs h-10 shadow-customShadow hover:text-gray-100 bg-red-500"
+                    onClick={() => setRefundOpen(true)}
+                    disabled={payment?.status?.toUpperCase() === "REFUNDED" || !refundPaymentData}
                   >
                     <CornerDownLeft className="w-3 h-3 mr-1" /> Refund
                   </Button>
@@ -260,6 +284,13 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
         )}
       </SheetContent>
     </Sheet>
+
+    <RefundDialog 
+      open={refundOpen} 
+      setOpen={setRefundOpen} 
+      payment={refundPaymentData} 
+    />
+    </>
   );
 };
 

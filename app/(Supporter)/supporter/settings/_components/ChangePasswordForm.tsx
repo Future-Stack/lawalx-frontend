@@ -44,7 +44,8 @@ export default function ChangePasswordForm() {
           confirmPassword: '',
         });
       }
-    } catch (err: any) {
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string } };
       toast.error(err?.data?.message || 'Failed to change password');
     }
   };

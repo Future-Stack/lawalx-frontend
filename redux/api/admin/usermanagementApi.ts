@@ -84,6 +84,14 @@ export const usermanagementApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+
+    getUserProfile: builder.query({
+      query: (userId: string) => ({
+        url: `/usermanagement/${userId}`,
+        method: "GET",
+      }),
+      providesTags: ["User"],
+    }),
   }),
 });
 
@@ -97,4 +105,5 @@ export const {
   useAdminResetPasswordMutation,
   useSuspendUserMutation,
   useUnsuspendUserMutation,
+  useGetUserProfileQuery,
 } = usermanagementApi;

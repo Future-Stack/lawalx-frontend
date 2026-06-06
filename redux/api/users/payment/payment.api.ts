@@ -30,9 +30,29 @@ export const userPaymentApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+    cancelSubscription: builder.mutation<MySubscriptionApiResponse, { userId: string }>({
+      query: ({ userId }) => ({
+        url: `/subscribers/cancel?userId=${userId}`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Subscription"],
+    }),
+    updateRecurring: builder.mutation<MySubscriptionApiResponse, { recurring: boolean }>({
+      query: (data) => ({
+        url: "/payment/my-subscription/recurring",
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Subscription"],
+    }),
   }),
 });
 
-export const { useGetMySubscriptionQuery, useCreateCheckoutMutation, useCreateEnterpriseCheckoutMutation } =
-  userPaymentApi;
+export const {
+  useGetMySubscriptionQuery,
+  useCreateCheckoutMutation,
+  useCreateEnterpriseCheckoutMutation,
+  useCancelSubscriptionMutation,
+  useUpdateRecurringMutation,
+} = userPaymentApi;
 export const useCreatePaymentMutation = useCreateCheckoutMutation;
