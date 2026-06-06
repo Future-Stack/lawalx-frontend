@@ -133,7 +133,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
         try {
             const response = await createLowerThird(payload).unwrap();
             if (response.success) {
-                toast.success("Lower Third created successfully!");
+                toast.success("Text Section added successfully!");
                 const createdId = (response as any).data?.id || (response as any).id || (response as any).data;
                 if (onLowerThirdCreated && createdId) {
                     onLowerThirdCreated(createdId);
@@ -141,7 +141,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                 }
             }
         } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to create Lower Third");
+            toast.error(error?.data?.message || "Failed to add Text Section");
         }
     };
 
@@ -180,7 +180,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
         { label: "Select Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-muted" /> },
         { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-muted" /> },
         { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-muted" /> },
-        { label: "Text Section", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-muted" /> }
+        // { label: "Text Section", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-muted" /> }
     ];
 
     // const relatedContent = mockContent
@@ -197,7 +197,6 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                 options={contentTypeOptions}
                 value="lower-third"
                 onChange={(v) => onContentTypeChange?.(v)}
-                required
             />
 
             <div className="flex flex-col xl:flex-row gap-6 w-full">

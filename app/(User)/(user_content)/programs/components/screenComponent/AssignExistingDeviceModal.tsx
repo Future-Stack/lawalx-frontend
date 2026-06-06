@@ -5,7 +5,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Search, Monitor, Loader2, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { DeviceListResponse, Device } from "@/redux/api/users/devices/devices.type";
 import DeviceLocation from "@/components/common/DeviceLocation";
 import { useUpdateSingleProgramMutation } from "@/redux/api/users/programs/programs.api";
@@ -25,7 +25,7 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
     programId,
     existingDeviceIds,
 }) => {
-    const { data: devicesData, isLoading: isLoadingDevices } = useGetMyDevicesDataQuery();
+    const { data: devicesData, isLoading: isLoadingDevices } = useGetMyAllDevicesDataQuery();
     const [updateProgram, { isLoading: isUpdating }] = useUpdateSingleProgramMutation();
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);

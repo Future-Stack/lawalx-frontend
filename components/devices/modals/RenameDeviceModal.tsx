@@ -8,14 +8,18 @@ interface Props {
   onClose: () => void;
   deviceId?: string;
   initialName?: string;
+  onRename?: (newName: string) => Promise<void>;
+  isLoading?: boolean;
 }
 
-export default function RenameDeviceModal({ isOpen, onClose, deviceId, initialName }: Props) {
+export default function RenameDeviceModal({ isOpen, onClose, deviceId, initialName, onRename, isLoading }: Props) {
   const { data: deviceData, isLoading: isFetching } = useGetSingleDeviceDataQuery(
     { id: deviceId || "" },
     { skip: !isOpen || !deviceId }
   );
-  const [renameDeviceApi, { isLoading: isRenaming }] = useRenameDeviceMutation();
+  const [renameDeviceApi, { isLoading: isRenamingInternal }] = useRenameDeviceMutation();
+
+  const isRenaming = isLoading !== undefined ? isLoading : isRenamingInternal;
 
   const [name, setName] = useState(initialName || "");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -38,6 +42,7 @@ export default function RenameDeviceModal({ isOpen, onClose, deviceId, initialNa
         setName(initialName);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, deviceData, initialName]);
 
   // Handle focus
@@ -57,12 +62,18 @@ export default function RenameDeviceModal({ isOpen, onClose, deviceId, initialNa
   const handleRename = async () => {
     if (!deviceId) return;
     try {
-      await renameDeviceApi({ id: deviceId, name: name.trim() }).unwrap();
-      toast.success("Device renamed successfully");
-      onClose();
+      if (onRename) {
+        await onRename(name.trim());
+      } else {
+        await renameDeviceApi({ deviceId: deviceId, name: name.trim() }).unwrap();
+        toast.success("Device renamed successfully");
+        onClose();
+      }
     } catch (error) {
-      toast.error("Failed to rename device");
-      console.error("Rename error:", error);
+      if (!onRename) {
+        toast.error("Failed to rename device");
+        console.error("Rename error:", error);
+      }
     }
   };
 

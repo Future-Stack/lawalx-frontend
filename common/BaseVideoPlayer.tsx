@@ -27,8 +27,6 @@ function setSavedVolume(v: number) {
     localStorage.setItem(VOLUME_KEY, String(v));
   } catch {}
 }
-// ──────────────────────────────────────────────────────────────
-
 interface VideoPlayerProps {
   src: string;
   poster?: string;
@@ -39,8 +37,8 @@ interface VideoPlayerProps {
   onEnded?: () => void;
   onPlay?: () => void;
   onPause?: () => void;
-  fillParent?: boolean; // New prop to force h-full instead of aspect-ratio padding
-  className?: string; // Standard className override
+  fillParent?: boolean;
+  className?: string; 
   onReady?: () => void;
   volume?: number;
   onVolumeChange?: (volume: number) => void;
@@ -87,10 +85,15 @@ const BaseVideoPlayer = ({
   const onPlayRef   = useRef(onPlay);
   const onPauseRef  = useRef(onPause);
   const onReadyRef  = useRef(onReady);
+  const onVolumeChangeRef = useRef(onVolumeChange);
+  const volumeRef = useRef(volume);
+
   onEndedRef.current  = onEnded;
   onPlayRef.current   = onPlay;
   onPauseRef.current  = onPause;
   onReadyRef.current  = onReady;
+  onVolumeChangeRef.current = onVolumeChange;
+  volumeRef.current = volume;
 
   const autoPlayRef = useRef(autoPlay);
   autoPlayRef.current = autoPlay;
@@ -111,15 +114,10 @@ const BaseVideoPlayer = ({
         return;
       }
 
-      // READY — fires on mount AND every src swap
       const handleReady = () => {
         setReady(true);
         onReadyRef.current?.();
-        // Always restore saved volume on ready, regardless of autoPlay.
-        // For autoPlay: browser needs muted=true to START playing,
-        // but we restore volume right after so user hears audio.
-        // Priority: 1. volume prop, 2. localStorage, 3. default (1)
-        const vol = volume !== undefined ? volume : getSavedVolume();
+        const vol = volumeRef.current !== undefined ? volumeRef.current : getSavedVolume();
         if (vol === null) return;
         
         setTimeout(() => {
@@ -133,17 +131,13 @@ const BaseVideoPlayer = ({
         }, 50);
       };
 
-      // VOLUMECHANGE — user moved slider → persist
-      // Skip saving when volume is 0 AND autoplay is active
-      // (that 0 is forced by browser policy, not user intent)
       const handleVolumeChange = () => {
         const p = playerRef.current?.plyr as any;
         if (!p) return;
         const vol = p.volume;
-        // Only save if it's a real user change: not the forced-0 from autoplay start
         if (autoPlayRef.current && vol === 0 && p.muted) return;
         setSavedVolume(vol);
-        onVolumeChange?.(vol);
+        onVolumeChangeRef.current?.(vol);
       };
 
       const handleSeeking = () => {
@@ -362,276 +356,3 @@ const BaseVideoPlayer = ({
 
 export default BaseVideoPlayer;
 
-
-
-// // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// "use client";
-
-// import { useRef, useEffect, useState, useMemo } from "react";
-// import dynamic from "next/dynamic";
-// import "plyr-react/plyr.css";
-// import type { APITypes } from "plyr-react";
-// import { Loader2 } from "lucide-react";
-
-// // Client-only load
-// const Plyr = dynamic(() => import("plyr-react"), { ssr: false });
-
-// interface VideoPlayerProps {
-//   src: string;
-//   poster?: string;
-//   autoPlay?: boolean;
-//   muted?: boolean;
-//   rounded?: string;
-//   onEnded?: () => void;
-//   onPlay?: () => void;
-//   onPause?: () => void;
-// }
-
-// const BaseVideoPlayer = ({
-//   src,
-//   poster,
-//   autoPlay = false,
-//   muted = true,
-//   rounded = "rounded-xl",
-//   onEnded,
-//   onPlay,
-//   onPause,
-// }: VideoPlayerProps) => {
-//   const playerRef = useRef<APITypes>(null);
-//   const [isMounted, setIsMounted] = useState(false);
-//   const [ready, setReady] = useState(false);
-//   const [volumeRange, setVolumeRange] = useState<number | null>(null)
-//   useEffect(() => {
-//     if (!isMounted) return;
-
-//     let timer: NodeJS.Timeout;
-
-//     const setup = () => {
-//       const player = playerRef.current?.plyr as any;
-
-//       if (player && typeof player.on === "function") {
-
-//         const handleReady = () => {
-//           setReady(true);
-
-//           // ✅ Restore volume from localStorage
-//           const savedVolume = localStorage.getItem("volume");
-//           if (savedVolume !== null) {
-//             const vol = Number(savedVolume);
-//             player.volume = vol;
-//             player.muted = vol === 0;
-//             setVolumeRange(vol);
-//           }
-
-//           // ✅ Attach volume listener
-//           player.on("volumechange", () => {
-//             const vol = player.volume;
-//             localStorage.setItem("volume", String(vol));
-//             setVolumeRange(vol);
-//           });
-//         };
-
-//         const handlePlay = () => onPlayRef.current?.();
-//         const handlePause = () => onPauseRef.current?.();
-//         const handleEnded = () => onEndedRef.current?.();
-
-//         player.on("ready", handleReady);
-//         player.on("playing", handlePlay);
-//         player.on("pause", handlePause);
-//         player.on("ended", handleEnded);
-
-//         return () => {
-//           player.off("ready", handleReady);
-//           player.off("playing", handlePlay);
-//           player.off("pause", handlePause);
-//           player.off("ended", handleEnded);
-//         };
-//       } else {
-//         timer = setTimeout(setup, 300);
-//       }
-//     };
-
-//     const cleanup = setup();
-
-//     return () => {
-//       if (timer) clearTimeout(timer);
-//       if (cleanup) cleanup();
-//     };
-//   }, [isMounted]);
-//   useEffect(() => {
-//     const player = playerRef.current?.plyr as any;
-
-//     if (player && ready) {
-//       const savedVolume = localStorage.getItem("volume");
-
-//       if (savedVolume !== null) {
-//         const vol = Number(savedVolume);
-
-//         // Apply AFTER source loads
-//         setTimeout(() => {
-//           player.volume = vol;
-//           player.muted = vol === 0;
-//           setVolumeRange(vol);
-//         }, 50); // small delay ensures Plyr finished updating source
-//       }
-//     }
-//   }, [src, ready]);
-//   // Memoize options to include current autoPlay/muted state
-//   const plyrOptions = useMemo(() => ({
-//     autoplay: autoPlay,
-//     muted: muted || autoPlay,
-//     controls: [
-//       "play",
-//   onEndedRef.current = onEnded;
-//   onPlayRef.current = onPlay;
-//   onPauseRef.current = onPause;
-
-
-//   useEffect(() => {
-//     setIsMounted(true);
-
-//   }, []);
-
-//   // Memoize source so Plyr doesn't re-initialize on unrelated parent re-renders
-//   const source = useMemo(() => {
-//     const isYouTube = src.includes("youtube.com") || src.includes("youtu.be");
-
-//     if (isYouTube) {
-//       return {
-//         type: "video" as const,
-//         poster: poster || "",
-//         sources: [{ src, provider: "youtube" as const }],
-//       } as any;
-//     }
-
-//     const isAbsolute = src.startsWith("http://") || src.startsWith("https://");
-//     const safeSrc = isAbsolute ? src : src.startsWith("/") ? src : "/" + src;
-
-//     return {
-//       type: "video" as const,
-//       poster: poster || "",
-//       sources: [{ src: safeSrc, type: "video/mp4" }],
-//     } as any;
-//   }, [src, poster]);
-
-//   // Reset ready state when source changes
-//   useEffect(() => {
-//     setReady(false);
-//   }, [src]);
-
-//   // Handle all event listeners once instance is available
-//   useEffect(() => {
-//     if (!isMounted) return;
-
-//     let timer: NodeJS.Timeout;
-//     const initListeners = () => {
-//       const instance = playerRef.current?.plyr as any;
-
-//       if (instance && typeof instance.on === "function") {
-//         const handleEnded = () => onEndedRef.current?.();
-//         const handleReady = () => setReady(true);
-//         const handlePlaying = () => {
-//           setReady(true);
-//           onPlayRef.current?.();
-//         };
-//         const handlePause = () => onPauseRef.current?.();
-
-//         instance.on("ended", handleEnded);
-//         instance.on("ready", handleReady);
-//         instance.on("canplay", handleReady);
-//         instance.on("playing", handlePlaying);
-//         instance.on("pause", handlePause);
-
-//         if (instance.ready) setReady(true);
-
-//         return () => {
-//           try {
-//             instance.off("ended", handleEnded);
-//             instance.off("ready", handleReady);
-//             instance.off("canplay", handleReady);
-//             instance.off("playing", handlePlaying);
-//             instance.off("pause", handlePause);
-//           } catch (e) { /* ignore cleanup errors */ }
-//         };
-//       } else {
-//         timer = setTimeout(initListeners, 100);
-//       }
-//     };
-
-//     const cleanup = initListeners();
-//     return () => {
-//       if (timer) clearTimeout(timer);
-//       if (cleanup) cleanup();
-//     };
-//   }, [isMounted]); // Only run once on mount
-
-//   // Sync playback with autoPlay prop
-//   useEffect(() => {
-//     const instance = playerRef.current?.plyr as any;
-//     if (instance && ready) {
-//       if (autoPlay) {
-//         // Mute before playing to satisfy browser policies
-//         instance.muted = true;
-//         instance.volume = 0;
-
-//         // Small delay to ensure state is registered
-//         const playTimer = setTimeout(() => {
-//           instance.play()?.catch(() => {
-//             console.warn("Autoplay attempt failed or blocked");
-//           });
-//         }, 50);
-//         return () => clearTimeout(playTimer);
-//       } else {
-//         instance.pause();
-//       }
-//     }
-//   }, [autoPlay, ready, src]);
-
-//   // Sync volume / muted status (for manual overrides)
-//   useEffect(() => {
-//     const instance = playerRef.current?.plyr as any;
-//     if (instance && ready && !autoPlay) {
-//       instance.muted = muted;
-//       instance.volume = muted ? 0 : 1;
-//     }
-//   }, [muted, autoPlay, ready]);
-
-//   return (
-//     <div
-//       className={`relative w-full pt-[56.25%] ${rounded} bg-black overflow-hidden group`}
-//       style={{ transform: "translateZ(0)" }}
-//     >
-//       <div className="absolute inset-0 flex items-center justify-center">
-//         {(!ready || !isMounted) && (
-//           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black gap-3 transition-opacity duration-300">
-//             <Loader2 className="w-8 h-8 animate-spin text-white/50" />
-//             <span className="text-[10px] text-white/30 uppercase tracking-widest font-medium">Initializing</span>
-//           </div>
-//         )}
-
-//         <div className={`absolute inset-0 transition-all duration-700 ease-out ${ready ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-105 blur-lg"}`}>
-//           {isMounted ? (
-//             <Plyr
-//               ref={playerRef}
-//               source={source}
-//               options={plyrOptions}
-
-//             />
-//           ) : (
-//             <div className="w-full h-full bg-black" />
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default BaseVideoPlayer;
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default BaseVideoPlayer;

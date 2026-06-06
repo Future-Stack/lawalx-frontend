@@ -15,7 +15,7 @@ import { useDeleteFileMutation, useDeleteFolderMutation, useGetAllContentDataQue
 import { transformFile, transformFolder } from "@/lib/content-utils";
 import folderIcon from "@/public/icons/folder.svg";
 import { useCreateProgramMutation } from "@/redux/api/users/programs/programs.api";
-import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { WorkoutStatus } from "@/redux/api/users/programs/programs.type";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import { toast } from "sonner";
@@ -45,7 +45,7 @@ interface FirstSignupCreateProgramModalProps {
 export default function FirstSignupCreateProgramModal({ isOpen, onClose, onSuccess }: FirstSignupCreateProgramModalProps) {
   const router = useRouter();
   const { data: allContentData, isLoading: isContentLoading } = useGetAllContentDataQuery(undefined);
-  const { data: devicesData, isLoading: isDevicesLoading } = useGetMyDevicesDataQuery(undefined);
+  const { data: devicesData, isLoading: isDevicesLoading } = useGetMyAllDevicesDataQuery(undefined);
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [currentStep, setCurrentStep] = useState(1);

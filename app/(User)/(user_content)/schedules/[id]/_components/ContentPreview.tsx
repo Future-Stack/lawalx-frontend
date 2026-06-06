@@ -149,7 +149,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
       setPlayingIndex((playingIndex + 1) % items.length);
       setPlaybackVersion((prev) => prev + 1);
       setIsFading(false);
-    }, 500);
+    }, 1500);
   }, [items, playingIndex, setPlayingIndex]);
 
   useEffect(() => {
@@ -157,7 +157,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     const currentItem = items[playingIndex];
     if (currentItem?.type === "video" || currentItem?.type === "audio") return;
     const displayDuration = parseInt(currentItem?.duration || "7");
-    const timer = setTimeout(advance, Math.max(0, displayDuration * 1000 - 500));
+    const timer = setTimeout(advance, Math.max(0, displayDuration * 1000 - 1500));
     return () => clearTimeout(timer);
   }, [playingIndex, items, isPaused, advance]);
 

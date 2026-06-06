@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/select";
 import { useAddDeviceMutation, useGetDevicePinWiseDataQuery } from "@/redux/api/users/devices/devices.api";
 import { useGetAllProgramsDataQuery } from "@/redux/api/users/programs/programs.api";
-import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { toast } from "sonner";
 
 interface AddDeviceModalProps {
@@ -41,8 +40,6 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
 
   const [addDevice] = useAddDeviceMutation();
   const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
-  const { data: userProfile } = useGetUserProfileQuery();
-  const userInfo = userProfile?.data;
 
   const cleanedPin = useMemo(() => pin.replace("-", ""), [pin]);
   const { data: devicePinWiseData } = useGetDevicePinWiseDataQuery(
@@ -78,7 +75,6 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
     setDeviceLocationLabel(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
 
     const fetchLocationName = async () => {
-      const cacheKey = `${lat.toFixed(6)},${lng.toFixed(6)}`;
       try {
         const response = await fetch(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`

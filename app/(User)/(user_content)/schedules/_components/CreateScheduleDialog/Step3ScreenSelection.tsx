@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Search, Monitor, Loader2, CheckCircle2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { DeviceListResponse, Device } from "@/redux/api/users/devices/devices.type";
 
 interface Step3Props {
@@ -17,7 +17,7 @@ import DeviceLocation from "@/components/common/DeviceLocation";
 import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 
 const Step3ScreenSelection: React.FC<Step3Props> = ({ data, onChange }) => {
-    const { data: devicesData, isLoading } = useGetMyDevicesDataQuery();
+    const { data: devicesData, isLoading } = useGetMyAllDevicesDataQuery();
     const [searchQuery, setSearchQuery] = useState("");
     console.log("devicesData", devicesData);
 
