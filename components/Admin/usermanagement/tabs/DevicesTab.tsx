@@ -146,17 +146,28 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction, isLastRows, i
   );
 };
 
-export default function DevicesTab() {
+export default function DevicesTab({ devices: devicesProp }: { devices?: any[] }) {
   const [statusFilter, setStatusFilter] = useState('All Status');
-  const [typeFilter, setTypeFilter] = useState('All Types');
   const [searchQuery, setSearchQuery] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [modalContent, setModalContent] = useState<{ title: string; device: Device | null; action: string }>({ title: '', device: null, action: '' });
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
-  // All devices data
-  const allDevices = useMemo(() => generateDevicesData(), []);
+  const allDevices = devicesProp && devicesProp.length > 0
+    ? devicesProp.map((d: any, i: number) => ({
+      id: i + 1,
+      device: d.deviceName || "N/A",
+      model: d.resolution || "N/A",
+      customer: d.programName || "N/A",
+      location: d.location || "N/A",
+      type: "N/A",
+      status: d.status === "PAIRED" ? "Online" : d.status === "OFFLINE" ? "Offline" : d.status === "UNPAIRED" ? "Offline" : (d.status || "N/A"),
+      storage: d.storageUsage || "N/A",
+      uptime: "N/A",
+      lastSync: d.lastSynced ? new Date(d.lastSynced).toLocaleString() : "N/A",
+    }))
+    : [];
 
   // Calculate stats based on all devices
   const stats = useMemo(() => {
@@ -178,13 +189,10 @@ export default function DevicesTab() {
         device.device.toLowerCase().includes(searchQuery.toLowerCase()) ||
         device.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
         device.model.toLowerCase().includes(searchQuery.toLowerCase());
-
       const matchesStatus = statusFilter === 'All Status' || device.status === statusFilter;
-      const matchesType = typeFilter === 'All Types' || device.type === typeFilter;
-
-      return matchesSearch && matchesStatus && matchesType;
+      return matchesSearch && matchesStatus;
     });
-  }, [allDevices, searchQuery, statusFilter, typeFilter]);
+  }, [allDevices, searchQuery, statusFilter]);
 
   const totalPages = Math.ceil(filteredDevices.length / ITEMS_PER_PAGE);
   const currentDevices = filteredDevices.slice(
@@ -318,13 +326,8 @@ export default function DevicesTab() {
           </div>
           <Dropdown
             value={statusFilter}
-            options={['All Status', 'Online', 'Offline', 'Syncing']}
+            options={['All Status', 'Online', 'Offline']}
             onChange={setStatusFilter}
-          />
-          <Dropdown
-            value={typeFilter}
-            options={['All Types', 'Android TV', 'Fire TV', 'Samsung Tizen', 'LG webOS']}
-            onChange={setTypeFilter}
           />
         </div>
       </div>
@@ -337,14 +340,13 @@ export default function DevicesTab() {
             <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-border">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Device</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Customer</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Program</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Resolution</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Storage</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Sync</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Uptime</th>
-                <th className="px-6 py-3"></th>
+                {/* <th className="px-6 py-3"></th> */}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -368,7 +370,7 @@ export default function DevicesTab() {
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.storage}</td>
                       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{device.lastSync}</td>
-                      <td className="px-6 py-4">
+                      {/* <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-green-500"></div>
                           <span className="text-sm text-gray-900 dark:text-white">{device.uptime}</span>
@@ -376,14 +378,14 @@ export default function DevicesTab() {
                       </td>
                       <td className="px-6 py-4">
                         <ActionMenu device={device} onAction={handleAction} isLastRows={isLastRows} isFirstRows={isFirstRows} />
-                      </td>
+                      </td> */}
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={9} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                    No devices found matching your criteria.
+                  <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                    No data from backend.
                   </td>
                 </tr>
               )}
@@ -400,13 +402,13 @@ export default function DevicesTab() {
       </div>
 
       {/* Modal */}
-      <Modal
+      {/* <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         title={modalContent.title}
       >
         {renderModalContent()}
-      </Modal>
+      </Modal> */}
     </div>
   );
 }

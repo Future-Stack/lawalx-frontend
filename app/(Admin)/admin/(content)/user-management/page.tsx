@@ -119,13 +119,7 @@ export default function UserManagementPage() {
   const limit = 10;
 
   // API Queries
-  const planQuery = planFilter === "All Plans"
-    ? undefined
-    : planFilter === "Free Trial"
-      ? "FREE_TRIAL"
-      : planFilter === "Trial"
-        ? "TRIAL"
-        : planFilter;
+  const planQuery = planFilter === "All Plans" ? undefined : planFilter.toUpperCase().replace(" ", "_");
 
   const { data: usersData, isLoading: isUsersLoading } = useGetUsersQuery({
     page,
@@ -133,7 +127,7 @@ export default function UserManagementPage() {
     search: searchTerm,
     status: statusFilter,
     plan: planQuery,
-    storageUsage: storageFilter,
+    storageUsage: storageFilter > 0 ? storageFilter : undefined,
   });
 
   const { data: statsData } = useGetUserStatsQuery({});
@@ -515,7 +509,7 @@ export default function UserManagementPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full xl:w-auto">
               <Dropdown
                 value={planFilter}
-                options={["All Plans", "Premium", "Free Trial"]}
+                options={["All Plans", "Free trial", "Basic", "Business", "Premium", "Enterprise"]}
                 onChange={setPlanFilter}
                 className="w-full"
               />
@@ -589,39 +583,35 @@ export default function UserManagementPage() {
                 const isFirstRows = index < 2;
                 const isLastRows = index >= users.length - 2;
 
-                // Derive fields from API response
-                const payment = user.payments?.[0];
-                const plan = (payment?.planName || "Free Trial").replace("_", " ");
-                const deviceLimit = payment?.deviceLimit || 0;
-                const storageGB = payment?.storageGB || 0;
+                const plan = user.plan || "No Plan";
+                const deviceStr: string = user.device || "0/0";
+                const storageStr: string = user.storage || "0GB/0GB";
 
-                const deviceUsedRaw = user.device ?? user.deviceUsage ?? 0;
-                const deviceUsed = Number(String(deviceUsedRaw).replace(/[^0-9.]/g, '')) || 0;
-                const storageUsedRaw = user.storage ?? user.storageUsage ?? 0;
-                const storageUsed = Number(String(storageUsedRaw).replace(/[^0-9.]/g, '')) || 0;
+                const [deviceUsed, deviceLimit] = deviceStr.split("/").map((v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0);
+                const [storageUsed, storageTotal] = storageStr.split("/").map((v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0);
 
                 const deviceUsage = deviceLimit > 0 ? Math.min(100, Math.round((deviceUsed / deviceLimit) * 100)) : 0;
-                const storageUsage = storageGB > 0 ? Math.min(100, Math.round((storageUsed / storageGB) * 100)) : 0;
+                const storageUsage = storageTotal > 0 ? Math.min(100, Math.round((storageUsed / storageTotal) * 100)) : 0;
                 const statusStr = user.status.charAt(0) + user.status.slice(1).toLowerCase();
 
                 return (
                   <tr
                     key={user.id}
                     onClick={() => {
-                      const query = new URLSearchParams({
+                      const q = new URLSearchParams({
                         name: user.full_name || user.username,
                         email: user.account?.email || "",
-                        plan: plan,
+                        plan,
                         status: user.status,
-                        device: `${deviceLimit || 0}`,
-                        storage: `${storageGB || 0}`,
-                        deviceUsage: `${deviceUsage}`,
-                        storageUsage: `${storageUsage}`,
+                        device: String(deviceLimit),
+                        storage: String(storageTotal),
+                        deviceUsage: String(deviceUsage),
+                        storageUsage: String(storageUsage),
                         phone: user.phoneNumber || "",
                         location: user.location || "",
                         joinDate: user.account?.created_at || "",
                       }).toString();
-                      router.push(`/admin/user-management/${user.id}?${query}`);
+                      router.push(`/admin/user-management/${user.id}?${q}`);
                     }}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
                   >
@@ -645,40 +635,27 @@ export default function UserManagementPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-nowrap">
-                      <span className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-full text-xs font-medium">
-                        {plan}
-                      </span>
+                      {(() => {
+                        const p = plan.toLowerCase();
+                        const cls = p.includes("premium") ? "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400"
+                          : p.includes("enterprise") ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
+                          : p.includes("business") ? "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
+                          : p.includes("basic") ? "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400"
+                          : p.includes("free") || p.includes("trial") ? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                          : "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400";
+                        return <span className={`px-3 py-1 rounded-full text-xs font-medium ${cls}`}>{plan}</span>;
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white mb-1">
-                        {`${deviceUsed}/${deviceLimit || 0}`}
-                      </div>
+                      <div className="text-sm text-gray-900 dark:text-white mb-1">{deviceStr}</div>
                       <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${deviceUsage > 80
-                            ? "bg-red-500"
-                            : deviceUsage > 60
-                              ? "bg-orange-500"
-                              : "bg-blue-500"
-                            }`}
-                          style={{ width: `${deviceUsage}%` }}
-                        />
+                        <div className={`h-full ${deviceUsage >= 80 ? "bg-red-500" : deviceUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${deviceUsage}%` }} />
                       </div>
                     </td>
                     <td className="px-4 py-3 text-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white mb-1">
-                        {`${storageUsed}GB/${storageGB || 0}GB`}
-                      </div>
+                      <div className="text-sm text-gray-900 dark:text-white mb-1">{storageStr}</div>
                       <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full ${storageUsage > 80
-                            ? "bg-red-500"
-                            : storageUsage > 60
-                              ? "bg-orange-500"
-                              : "bg-blue-500"
-                            }`}
-                          style={{ width: `${storageUsage}%` }}
-                        />
+                        <div className={`h-full ${storageUsage >= 80 ? "bg-red-500" : storageUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${storageUsage}%` }} />
                       </div>
                     </td>
                     <td className="px-4 py-3 text-nowrap">
@@ -752,20 +729,20 @@ export default function UserManagementPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const query = new URLSearchParams({
+                                  const q = new URLSearchParams({
                                     name: user.full_name || user.username,
                                     email: user.account?.email || "",
-                                    plan: plan,
+                                    plan,
                                     status: user.status,
-                                    device: `${deviceLimit || 0}`,
-                                    storage: `${storageGB || 0}`,
-                                    deviceUsage: `${deviceUsage}`,
-                                    storageUsage: `${storageUsage}`,
+                                    device: String(deviceLimit),
+                                    storage: String(storageTotal),
+                                    deviceUsage: String(deviceUsage),
+                                    storageUsage: String(storageUsage),
                                     phone: user.phoneNumber || "",
                                     location: user.location || "",
                                     joinDate: user.account?.created_at || "",
                                   }).toString();
-                                  router.push(`/admin/user-management/${user.id}?${query}`);
+                                  router.push(`/admin/user-management/${user.id}?${q}`);
                                 }}
                                 className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
                               >
@@ -879,30 +856,26 @@ export default function UserManagementPage() {
           ) : users.map((user: any, index: number) => {
             const isLastRows = index >= users.length - 2;
 
-            // Derive fields from API response
-            const payment = user.payments?.[0];
-            const plan = (payment?.planName || "Free Trial").replace("_", " ");
-            const deviceLimit = payment?.deviceLimit || 0;
-            const storageGB = payment?.storageGB || 0;
+            const plan = user.plan || "No Plan";
+            const deviceStr: string = user.device || "0/0";
+            const storageStr: string = user.storage || "0GB/0GB";
 
-            const deviceUsedRaw = user.device ?? user.deviceUsage ?? 0;
-            const deviceUsed = Number(String(deviceUsedRaw).replace(/[^0-9.]/g, '')) || 0;
-            const storageUsedRaw = user.storage ?? user.storageUsage ?? 0;
-            const storageUsed = Number(String(storageUsedRaw).replace(/[^0-9.]/g, '')) || 0;
+            const [deviceUsed, deviceLimit] = deviceStr.split("/").map((v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0);
+            const [storageUsed, storageTotal] = storageStr.split("/").map((v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0);
 
             const deviceUsage = deviceLimit > 0 ? Math.min(100, Math.round((deviceUsed / deviceLimit) * 100)) : 0;
-            const storageUsage = storageGB > 0 ? Math.min(100, Math.round((storageUsed / storageGB) * 100)) : 0;
+            const storageUsage = storageTotal > 0 ? Math.min(100, Math.round((storageUsed / storageTotal) * 100)) : 0;
             const statusStr = user.status.charAt(0) + user.status.slice(1).toLowerCase();
 
             const query = new URLSearchParams({
               name: user.full_name || user.username,
               email: user.account?.email || "",
-              plan: plan,
+              plan,
               status: user.status,
-              device: `${deviceLimit || 0}`,
-              storage: `${storageGB || 0}`,
-              deviceUsage: `${deviceUsage}`,
-              storageUsage: `${storageUsage}`,
+              device: String(deviceLimit),
+              storage: String(storageTotal),
+              deviceUsage: String(deviceUsage),
+              storageUsage: String(storageUsage),
               phone: user.phoneNumber || "",
               location: user.location || "",
               joinDate: user.account?.created_at || "",
@@ -1055,7 +1028,16 @@ export default function UserManagementPage() {
                 <div className="flex items-center justify-between text-xs py-2 border-y border-border/50">
                   <div>
                     <span className="text-gray-500 dark:text-gray-400 font-medium">Current Plan:</span>
-                    <span className="ml-2 font-bold text-bgBlue">{plan}</span>
+                    {(() => {
+                      const p = plan.toLowerCase();
+                      const cls = p.includes("premium") ? "text-purple-600 dark:text-purple-400"
+                        : p.includes("enterprise") ? "text-indigo-600 dark:text-indigo-400"
+                        : p.includes("business") ? "text-orange-600 dark:text-orange-400"
+                        : p.includes("basic") ? "text-teal-600 dark:text-teal-400"
+                        : p.includes("free") || p.includes("trial") ? "text-gray-500 dark:text-gray-400"
+                        : "text-blue-600 dark:text-blue-400";
+                      return <span className={`ml-2 font-bold ${cls}`}>{plan}</span>;
+                    })()}
                   </div>
                   {user.issues && user.issues.length > 0 && user.issues[0] !== "No issues" && (
                     <div className="flex gap-1">
@@ -1074,25 +1056,19 @@ export default function UserManagementPage() {
                   <div className="space-y-1">
                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight text-gray-500">
                       <span>Device Used</span>
-                      <span>{deviceUsed}/{deviceLimit}</span>
+                      <span>{deviceStr}</span>
                     </div>
                     <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden border border-border/30">
-                      <div
-                        className={`h-full transition-all duration-500 ${deviceUsage > 80 ? "bg-red-500" : deviceUsage > 60 ? "bg-orange-500" : "bg-bgBlue"}`}
-                        style={{ width: `${deviceUsage}%` }}
-                      />
+                      <div className={`h-full transition-all duration-500 ${deviceUsage >= 80 ? "bg-red-500" : deviceUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${deviceUsage}%` }} />
                     </div>
                   </div>
                   <div className="space-y-1">
                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight text-gray-500">
                       <span>Storage Used</span>
-                      <span>{storageUsed}GB/{storageGB}GB</span>
+                      <span>{storageStr}</span>
                     </div>
                     <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden border border-border/30">
-                      <div
-                        className={`h-full transition-all duration-500 ${storageUsage > 80 ? "bg-red-500" : storageUsage > 60 ? "bg-orange-500" : "bg-bgBlue"}`}
-                        style={{ width: `${storageUsage}%` }}
-                      />
+                      <div className={`h-full transition-all duration-500 ${storageUsage >= 80 ? "bg-red-500" : storageUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${storageUsage}%` }} />
                     </div>
                   </div>
                 </div>
