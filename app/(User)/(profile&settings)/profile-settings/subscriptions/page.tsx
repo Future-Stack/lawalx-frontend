@@ -9,8 +9,13 @@ import {
   Plus,
   Loader2,
 } from "lucide-react";
-import { useGetMySubscriptionQuery } from "@/redux/api/users/payment/payment.api";
+import { useGetMySubscriptionQuery, useCancelSubscriptionMutation, useUpdateRecurringMutation } from "@/redux/api/users/payment/payment.api";
+import CancelSubscriptionModal from "@/components/common/CancelSubscriptionModal";
+import AutoRenewConfirmModal from "@/components/common/AutoRenewConfirmModal";
+import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import BillingHistoryTable from "./_components/BillingHistoryTable";
+import MyAdditionalPaymentTable from "./_components/MyAdditionalPaymentTable";
 
 function formatCurrency(amount: number, currency: string) {
   try {
@@ -25,19 +30,6 @@ function formatCurrency(amount: number, currency: string) {
   }
 }
 
-function formatDateTime(dateString: string) {
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "N/A";
-  return date.toLocaleString("en-US", {
-    month: "numeric",
-    day: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
-
 function formatDate(dateString: string) {
   const date = new Date(dateString);
   if (Number.isNaN(date.getTime())) return "N/A";
@@ -46,11 +38,41 @@ function formatDate(dateString: string) {
 
 export default function Subscriptions() {
   const router = useRouter();
-  const [autoRenew, setAutoRenew] = React.useState(false);
   const [selectedMethod, setSelectedMethod] = React.useState("visa");
+  const [billingTab, setBillingTab] = React.useState<"billing" | "additional">(
+    "billing",
+  );
   const { data: mySubscriptionRes, isLoading } = useGetMySubscriptionQuery();
+  const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
+  const [updateRecurring, { isLoading: isUpdatingRecurring }] = useUpdateRecurringMutation();
+  const [isCancelModalOpen, setIsCancelModalOpen] = React.useState(false);
+  const [isAutoRenewModalOpen, setIsAutoRenewModalOpen] = React.useState(false);
 
-  const subscription = mySubscriptionRes?.data?.subscription ?? null;
+  const handleCancelPlan = async () => {
+    if (!mySubscriptionRes?.data?.userId) return;
+    try {
+      await cancelSubscription({ userId: mySubscriptionRes.data.userId }).unwrap();
+      toast.success("Subscription cancellation scheduled successfully");
+      setIsCancelModalOpen(false);
+    } catch (error) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to cancel subscription");
+    }
+  };
+
+  const subscription = mySubscriptionRes?.data ?? null;
+  const isAutoRenewEnabled = subscription?.recurring ?? false;
+
+  const handleToggleAutoRenew = async () => {
+    try {
+      await updateRecurring({ recurring: !isAutoRenewEnabled }).unwrap();
+      toast.success(`Subscription recurring ${!isAutoRenewEnabled ? 'enabled' : 'disabled'} successfully`);
+      setIsAutoRenewModalOpen(false);
+    } catch (error) {
+      const err = error as { data?: { message?: string } };
+      toast.error(err?.data?.message || "Failed to update auto-renew setting");
+    }
+  };
   const payments = subscription?.payments ?? [];
   const latestPayment = payments[0];
   const planName = subscription?.plan?.name
@@ -65,13 +87,12 @@ export default function Subscriptions() {
     ? `${formatCurrency(latestPayment.amount, latestPayment.currency)}/${billingUnit}`
     : `--/${billingUnit}`;
   const planStatus = subscription?.status ?? "Inactive";
-  const deviceLimit = subscription?.deviceLimit ?? 0;
+  const deviceQuantity = subscription?.deviceQuantity ?? 0;
   const storageLimitGb = subscription?.storageLimitGb ?? 0;
   const hasSubscription = Boolean(subscription?.id);
 
   React.useEffect(() => {
     if (!subscription) return;
-    setAutoRenew(Boolean(subscription.recurring));
     if (
       subscription.gateway === "stripe" ||
       subscription.gateway === "paystack"
@@ -165,7 +186,7 @@ export default function Subscriptions() {
                       style={{ width: "0%" }}
                     ></div>
                   </div>
-                  <p className="text-xs text-muted">0 / {deviceLimit}</p>
+                  <p className="text-xs text-muted">0 / {deviceQuantity}</p>
                 </div>
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-body mb-2">
@@ -231,7 +252,11 @@ export default function Subscriptions() {
                 {/* <button className="px-4 py-2 bg-white border border-border text-body text-sm font-medium rounded-lg hover:bg-gray-50 cursor-pointer shadow-customShadow">
                             Stop Plan
                         </button> */}
-                <button className="px-4 py-2 bg-[#F43F5E] text-white text-sm font-medium rounded-lg hover:bg-red-600 cursor-pointer shadow-customShadow">
+                <button 
+                  type="button"
+                  onClick={() => setIsCancelModalOpen(true)}
+                  className="px-4 py-2 bg-[#F43F5E] text-white text-sm font-medium rounded-lg hover:bg-red-600 cursor-pointer shadow-customShadow"
+                >
                   Cancel Plan
                 </button>
               </div>
@@ -241,7 +266,7 @@ export default function Subscriptions() {
       </section>
 
       {/* Payment Method */}
-      <section>
+      {/* <section>
         <h2 className="text-lg md:text-xl font-bold text-headings mb-4">
           Payment Method
         </h2>
@@ -251,7 +276,6 @@ export default function Subscriptions() {
             Card Details
           </label>
           <div className="w-3/4">
-            {/* Card 1 - VISA */}
             <div
               onClick={() => setSelectedMethod("visa")}
               className={`border rounded-xl p-4 flex items-start gap-4 mb-3 relative cursor-pointer transition-colors ${selectedMethod === "visa" ? "border-bgBlue" : "border-border"}`}
@@ -283,7 +307,6 @@ export default function Subscriptions() {
               </div>
             </div>
 
-            {/* Card 2 - Stripe */}
             <div
               onClick={() => setSelectedMethod("stripe")}
               className={`border rounded-xl p-4 flex items-start gap-4 relative cursor-pointer transition-colors ${selectedMethod === "stripe" ? "border-bgBlue" : "border-border"}`}
@@ -324,108 +347,85 @@ export default function Subscriptions() {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
 
-      {/* Auto Renew */}
-      <section className="flex items-center justify-between pb-6 border-b border-border">
-        <div>
-          <h2 className="text-lg md:text-xl font-bold text-headings">
-            Auto Renew
-          </h2>
-          <p className="text-sm text-muted">
-            Your subscription will be renewed automatically
-          </p>
-        </div>
-        <button
-          onClick={() => setAutoRenew(!autoRenew)}
-          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${autoRenew ? "bg-bgBlue" : "bg-gray-200"}`}
-        >
-          <span
-            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${autoRenew ? "translate-x-6" : "translate-x-1"}`}
-          />
-        </button>
-      </section>
-
-      {/* Billing History */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg md:text-xl font-bold text-headings">
-            Billing History
-          </h2>
-          <button className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-xs font-medium text-body hover:bg-gray-50 cursor-pointer shadow-customShadow">
-            <Download className="w-3.5 h-3.5" /> Download All
+      {subscription && (
+        <section className="flex items-center justify-between pb-6 border-b border-border">
+          <div>
+            <h2 className="text-lg md:text-xl font-bold text-headings">
+              Auto Renew
+            </h2>
+            <p className="text-sm text-muted">
+              {isAutoRenewEnabled
+                ? "Your subscription will be renewed automatically"
+                : "Your subscription will not renew automatically"}
+            </p>
+          </div>
+          <button
+            onClick={() => setIsAutoRenewModalOpen(true)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer ${isAutoRenewEnabled ? "bg-bgBlue" : "bg-gray-200 dark:bg-gray-700"}`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAutoRenewEnabled ? "translate-x-6" : "translate-x-1"}`}
+            />
           </button>
+        </section>
+      )}
+
+      {/* Billing History & Additional Payment */}
+      <section>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div className="inline-flex rounded-lg border border-border p-1 bg-gray-50 dark:bg-gray-800 w-fit">
+            <button
+              type="button"
+              onClick={() => setBillingTab("billing")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer ${
+                billingTab === "billing"
+                  ? "bg-white dark:bg-gray-900 text-bgBlue shadow-sm"
+                  : "text-muted hover:text-gray-900 dark:hover:text-gray-100"
+              }`}
+            >
+              Billing History
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingTab("additional")}
+              className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors cursor-pointer ${
+                billingTab === "additional"
+                  ? "bg-white dark:bg-gray-900 text-bgBlue shadow-sm"
+                  : "text-muted hover:text-gray-900 dark:hover:text-gray-100"
+              }`}
+            >
+              Additional Payment
+            </button>
+          </div>
+          {billingTab === "billing" && (
+            <button className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-xs font-medium text-body hover:bg-gray-50 cursor-pointer shadow-customShadow">
+              <Download className="w-3.5 h-3.5" /> Download All
+            </button>
+          )}
         </div>
 
-        <div className="border border-border rounded-xl overflow-hidden text-sm">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 dark:bg-gray-800 text-muted font-medium border-b border-border">
-              <tr>
-                <th className="px-6 py-3 w-10">
-                  <input
-                    type="checkbox"
-                    className="rounded border-gray-300 cursor-pointer"
-                  />
-                </th>
-                <th className="px-6 py-3">Invoice</th>
-                <th className="px-6 py-3">Amount</th>
-                <th className="px-6 py-3">Date</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-              {payments.length > 0 ? (
-                payments.map((row) => {
-                  const status = row.status === "SUCCESS" ? "Paid" : row.status;
-                  return (
-                    <tr
-                      key={row.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-900"
-                    >
-                      <td className="px-6 py-4">
-                        <input
-                          type="checkbox"
-                          className="rounded border-gray-300 cursor-pointer"
-                        />
-                      </td>
-                      <td className="px-6 py-4 font-medium text-headings">
-                        {row.transactionId || row.id}
-                      </td>
-                      <td className="px-6 py-4 text-muted">
-                        {formatCurrency(row.amount, row.currency)}
-                      </td>
-                      <td className="px-6 py-4 text-muted">
-                        {formatDateTime(row.createdAt)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                            status === "Paid"
-                              ? "bg-green-50 text-green-700 border-green-200"
-                              : "bg-orange-50 text-orange-700 border-orange-200"
-                          }`}
-                        >
-                          {status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-gray-400 hover:text-gray-600 cursor-pointer">
-                        <Download className="w-4 h-4" />
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-6 py-6 text-center text-muted">
-                    No billing history found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {billingTab === "billing" ? (
+          <BillingHistoryTable payments={payments} />
+        ) : (
+          <MyAdditionalPaymentTable />
+        )}
       </section>
+
+      <CancelSubscriptionModal
+        isOpen={isCancelModalOpen}
+        onClose={() => setIsCancelModalOpen(false)}
+        onConfirm={handleCancelPlan}
+        isLoading={isCanceling}
+      />
+      <AutoRenewConfirmModal
+        isOpen={isAutoRenewModalOpen}
+        onClose={() => setIsAutoRenewModalOpen(false)}
+        onConfirm={handleToggleAutoRenew}
+        isLoading={isUpdatingRecurring}
+        isEnabling={!isAutoRenewEnabled}
+      />
     </div>
   );
 }

@@ -49,99 +49,43 @@ interface ContentItem {
 }
 
 // --- Demo Data ---
-const storageData = [
-  { name: "Free Space", value: 5.0, color: "#E0E7FF" }, // Indigo 100
-  { name: "Audio", value: 7.5, color: "#C084FC" }, // Purple 400
-  { name: "Image", value: 17.5, color: "#8B5CF6" }, // Violet 500
-  { name: "Video", value: 20.0, color: "#6D28D9" }, // Violet 700
-];
-
 const statsData = [
-  { label: "Total Videos", value: 123, total: 123 },
-  { label: "Total Images", value: 123, total: 123 },
-  { label: "Total Audios", value: 123, total: 123 },
-  { label: "Total Screens", value: 123, total: 123 },
-  { label: "Total Schedules", value: 123, total: 123 },
-  { label: "Total Templates", value: 123, total: 123 },
+  { label: "Total Videos", value: 0, total: "—" },
+  { label: "Total Images", value: 0, total: "—" },
+  { label: "Total Audios", value: 0, total: "—" },
+  { label: "Total Screens", value: 0, total: "—" },
+  { label: "Total Schedules", value: 0, total: "—" },
+  { label: "Total Templates", value: 0, total: "—" },
 ];
 
-const initialContentData: ContentItem[] = [
-  {
-    id: "1",
-    name: "Video.MP4",
-    type: "Video",
-    size: "45 MB",
-    duration: "120 sec",
-    uploadDate: "December 15, 2024",
-    assignedTo: "Main Lobby Display, Main Gate Entry",
-    status: "Active",
-    url: "https://www.w3schools.com/html/mov_bbb.mp4", // Demo Video
-  },
-  {
-    id: "2",
-    name: "Audio.mp3",
-    type: "Audio",
-    size: "45 MB",
-    duration: "120 sec",
-    uploadDate: "December 15, 2024",
-    assignedTo: "Main Lobby Display, Main Gate Entry",
-    status: "Active",
-    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", // Demo Audio
-  },
-  {
-    id: "3",
-    name: "Image.png",
-    type: "Image",
-    size: "45 MB",
-    duration: "120 sec",
-    uploadDate: "December 15, 2024",
-    assignedTo: "Main Lobby Display, Main Gate Entry",
-    status: "Active",
-  },
-  {
-    id: "4",
-    name: "Video.MP4",
-    type: "Video",
-    size: "45 MB",
-    duration: "120 sec",
-    uploadDate: "December 15, 2024",
-    assignedTo: "Main Lobby Display, Main Gate Entry",
-    status: "Active",
-    url: "https://www.w3schools.com/html/movie.mp4",
-  },
-  {
-    id: "5",
-    name: "Image.png",
-    type: "Image",
-    size: "45 MB",
-    duration: "120 sec",
-    uploadDate: "December 15, 2024",
-    assignedTo: "Main Lobby Display, Main Gate Entry",
-    status: "Active",
-  },
-  {
-    id: "6",
-    name: "Audio.mp3",
-    type: "Audio",
-    size: "45 MB",
-    duration: "120 sec",
-    uploadDate: "December 15, 2024",
-    assignedTo: "Main Lobby Display, Main Gate Entry",
-    status: "Active",
-    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-  },
-];
+const initialContentData: ContentItem[] = [];
 
 // --- Sub-components ---
 
-const StorageChart = () => {
+const StorageChart = ({ storage }: { storage?: any }) => {
+  const totalLimitGB = storage?.totalLimitGB || 0;
+  const breakdown = storage?.usedBreakdown || {};
+  const video = Number(breakdown.video) || 0;
+  const audio = Number(breakdown.audio) || 0;
+  const image = Number(breakdown.image) || 0;
+  const others = Number(breakdown.others) || 0;
+  const freeSpace = storage?.freeSpaceGB ?? Math.max(0, totalLimitGB - video - audio - image - others);
+
+  const chartData = [
+    { name: "Video", value: video, color: "#6366f1" },
+    { name: "Audio", value: audio, color: "#f59e0b" },
+    { name: "Image", value: image, color: "#10b981" },
+    { name: "Others", value: others, color: "#ef4444" },
+    { name: "Free Space", value: freeSpace, color: "#e2e8f0" },
+  ].filter((d) => d.value > 0 || d.name === "Free Space");
+
   return (
     <div className="flex items-center gap-8">
       <div className="relative w-40 h-40">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={storageData}
+              data={chartData}
               innerRadius={50}
               outerRadius={70}
               paddingAngle={0}
@@ -150,37 +94,28 @@ const StorageChart = () => {
               startAngle={90}
               endAngle={-270}
             >
-              {storageData.map((entry, index) => (
+              {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip />
+            <Tooltip formatter={(val: any) => `${Number(val).toFixed(4)} GB`} />
           </PieChart>
         </ResponsiveContainer>
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
           <span className="text-gray-500 text-xs">Total</span>
-          <span className="text-gray-900 dark:text-white font-bold text-lg">50GB</span>
+          <span className="text-gray-900 dark:text-white font-bold text-lg">{totalLimitGB}GB</span>
         </div>
       </div>
 
       <div className="space-y-2">
-        {storageData.map((item, index) => (
+        {chartData.map((item, index) => (
           <div key={index} className="flex items-center gap-2 text-sm">
-            <div
-              className="w-3 h-3 rounded-sm"
-              style={{ backgroundColor: item.color }}
-            />
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
             <span className="text-gray-600 dark:text-gray-300">
-              {item.name} ({item.value} GB)
+              {item.name} ({item.value.toFixed(4)} GB)
             </span>
           </div>
         ))}
-        <div className="flex items-center gap-2 text-sm">
-          <div className="w-3 h-3 rounded-sm border border-gray-300 bg-white" />
-          <span className="text-gray-600 dark:text-gray-300">
-            Video (20.00GB)
-          </span>
-        </div>
       </div>
     </div>
   );
@@ -205,13 +140,12 @@ const MediaModal = ({
           <button onClick={onClose} className="text-gray-500 hover:text-gray-900 dark:hover:text-white text-2xl leading-none">&times;</button>
         </div>
         <div className="bg-black flex-1 flex items-center justify-center min-h-[300px] w-full">
-          {item.type === "Video" && item.url && (
+          {item.type === "Video" && item.url ? (
             <video controls autoPlay className="max-w-full w-full">
               <source src={item.url} type="video/mp4" />
               Your browser does not support the video tag.
             </video>
-          )}
-          {item.type === "Audio" && item.url && (
+          ) : item.type === "Audio" && item.url ? (
             <div className="w-full max-w-md p-8 bg-gray-900 rounded-lg flex flex-col items-center gap-4">
               <Music className="w-16 h-16 text-white mb-4" />
               <audio controls autoPlay className="w-full">
@@ -219,15 +153,13 @@ const MediaModal = ({
                 Your browser does not support the audio element.
               </audio>
             </div>
-          )}
-          {item.type === "Image" && (
-            <div className="flex flex-col items-center text-white">
-              <FileImage className="w-20 h-20 mb-4 text-gray-400" />
-              <p>Image Preview (Placeholder)</p>
+          ) : item.type === "Image" && item.url ? (
+            <img src={item.url} alt={item.name} className="max-w-full max-h-[70vh] object-contain" />
+          ) : (
+            <div className="flex flex-col items-center text-white gap-3">
+              <FileImage className="w-16 h-16 text-gray-400" />
+              <p className="text-gray-400 text-sm">No preview available</p>
             </div>
-          )}
-          {(!item.url && (item.type === 'Video' || item.type === 'Audio')) && (
-            <div className="text-white">No media source available for demo.</div>
           )}
         </div>
       </div>
@@ -237,7 +169,7 @@ const MediaModal = ({
 
 
 // --- Main Component ---
-export default function ContentTab() {
+export default function ContentTab({ files, stats: statsProp }: { files?: any[]; stats?: any }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [sortOrder, setSortOrder] = useState<"name" | "date" | "size">("name");
@@ -247,7 +179,32 @@ export default function ContentTab() {
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
-  const filteredData = initialContentData
+  const contentData: ContentItem[] = files && files.length > 0
+    ? files.map((f: any) => ({
+        id: f.id,
+        name: f.name,
+        type: f.fileType ? (f.fileType.charAt(0) + f.fileType.slice(1).toLowerCase()) as ContentType : "Image",
+        size: f.sizeAndDuration?.split(" - ")[0] || "N/A",
+        duration: f.sizeAndDuration?.split(" - ")[1] || "",
+        uploadDate: f.uploadedDate ? new Date(f.uploadedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "N/A",
+        assignedTo: f.programAssigned || "None",
+        status: "Active" as ContentStatus,
+        url: f.url ? `${process.env.NEXT_PUBLIC_SOCKET_URL || "https://lawaltwo.sakibalhasa.xyz"}/${f.url}` : undefined,
+      }))
+    : [];
+
+  const resolvedStatsData = statsProp
+    ? [
+        { label: "Total Videos", value: statsProp.content?.totalVideos ?? 0, total: statsProp.content?.limits?.videoLimit ?? "—" },
+        { label: "Total Images", value: statsProp.content?.totalImages ?? 0, total: statsProp.content?.limits?.imageLimit ?? "—" },
+        { label: "Total Audios", value: statsProp.content?.totalAudios ?? 0, total: statsProp.content?.limits?.audioLimit ?? "—" },
+        { label: "Total Programs", value: statsProp.content?.totalScreens ?? statsProp.content?.totalPrograms ?? 0, total: statsProp.content?.limits?.deviceLimit ?? "—" },
+        { label: "Total Schedules", value: statsProp.content?.totalSchedules ?? 0, total: "—" },
+        { label: "Total Templates", value: statsProp.content?.totalTemplates ?? 0, total: "—" },
+      ]
+    : statsData;
+
+  const filteredData = contentData
     .filter((item) =>
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -310,12 +267,12 @@ export default function ContentTab() {
         <div className="flex flex-col lg:flex-row gap-12 p-4">
           {/* Chart Section */}
           <div className="flex-shrink-0 border-r border-border pr-12 lg:w-auto w-full flex justify-center lg:block">
-            <StorageChart />
+            <StorageChart storage={statsProp?.storage} />
           </div>
 
           {/* Stats Grid */}
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-y-6 gap-x-12">
-            {statsData.map((stat, i) => (
+            {resolvedStatsData.map((stat, i) => (
               <div key={i} className="flex justify-between items-center border-b border-border pb-2">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</span>
                 <span className="text-sm font-bold text-gray-900 dark:text-white">

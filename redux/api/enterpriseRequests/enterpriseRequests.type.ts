@@ -11,6 +11,9 @@ export interface EnterpriseSubscriptionInfoPayload {
   audioLimit: number;
   videoLimit: number;
   features: string[];
+  originalPrice?: number;
+  mainPrice?: number;
+  computedPrice?: number;
 }
 
 export interface EnterprisePlanDetails {
