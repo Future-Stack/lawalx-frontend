@@ -24,23 +24,22 @@ interface DetailsTabProps {
 export default function DetailsTab({ user, onEdit, onEditPersonalInfo }: DetailsTabProps) {
   // Use user data or fallbacks
   const personalInfo = {
-    email: user.email,
-    phone: user.phone || "+1 (555) 123-4567",
-    location: user.location,
-    joinDate: user.joinDate,
-    organization: user.organization,
-    plan: user.plan,
-    monthlyPayment: user.revenue || "$299.00",
-    status: user.status,
+    email: user.email || "N/A",
+    phone: user.phone || "N/A",
+    location: user.location || "N/A",
+    joinDate: user.joinDate || "N/A",
+    organization: user.organization || "N/A",
+    plan: user.plan || "N/A",
+    monthlyPayment: user.revenue || "N/A",
+    status: user.status || "N/A",
   };
 
   const enterpriseInfo = {
-    companyName: user.organization,
-    industryType: "Marketing", // Hardcoded or from user object if available
-    website: "www.techcorp.org",
-    companyLocation: user.location,
-    totalEmployee: "100+",
-    companyLogo: "Logo.png",
+    companyName: user.companyName || "N/A",
+    industryType: user.industryType || "N/A",
+    website: user.website || "N/A",
+    companyLocation: user.companyLocation || "N/A",
+    companyLogo: user.companyLogo || "N/A",
   };
 
   return (
