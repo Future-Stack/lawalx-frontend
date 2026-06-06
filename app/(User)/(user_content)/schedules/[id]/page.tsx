@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useGetSingleScheduleDataQuery, useUpdateScheduleMutation, useDeleteScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
 import { ScheduleTarget } from "@/redux/api/users/schedules/schedules.type";
-import { useDeleteDeviceMutation, useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useDeleteDeviceMutation, useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { Device } from "@/redux/api/users/devices/devices.type";
 import { ContentItem } from "@/types/content";
 import { getUrl, formatBytes } from "@/lib/content-utils";
@@ -101,7 +101,7 @@ export default function ScheduleDetailPage() {
   const [deleteSchedule] = useDeleteScheduleMutation();
   const [deleteDevice] = useDeleteDeviceMutation();
 
-  const { data: allDevicesData } = useGetMyDevicesDataQuery(undefined);
+  const { data: allDevicesData } = useGetMyAllDevicesDataQuery(undefined);
   const allDevices = allDevicesData?.data || [];
 
   const isNew = id === "new";

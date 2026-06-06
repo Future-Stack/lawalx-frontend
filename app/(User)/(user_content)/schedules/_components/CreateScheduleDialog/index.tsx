@@ -268,11 +268,12 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
                                     data={step2Data}
                                     onChange={(newData) => {
                                         setStep2Data(newData);
-                                        if (newData.contentType === "lower-third") {
-                                            setShowLowerThird(true);
-                                        }
                                     }}
                                     onContentSelect={handleContentSelect}
+                                    onTextSectionClick={() => {
+                                        setStep2Data(prev => ({ ...prev, contentType: "lower-third" }));
+                                        setShowLowerThird(true);
+                                    }}
                                 />
                             )}
 

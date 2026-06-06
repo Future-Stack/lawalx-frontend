@@ -2,27 +2,24 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Search, ChevronDown, MoreVertical, Trash2, Eye, PenLine, PencilLine, Plus, MapPin, Loader2 } from "lucide-react";
-import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
-import { Progress } from "@/components/ui/progress";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Plus } from "lucide-react";
+
 import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 import PreviewDeviceModal from "@/components/devices/modals/PreviewDeviceModal";
 import LeafletMapModal from "@/components/shared/modals/LeafletMapModal";
 import RenameDeviceModal from "@/components/devices/modals/RenameDeviceModal";
 import RemoveDeviceModal from "@/components/devices/modals/RemoveDeviceModal";
 import ReportDeviceModal from "@/components/devices/modals/ReportDeviceModal";
-import { useGetMyDevicesDataQuery, useDeleteDeviceMutation, useRenameDeviceMutation } from "@/redux/api/users/devices/devices.api";
+import { useDeleteDeviceMutation, useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { Device as ApiDevice } from "@/redux/api/users/devices/devices.type";
 import { toast } from "sonner";
 
+import DevicesFilter from "./_components/DevicesFilter";
+import DevicesTable from "./_components/DevicesTable";
+import DevicesPagination from "./_components/DevicesPagination";
+
 // Local types to match admin page logic, adapting to API data
-type DeviceView = {
+export type DeviceView = {
   id: string;
   device: string;
   model: string;
@@ -37,8 +34,6 @@ type DeviceView = {
   lng: number;
   original: ApiDevice;
 };
-
-import DeviceLocation from "@/components/common/DeviceLocation";
 
 const calculateTimeAgo = (dateString: string | null) => {
   if (!dateString) return "---";
@@ -55,100 +50,11 @@ const calculateTimeAgo = (dateString: string | null) => {
   return `${diffInDays} days ago`;
 };
 
-const parseStorage = (storageStr: string) => {
-  if (!storageStr || storageStr === "N/A") return 0;
-  try {
-    const parts = storageStr.split("/");
-    if (parts.length === 2) {
-      const used = parseFloat(parts[0].trim());
-      const total = parseFloat(parts[1].trim().split(" ")[0]);
-      if (!isNaN(used) && !isNaN(total) && total > 0) {
-        return (used / total) * 100;
-      }
-    }
-  } catch (e) {
-    return 0;
-  }
-  return 0;
-};
-
-// Reusable Dropdown Component (matching admin style)
-const Dropdown = ({ value, options, onChange, icon: Icon }: any) => {
-  const [isOpen, setIsOpen] = useState(false);
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer flex items-center gap-2 p-3 text-black dark:text-white bg-[#F9FAFB] dark:bg-gray-800 border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium w-full sm:w-auto justify-between sm:justify-start"
-      >
-        <div className="flex items-center gap-2">
-          {Icon && <Icon className="w-5 h-5" />}
-          {value}
-        </div>
-        <ChevronDown className="w-4 h-4 ml-2" />
-      </button>
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 w-48 bg-navbarBg border border-border rounded-lg shadow-lg z-20">
-            {options.map((option: string) => (
-              <button
-                key={option}
-                onClick={() => {
-                  onChange(option);
-                  setIsOpen(false);
-                }}
-                className="w-full cursor-pointer text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg text-gray-900 dark:text-white"
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-// Action Menu Component (matching admin style)
-const ActionMenu = ({ device, onAction }: any) => {
-  const actions = [
-    { label: 'Preview', icon: Eye, color: 'text-gray-900 dark:text-white hover:text-white focus:text-white transition-colors' },
-    { label: 'Rename', icon: PenLine, color: 'text-gray-900 dark:text-white hover:text-white focus:text-white transition-colors' },
-    { label: 'Remove Device', icon: Trash2, color: 'text-red-600 dark:text-red-400 hover:text-white focus:text-white transition-colors' },
-  ];
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button type="button" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 cursor-pointer outline-none">
-          <MoreVertical className="w-5 h-5" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
-        {actions.map((action) => (
-          <DropdownMenuItem
-            key={action.label}
-            onClick={() => onAction(action.label, device)}
-            className={`flex items-center gap-2 cursor-pointer group outline-none ${action.color}`}
-          >
-            <action.icon className="w-4 h-4 transition-colors group-hover:text-white" />
-            <span className="transition-colors group-hover:text-white">
-              {action.label}
-            </span>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-};
-
 export default function DevicesPage() {
-  const { data: devicesData, isLoading } = useGetMyDevicesDataQuery(undefined);
+  const { data: devicesData, isLoading } = useGetMyAllDevicesDataQuery(undefined);
   const [deleteDevice, { isLoading: isDeleting }] = useDeleteDeviceMutation();
-  const [renameDeviceApi] = useRenameDeviceMutation();
   console.log("devicesData", devicesData);
+
   const allDevices: DeviceView[] = useMemo(() => {
     if (!devicesData?.data) return [];
 
@@ -160,7 +66,7 @@ export default function DevicesPage() {
       const storageDisplay = `${usedStorage.toFixed(2)} GB / ${totalStorage.toFixed(0)} GB`;
 
       return {
-        id: device.id,
+        id: device.id || (device as any)._id || (device as any).deviceId || "",
         device: device.name || device.deviceSerial || "Unknown Device",
         model: device.model || "Unknown Model",
         resolution: device.program?.serene_size || "1920x1080",
@@ -188,6 +94,7 @@ export default function DevicesPage() {
     const types = Array.from(new Set(allDevices.map(d => d.type).filter(Boolean)));
     return ['All Types', ...types];
   }, [allDevices]);
+  
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -219,9 +126,6 @@ export default function DevicesPage() {
 
   useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, typeFilter]);
 
-  const onlineCount = allDevices.filter(d => d.status === "ONLINE").length;
-  const offlineCount = allDevices.filter(d => d.status === "OFFLINE").length;
-
   const handleAction = (action: string, device: DeviceView) => {
     if (action === 'Preview') setPreviewDevice(device);
     if (action === 'Rename') setRenameDevice(device);
@@ -238,18 +142,6 @@ export default function DevicesPage() {
     } catch (error) {
       toast.error("Failed to remove device");
       console.error("Delete error:", error);
-    }
-  };
-
-  const handleRename = async (newName: string) => {
-    if (!renameDevice) return;
-    try {
-      await renameDeviceApi({ id: renameDevice.id, name: newName }).unwrap();
-      toast.success("Device renamed successfully");
-      setRenameDevice(null);
-    } catch (error) {
-      toast.error("Failed to rename device");
-      console.error("Rename error:", error);
     }
   };
 
@@ -273,165 +165,42 @@ export default function DevicesPage() {
 
       {/* Management + Table */}
       <div className="space-y-4">
-        {/* Filtering Section - Moved Outside Table */}
-        <div className="p-2 md:p-4 gap-2 rounded-[16px] border border-border bg-navbarBg flex flex-col lg:flex-row items-center self-stretch">
-          <div className="flex p-3 items-center gap-2 rounded-xl bg-input dark:bg-gray-800 flex-1 w-full">
-            <Search className="w-6 h-6 text-[#A3A3A3]" />
-            <input
-              type="text"
-              placeholder="Search devices..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full text-base font-normal text-[#171717] dark:text-white placeholder:text-[#A3A3A3] focus:outline-none"
-            />
-          </div>
-          <div className="flex gap-2 w-full lg:w-auto">
-            <Dropdown value={statusFilter} options={statusOptions} onChange={setStatusFilter} />
-            <Dropdown value={typeFilter} options={typeOptions} onChange={setTypeFilter} />
-          </div>
-        </div>
+        {/* Filtering Section */}
+        <DevicesFilter
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          statusOptions={statusOptions}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+          typeOptions={typeOptions}
+        />
 
         {/* Table Container */}
         <div className="bg-navbarBg rounded-xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead className="border-b border-border bg-bgGray/50 dark:bg-gray-800/50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Device Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Location</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Program Playing</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Last Synced</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-body dark:text-gray-300">Storage Usage</th>
-                  <th className="px-6 py-4"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border bg-navbarBg">
-                {paginatedDevices.map((device) => (
-                  <tr key={device.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                    <td className="px-6 py-5">
-                      <div className="text-[15px] font-bold text-[#171717] dark:text-white leading-tight">
-                        {device.device}
-                      </div>
-                      <div className="text-[13px] text-[#737373] dark:text-gray-400 mt-0.5">
-                        {device.resolution}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 text-sm">
-                      <div
-                        className="flex items-center gap-2 text-[#404040] dark:text-gray-300 font-medium cursor-pointer hover:text-bgBlue transition-colors group"
-                        onClick={() => {
-                          setSelectedLocation({
-                            lat: device.lat,
-                            lng: device.lng,
-                            label: device.location,
-                            device: device
-                          });
-                          setMapModalOpen(true);
-                        }}
-                      >
-                        <MapPin className="w-4 h-4 text-[#737373] group-hover:text-bgBlue" />
-                        <DeviceLocation lat={device.lat} lng={device.lng} />
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className={`text-sm font-bold ${device.programName === "No program assigned" ? "text-[#A3A3A3] font-normal" : "text-[#171717] dark:text-white"}`}>
-                        {device.programName}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <DeviceStatusBadge status={device.status} />
-                    </td>
-                    <td className="px-6 py-5 text-sm text-[#737373] dark:text-gray-400 font-medium">
-                      {device.lastSync}
-                    </td>
-                    <td className="px-6 py-5 min-w-[160px]">
-                      <div className="flex flex-col gap-1.5">
-                        <div className="text-[13px] text-[#737373] dark:text-gray-400 font-medium">
-                          {device.storage}
-                        </div>
-                        <div className="p-[1px] bg-[#EFF6FF] border border-[#D4D4D4] rounded-full overflow-hidden">
-                          <Progress value={parseStorage(device.storage)} className="h-1.5 bg-transparent [&>div]:bg-bgBlue" />
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="flex items-center justify-end gap-3 px-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction('Preview', device);
-                          }}
-                          className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 hover:text-bgBlue rounded-md transition-all cursor-pointer"
-                          title="Preview"
-                        >
-                          <Eye className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction('Rename', device);
-                          }}
-                          className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 hover:text-bgBlue rounded-md transition-all cursor-pointer"
-                          title="Rename"
-                        >
-                          <PencilLine className="w-5 h-5" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAction('Remove Device', device);
-                          }}
-                          className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 rounded-md transition-all cursor-pointer"
-                          title="Remove Device"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {paginatedDevices.length === 0 && !isLoading && (
-              <div className="p-12 text-center text-gray-500 font-medium bg-navbarBg">
-                No devices found. Try adjusting your search or filters.
-              </div>
-            )}
-            {isLoading && (
-              <div className="p-12 text-center text-gray-500 font-medium bg-navbarBg flex items-center justify-center gap-2">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Loading your devices...
-              </div>
-            )}
-          </div>
+          <DevicesTable
+            isLoading={isLoading}
+            devices={paginatedDevices}
+            onAction={handleAction}
+            onSelectLocation={(device) => {
+              setSelectedLocation({
+                lat: device.lat,
+                lng: device.lng,
+                label: device.location,
+                device: device
+              });
+              setMapModalOpen(true);
+            }}
+          />
 
           {/* Pagination */}
-          <div className="px-6 py-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0 bg-bgGray/50 dark:bg-gray-800/50">
-            <div className="text-sm text-[#737373] dark:text-gray-400 font-medium text-center sm:text-left">
-              Showing {filteredDevices.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}-
-              {Math.min(currentPage * itemsPerPage, filteredDevices.length)} of {filteredDevices.length} devices
-            </div>
-            <div className="flex gap-2 w-full sm:w-auto justify-center sm:justify-end">
-              <button
-                type="button"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="flex-1 sm:flex-none px-4 py-2 border border-border rounded-lg text-sm font-semibold text-body cursor-pointer shadow-customShadow transition-colors"
-              >
-                Previous
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredDevices.length / itemsPerPage)))}
-                disabled={currentPage === 0 || currentPage >= Math.ceil(filteredDevices.length / itemsPerPage)}
-                className="flex-1 sm:flex-none px-4 py-2 border border-border rounded-lg text-sm font-semibold text-body cursor-pointer shadow-customShadow transition-colors"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <DevicesPagination
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            filteredCount={filteredDevices.length}
+            itemsPerPage={itemsPerPage}
+          />
         </div>
 
         {/* Modals */}

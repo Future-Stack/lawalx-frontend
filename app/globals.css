@@ -953,36 +953,32 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 /* Professional Media Preview Animations */
 @keyframes preview-exit {
   0% {
+    clip-path: inset(0 0 0 0);
     opacity: 1;
-    transform: scale(1);
-    filter: blur(0px);
   }
-
   100% {
+    clip-path: inset(0 50% 0 50%);
     opacity: 0;
-    transform: scale(0.98);
-    filter: blur(4px);
   }
 }
 
 @keyframes preview-enter {
   0% {
+    clip-path: inset(0 50% 0 50%);
     opacity: 0;
-    transform: scale(0.98);
-    filter: blur(4px);
   }
-
   100% {
+    clip-path: inset(0 0 0 0);
     opacity: 1;
-    transform: scale(1);
-    filter: blur(0px);
   }
 }
 
 .animate-preview-exit {
-  animation: preview-exit 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: preview-exit 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: clip-path, opacity;
 }
 
 .animate-preview-enter {
-  animation: preview-enter 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: preview-enter 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: clip-path, opacity;
 }

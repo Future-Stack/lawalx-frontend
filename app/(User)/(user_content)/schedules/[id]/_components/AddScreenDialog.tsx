@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Search, Monitor, CircleCheckBigIcon, Loader2 } from "lucide-react";
 import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 import BaseDialog from "@/common/BaseDialog";
-import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { Device } from "@/redux/api/users/devices/devices.type";
 import Dropdown from "@/common/Dropdown";
 
@@ -17,7 +17,7 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
     const [selectedStatus, setSelectedStatus] = useState("all");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-    const { data: allDevicesData, isLoading } = useGetMyDevicesDataQuery(undefined);
+    const { data: allDevicesData, isLoading } = useGetMyAllDevicesDataQuery(undefined);
     const allDevices = useMemo(() => allDevicesData?.data || [], [allDevicesData?.data]);
 
     const filteredDevices = useMemo(() => {
