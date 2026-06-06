@@ -57,6 +57,17 @@ export const additionalPaymentApi = baseApi.injectEndpoints({
       providesTags: ["AdditionalPaymentSigner"],
     }),
 
+    getMySigners: builder.query<
+      AdditionalPaymentSignersResponse,
+      void
+    >({
+      query: () => ({
+        url: "/additional-payments/my-signers",
+        method: "GET",
+      }),
+      providesTags: ["AdditionalPaymentSigner"],
+    }),
+
     createAdditionalPaymentSigner: builder.mutation<
       ApiResponse<AdditionalPaymentSigner>,
       FormData
@@ -87,6 +98,7 @@ export const {
   useGetAdditionalPaymentsQuery,
   useGetAdditionalPaymentByIdQuery,
   useGetAdditionalPaymentSignersQuery,
+  useGetMySignersQuery,
   useCreateAdditionalPaymentMutation,
   useCreateAdditionalPaymentSignerMutation,
 } = additionalPaymentApi;

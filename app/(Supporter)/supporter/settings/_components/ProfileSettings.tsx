@@ -97,22 +97,22 @@ export default function ProfileSettings() {
       {/* Tabs */}
       <div className="flex justify-center mb-8 sm:mb-12">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full max-w-xl">
-          <TabsList className="grid w-full grid-cols-3 h-15 sm:h-15 bg-white dark:bg-[#0c1427] border border-[#0FA6FF] dark:border-blue-900/50 rounded-xs p-1">
+          <TabsList className="flex sm:grid w-full sm:grid-cols-3 h-auto sm:h-15 bg-white dark:bg-[#0c1427] border border-[#0FA6FF] dark:border-blue-900/50 rounded-xs p-1 overflow-x-auto scrollbar-hide">
             <TabsTrigger
               value="edit-profile"
-              className="rounded-xs border-none text-gray-600 dark:text-gray-400 data-[state=active]:bg-[#1EA1F2] data-[state=active]:text-white data-[state=active]:shadow-sm text-sm font-medium transition-all h-full"
+              className="flex-1 min-w-fit sm:min-w-0 rounded-xs border-none text-gray-600 dark:text-gray-400 data-[state=active]:bg-[#1EA1F2] data-[state=active]:text-white data-[state=active]:shadow-sm text-xs sm:text-sm font-medium transition-all py-2.5 sm:py-0 sm:h-full px-4 sm:px-0 whitespace-nowrap"
             >
               Edit Profile
             </TabsTrigger>
             <TabsTrigger
               value="change-password"
-              className="rounded-xs border-none text-gray-600 dark:text-gray-400 data-[state=active]:bg-[#1EA1F2] data-[state=active]:text-white data-[state=active]:shadow-sm text-sm font-medium transition-all h-full"
+              className="flex-1 min-w-fit sm:min-w-0 rounded-xs border-none text-gray-600 dark:text-gray-400 data-[state=active]:bg-[#1EA1F2] data-[state=active]:text-white data-[state=active]:shadow-sm text-xs sm:text-sm font-medium transition-all py-2.5 sm:py-0 sm:h-full px-4 sm:px-0 whitespace-nowrap"
             >
               Change Password
             </TabsTrigger>
             <TabsTrigger
               value="signature"
-              className="rounded-xs border-none text-gray-600 dark:text-gray-400 data-[state=active]:bg-[#1EA1F2] data-[state=active]:text-white data-[state=active]:shadow-sm text-sm font-medium transition-all h-full"
+              className="flex-1 min-w-fit sm:min-w-0 rounded-xs border-none text-gray-600 dark:text-gray-400 data-[state=active]:bg-[#1EA1F2] data-[state=active]:text-white data-[state=active]:shadow-sm text-xs sm:text-sm font-medium transition-all py-2.5 sm:py-0 sm:h-full px-4 sm:px-0 whitespace-nowrap"
             >
               Signature
             </TabsTrigger>
