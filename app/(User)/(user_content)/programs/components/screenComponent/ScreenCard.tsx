@@ -65,7 +65,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
     setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % program.timeline!.length);
       setIsFading(false);
-    }, 500);
+    }, 1500);
   }, [program.timeline]);
 
   useEffect(() => {
@@ -76,7 +76,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
     if (currentItem?.file?.type === "VIDEO") return;
 
     const duration = currentItem?.file?.duration ? currentItem.file.duration * 1000 : 7000;
-    const timer = setTimeout(advance, Math.max(0, duration - 500));
+    const timer = setTimeout(advance, Math.max(0, duration - 1500));
     return () => clearTimeout(timer);
   }, [currentIndex, program.timeline, localActive, advance]);
 

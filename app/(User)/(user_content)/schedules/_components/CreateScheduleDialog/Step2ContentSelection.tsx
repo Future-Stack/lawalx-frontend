@@ -18,9 +18,10 @@ interface Step2Props {
     };
     onChange: (data: { contentType: string; selectedContent: ContentItem[] }) => void;
     onContentSelect: (content: ContentItem) => void;
+    onTextSectionClick?: () => void;
 }
 
-const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContentSelect }) => {
+const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContentSelect, onTextSectionClick }) => {
     const { data: allContentData, isLoading } = useGetAllContentDataQuery(undefined);
     const [isMounted, setIsMounted] = useState(false);
     const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
@@ -69,8 +70,7 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
     const contentTypeOptions = [
         { label: "Select Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-body" /> },
         { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-body" /> },
-        { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-body" /> },
-        { label: "Text Section", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-body" /> }
+        { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-body" /> }
     ];
 
     // Filter content based on selected type and search query
@@ -263,6 +263,34 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
 
     return (
         <div className="space-y-4">
+            {/* Text Section Prompt */}
+            <div className={`p-4 rounded-xl border border-dashed border-border bg-input/40 flex items-center justify-between gap-4 transition-all ${
+                data.selectedContent.length > 0 ? "hover:border-bgBlue group cursor-pointer" : ""
+            }`}>
+                <div className="space-y-1">
+                    <p className="text-sm font-semibold text-headings">
+                        Text Section Overlay for Schedule
+                    </p>
+                    <p className="text-xs text-muted">If you want to add a text section for your schedule, please first time select content then click here</p>
+                </div>
+                <button
+                    type="button"
+                    disabled={data.selectedContent.length === 0}
+                    onClick={onTextSectionClick}
+                    className={`w-10 h-10 rounded-full bg-navbarBg border border-border flex items-center justify-center shadow-customShadow transition-all flex-shrink-0 ${
+                        data.selectedContent.length > 0
+                            ? "cursor-pointer group-hover:border-bgBlue"
+                            : "opacity-50 cursor-not-allowed border-border"
+                    }`}
+                >
+                    <ArrowRight className={`w-5 h-5 text-muted transition-all ${
+                        data.selectedContent.length > 0
+                            ? "group-hover:text-bgBlue group-hover:translate-x-0.5"
+                            : ""
+                    }`} />
+                </button>
+            </div>
+
             {/* Content Type Selector */}
             <BaseSelect
                 label="Content Type"
@@ -270,7 +298,6 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                 options={contentTypeOptions}
                 value={data.contentType}
                 onChange={(value) => onChange({ ...data, contentType: value })}
-                required
             />
 
             {/* Selection Summary */}

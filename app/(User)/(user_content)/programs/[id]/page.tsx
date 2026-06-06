@@ -129,7 +129,7 @@ const ScreenCardDetails = () => {
       if (localActive) {
         setIsPaused(false); // Ensure timer resumes on advance
       }
-    }, 500);
+    }, 1500);
   }, [localTimeline, localActive]);
 
   // Handle media completion (Video & Audio)
@@ -150,7 +150,7 @@ const ScreenCardDetails = () => {
     remainingTimeRef.current = remainingTime;
   }, [remainingTime]);
 
-  // Handle timing for all items (Images, Videos, and Audio)
+  // Handle timing for non-media items (Images/Content)
   useEffect(() => {
     // If program is off, or fading, or no timeline, do nothing
     if (!localTimeline || localTimeline.length < 1 || isPaused || isFading) return;
@@ -158,10 +158,14 @@ const ScreenCardDetails = () => {
     const currentItem = localTimeline[playingIndex];
     if (!currentItem) return;
 
+    // Videos and Audios rely on player's onEnded callback
+    if (currentItem.file?.type === "VIDEO" || currentItem.file?.type === "AUDIO") return;
+
     // Determine how long to wait using the ref to avoid dependency loops
     let timeToWait = remainingTimeRef.current;
     if (timeToWait <= 0) {
-      timeToWait = (currentItem.duration || 7) * 1000;
+      const durationMs = (currentItem.duration || 7) * 1000;
+      timeToWait = Math.max(0, durationMs - 1500);
       setRemainingTime(timeToWait);
       return;
     }
