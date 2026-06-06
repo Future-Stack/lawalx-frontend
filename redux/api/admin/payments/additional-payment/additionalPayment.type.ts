@@ -23,6 +23,10 @@ export interface AdditionalPaymentSigner {
   id: string;
   name: string;
   imageUrl: string;
+  type?: string;
+  createdById?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AdditionalPaymentUserBrief {

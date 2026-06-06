@@ -42,11 +42,15 @@ const AdditionalPaymentTab = () => {
   const totalPages = meta?.totalPages ?? 1;
 
   const handleDownloadInvoice = async (item: AdditionalPaymentListRow) => {
-    const url = getUrl(item.downloadUrl || item.invoiceUrl);
-    if (!url) {
+    const invoiceUrl = item.downloadUrl || item.invoiceUrl;
+    if (!invoiceUrl) {
       toast.error("Invoice file is not available yet.");
       return;
     }
+    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
+    const cleanPath = invoiceUrl.startsWith("/") ? invoiceUrl.slice(1) : invoiceUrl;
+    const url = `${baseUrl}/${cleanPath}`;
+
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error("Network response was not ok");
@@ -72,11 +76,15 @@ const AdditionalPaymentTab = () => {
   };
 
   const handleViewInvoice = (item: AdditionalPaymentListRow) => {
-    const url = getUrl(item.invoiceUrl);
-    if (!url) {
+    const invoiceUrl = item.invoiceUrl;
+    if (!invoiceUrl) {
       toast.error("Invoice file is not available yet.");
       return;
     }
+    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
+    const cleanPath = invoiceUrl.startsWith("/") ? invoiceUrl.slice(1) : invoiceUrl;
+    const url = `${baseUrl}/${cleanPath}`;
+
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
