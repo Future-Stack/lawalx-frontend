@@ -87,7 +87,7 @@ export default function Subscriptions() {
     ? `${formatCurrency(latestPayment.amount, latestPayment.currency)}/${billingUnit}`
     : `--/${billingUnit}`;
   const planStatus = subscription?.status ?? "Inactive";
-  const deviceLimit = subscription?.deviceLimit ?? 0;
+  const deviceQuantity = subscription?.deviceQuantity ?? 0;
   const storageLimitGb = subscription?.storageLimitGb ?? 0;
   const hasSubscription = Boolean(subscription?.id);
 
@@ -186,7 +186,7 @@ export default function Subscriptions() {
                       style={{ width: "0%" }}
                     ></div>
                   </div>
-                  <p className="text-xs text-muted">0 / {deviceLimit}</p>
+                  <p className="text-xs text-muted">0 / {deviceQuantity}</p>
                 </div>
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-body mb-2">
