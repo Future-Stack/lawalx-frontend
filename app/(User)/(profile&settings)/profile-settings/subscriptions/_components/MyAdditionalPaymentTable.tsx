@@ -13,11 +13,15 @@ export default function MyAdditionalPaymentTable() {
   const invoices = data?.data ?? [];
 
   const handleDownload = async (invoiceUrl: string, invoiceNumber: string) => {
-    const url = getUrl(invoiceUrl);
-    if (!url) {
+    if (!invoiceUrl) {
       toast.error("Invoice file is not available yet.");
       return;
     }
+    
+    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
+    const cleanPath = invoiceUrl.startsWith("/") ? invoiceUrl.slice(1) : invoiceUrl;
+    const url = `${baseUrl}/${cleanPath}`;
+
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error("Network response was not ok");
