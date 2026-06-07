@@ -254,12 +254,16 @@ export default function RequestCustomPlanPage() {
                   {formData.industryType === "others" && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                       <Label className="text-[16px] font-semibold text-[#404040] font-inter">
-                        Specify Industry Type <span className="text-red-500">*</span>
+                        Specify Industry Type{" "}
+                        <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         value={formData.specifyIndustryType}
                         onChange={(e) =>
-                          handleInputChange("specifyIndustryType", e.target.value)
+                          handleInputChange(
+                            "specifyIndustryType",
+                            e.target.value,
+                          )
                         }
                         placeholder="e.g. Education"
                         className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
@@ -286,9 +290,7 @@ export default function RequestCustomPlanPage() {
                       <SelectItem value="201-500">
                         201 - 500 Employee
                       </SelectItem>
-                      <SelectItem value="501+">
-                        501+ Employee
-                      </SelectItem>
+                      <SelectItem value="501+">501+ Employee</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

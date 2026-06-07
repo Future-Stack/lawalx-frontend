@@ -527,7 +527,10 @@ export default function TicketConversationDialog({
                           <div className="flex items-center gap-2.5 w-full">
                             <Checkbox
                               checked={isSelected}
-                              disabled={isSelected && tag.name === "Needs_Enterprise_Plan"}
+                              disabled={
+                                isSelected &&
+                                tag.name === "Needs_Enterprise_Plan"
+                              }
                               onCheckedChange={() =>
                                 handleToggleTag(tag.id, isSelected)
                               }
