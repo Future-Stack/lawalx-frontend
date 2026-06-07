@@ -16,7 +16,6 @@ import {
   CalendarPlus,
   FolderPlus,
   VideoIcon,
-  UserRoundCogIcon,
   LogOutIcon,
   HelpCircleIcon,
   SettingsIcon,

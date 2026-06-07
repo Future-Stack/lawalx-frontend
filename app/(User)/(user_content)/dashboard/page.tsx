@@ -8,7 +8,6 @@ import {
   HardDrive,
   Calendar,
   TrendingUp,
-
   Tv,
   Video,
   ArrowUpRight,
@@ -19,6 +18,8 @@ import {
   Activity,
   TvMinimal,
   UserRoundCog,
+  PencilLine,
+  Trash2,
 } from "lucide-react";
 
 import ActionCardButton from "@/common/ActionCardButton";
@@ -27,7 +28,10 @@ import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 import Link from "next/link";
 import DashboardBannerSystem from "@/components/dashboard/DashboardBannerSystem";
 import { formatDistanceToNow } from "date-fns";
-import { useGetAllActivitiesQuery, useGetAllStatsQuery, useGetAllDevicesQuery } from "@/redux/api/users/dashboard/activityApi";
+import { useGetAllActivitiesQuery, useGetAllStatsQuery } from "@/redux/api/users/dashboard/activityApi";
+import { useDeleteDeviceMutation, useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { RecentDeviceRenameModal, RecentDeviceRemoveModal } from "@/components/dashboard/RecentDeviceActionsModals";
+import { toast } from "sonner";
 import CommonLoader from "@/common/CommonLoader";
 import CreateScheduleDialog from "../schedules/_components/CreateScheduleDialog";
 import UploadFileModal from "@/components/content/UploadFileModal";
@@ -36,7 +40,8 @@ import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 
 export default function Dashboard() {
   const { data: statsData } = useGetAllStatsQuery(undefined);
-  const { data: devicesData } = useGetAllDevicesQuery();
+  const { data: devicesData } = useGetMyAllDevicesDataQuery();
+  console.log("Recent Devices Data:", devicesData);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
@@ -44,6 +49,27 @@ export default function Dashboard() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isPageLoading, setIsPageLoading] = useState(false);
   const [forceShowProgram, setForceShowProgram] = useState(false);
+
+  const [renameDevice, setRenameDevice] = useState<any | null>(null);
+  const [removeDevice, setRemoveDevice] = useState<any | null>(null);
+  const [deleteDevice, { isLoading: isDeleting }] = useDeleteDeviceMutation();
+
+  const handleDelete = async () => {
+    if (!removeDevice) return;
+    try {
+      await deleteDevice({ id: removeDevice.id }).unwrap();
+      toast.success("Device removed successfully");
+      setRemoveDevice(null);
+    } catch (error) {
+      toast.error("Failed to remove device");
+      console.error("Delete error:", error);
+    }
+  };
+
+  const handleAction = (action: string, device: any) => {
+    if (action === 'Rename') setRenameDevice(device);
+    if (action === 'Remove Device') setRemoveDevice(device);
+  };
 
   const handleCloseAddDeviceModal = () => {
     setIsAddDeviceModalOpen(false);
@@ -210,30 +236,49 @@ export default function Dashboard() {
               devices.slice(0, 3).map((device, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-4 p-5 border border-border rounded-[20px] bg-navbarBg"
+                  className="flex items-center gap-4 p-5 border border-border rounded-[20px] bg-navbarBg justify-between"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-3">
-                        <span className="text-[16px] font-semibold text-headings" style={{ fontFamily: "Inter, sans-serif" }}>
-                          {typeof device.name === 'object' ? 'Device' : (device.name || "Unknown Device")}
-                        </span>
-                        <DeviceStatusBadge status={device.status} />
-                      </div>
-                      {/* <button className="text-gray-400 hover:text-gray-600 cursor-pointer">
-                        <MoreVertical className="w-5 h-5" />
-                      </button> */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <span className="text-[16px] font-semibold text-headings truncate" style={{ fontFamily: "Inter, sans-serif" }}>
+                        {typeof device.name === 'object' ? 'Device' : (device.name || "Unknown Device")}
+                      </span>
+                      <DeviceStatusBadge status={device.status} />
                     </div>
                     <div className="text-[14px] text-muted mb-1" style={{ fontFamily: "Inter, sans-serif" }}>
                       3840 × 2160
                     </div>
-                    <div className="text-[14px] text-body font-medium uppercase" style={{ fontFamily: "Inter, sans-serif" }}>
+                    <div className="text-[14px] text-body font-medium uppercase truncate" style={{ fontFamily: "Inter, sans-serif" }}>
                       {device.location && typeof device.location === 'object' && (device.location as any).lat !== undefined ? (
                         <DeviceLocation lat={(device.location as any).lat} lng={(device.location as any).lng} />
                       ) : (
-                        (device.location as string) || "LA, USA"
+                        (device.location as any) || "LA, USA"
                       )}
                     </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAction('Rename', device);
+                      }}
+                      className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 hover:text-bgBlue rounded-md transition-all cursor-pointer"
+                      title="Rename"
+                    >
+                      <PencilLine className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAction('Remove Device', device);
+                      }}
+                      className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 rounded-md transition-all cursor-pointer"
+                      title="Remove Device"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
               ))
@@ -312,6 +357,20 @@ export default function Dashboard() {
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         setIsPageLoading={setIsPageLoading}
+      />
+
+      {/* Rename and Remove Device Modals */}
+      <RecentDeviceRenameModal
+        isOpen={!!renameDevice}
+        onClose={() => setRenameDevice(null)}
+        device={renameDevice}
+      />
+      <RecentDeviceRemoveModal
+        isOpen={!!removeDevice}
+        onClose={() => setRemoveDevice(null)}
+        device={removeDevice}
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
       />
 
       {/* Full Page Loader Overlay */}

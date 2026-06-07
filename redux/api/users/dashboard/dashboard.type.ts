@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface DashboardData {
   totalDevices: number;
   newDevicesThisWeek: number;
@@ -16,6 +17,7 @@ export interface DashboardStatsResponse {
 
 // get all devices 
 export type Device = {
+  id: string;
   name: string;
   status: "ONLINE" | "OFFLINE";
   location: { lat: number; lng: number } | string | null;

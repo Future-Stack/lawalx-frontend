@@ -6,7 +6,7 @@ import { Schedule } from "@/redux/api/users/schedules/schedules.type";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useDeleteScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
-import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { toast } from "sonner";
 import SchedulePreviewDialog from "./SchedulePreviewDialog";
 import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
@@ -43,7 +43,7 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
     totalPages,
     setCurrentPage,
 }) => {
-    const { data: devicesData } = useGetMyDevicesDataQuery();
+    const { data: devicesData } = useGetMyAllDevicesDataQuery();
     const router = useRouter();
     const [openPreview, setOpenPreview] = React.useState(false);
     const [deleteSchedule, { isLoading: isDeleting }] = useDeleteScheduleMutation();
