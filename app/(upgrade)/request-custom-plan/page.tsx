@@ -15,6 +15,7 @@ import { HelpCircle, MapPin, Globe, X, Check, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSubmitEnterpriseRequestMutation } from "@/redux/api/enterpriseRequests/enterpriseRequestsApi";
 import { toast } from "sonner";
+import { countries, getCountryByCode } from "@/constants/countries";
 
 export default function RequestCustomPlanPage() {
   const router = useRouter();
@@ -24,7 +25,8 @@ export default function RequestCustomPlanPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phoneNumber: "",
+    phoneNumber: "+1",
+    countryCode: "US",
     industryType: "",
     specifyIndustryType: "",
     companySize: "",
@@ -44,6 +46,26 @@ export default function RequestCustomPlanPage() {
     value: string | number,
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const country = getCountryByCode(formData.countryCode);
+    if (!country) return;
+
+    let val = e.target.value;
+
+    if (!val.startsWith(country.dialCode)) {
+      val = country.dialCode;
+    } else {
+      const subscriberPart = val.slice(country.dialCode.length).replace(/[^\d]/g, "");
+      if (subscriberPart.length <= country.maxLength) {
+        val = country.dialCode + subscriberPart;
+      } else {
+        val = formData.phoneNumber;
+      }
+    }
+
+    setFormData((prev) => ({ ...prev, phoneNumber: val }));
   };
 
   const getPrice = (b: number) => {
@@ -218,14 +240,41 @@ export default function RequestCustomPlanPage() {
                 <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
                   Your Phone Number <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  value={formData.phoneNumber}
-                  onChange={(e) =>
-                    handleInputChange("phoneNumber", e.target.value)
-                  }
-                  placeholder="+21(256)2546325"
-                  className="h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
-                />
+                <div className="flex gap-2">
+                  <div className="w-[110px]">
+                    <Select
+                      value={formData.countryCode}
+                      onValueChange={(val) => {
+                        const country = getCountryByCode(val);
+                        if (country) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            countryCode: val,
+                            phoneNumber: country.dialCode,
+                          }));
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-[#404040] bg-white">
+                        <SelectValue placeholder="US" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {countries.map((c) => (
+                          <SelectItem key={c.code} value={c.code}>
+                            {c.code}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Input
+                    value={formData.phoneNumber}
+                    onChange={handlePhoneNumberChange}
+                    inputMode="tel"
+                    placeholder="Enter phone number"
+                    className="flex-1 h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                  />
+                </div>
               </div>
 
               <div className="flex flex-col md:flex-row gap-4 w-full items-start">
