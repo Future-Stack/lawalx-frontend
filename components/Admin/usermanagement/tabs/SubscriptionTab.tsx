@@ -2,24 +2,48 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Edit2 } from "lucide-react";
+import { Download, Edit2, Loader2 } from "lucide-react";
 import TablePagination from "@/components/shared/TablePagination";
+import { useLazyGetUserInvoicesQuery, useLazyGetSingleInvoiceQuery } from "@/redux/api/admin/usermanagementApi";
+import { generateInvoicePdf } from "@/lib/invoicePdfUtils";
+import { toast } from "sonner";
+import JSZip from "jszip";
 
 export default function SubscriptionTab({
   onOpenChangePlan,
   currentPlan,
   paymentHistory: paymentHistoryProp,
   monthlyPayment,
+  currency,
+  userId,
 }: {
   onOpenChangePlan: () => void;
   currentPlan?: any;
   paymentHistory?: any[];
   monthlyPayment?: string;
+  currency?: string;
+  userId?: string;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [downloadingAll, setDownloadingAll] = useState(false);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const ITEMS_PER_PAGE = 10;
 
+  const [triggerGetInvoices] = useLazyGetUserInvoicesQuery();
+  const [triggerGetSingleInvoice] = useLazyGetSingleInvoiceQuery();
+
   const history = paymentHistoryProp && paymentHistoryProp.length > 0 ? paymentHistoryProp : [];
+
+  const formatAmount = (p: any): string => {
+    const isNGN = currency === "NGN";
+    const symbol = isNGN ? "₦" : "$";
+    if (typeof p.amount === "number" && typeof p.originalAmount === "number") {
+      const val = isNGN ? p.amount : p.originalAmount;
+      return `${symbol}${val.toFixed(2)}`;
+    }
+    if (typeof p.amount === "string") return p.amount;
+    return "N/A";
+  };
 
   const totalPages = Math.ceil(history.length / ITEMS_PER_PAGE);
   const currentHistory = history.slice(
@@ -27,18 +51,64 @@ export default function SubscriptionTab({
     currentPage * ITEMS_PER_PAGE
   );
 
+  const handleDownloadAll = async () => {
+    if (!userId) return toast.error("User ID not available");
+    setDownloadingAll(true);
+    try {
+      const { data, isError } = await triggerGetInvoices({ userId, limit: 100 });
+      if (isError || !data?.success) return toast.error("Failed to fetch invoices");
+
+      const invoices: any[] = data.data || [];
+      if (invoices.length === 0) return toast.info("No invoices found");
+
+      const zip = new JSZip();
+      for (const inv of invoices) {
+        const doc = await generateInvoicePdf(inv, currency);
+        const pdfBlob = doc.output("arraybuffer");
+        zip.file(`${inv.invoiceNumber || inv.id}.pdf`, pdfBlob);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `invoices-${new Date().toISOString().split("T")[0]}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Downloaded ${invoices.length} invoice(s)`);
+    } catch (err) {
+      toast.error("Failed to download invoices");
+    } finally {
+      setDownloadingAll(false);
+    }
+  };
+  const handleDownloadSingle = async (invoiceId: string) => {
+    if (!userId) return toast.error('User ID not available');
+    setDownloadingId(invoiceId);
+    try {
+      const { data, isError } = await triggerGetSingleInvoice({ userId, paymentId: invoiceId });
+      console.log('Single invoice response:', { data, isError });
+      if (isError || !data?.success) return toast.error('Failed to fetch invoice');
+      const doc = await generateInvoicePdf(data.data, currency);
+      doc.save(`${invoiceId}.pdf`);
+      toast.success('Invoice downloaded');
+    } catch (err) {
+      console.error('Error downloading invoice:', err);
+      toast.error('Failed to download invoice');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+
   return (
     <div className="space-y-8">
       {/* Current Plan */}
       <div className="bg-navbarBg rounded-xl border border-border shadow-sm">
         <div className="flex justify-between items-start mb-6 border-b border-border p-4">
           <div>
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-              Current Plan
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Active subscription details
-            </p>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Current Plan</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Active subscription details</p>
           </div>
           <button
             onClick={onOpenChangePlan}
@@ -49,7 +119,6 @@ export default function SubscriptionTab({
           </button>
         </div>
 
-        {/* 2 Column Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6 p-4">
           <div className="flex justify-between items-center py-3 border-b border-border">
             <span className="text-sm text-gray-500 dark:text-gray-400">Plan</span>
@@ -68,7 +137,7 @@ export default function SubscriptionTab({
           <div className="flex justify-between items-center py-3 border-b border-border">
             <span className="text-sm text-gray-500 dark:text-gray-400">Next Billing</span>
             <span className="text-sm font-bold text-gray-900 dark:text-white">
-              {currentPlan?.nextBilling ? new Date(currentPlan.nextBilling).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "N/A"}
+              {currentPlan?.nextBilling ? new Date(currentPlan.nextBilling).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "N/A"}
             </span>
           </div>
           <div className="flex justify-between items-center py-3 border-b border-border">
@@ -94,10 +163,13 @@ export default function SubscriptionTab({
       {/* Payment History */}
       <div className="bg-navbarBg rounded-xl border border-border shadow-sm">
         <div className="flex justify-between items-center border-b border-border p-4">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Payment History
-          </h3>
-          <button className="px-4 shadow-customShadow py-2 bg-white dark:bg-gray-700 border border-border rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Payment History</h3>
+          <button
+            onClick={handleDownloadAll}
+            disabled={downloadingAll}
+            className="px-4 shadow-customShadow py-2 bg-white dark:bg-gray-700 border border-border rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-60"
+          >
+            {downloadingAll ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             Download All
           </button>
         </div>
@@ -121,7 +193,7 @@ export default function SubscriptionTab({
                     <span className="px-1.5 py-0.5 border border-blue-200 bg-blue-50 text-blue-700 rounded text-[10px] uppercase font-bold">VISA</span>
                     {p.method || p.paymentMethod || "N/A"}
                   </td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{p.amount}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{formatAmount(p)}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border inline-block ${
                       p.status === "Paid" || p.status === "SUCCESS"
@@ -136,11 +208,19 @@ export default function SubscriptionTab({
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {p.date ? new Date(p.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "N/A"}
+                    {p.date ? new Date(p.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "N/A"}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer">
-                      <Download className="w-5 h-5" />
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadSingle(p.invoice)}
+                      disabled={downloadingId === p.invoice}
+                      className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer disabled:opacity-60"
+                      title="Download Invoice"
+                    >
+                      {downloadingId === p.invoice
+                        ? <Loader2 className="w-5 h-5 animate-spin" />
+                        : <Download className="w-5 h-5" />}
                     </button>
                   </td>
                 </tr>

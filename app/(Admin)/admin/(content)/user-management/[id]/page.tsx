@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 import {
   Building2,
   User,
@@ -44,8 +45,9 @@ export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
   const userId = params.id as string;
+  const currency = useSelector((state: any) => state.settings.currency);
 
-  const { data: profileData, isLoading } = useGetUserProfileQuery(userId);
+  const { data: profileData, isLoading } = useGetUserProfileQuery({ userId, currency });
   const profile = profileData?.data;
 
   const [activeTab, setActiveTab] = useState<TabType>("Details");
@@ -98,9 +100,30 @@ export default function UserProfilePage() {
   const currentSub = profile.currentSubscription;
   const storagePct = profile.stats?.storage?.usagePercentage || 0;
 
+  const formatPrice = (price: any): string => {
+    if (!price) return "N/A";
+    if (typeof price === "string") {
+      const num = parseFloat(price);
+      return isNaN(num) ? price : `$${num.toFixed(2)}`;
+    }
+    if (typeof price === "number") return `$${price.toFixed(2)}`;
+    if (typeof price === "object") {
+      if (currency === "NGN") {
+        const amt = price.amount ?? price.originalAmount;
+        return amt != null ? `₦${Number(amt).toFixed(2)}` : "N/A";
+      } else {
+        const amt = price.originalAmount ?? price.amount;
+        return amt != null ? `$${Number(amt).toFixed(2)}` : "N/A";
+      }
+    }
+    return "N/A";
+  };
+
   const planPrice = currentSub?.plan?.price
-    ? `$${parseFloat(currentSub.plan.price).toFixed(2)}/month`
-    : profile.currentPlan?.price || "N/A";
+    ? `${formatPrice(currentSub.plan.price)}/month`
+    : profile.currentPlan?.price
+      ? `${formatPrice(profile.currentPlan.price)}/month`
+      : "N/A";
 
   const user = {
     id: profile.id,
@@ -244,6 +267,8 @@ export default function UserProfilePage() {
             currentPlan={profile.currentPlan}
             paymentHistory={profile.paymentHistory}
             monthlyPayment={planPrice}
+            currency={currency}
+            userId={userId}
           />
         )}
         {activeTab === "Content" && (

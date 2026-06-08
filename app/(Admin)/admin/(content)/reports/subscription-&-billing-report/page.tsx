@@ -1641,7 +1641,7 @@ const BillingDashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-6">
           <div className={`bg-navbarBg rounded-lg p-4 shadow-sm border border-border`}>
             <div className="flex items-center justify-between mb-2">
-              <span className={`text-sm ${theme.textSecondary}`}>Success Rate</span>
+              <span className={`text-sm ${theme.textSecondary}`}>Success Payments</span>
               <CheckCircle size={30} className="text-green-500" />
             </div>
             <div className={`text-2xl font-bold ${theme.text}`}>{currencySymbol}{kpiData.successRate.value.toLocaleString()}</div>
