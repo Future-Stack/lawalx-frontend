@@ -20,6 +20,15 @@ export const usermanagementApi = baseApi.injectEndpoints({
       providesTags: ["User"],
     }),
 
+    addUser: builder.mutation({
+      query: (data) => ({
+        url: `/usermanagement/add-user`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
+
     getUserStats: builder.query({
       query: () => ({
         url: "/usermanagement/stats",
@@ -116,6 +125,7 @@ export const {
   useGetUserStatsQuery,
   useGetExportDataQuery,
   useLazyGetExportDataQuery,
+  useAddUserMutation,
   useDeleteUserMutation,
   useLoginAsUserMutation,
   useAdminResetPasswordMutation,
