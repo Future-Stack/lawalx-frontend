@@ -324,10 +324,12 @@ export default function UserManagementPage() {
 
         toast.success(`Impersonating ${res.data.user?.email || 'user'}. Redirecting...`);
 
-        // 3. Hard redirect to user dashboard — forces a full page reload
+        // 3. Hard redirect to user dashboard or supporter portal — forces a full page reload
         //    so the app picks up the new cookies and renders as the user
+        const role = res.data.user?.role?.toUpperCase() || 'USER';
+        const targetUrl = role === 'SUPPORTER' ? '/supporter/overview' : '/dashboard';
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = targetUrl;
         }, 1000);
       }
     } catch (err: any) {

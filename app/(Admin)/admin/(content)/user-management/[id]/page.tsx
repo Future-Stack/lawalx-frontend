@@ -88,9 +88,11 @@ export default function UserProfilePage() {
 
         toast.success(`Impersonating ${res.data.user?.email || 'user'}. Redirecting...`);
 
-        // 3. Hard redirect to user dashboard
+        // 3. Hard redirect to user dashboard or supporter portal
+        const role = res.data.user?.role?.toUpperCase() || 'USER';
+        const targetUrl = role === 'SUPPORTER' ? '/supporter/overview' : '/dashboard';
         setTimeout(() => {
-          window.location.href = '/dashboard';
+          window.location.href = targetUrl;
         }, 1000);
       }
     } catch (err: any) {
