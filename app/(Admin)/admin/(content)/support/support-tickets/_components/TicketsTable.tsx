@@ -261,7 +261,6 @@ export default function TicketsTable() {
 
         {/* ── shadcn Table ─────────────────────────────────────────────── */}
         <StickyScrollContainer className="bg-navbarBg">
-          <div className="overflow-x-auto scrollbar-hide">
             <TicketsDesktopView
               tickets={filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)}
               isLoading={isLoading}
@@ -279,7 +278,6 @@ export default function TicketsTable() {
               handleOpenWorkload={handleOpenWorkload}
               openEnterprisePlan={handleOpenEnterprisePlan}
             />
-          </div>
         </StickyScrollContainer>
 
         {/* ── Pagination ─────────────────────────────────────────────────── */}

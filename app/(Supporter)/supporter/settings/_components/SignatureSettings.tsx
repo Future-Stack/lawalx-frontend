@@ -3,7 +3,9 @@ import { Loader2, X, FileSignature } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { useCreateAdditionalPaymentSignerMutation } from "@/redux/api/admin/payments/additional-payment/additionalPaymentApi";
+import { useCreateAdditionalPaymentSignerMutation, useGetMySignersQuery } from "@/redux/api/admin/payments/additional-payment/additionalPaymentApi";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
 
 export default function SignatureSettings() {
   const [name, setName] = useState("");
@@ -12,6 +14,9 @@ export default function SignatureSettings() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [createSigner, { isLoading }] = useCreateAdditionalPaymentSignerMutation();
+  const { data: signersRes, isLoading: isLoadingSigners } = useGetMySignersQuery();
+
+  const currentSigner = signersRes?.data?.[0];
 
   const handleSignatureUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -60,10 +65,38 @@ export default function SignatureSettings() {
   return (
     <div className="animate-in fade-in duration-300">
       <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6">
-        Upload Signature
+        Signature Settings
       </h3>
 
+      {isLoadingSigners ? (
+        <div className="flex items-center gap-2 mb-8 text-sm text-muted">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Loading current signature...
+        </div>
+      ) : currentSigner ? (
+        <div className="mb-8 p-5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900/30">
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Current Signature</h4>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 w-full sm:w-[240px] h-[100px] flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img 
+                src={`${BASE_URL}/${currentSigner.imageUrl}`} 
+                alt="Current signature" 
+                className="max-h-full max-w-full object-contain"
+              />
+            </div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              <p><span className="font-medium text-gray-900 dark:text-white">Signer Name:</span> {currentSigner.name}</p>
+              {currentSigner.createdAt && (
+                <p className="text-xs text-gray-500 mt-1">Uploaded on {new Date(currentSigner.createdAt).toLocaleDateString()}</p>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <div className="space-y-5">
+        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Upload New Signature</h4>
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
             Signer Name

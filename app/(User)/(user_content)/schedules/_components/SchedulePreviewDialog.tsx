@@ -142,7 +142,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
         setTimeout(() => {
             setPlayingIndex((prev) => (prev + 1) % allItems.length);
             setIsFading(false);
-        }, 500); // Synchronized with globals.css animation duration
+        }, 1500); // Synchronized with globals.css animation duration
     }, [allItems.length]);
 
     useEffect(() => {
@@ -156,7 +156,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
 
         // Default to 7s for non-video items
         const duration = (currentItem as any).duration ? (currentItem as any).duration * 1000 : 7000;
-        const timer = setTimeout(advance, Math.max(0, duration - 500));
+        const timer = setTimeout(advance, Math.max(0, duration - 1500));
         return () => clearTimeout(timer);
     }, [playingIndex, allItems, advance, open, localActive]);
 

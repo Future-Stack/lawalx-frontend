@@ -4,7 +4,7 @@ export interface CheckoutPayload {
   screenSize: number;
   country: string;
   gateway: "stripe" | "paystack";
-  deviceQuantity?: number;
+  deviceQuantity: number;
   couponCode?: string;
 }
 

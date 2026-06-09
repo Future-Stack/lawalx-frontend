@@ -26,6 +26,7 @@ export default function RequestCustomPlanPage() {
     email: "",
     phoneNumber: "",
     industryType: "",
+    specifyIndustryType: "",
     companySize: "",
     location: "",
     website: "",
@@ -65,11 +66,16 @@ export default function RequestCustomPlanPage() {
         finalTimeline = formData.specifyTimeline || "";
       }
 
+      let finalIndustryType = formData.industryType;
+      if (finalIndustryType === "others") {
+        finalIndustryType = formData.specifyIndustryType || "";
+      }
+
       if (
         !formData.name ||
         !formData.email ||
         !formData.phoneNumber ||
-        !formData.industryType ||
+        !finalIndustryType ||
         !formData.companySize ||
         !formData.location ||
         !formData.deviceScreenSize ||
@@ -86,7 +92,7 @@ export default function RequestCustomPlanPage() {
         name: formData.name,
         email: formData.email,
         phoneNumber: formData.phoneNumber,
-        industryType: formData.industryType,
+        industryType: finalIndustryType,
         companySize: formData.companySize,
         location: formData.location,
         website: formData.website || "",
@@ -222,26 +228,44 @@ export default function RequestCustomPlanPage() {
                 />
               </div>
 
-              <div className="flex flex-col md:flex-row gap-4 w-full">
-                <div className="space-y-2 w-full">
-                  <Label className="text-[16px] font-semibold text-[#404040] font-inter">
-                    Industry Type <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={formData.industryType}
-                    onValueChange={(val) =>
-                      handleInputChange("industryType", val)
-                    }
-                  >
-                    <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-body bg-white">
-                      <SelectValue placeholder="Fintech" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="fintech">Fintech</SelectItem>
-                      <SelectItem value="health">Healthcare</SelectItem>
-                      <SelectItem value="retail">Retail</SelectItem>
-                    </SelectContent>
-                  </Select>
+              <div className="flex flex-col md:flex-row gap-4 w-full items-start">
+                <div className="space-y-4 w-full">
+                  <div className="space-y-2">
+                    <Label className="text-[16px] font-semibold text-[#404040] font-inter">
+                      Industry Type <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={formData.industryType}
+                      onValueChange={(val) =>
+                        handleInputChange("industryType", val)
+                      }
+                    >
+                      <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-body bg-white">
+                        <SelectValue placeholder="Fintech" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="fintech">Fintech</SelectItem>
+                        <SelectItem value="health">Healthcare</SelectItem>
+                        <SelectItem value="retail">Retail</SelectItem>
+                        <SelectItem value="others">Others</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {formData.industryType === "others" && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                      <Label className="text-[16px] font-semibold text-[#404040] font-inter">
+                        Specify Industry Type <span className="text-red-500">*</span>
+                      </Label>
+                      <Input
+                        value={formData.specifyIndustryType}
+                        onChange={(e) =>
+                          handleInputChange("specifyIndustryType", e.target.value)
+                        }
+                        placeholder="e.g. Education"
+                        className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2 w-full">
                   <Label className="text-[16px] font-semibold text-[#404040] font-inter">
@@ -261,6 +285,9 @@ export default function RequestCustomPlanPage() {
                       <SelectItem value="51-200">51 - 200 Employee</SelectItem>
                       <SelectItem value="201-500">
                         201 - 500 Employee
+                      </SelectItem>
+                      <SelectItem value="501+">
+                        501+ Employee
                       </SelectItem>
                     </SelectContent>
                   </Select>

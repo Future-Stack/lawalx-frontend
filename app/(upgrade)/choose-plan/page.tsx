@@ -223,9 +223,11 @@ function ChoosePlanPageInner() {
         screenSize,
         country,
         gateway,
+        deviceQuantity: deviceQuantity !== undefined ? deviceQuantity : checkoutPlan.deviceLimit,
         ...(couponCode && { couponCode }),
-        ...(deviceQuantity !== undefined && { deviceQuantity }),
       };
+
+      console.log("Checkout API Payload:", payload);
 
       const res = await createCheckout(payload).unwrap();
       if (res?.data?.checkoutUrl) {

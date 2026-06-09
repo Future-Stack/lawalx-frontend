@@ -3,18 +3,19 @@
 
 import { useState, useMemo, useEffect } from "react";
 import {
-  X, FileText, Video, Monitor, CircleCheckBigIcon,
-  Search, ChevronLeft, ChevronRight, Loader2, Plus,
-  AudioLines, Image as ImageIcon,
-  Trash2
+  X,
+  FileText,
+  Video,
+  Monitor,
+  CircleCheckBigIcon,
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
 } from "lucide-react";
-import Dropdown from "@/common/Dropdown";
-import Image from "next/image";
 import { useGetAllContentDataQuery } from "@/redux/api/users/content/content.api";
 import { transformFile, transformFolder } from "@/lib/content-utils";
-import folderIcon from "@/public/icons/folder.svg";
 import { useCreateProgramMutation } from "@/redux/api/users/programs/programs.api";
-import { useGetMyDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { WorkoutStatus } from "@/redux/api/users/programs/programs.type";
 import UploadFileModal from "@/components/content/UploadFileModal";
 import { toast } from "sonner";
@@ -26,14 +27,9 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import DeviceStatusBadge from "../common/DeviceStatusBadge";
+import Step1ProgramInfo from "./create-program-steps/Step1ProgramInfo";
+import Step2ContentSelection from "./create-program-steps/Step2ContentSelection";
+import Step3DeviceSelection from "./create-program-steps/Step3DeviceSelection";
 
 interface CreateScreenModalProps {
   isOpen: boolean;
@@ -43,7 +39,7 @@ interface CreateScreenModalProps {
 
 export default function CreateScreenModal({ isOpen, onClose, onSuccess }: CreateScreenModalProps) {
   const { data: allContentData, isLoading: isContentLoading } = useGetAllContentDataQuery(undefined);
-  const { data: devicesData, isLoading: isDevicesLoading } = useGetMyDevicesDataQuery(undefined);
+  const { data: devicesData, isLoading: isDevicesLoading } = useGetMyAllDevicesDataQuery(undefined);
   const [createProgram, { isLoading: isCreating }] = useCreateProgramMutation();
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [deletedContentIds, setDeletedContentIds] = useState<Set<string>>(new Set());
@@ -119,6 +115,63 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     if (!devicesData?.data) return [];
     return devicesData.data;
   }, [devicesData]);
+
+  const selectableItems = useMemo(() => {
+    if (isContentLoading || !isMounted || filteredContent.length === 0) return [];
+
+    const itemMatchesFilter = (item: any) => {
+      if (item.type === "folder") return false;
+      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+      let matchesType = true;
+      if (selectedType === "video") matchesType = item.type === "video";
+      else if (selectedType === "image") matchesType = item.type === "image";
+      else if (selectedType === "audio") matchesType = item.type === "audio";
+      return matchesSearch && matchesType;
+    };
+
+    const getFilteredSelectableItems = (items: any[]): any[] => {
+      const result: any[] = [];
+      items.forEach((item) => {
+        if (item.type !== "folder") {
+          result.push(item);
+        } else if (item.children) {
+          item.children.forEach((child: any) => {
+            if (itemMatchesFilter(child)) {
+              result.push(child);
+            }
+          });
+        }
+      });
+      return result;
+    };
+
+    return getFilteredSelectableItems(filteredContent);
+  }, [filteredContent, searchQuery, selectedType, isContentLoading, isMounted]);
+
+  const allFilteredSelected = useMemo(() => {
+    if (selectableItems.length === 0) return false;
+    return selectableItems.every((item) => programData.content_ids.includes(item.id));
+  }, [selectableItems, programData.content_ids]);
+
+  const handleSelectAll = () => {
+    const selectableIds = selectableItems.map((item) => item.id);
+    if (selectableIds.length === 0) return;
+
+    if (allFilteredSelected) {
+      setProgramData((prev) => ({
+        ...prev,
+        content_ids: prev.content_ids.filter((id) => !selectableIds.includes(id)),
+      }));
+    } else {
+      setProgramData((prev) => {
+        const newIds = new Set([...prev.content_ids, ...selectableIds]);
+        return {
+          ...prev,
+          content_ids: Array.from(newIds),
+        };
+      });
+    }
+  };
 
   const handleClose = () => {
     setCurrentStep(1);
@@ -196,114 +249,6 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to create program");
     }
-  };
-
-  const renderContentItem = (item: any, depth = 0) => {
-    const isSelected = programData.content_ids.includes(item.id);
-    const isExpanded = expandedFolders.has(item.id);
-    console.log("item delete", item.id);
-    
-    const deleteFile = (id: any) => {
-      setDeletingId(id);
-      setTimeout(() => {
-        setDeletedContentIds((prev) => {
-          const next = new Set(prev);
-          next.add(id);
-          return next;
-        });
-        // Deselect the content item if it was selected
-        setProgramData((prev) => ({
-          ...prev,
-          content_ids: prev.content_ids.filter((contentId) => contentId !== id),
-        }));
-        setDeletingId(null);
-        toast.success("Content removed from list");
-      }, 500);
-    };
-
-    return (
-      <div key={item.id} className="space-y-2">
-        <div
-          onClick={(e) => {
-            if (item.type === "folder") toggleFolder(e, item.id);
-            else toggleVideoSelection(item.id);
-          }}
-          className={`flex items-center gap-3 p-3 rounded-lg border border-borderGray dark:border-gray-700 bg-white dark:bg-gray-800 transition-all group ${isSelected
-            ? "border-bgBlue bg-blue-50/50 dark:bg-blue-950/20"
-            : "hover:border-bgBlue hover:bg-blue-50 dark:hover:bg-blue-950/20"
-            } cursor-pointer`}
-          style={{ marginLeft: depth > 0 ? `${depth * 1.5}rem` : 0 }}
-        >
-          <div className="flex-shrink-0">
-            {item.type !== "folder" && (
-              <div
-                className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isSelected
-                  ? "bg-bgBlue border-bgBlue text-white"
-                  : "border-gray-300 dark:border-gray-600 group-hover:border-bgBlue"
-                  }`}
-              >
-                {isSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
-              </div>
-            )}
-          </div>
-
-          <div className="flex items-center gap-1">
-            {item.type === "folder" && (
-              <ChevronRight
-                className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? "rotate-90" : ""}`}
-              />
-            )}
-
-            <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden flex-shrink-0">
-              {item.type === "audio" ? (
-                <div className="w-full h-full flex items-center justify-center bg-blue-50 dark:bg-blue-950/20">
-                  <AudioLines className="w-5 h-5 text-bgBlue" />
-                  <audio src={item.audio} muted={false} />
-                </div>
-              ) : item.type === "video" ? (
-                <video src={item.video} className="w-full h-full object-cover" muted />
-              ) : item.type === "folder" ? (
-                <Image src={folderIcon} alt="folder" width={24} height={24} />
-              ) : item.thumbnail ? (
-                <Image src={item.thumbnail} alt={item.title} width={40} height={40} className="w-full h-full object-cover" />
-              ) : (
-                <ImageIcon className="w-5 h-5 text-bgBlue" />
-              )}
-            </div>
-          </div>
-
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900 dark:text-white group-hover:text-bgBlue transition-colors truncate text-sm">
-              {item.title}
-            </p>
-            <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-semibold tracking-wider">
-              {item.type === "folder" ? `${item.fileCount || 0} items` : `${item.size} ${item.duration ? `• ${item.duration}` : ""}`}
-            </p>
-          </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (deletingId) return;
-              deleteFile(item.id);
-            }}
-            disabled={!!deletingId}
-            className="hover:bg-red-100 p-2 rounded-lg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-w-[36px] flex items-center justify-center"
-          >
-            {deletingId === item.id ? (
-              <Loader2 className="w-5 h-5 text-red-500 animate-spin" />
-            ) : (
-              <Trash2 className="w-5 h-5 text-red-500" />
-            )}
-          </button>
-        </div>
-
-        {item.type === "folder" && isExpanded && item.children && (
-          <div className="space-y-2">
-            {item.children.map((child: any) => renderContentItem(child, depth + 1))}
-          </div>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -385,148 +330,43 @@ export default function CreateScreenModal({ isOpen, onClose, onSuccess }: Create
         {/* Content Area matches original style exactly */}
         <div className="flex-1 overflow-y-auto p-6">
           {currentStep === 1 && (
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Name</label>
-                <input
-                  type="text"
-                  value={programData.name}
-                  onChange={(e) => setProgramData({ ...programData, name: e.target.value })}
-                  placeholder="Store A - NYC"
-                  className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Description</label>
-                <textarea
-                  value={programData.description}
-                  onChange={(e) => setProgramData({ ...programData, description: e.target.value })}
-                  placeholder="Enter program description"
-                  rows={6}
-                  className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent resize-none text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Screen Size</label>
-                <Select
-                  value={programData.serene_size}
-                  onValueChange={(val: string) => setProgramData({ ...programData, serene_size: val })}
-                >
-                  <SelectTrigger className="w-full bg-white dark:bg-gray-800 border-borderGray dark:border-gray-600 py-2.5 md:py-3.5 h-auto rounded-lg">
-                    <SelectValue placeholder="Select screen size" />
-                  </SelectTrigger>
-                  <SelectContent className="z-[1000001]">
-                    <SelectItem value="1920x1080">Full HD (1920x1080)</SelectItem>
-                    <SelectItem value="1280x720">HD (1280x720)</SelectItem>
-                    <SelectItem value="3840x2160">4K (3840x2160)</SelectItem>
-                    <SelectItem value="1080x1920">Portrait (1080x1920)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <Step1ProgramInfo
+              programData={programData}
+              setProgramData={setProgramData}
+            />
           )}
 
           {currentStep === 2 && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
-                <div className="relative w-full sm:w-1/2">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
-                  <input
-                    type="text"
-                    placeholder="Search Content"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                  />
-                </div>
-                <div className="flex items-center gap-2 w-full sm:w-1/2">
-                  <div className="flex-1">
-                    <Dropdown
-                      options={[
-                        { value: "all", label: "All Content" },
-                        { value: "video", label: "Videos" },
-                        { value: "image", label: "Images" },
-                        { value: "audio", label: "Audio" },
-                      ]}
-                      value={selectedType}
-                      onChange={(value) => setSelectedType(String(value))}
-                      className="w-full cursor-pointer"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsUploadModalOpen(true)}
-                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-bgBlue hover:bg-blue-600 text-white rounded-lg font-medium transition-colors cursor-pointer shrink-0 shadow-customShadow"
-                  >
-                    <Plus className="w-5 h-5" />
-                    <span>Upload Content</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="max-h-[350px] overflow-y-auto space-y-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden pr-1">
-                {isContentLoading || !isMounted ? (
-                  <div className="flex flex-col items-center justify-center p-12 text-gray-400">
-                    <Loader2 className="w-8 h-8 animate-spin mb-2" />
-                    <span>Loading your content...</span>
-                  </div>
-                ) : filteredContent.length === 0 ? (
-                  <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                    No files found matching your search.
-                  </div>
-                ) : (
-                  filteredContent.map((item) => renderContentItem(item))
-                )}
-              </div>
-            </div>
+            <Step2ContentSelection
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              selectedType={selectedType}
+              setSelectedType={setSelectedType}
+              setIsUploadModalOpen={setIsUploadModalOpen}
+              filteredContent={filteredContent}
+              isContentLoading={isContentLoading}
+              isMounted={isMounted}
+              programData={programData}
+              setProgramData={setProgramData}
+              expandedFolders={expandedFolders}
+              setDeletedContentIds={setDeletedContentIds}
+              deletingId={deletingId}
+              setDeletingId={setDeletingId}
+              toggleFolder={toggleFolder}
+              toggleVideoSelection={toggleVideoSelection}
+              selectableItems={selectableItems}
+              allFilteredSelected={allFilteredSelected}
+              handleSelectAll={handleSelectAll}
+            />
           )}
 
           {currentStep === 3 && (
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                  Select Devices <span className="text-gray-400 font-normal">(optional)</span>
-                </label>
-                <div className="border border-borderGray dark:border-gray-600 rounded-lg divide-y dark:divide-gray-700 max-h-64 overflow-y-auto scrollbar-hide">
-                  {isDevicesLoading ? (
-                    <div className="flex flex-col items-center justify-center p-8 text-gray-400">
-                      <Loader2 className="w-8 h-8 animate-spin mb-2" />
-                      <span>Loading devices...</span>
-                    </div>
-                  ) : devices.length === 0 ? (
-                    <div className="p-8 text-center text-gray-500 dark:text-gray-400">
-                      No devices found.
-                    </div>
-                  ) : (
-                    devices.map((device: any) => (
-                      <div
-                        key={device.id}
-                        className={`flex items-center gap-4 p-4 cursor-pointer transition-colors ${programData.device_ids.includes(device.id)
-                          ? "bg-blue-50 dark:bg-blue-900/20"
-                          : "hover:bg-gray-50 dark:hover:bg-gray-800"
-                          }`}
-                        onClick={() => toggleDeviceSelection(device.id)}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={programData.device_ids.includes(device.id)}
-                          onChange={() => toggleDeviceSelection(device.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 text-blue-500 focus:ring-blue-500 cursor-pointer"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900 dark:text-white truncate">{device.name}</span>
-                            <DeviceStatusBadge status={device.status} />
-                          </div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400 truncate">{device.deviceSerial}</div>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
+            <Step3DeviceSelection
+              isDevicesLoading={isDevicesLoading}
+              devices={devices}
+              programData={programData}
+              toggleDeviceSelection={toggleDeviceSelection}
+            />
           )}
         </div>
 

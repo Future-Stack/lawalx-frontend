@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { Moon, Bell, Sun, User, Monitor, Settings as SettingsIcon } from 'lucide-react';

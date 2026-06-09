@@ -87,7 +87,7 @@ export default function Subscriptions() {
     ? `${formatCurrency(latestPayment.amount, latestPayment.currency)}/${billingUnit}`
     : `--/${billingUnit}`;
   const planStatus = subscription?.status ?? "Inactive";
-  const deviceLimit = subscription?.deviceLimit ?? 0;
+  const deviceQuantity = subscription?.deviceQuantity ?? 0;
   const storageLimitGb = subscription?.storageLimitGb ?? 0;
   const hasSubscription = Boolean(subscription?.id);
 
@@ -186,7 +186,7 @@ export default function Subscriptions() {
                       style={{ width: "0%" }}
                     ></div>
                   </div>
-                  <p className="text-xs text-muted">0 / {deviceLimit}</p>
+                  <p className="text-xs text-muted">0 / {deviceQuantity}</p>
                 </div>
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-body mb-2">
@@ -266,7 +266,7 @@ export default function Subscriptions() {
       </section>
 
       {/* Payment Method */}
-      <section>
+      {/* <section>
         <h2 className="text-lg md:text-xl font-bold text-headings mb-4">
           Payment Method
         </h2>
@@ -276,7 +276,6 @@ export default function Subscriptions() {
             Card Details
           </label>
           <div className="w-3/4">
-            {/* Card 1 - VISA */}
             <div
               onClick={() => setSelectedMethod("visa")}
               className={`border rounded-xl p-4 flex items-start gap-4 mb-3 relative cursor-pointer transition-colors ${selectedMethod === "visa" ? "border-bgBlue" : "border-border"}`}
@@ -308,7 +307,6 @@ export default function Subscriptions() {
               </div>
             </div>
 
-            {/* Card 2 - Stripe */}
             <div
               onClick={() => setSelectedMethod("stripe")}
               className={`border rounded-xl p-4 flex items-start gap-4 relative cursor-pointer transition-colors ${selectedMethod === "stripe" ? "border-bgBlue" : "border-border"}`}
@@ -349,7 +347,7 @@ export default function Subscriptions() {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {subscription && (
         <section className="flex items-center justify-between pb-6 border-b border-border">
