@@ -60,9 +60,12 @@ const ContentAndProgramsReport = () => {
         return;
       }
 
+      // Export API returns: totalFiles, exportedAt, files[]
       const files = exportData.data?.files || [];
-      const distribution = exportData.data?.contentTypeDistribution || [];
-      const quality = exportData.data?.contentQualityStats || {};
+      const totalFiles = exportData.data?.totalFiles || files.length;
+      const exportedAt = exportData.data?.exportedAt
+        ? new Date(exportData.data.exportedAt).toLocaleString()
+        : new Date().toLocaleString();
 
       const doc = new jsPDF();
       const timeRangeLabel = selectedRange.label;
@@ -71,88 +74,42 @@ const ContentAndProgramsReport = () => {
       let currentY = await addPdfHeader(
         doc,
         'Content And Programs Report',
-        `Period: ${timeRangeLabel}  |  Generated: ${new Date().toLocaleString()}`
+        `Period: ${timeRangeLabel}  |  Generated: ${exportedAt}`
       );
 
-      // Section 1: Content KPI Summary
+      // Section 1: Summary
       doc.setTextColor(50, 50, 50);
       doc.setFontSize(14);
-      doc.text('1. Content KPI Summary', 14, currentY);
-
-      const summaryStats = [
-        ['Metric', 'Value'],
-        ['Total Content Items', (exportData.data?.totalFiles || files.length || 0).toLocaleString()],
-        ['Active Screens', (exportData.data?.totalScreens || 0).toLocaleString()],
-        ['Storage Used', exportData.data?.storageUsed || '0 MB'],
-        ['Flagged Content', (exportData.data?.flaggedContent || 0).toString()]
-      ];
+      doc.text('1. Export Summary', 14, currentY);
 
       autoTable(doc, {
         startY: currentY + 5,
-        head: [summaryStats[0]],
-        body: summaryStats.slice(1),
+        head: [['Metric', 'Value']],
+        body: [
+          ['Total Files', totalFiles.toLocaleString()],
+          ['Exported At', exportedAt],
+        ],
         theme: 'grid',
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [59, 130, 246] } // Blue-500
+        headStyles: { fillColor: [59, 130, 246] },
       });
       currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Section 2: Content Type Distribution
-      if (distribution.length > 0) {
-        doc.setFontSize(14);
-        doc.text('2. Content Type Distribution', 14, currentY);
-        const distRows = distribution.map((d: any) => [
-          d.type,
-          (d.count || 0).toLocaleString(),
-          d.storage || '0 MB',
-          `${d.percentage || 0}%`
-        ]);
-        autoTable(doc, {
-          startY: currentY + 5,
-          head: [['Type', 'File Count', 'Storage', 'Percentage']],
-          body: distRows,
-          theme: 'striped',
-          styles: { fontSize: 8 },
-          headStyles: { fillColor: [139, 92, 246] } // Purple-500
-        });
-        currentY = (doc as any).lastAutoTable.finalY + 15;
-      }
-
-      // Section 3: Content Quality Analytics
-      if (quality.totalContentItems) {
-        if (currentY > 230) { doc.addPage(); currentY = 20; }
-        doc.setFontSize(14);
-        doc.text(`${distribution.length > 0 ? '3' : '2'}. Content Quality Stats`, 14, currentY);
-        const qualityRows = [
-          ['Status', 'Count', 'Percentage'],
-          ['Active', (quality.activeContent || 0).toLocaleString(), `${((quality.activeContent / quality.totalContentItems) * 100 || 0).toFixed(1)}%`],
-          ['Flagged', (quality.flaggedContent || 0).toLocaleString(), `${((quality.flaggedContent / quality.totalContentItems) * 100 || 0).toFixed(1)}%`],
-          ['Archived', (quality.archivedContent || 0).toLocaleString(), `${((quality.archivedContent / quality.totalContentItems) * 100 || 0).toFixed(1)}%`],
-        ];
-        autoTable(doc, {
-          startY: currentY + 5,
-          head: [qualityRows[0]],
-          body: qualityRows.slice(1),
-          theme: 'grid',
-          styles: { fontSize: 8 },
-          headStyles: { fillColor: [239, 68, 68] } // Red-500
-        });
-        currentY = (doc as any).lastAutoTable.finalY + 15;
-      }
-
-      // Section 4: Content File Inventory
+      // Section 2: Content File Inventory
       if (currentY > 230) { doc.addPage(); currentY = 20; }
       doc.setFontSize(14);
-      doc.text(`${(distribution.length > 0 && quality.totalContentItems) ? '4' : (distribution.length > 0 || quality.totalContentItems) ? '3' : '2'}. Content File Inventory`, 14, currentY);
+      doc.text('2. Content File Inventory', 14, currentY);
 
-      const tableColumn = ["Index", "Name", "Type", "Size", "User", "Created At"];
+      const tableColumn = ["#", "File Name", "File Type", "Size", "Type", "Duration (s)", "Uploaded By", "Created At"];
       const tableRows = files.map((file: any, index: number) => [
         index + 1,
         file.originalName || 'N/A',
-        file.type || 'N/A',
+        file.fileType || 'N/A',
         file.size ? formatBytes(file.size) : 'N/A',
+        file.type || 'N/A',
+        file.duration ?? 'N/A',
         file.user?.username || 'N/A',
-        file.createdAt ? new Date(file.createdAt).toLocaleDateString() : 'N/A'
+        file.createdAt ? new Date(file.createdAt).toLocaleDateString() : 'N/A',
       ]);
 
       autoTable(doc, {
@@ -160,11 +117,10 @@ const ContentAndProgramsReport = () => {
         body: tableRows,
         startY: currentY + 5,
         theme: 'striped',
-        headStyles: { fillColor: [16, 185, 129] }, // Emerald-500
-        styles: { fontSize: 7 }
+        headStyles: { fillColor: [16, 185, 129] },
+        styles: { fontSize: 7 },
       });
 
-      // Save PDF
       doc.save(`Content_Report_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success("Content report exported successfully");
     } catch (error) {
@@ -211,15 +167,19 @@ const ContentAndProgramsReport = () => {
   const reportData = useMemo(() => {
     const data = dashboardData?.data || {};
 
-    // KPI Data
+    // Extract topMetrics from API response
+    const topMetrics = data.topMetrics || {};
+
+    // KPI Data — mapped from topMetrics
     const kpi = {
-      totalScreens: data.totalScreens || 0,
-      totalScreensChange: 0, // Placeholder if not in backend
-      contentItems: data.contentItems || 0,
-      contentItemsChange: 0, // Placeholder if not in backend
-      storageUsed: data.storageUsed || "0 MB",
-      storageCapacity: data.storagePercentage || 0,
-      flaggedContent: data.flaggedContent || 0,
+      totalDevice: topMetrics.totalDevice?.value || 0,
+      totalDeviceSub: topMetrics.totalDevice?.subText || '',
+      contentItems: topMetrics.contentItems?.value || 0,
+      contentItemsSub: topMetrics.contentItems?.subText || '',
+      storageUsed: topMetrics.storageUsed?.value || '0 MB',
+      storageUsedSub: topMetrics.storageUsed?.subText || '',
+      unusedContent: topMetrics.unusedContent?.value || 0,
+      unusedContentSub: topMetrics.unusedContent?.subText || '',
     };
 
     // Content Type Distribution
@@ -230,13 +190,12 @@ const ContentAndProgramsReport = () => {
       percentage: `${item.percentage}%`
     }));
 
-    // Content Quality Stats
+    // Content Quality Stats — API returns totalContentItems, activeContent, unusedContent
     const quality = data.contentQualityStats || {};
     const qualityStats = {
       total: quality.totalContentItems || 0,
       active: quality.activeContent || 0,
-      flagged: quality.flaggedContent || 0,
-      archived: quality.archivedContent || 0,
+      unused: quality.unusedContent || 0,
     };
 
     // Usage Trends
@@ -347,20 +306,20 @@ const ContentAndProgramsReport = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* Top Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Card 1: Total Screens */}
+        {/* Card 1: Total Devices */}
         <div className="bg-navbarBg p-6 rounded-xl border border-border shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Programs</h3>
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">Total Devices</h3>
             <Monitor className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
           </div>
           <div className="flex flex-col">
             <span className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-              {reportData.kpi.totalScreens.toLocaleString()}
+              {reportData.kpi.totalDevice.toLocaleString()}
             </span>
             <span className="text-xs text-gray-400">
-              +{reportData.kpi.totalScreensChange} from last month
+              {reportData.kpi.totalDeviceSub}
             </span>
           </div>
         </div>
@@ -376,7 +335,7 @@ const ContentAndProgramsReport = () => {
               {reportData.kpi.contentItems.toLocaleString()}
             </span>
             <span className="text-xs text-gray-400">
-              +{reportData.kpi.contentItemsChange.toLocaleString()} from last month
+              {reportData.kpi.contentItemsSub}
             </span>
           </div>
         </div>
@@ -392,23 +351,23 @@ const ContentAndProgramsReport = () => {
               {reportData.kpi.storageUsed}
             </span>
             <span className="text-xs text-gray-400">
-              {reportData.kpi.storageCapacity}% of total capacity
+              {reportData.kpi.storageUsedSub}
             </span>
           </div>
         </div>
 
-        {/* Card 4: Flagged Content */}
+        {/* Card 4: Unused Content */}
         <div className="bg-navbarBg p-6 rounded-xl border border-border shadow-sm relative overflow-hidden group hover:shadow-md transition-shadow">
           <div className="flex justify-between items-start mb-4">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">Flagged Content</h3>
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400">Unused Content</h3>
             <Flag className="w-4 h-4 text-red-500" />
           </div>
           <div className="flex flex-col">
             <span className="text-3xl font-bold text-red-500 mb-1">
-              {reportData.kpi.flaggedContent}
+              {reportData.kpi.unusedContent.toLocaleString()}
             </span>
             <span className="text-xs text-gray-400">
-              Requires review
+              {reportData.kpi.unusedContentSub}
             </span>
           </div>
         </div>
@@ -498,16 +457,9 @@ const ContentAndProgramsReport = () => {
             </div>
 
             <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Flagged Content</span>
-              <span className="font-semibold text-red-500 text-base">
-                {reportData.qualityStats.flagged}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600 dark:text-gray-400">Archived Content</span>
-              <span className="font-semibold text-gray-500 dark:text-gray-500 text-base">
-                {reportData.qualityStats.archived}
+              <span className="text-gray-600 dark:text-gray-400">Unused Content</span>
+              <span className="font-semibold text-orange-500 text-base">
+                {reportData.qualityStats.unused.toLocaleString()}
               </span>
             </div>
           </div>
@@ -515,7 +467,7 @@ const ContentAndProgramsReport = () => {
       </div>
 
       {/* Content Usage Trends */}
-      <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-4 ml-1">
+      {/* <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-4 ml-1">
         Content Usage Trends
       </h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -534,7 +486,7 @@ const ContentAndProgramsReport = () => {
             </span>
           </div>
         ))}
-      </div>
+      </div> */}
 
     </div>
   );

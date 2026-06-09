@@ -815,9 +815,6 @@ const BillingDashboard = () => {
       <div className={`bg-navbarBg rounded-lg p-6 shadow-sm border border-border`}>
         <div className="flex justify-between items-center mb-4">
           <h3 className={`text-lg font-semibold ${theme.text}`}>Recent Transactions</h3>
-          <button className={`p-2 ${theme.hover} rounded-lg`}>
-            <Filter size={20} className={theme.text} />
-          </button>
         </div>
 
         <div className="overflow-x-auto">
