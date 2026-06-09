@@ -68,7 +68,35 @@ export default function UserProfilePage() {
   const handleLoginAsUser = async (id: string) => {
     try {
       const res = await loginAsUser(id).unwrap();
-      if (res.success) toast.success("Login tokens generated successfully");
+      if (res.success) {
+        // 1. Save admin's current tokens to sessionStorage for "Return to Admin" banner
+        const adminToken = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('token='))
+          ?.split('=')[1] || '';
+        const adminRefreshToken = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('refreshToken='))
+          ?.split('=')[1] || '';
+
+        sessionStorage.setItem('impersonation_original_token', adminToken);
+        sessionStorage.setItem('impersonation_original_refresh_token', adminRefreshToken);
+
+        // 2. Replace cookies with the user's impersonated tokens
+        const newToken = res.data.accessToken;
+        const newRefreshToken = res.data.refreshToken;
+        document.cookie = `token=${newToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `refreshToken=${newRefreshToken}; path=/; max-age=${30 * 24 * 60 * 60}; secure; samesite=strict`;
+
+        toast.success(`Impersonating ${res.data.user?.email || 'user'}. Redirecting...`);
+
+        // 3. Hard redirect to user dashboard or supporter portal
+        const role = res.data.user?.role?.toUpperCase() || 'USER';
+        const targetUrl = role === 'SUPPORTER' ? '/supporter/overview' : '/dashboard';
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 1000);
+      }
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to login as user");
     }
