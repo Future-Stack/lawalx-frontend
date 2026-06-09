@@ -913,11 +913,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const handleAddClient = (data: any) => {
-    console.log("New client added:", data);
-    alert(`New client ${data.fullName} (${data.email}) added successfully!`);
-    setIsAddClientModalOpen(false); // Close modal after success
-  };
+
 
   return (
     <div className="min-h-screen">
@@ -1013,7 +1009,6 @@ const Dashboard: React.FC = () => {
         <AddUserModal
           isOpen={isAddClientModalOpen}
           onClose={() => setIsAddClientModalOpen(false)}
-          onAddUser={handleAddClient}
         />
         <TicketDetailsDialog
           ticket={selectedTicket}

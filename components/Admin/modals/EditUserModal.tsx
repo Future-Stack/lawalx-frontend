@@ -278,8 +278,8 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
                   Phone Number
                 </label>
-                <div className="flex gap-2">
-                  <div className="w-24">
+                <div className="grid grid-cols-4 gap-1">
+                  <div className="col-span-1">
                     <Dropdown
                       value={formData.countryCode}
                       options={countries.map(c => c.code)}
@@ -302,7 +302,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                     placeholder="Enter phone number"
                     value={formData.phoneNumber}
                     onChange={handlePhoneNumberChange}
-                    className="flex-1 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                    className="col-span-3 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white h-10"
                   />
                 </div>
               </div>
@@ -310,7 +310,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
           </div>
 
           {/* Subscription Plan - Orange Theme */}
-          <div className="bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-xl p-4">
+          {/* <div className="bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-xl p-4">
             <h3 className="text-sm font-bold text-orange-700 dark:text-orange-400 mb-4 flex items-center gap-2">
               <CreditCard className="w-4 h-4" />
               Subscription Plan
@@ -378,7 +378,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Advance Customization */}
           {formData.plan === "Enterprise" && (

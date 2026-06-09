@@ -289,12 +289,7 @@ export default function UserManagementPage() {
     setSelectedUsers(new Set());
   };
 
-  const handleAddUser = (data: any) => {
-    // Current API doesn't have an add user endpoint in usermanagementApi.ts provided in the prompt
-    // Assuming it's handled elsewhere or needs to be added later.
-    toast.info("Add user functionality not yet connected to backend.");
-    setIsModalOpen(false);
-  };
+
 
   const handleLoginAsUser = async (userId: string) => {
     try {
@@ -1133,7 +1128,6 @@ export default function UserManagementPage() {
       <AddUserModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAddUser={handleAddUser}
       />
 
       {/* Reusable Modals */}
