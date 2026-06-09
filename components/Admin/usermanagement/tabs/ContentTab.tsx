@@ -172,27 +172,27 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
 
   const contentData: ContentItem[] = files && files.length > 0
     ? files.map((f: any) => ({
-        id: f.id,
-        name: f.name,
-        type: f.fileType ? (f.fileType.charAt(0) + f.fileType.slice(1).toLowerCase()) as ContentType : "Image",
-        size: f.sizeAndDuration?.split(" - ")[0] || "N/A",
-        duration: f.sizeAndDuration?.split(" - ")[1] || "",
-        uploadDate: f.uploadedDate ? new Date(f.uploadedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "N/A",
-        assignedTo: f.programAssigned || "None",
-        status: "Active" as ContentStatus,
-        url: f.url ? `${process.env.NEXT_PUBLIC_SOCKET_URL || "https://lawaltwo.sakibalhasa.xyz"}/${f.url}` : undefined,
-      }))
+      id: f.id,
+      name: f.name,
+      type: f.fileType ? (f.fileType.charAt(0) + f.fileType.slice(1).toLowerCase()) as ContentType : "Image",
+      size: f.sizeAndDuration?.split(" - ")[0] || "N/A",
+      duration: f.sizeAndDuration?.split(" - ")[1] || "",
+      uploadDate: f.uploadedDate ? new Date(f.uploadedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "N/A",
+      assignedTo: f.programAssigned || "None",
+      status: "Active" as ContentStatus,
+      url: f.url ? `${process.env.NEXT_PUBLIC_SOCKET_URL || "https://lawaltwo.sakibalhasa.xyz"}/${f.url}` : undefined,
+    }))
     : [];
 
   const resolvedStatsData = statsProp
     ? [
-        { label: "Total Videos", value: statsProp.content?.totalVideos ?? 0, total: statsProp.content?.limits?.videoLimit ?? null },
-        { label: "Total Images", value: statsProp.content?.totalImages ?? 0, total: statsProp.content?.limits?.imageLimit ?? null },
-        { label: "Total Audios", value: statsProp.content?.totalAudios ?? 0, total: statsProp.content?.limits?.audioLimit ?? null },
-        { label: "Total Programs", value: statsProp.content?.totalPrograms ?? statsProp.content?.totalScreens ?? 0, total: null },
-        { label: "Total Schedules", value: statsProp.content?.totalSchedules ?? 0, total: null },
-        { label: "Total Templates", value: statsProp.content?.totalTemplates ?? 0, total: statsProp.content?.limits?.templateLimit ?? null },
-      ]
+      { label: "Total Videos", value: statsProp.content?.totalVideos ?? 0, total: statsProp.content?.limits?.videoLimit ?? null },
+      { label: "Total Images", value: statsProp.content?.totalImages ?? 0, total: statsProp.content?.limits?.imageLimit ?? null },
+      { label: "Total Audios", value: statsProp.content?.totalAudios ?? 0, total: statsProp.content?.limits?.audioLimit ?? null },
+      { label: "Total Programs", value: statsProp.content?.totalPrograms ?? statsProp.content?.totalScreens ?? 0, total: null },
+      { label: "Total Schedules", value: statsProp.content?.totalSchedules ?? 0, total: null },
+      { label: "Total Templates", value: statsProp.content?.totalTemplates ?? 0, total: statsProp.content?.limits?.templateLimit ?? null },
+    ]
     : statsData;
 
   const filteredData = contentData
@@ -330,12 +330,12 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             Content ({filteredData.length})
           </h3>
-          <button
+          {/* <button
             onClick={handleDownloadAll}
             className="px-4 shadow-customShadow py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 transition-colors cursor-pointer"
           >
             Download All
-          </button>
+          </button> */}
         </div>
 
         {/* Content View */}
@@ -407,13 +407,13 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
                         >
                           <Play className="w-4 h-4 fill-current" />
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => handleDownload(item)}
                           className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all cursor-pointer"
                           title="Download"
                         >
                           <Download className="w-4 h-4" />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>

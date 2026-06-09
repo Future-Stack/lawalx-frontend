@@ -82,6 +82,14 @@ export type GlobalDeviceDetailsResponse = {
   data: GlobalDevice;
 };
 
+// Response type for clear-data endpoint
+export type ClearDataResponse = {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: any;
+};
+
 export type GlobalDevicesExportResponse = {
   statusCode: number;
   success: boolean;
@@ -184,6 +192,13 @@ const globalDevicesApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [{ type: "Device", id: "LIST" }],
     }),
+    clearDeviceData: build.mutation<ClearDataResponse, string>({
+      query: (id) => ({
+        url: `/device/${id}/clear-data`,
+        method: "PATCH",
+      }),
+      invalidatesTags: (result, error, id) => [{ type: "Device", id }],
+    }),
     renameDevice: build.mutation({
       query: ({ id, name }) => ({
         url: `/device/${id}/rename`,
@@ -214,6 +229,7 @@ export const {
   useLazyExportGlobalDevicesQuery,
   useGetGlobalDeviceDetailsQuery,
   useDeleteDeviceMutation,
+  useClearDeviceDataMutation,
   useRenameDeviceMutation,
   useSyncDeviceMutation,
   useGetDeviceActivityLogsQuery,
