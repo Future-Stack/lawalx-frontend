@@ -140,7 +140,10 @@ const SubscribersTable = ({
                       <DropdownMenuItem>
                         <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleCancelPlan(sub.userId)}>
+                      <DropdownMenuItem
+                        className="text-red-500 focus:text-red-500"
+                        onClick={() => handleCancelPlan(sub.userId)}
+                      >
                         <XCircle className="mr-2 h-4 w-4" /> Cancel Plan
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -159,40 +162,45 @@ const SubscribersTable = ({
           >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <div className="font-medium text-headings truncate">{sub.userName}</div>
+                <div className="font-medium text-headings truncate">
+                  {sub.userName}
+                </div>
                 <div className="text-sm text-muted truncate">{sub.email}</div>
               </div>
               <div className="flex-shrink-0">
                 <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    size="icon"
-                    aria-label="Subscriber options"
-                    className="h-8 w-8 text-muted hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => handleViewInvoices(sub.userId)}
-                  >
-                    <FileText className="mr-2 h-4 w-4" /> View Invoices
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleAdditionalPayment(sub)}
-                  >
-                    <CreditCard className="mr-2 h-4 w-4" /> Additional payment
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="text-red-500 focus:text-red-500" onClick={() => handleCancelPlan(sub.userId)}>
-                    <XCircle className="mr-2 h-4 w-4" /> Cancel Plan
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon"
+                      aria-label="Subscriber options"
+                      className="h-8 w-8 text-muted hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => handleViewInvoices(sub.userId)}
+                    >
+                      <FileText className="mr-2 h-4 w-4" /> View Invoices
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleAdditionalPayment(sub)}
+                    >
+                      <CreditCard className="mr-2 h-4 w-4" /> Additional payment
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-red-500 focus:text-red-500"
+                      onClick={() => handleCancelPlan(sub.userId)}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" /> Cancel Plan
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
@@ -213,11 +221,17 @@ const SubscribersTable = ({
               </span>
             </div>
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
-              <span className="text-muted whitespace-nowrap">Payment Cycle:</span>
-              <span className="text-headings whitespace-nowrap">{sub.paymentCycle}</span>
+              <span className="text-muted whitespace-nowrap">
+                Payment Cycle:
+              </span>
+              <span className="text-headings whitespace-nowrap">
+                {sub.paymentCycle}
+              </span>
             </div>
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
-              <span className="text-muted whitespace-nowrap">Next Billing:</span>
+              <span className="text-muted whitespace-nowrap">
+                Next Billing:
+              </span>
               <span className="text-headings whitespace-nowrap">
                 {formatDate(sub.nextBilling)}
               </span>

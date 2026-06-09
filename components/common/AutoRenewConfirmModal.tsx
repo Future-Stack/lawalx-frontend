@@ -73,11 +73,7 @@ export default function AutoRenewConfirmModal({
               onClick={onConfirm}
               disabled={isLoading}
             >
-              {isLoading
-                ? "Processing..."
-                : isEnabling
-                ? "Enable"
-                : "Disable"}
+              {isLoading ? "Processing..." : isEnabling ? "Enable" : "Disable"}
             </Button>
           </div>
         </div>
