@@ -1049,9 +1049,6 @@ const FinancialReport = () => {
                   <h2 className="text-lg font-semibold mb-2">Trial Conversion Rate</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Track trial-to-paid conversion metrics</p>
                 </div>
-                <button className="px-4 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg text-sm hover:bg-gray-800 dark:hover:bg-gray-600 flex items-center gap-2">
-                  <Download className="w-4 h-4" /> Export
-                </button>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">

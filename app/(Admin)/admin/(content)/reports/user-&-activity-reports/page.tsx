@@ -1008,10 +1008,10 @@ const UserActivityReports = () => {
                     <tbody>
                       {data.authentication.authEvents.map((event: any, idx: number) => (
                         <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="py-3 px-4 text-sm">{event.id}</td>
-                          <td className="py-3 px-4 text-sm">{event.timestamp}</td>
-                          <td className="py-3 px-4 text-sm">{event.user}</td>
-                          <td className="py-3 px-4 text-sm">
+                          <td className="py-3 px-4 text-sm text-nowrap">{event.id}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{event.timestamp}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{event.user}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">
                             <span className="inline-flex items-center gap-1.5">
                               {event.action === 'Login' ? <LogIn className="w-3.5 h-3.5 text-blue-500" /> :
                                 event.action === '2FA Verification' ? <Shield className="w-3.5 h-3.5 text-purple-500" /> :
@@ -1019,7 +1019,7 @@ const UserActivityReports = () => {
                               {event.action}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-3 px-4 text-nowrap">
                             <span className={`px-2 py-1 rounded-full text-xs ${event.status === 'Success'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                               : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
@@ -1027,9 +1027,9 @@ const UserActivityReports = () => {
                               {event.status}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm">{event.ip}</td>
-                          <td className="py-3 px-4 text-sm">
-                            <span className="inline-flex items-center gap-1.5">
+                          <td className="py-3 px-4 text-sm text-nowrap">{event.ip}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">
+                            <span className="inline-flex items-center gap-1.5 text-nowrap">
                               {event.location !== 'Unknown' ? '🌍' : '❓'}
                               {event.location}
                             </span>
