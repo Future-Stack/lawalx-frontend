@@ -31,89 +31,97 @@ const DeviceReportDashboard = () => {
         return;
       }
 
+      // Export API returns: filter, totalDevices, exportedAt, devices[]
       const devices = exportData.data?.devices || [];
-      const stats = exportData.data?.summary || {};
-      const regions = exportData.data?.regionalStats || [];
+      const totalDevices = exportData.data?.totalDevices || devices.length;
+      const exportedAt = exportData.data?.exportedAt
+        ? new Date(exportData.data.exportedAt).toLocaleString()
+        : new Date().toLocaleString();
+      const filterLabel = exportData.data?.filter || 'N/A';
 
-      const doc = new jsPDF();
+      // Use landscape A4 so all 11 columns fit without wrapping
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
       const timeRangeLabel = timeRanges.find(t => t.value === timeRange)?.label || 'All Time';
 
-      // Branded header with logo
+      // Branded header
       let currentY = await addPdfHeader(
         doc,
         'Device Report',
-        `Period: ${timeRangeLabel}  |  Generated: ${new Date().toLocaleString()}`
+        `Period: ${timeRangeLabel}  |  Generated: ${exportedAt}`
       );
 
-      // Section 1: Device Summary
+      // Section 1: Export Summary
       doc.setTextColor(50, 50, 50);
       doc.setFontSize(14);
-      doc.text('1. Device Summary', 14, currentY);
-
-      const summaryStats = [
-        ['Metric', 'Value'],
-        ['Total Devices', (stats.totalDevices || devices.length || 0).toLocaleString()],
-        ['Online Devices', (stats.onlineDevices || 0).toLocaleString()],
-        ['Offline Devices', (stats.offlineDevices || 0).toLocaleString()]
-      ];
+      doc.text('1. Export Summary', 14, currentY);
 
       autoTable(doc, {
         startY: currentY + 5,
-        head: [summaryStats[0]],
-        body: summaryStats.slice(1),
+        head: [['Metric', 'Value']],
+        body: [
+          ['Total Devices', totalDevices.toLocaleString()],
+          ['Filter Period', filterLabel],
+          ['Exported At', exportedAt],
+        ],
         theme: 'grid',
         styles: { fontSize: 8 },
-        headStyles: { fillColor: [59, 130, 246] } // Blue-500
+        headStyles: { fillColor: [59, 130, 246] },
       });
       currentY = (doc as any).lastAutoTable.finalY + 15;
 
-      // Section 2: Regional Distribution
-      if (regions.length > 0) {
-        doc.setFontSize(14);
-        doc.text('2. Regional Distribution', 14, currentY);
-        const regionRows = regions.map((r: any) => [
-          r.region || r.name,
-          (r.totalDevices || 0).toLocaleString(),
-          (r.onlineDevices || 0).toLocaleString(),
-          (r.offlineDevices || 0).toLocaleString(),
-          `${((r.onlineDevices / r.totalDevices) * 100 || 0).toFixed(1)}%`
-        ]);
-        autoTable(doc, {
-          startY: currentY + 5,
-          head: [['Region', 'Total', 'Online', 'Offline', 'Online Rate']],
-          body: regionRows,
-          theme: 'striped',
-          styles: { fontSize: 8 },
-          headStyles: { fillColor: [139, 92, 246] } // Purple-500
-        });
-        currentY = (doc as any).lastAutoTable.finalY + 15;
-      }
-
-      // Section 3: Device Inventory
+      // Section 2: Device Inventory
       if (currentY > 230) { doc.addPage(); currentY = 20; }
       doc.setFontSize(14);
-      doc.text(`${regions.length > 0 ? '3' : '2'}. Device Inventory List`, 14, currentY);
+      doc.text('2. Device Inventory List', 14, currentY);
 
-      const tableColumn = ["Index", "Device ID", "Name", "Status", "Region", "Username"];
+      const tableColumn = ["#", "Serial", "Name", "Status", "Type", "Model", "Region", "IP", "Program", "User", "Last Seen"];
       const tableRows = devices.map((device: any, index: number) => [
         index + 1,
-        device.id || 'N/A',
+        device.deviceSerial || 'N/A',
         device.name || 'N/A',
         device.status || 'N/A',
+        (device.deviceType || 'N/A').replace('_OS', ''),
+        device.model || 'N/A',
         device.region || 'N/A',
-        device.user?.username || 'N/A'
+        device.ip || 'N/A',
+        device.program?.name || '—',
+        device.user?.username || 'N/A',
+        device.lastSeen ? new Date(device.lastSeen).toLocaleDateString() : 'N/A',
       ]);
 
       autoTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: currentY + 5,
-        theme: 'grid',
-        headStyles: { fillColor: [16, 185, 129] }, // Emerald-500
-        styles: { fontSize: 8 }
+        theme: 'striped',
+        headStyles: {
+          fillColor: [16, 185, 129],
+          fontSize: 7,
+          fontStyle: 'bold',
+          halign: 'center',
+          overflow: 'hidden',
+        },
+        styles: {
+          fontSize: 6.5,
+          overflow: 'hidden',
+          cellPadding: { top: 2, bottom: 2, left: 2, right: 2 },
+        },
+        columnStyles: {
+          0: { cellWidth: 6, halign: 'center' },   // #
+          1: { cellWidth: 42 },                     // Serial
+          2: { cellWidth: 26 },                     // Name
+          3: { cellWidth: 16, halign: 'center' },   // Status
+          4: { cellWidth: 24 },                     // Type
+          5: { cellWidth: 22 },                     // Model
+          6: { cellWidth: 18, halign: 'center' },   // Region
+          7: { cellWidth: 24 },                     // IP
+          8: { cellWidth: 20 },                     // Program
+          9: { cellWidth: 40 },                     // User
+          10: { cellWidth: 20, halign: 'center' },  // Last Seen
+        },
+        tableWidth: 'wrap',
       });
 
-      // Save PDF
       doc.save(`Device_Report_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success("Device report exported successfully");
     } catch (error) {
@@ -133,14 +141,22 @@ const DeviceReportDashboard = () => {
       const devices = exportData.data?.devices || [];
       const wb = XLSX.utils.book_new();
       const wsData: any[] = [
-        ["Index", "Device ID", "Name", "Status", "Region", "Username"],
+        ["#", "Serial", "Name", "Status", "Device Type", "Model", "Region", "IP", "Program", "Active", "User", "Last Seen", "Last Sync", "Created At"],
         ...devices.map((device: any, index: number) => [
           index + 1,
-          device.id || 'N/A',
+          device.deviceSerial || 'N/A',
           device.name || 'N/A',
           device.status || 'N/A',
+          device.deviceType || 'N/A',
+          device.model || 'N/A',
           device.region || 'N/A',
-          device.user?.username || 'N/A'
+          device.ip || 'N/A',
+          device.program?.name || '—',
+          device.isActive ? 'Yes' : 'No',
+          device.user?.username || 'N/A',
+          device.lastSeen ? new Date(device.lastSeen).toLocaleDateString() : 'N/A',
+          device.last_Sync ? new Date(device.last_Sync).toLocaleDateString() : 'N/A',
+          device.createdAt ? new Date(device.createdAt).toLocaleDateString() : 'N/A',
         ])
       ];
       const ws = XLSX.utils.aoa_to_sheet(wsData);
