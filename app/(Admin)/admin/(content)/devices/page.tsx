@@ -7,6 +7,7 @@ import { useDeleteDeviceMutation, useGetGlobalDeviceDetailsQuery, useGetGlobalDe
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import DeviceLocation from "@/components/common/DeviceLocation";
+import { Progress } from '@/components/ui/progress';
 
 // Reusable Dropdown Component
 type DropdownProps = {
@@ -112,6 +113,11 @@ type Device = {
   type: string;
   status: 'Online' | 'Offline' | 'Syncing' | string;
   storage: string;
+  // New storage metrics
+  storageUsed: number;
+  storageTotal: number;
+  storagePercent: number;
+  storageDisplay: string;
   uptime: string;
   daysAgo: number;
   lastSyncDate?: Date;
@@ -233,6 +239,10 @@ export default function GlobalDevices() {
         location: locationLabel,
         type: device.deviceType ?? 'N/A',
         status: device.status ?? 'Offline',
+        storageUsed: device.user?.usedStorage ? parseFloat((device.user.usedStorage).toFixed(2)) : 0,
+        storageTotal: device.user?.totalStorage ? device.user.totalStorage : 0,
+        storagePercent: device.user?.totalStorage && device.user?.usedStorage ? Math.round((device.user.usedStorage / device.user.totalStorage) * 100) : 0,
+        storageDisplay: device.user?.totalStorage ? `${(device.user.usedStorage || 0).toFixed(2)} GB / ${device.user.totalStorage.toFixed(0)} GB` : 'N/A',
         storage: device.user?.totalStorage ? `${(device.user.usedStorage || 0).toFixed(2)} GB / ${device.user.totalStorage.toFixed(0)} GB` : 'N/A',
         uptime,
         daysAgo,
@@ -278,6 +288,8 @@ export default function GlobalDevices() {
         total: typeof s.totalDevices === 'object' ? (s.totalDevices?.count ?? 0) : (s.totalDevices ?? 0),
         online: typeof s.onlineDevices === 'object' ? (s.onlineDevices?.count ?? 0) : (s.onlineDevices ?? 0),
         offline: typeof s.offlineDevices === 'object' ? (s.offlineDevices?.count ?? 0) : (s.offlineDevices ?? 0),
+        paired: typeof s.pairedDevices === 'object' ? (s.pairedDevices?.count ?? 0) : (s.pairedDevices ?? 0),
+        pairedSubText: typeof s.pairedDevices === 'object' ? (s.pairedDevices?.subText ?? '') : '',
         avgUptime: s.avgUptime,
         trendText: `${s.onlinePercentage ?? 0}% Online`
       };
@@ -285,13 +297,14 @@ export default function GlobalDevices() {
     const total = devicesInRange.length;
     const online = devicesInRange.filter((d: Device) => d.status === 'Online' || d.status === 'ONLINE').length;
     const offline = devicesInRange.filter((d: Device) => d.status === 'Offline' || d.status === 'OFFLINE').length;
+    const paired = devicesInRange.filter((d: Device) => d.status === 'Paired' || d.status === 'PAIRED').length;
     const uptimes = devicesInRange.map((d: Device) => parseFloat(String(d.uptime).replace('%', '')) || 0);
     const avgUptime = uptimes.length > 0 ? (uptimes.reduce((a: number, b: number) => a + b, 0) / uptimes.length).toFixed(1) + '%' : '0%';
     const previousDays = getDaysFromRange(timeRange);
     const previousDevices = allDevices.filter((d: Device) => d.daysAgo > previousDays && d.daysAgo <= previousDays * 2);
     const trend = total - previousDevices.length;
     const trendText = trend > 0 ? `+${trend} from last period` : trend < 0 ? `${trend} from last period` : 'No change';
-    return { total, online, offline, avgUptime, trendText };
+    return { total, online, offline, paired, avgUptime, trendText };
   }, [devicesInRange, allDevices, timeRange, data]);
 
   // Filter devices by search and filters
@@ -484,7 +497,7 @@ export default function GlobalDevices() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <StatCard
             title="Total Devices"
             value={stats.total.toLocaleString()}
@@ -502,6 +515,13 @@ export default function GlobalDevices() {
             value={stats.offline}
             subtitle="Requires attention"
             icon={WifiOff}
+          />
+          <StatCard
+            title="Paired Devices"
+            value={stats.paired ?? 0}
+            // Prefer API subText if provided, otherwise show percentage
+            subtitle={stats.pairedSubText || (stats.paired ? `${((stats.paired / stats.total) * 100).toFixed(1)}% Paired` : 'No paired devices')}
+            icon={UserCheck}
           />
         </div>
 
@@ -522,7 +542,7 @@ export default function GlobalDevices() {
               </div>
               <Dropdown
                 value={statusFilter}
-                options={['All Status', 'WAITING', 'ONLINE', 'OFFLINE', 'PAIRED']}
+                options={['All Status', 'ONLINE', 'OFFLINE', 'PAIRED']}
                 onChange={setStatusFilter}
               />
               {/* <Dropdown
@@ -584,7 +604,14 @@ export default function GlobalDevices() {
                               {device.status}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.storage}</td>
+                          <td className="px-6 py-4 text-sm">
+                            <div className="flex flex-col space-y-1">
+                              <span className="text-gray-900 dark:text-white">{device.storage}</span>
+                              <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div className={`h-full ${device.storagePercent >= 80 ? 'bg-red-500' : device.storagePercent >= 50 ? 'bg-orange-500' : 'bg-blue-500'}`} style={{ width: `${device.storagePercent}%` }} />
+                              </div>
+                            </div>
+                          </td>
                           <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{device.lastSync}</td>
                           <td className="px-6 py-4">
                             <ActionMenu device={device} onAction={handleAction} />
