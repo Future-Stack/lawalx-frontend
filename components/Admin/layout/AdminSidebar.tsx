@@ -32,7 +32,8 @@ export default function AdminSidebar({ isCollapsed }: { isCollapsed: boolean }) 
     setExpandedItems(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const isActive = (href: string) => pathname === href;
+  const isActive = (href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
 
   // Full nested menu items (only used when expanded)
   const clientItems = [

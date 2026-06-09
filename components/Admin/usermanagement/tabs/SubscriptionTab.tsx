@@ -110,13 +110,13 @@ export default function SubscriptionTab({
             <h3 className="text-lg font-bold text-gray-900 dark:text-white">Current Plan</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">Active subscription details</p>
           </div>
-          <button
+          {/* <button
             onClick={onOpenChangePlan}
             className="px-4 shadow-customShadow py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 transition-colors cursor-pointer"
           >
             <Edit2 className="w-4 h-4" />
             Change Plan
-          </button>
+          </button> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-6 p-4">
@@ -147,14 +147,13 @@ export default function SubscriptionTab({
           <div className="flex justify-between items-center py-3 border-b border-border">
             <span className="text-sm text-gray-500 dark:text-gray-400">Billing Status</span>
             {currentPlan?.billingStatus
-              ? <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1.5 w-fit ${
-                  currentPlan.billingStatus === "ACTIVE"
-                    ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
-                    : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+              ? <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border flex items-center gap-1.5 w-fit ${currentPlan.billingStatus === "ACTIVE"
+                ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
+                : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
                 }`}>
-                  {currentPlan.billingStatus}
-                  <div className={`w-1.5 h-1.5 rounded-full ${currentPlan.billingStatus === "ACTIVE" ? "bg-green-500" : "bg-red-500"}`} />
-                </span>
+                {currentPlan.billingStatus}
+                <div className={`w-1.5 h-1.5 rounded-full ${currentPlan.billingStatus === "ACTIVE" ? "bg-green-500" : "bg-red-500"}`} />
+              </span>
               : <span className="text-sm font-bold text-gray-900 dark:text-white">N/A</span>}
           </div>
         </div>
@@ -177,8 +176,7 @@ export default function SubscriptionTab({
           <table className="w-full">
             <thead className="border-b border-border">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Invoice</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Payment Method</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Invoice Number</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Amount</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Status</th>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Date</th>
@@ -188,22 +186,17 @@ export default function SubscriptionTab({
             <tbody className="divide-y divide-border">
               {currentHistory.length > 0 ? currentHistory.map((p, i) => (
                 <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{p.invoice}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <span className="px-1.5 py-0.5 border border-blue-200 bg-blue-50 text-blue-700 rounded text-[10px] uppercase font-bold">VISA</span>
-                    {p.method || p.paymentMethod || "N/A"}
-                  </td>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{p.invoiceNumber || p.invoice}</td>
                   <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{formatAmount(p)}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border inline-block ${
-                      p.status === "Paid" || p.status === "SUCCESS"
-                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
-                        : p.status === "PENDING"
-                          ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800"
-                          : p.status === "REFUNDED"
-                            ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
-                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
-                    }`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border inline-block ${p.status === "Paid" || p.status === "SUCCESS"
+                      ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
+                      : p.status === "PENDING"
+                        ? "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800"
+                        : p.status === "REFUNDED"
+                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800"
+                          : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                      }`}>
                       {p.status === "SUCCESS" ? "Paid" : p.status}
                     </span>
                   </td>
@@ -213,12 +206,12 @@ export default function SubscriptionTab({
                   <td className="px-6 py-4 text-right">
                     <button
                       type="button"
-                      onClick={() => handleDownloadSingle(p.invoice)}
-                      disabled={downloadingId === p.invoice}
+                      onClick={() => handleDownloadSingle(p.paymentId || p.invoice)}
+                      disabled={downloadingId === (p.paymentId || p.invoice)}
                       className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer disabled:opacity-60"
                       title="Download Invoice"
                     >
-                      {downloadingId === p.invoice
+                      {downloadingId === (p.paymentId || p.invoice)
                         ? <Loader2 className="w-5 h-5 animate-spin" />
                         : <Download className="w-5 h-5" />}
                     </button>
@@ -226,7 +219,7 @@ export default function SubscriptionTab({
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-gray-500 dark:text-gray-400">No payment history found.</td>
+                  <td colSpan={5} className="px-6 py-10 text-center text-gray-500 dark:text-gray-400">No payment history found.</td>
                 </tr>
               )}
             </tbody>

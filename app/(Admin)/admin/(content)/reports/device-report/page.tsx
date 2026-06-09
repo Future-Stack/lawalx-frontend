@@ -1,7 +1,7 @@
 "use client";
 import { useState, useMemo } from 'react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Monitor, Wifi, WifiOff, TrendingUp, ChevronDown, Download, FileSpreadsheet, Home, ChevronRight } from 'lucide-react';
+import { BarChart, Bar, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Monitor, Wifi, WifiOff, TrendingUp, ChevronDown, Download, FileSpreadsheet, Home, ChevronRight, Shield } from 'lucide-react';
 import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
 
@@ -168,11 +168,11 @@ const DeviceReportDashboard = () => {
     const summary = apiData.summary || {};
 
     const defaultRegions = [
-      { name: 'North America', base: 0, online: 0, offline: 0, onlineRate: 0, offlineRate: 0 },
-      { name: 'Europe', base: 0, online: 0, offline: 0, onlineRate: 0, offlineRate: 0 },
-      { name: 'Asia', base: 0, online: 0, offline: 0, onlineRate: 0, offlineRate: 0 },
-      { name: 'South America', base: 0, online: 0, offline: 0, onlineRate: 0, offlineRate: 0 },
-      { name: 'Others', base: 0, online: 0, offline: 0, onlineRate: 0, offlineRate: 0 }
+      { name: 'North America', base: 0, online: 0, offline: 0, paired: 0, onlineRate: 0, offlineRate: 0, pairedRate: 0 },
+      { name: 'Europe', base: 0, online: 0, offline: 0, paired: 0, onlineRate: 0, offlineRate: 0, pairedRate: 0 },
+      { name: 'Asia', base: 0, online: 0, offline: 0, paired: 0, onlineRate: 0, offlineRate: 0, pairedRate: 0 },
+      { name: 'South America', base: 0, online: 0, offline: 0, paired: 0, onlineRate: 0, offlineRate: 0, pairedRate: 0 },
+      { name: 'Others', base: 0, online: 0, offline: 0, paired: 0, onlineRate: 0, offlineRate: 0, pairedRate: 0 }
     ];
 
     const regionsFromApi = (apiData.regionalStats || []).map((r: any) => ({
@@ -180,8 +180,10 @@ const DeviceReportDashboard = () => {
       base: r.total || 0,
       online: r.online || 0,
       offline: r.offline || 0,
+      paired: r.paired || 0,
       onlineRate: r.total ? (r.online / r.total) : 0,
-      offlineRate: r.total ? (r.offline / r.total) : 0
+      offlineRate: r.total ? (r.offline / r.total) : 0,
+      pairedRate: r.total ? (r.paired / r.total) : 0
     }));
 
     return {
@@ -189,6 +191,7 @@ const DeviceReportDashboard = () => {
         total: summary.totalDevices || 0,
         online: summary.onlineDevices || 0,
         offline: summary.offlineDevices || 0,
+        paired: summary.pairedDevices || 0,
         avgUptime: parseFloat(summary.averageUptime || "0")
       },
       regions: regionsFromApi.length > 0 ? regionsFromApi : defaultRegions,
@@ -268,8 +271,8 @@ const DeviceReportDashboard = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {/* Stats Card */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-navbarBg rounded-lg p-6 border border-border">
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-gray-500 dark:text-gray-400">Total Devices</span>
@@ -288,7 +291,7 @@ const DeviceReportDashboard = () => {
               {data.summary.online.toLocaleString()}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">
-              {((data.summary.online / data.summary.total) * 100).toFixed(1)}% online
+              {data.summary.total ? ((data.summary.online / data.summary.total) * 100).toFixed(1) : '0'}% online
             </div>
           </div>
 
@@ -298,19 +301,23 @@ const DeviceReportDashboard = () => {
               <WifiOff className="w-5 h-5 text-red-500" />
             </div>
             <div className="text-3xl font-bold mb-1 text-red-500">
-              {data.summary.offline}
+              {data.summary.offline.toLocaleString()}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">Requires attention</div>
           </div>
 
-          {/* <div className="bg-navbarBg rounded-lg p-6 border border-border">
+          <div className="bg-navbarBg rounded-lg p-6 border border-border">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Average Uptime</span>
-              <TrendingUp className="w-5 h-5 text-blue-500" />
+              <span className="text-sm text-gray-500 dark:text-gray-400">Paired Devices</span>
+              <Shield className="w-5 h-5 text-purple-500" />
             </div>
-            <div className="text-3xl font-bold mb-1">{data.summary.avgUptime.toFixed(1)}%</div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">Last 30 days</div>
-          </div> */}
+            <div className="text-3xl font-bold mb-1 text-purple-500">
+              {data.summary.paired?.toLocaleString() ?? '0'}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {data.summary.total ? ((data.summary.paired / data.summary.total) * 100).toFixed(1) + '% paired' : '0%'}
+            </div>
+          </div>
         </div>
 
         {/* Charts Row */}
@@ -338,51 +345,13 @@ const DeviceReportDashboard = () => {
                   }}
                   wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
                 />
-                <Bar dataKey="online" stackId="a" fill="#10b981" radius={[0, 0, 0, 0]} />
-                <Bar dataKey="offline" stackId="a" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                <Legend />
+                <Bar dataKey="online" fill="#10b981" radius={[0, 0, 4, 4]} />
+                <Bar dataKey="paired" fill="#9f7aea" radius={[0, 0, 0, 0]} />
+                <Bar dataKey="offline" fill="#ef4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          {/* System Uptime */}
-          {/* <div className="bg-navbarBg rounded-lg p-6 border border-border">
-            <h2 className="text-lg font-semibold mb-4">
-              System Uptime (Last {timeRange === 1 ? '24 Hours' : timeRange === 7 ? '7 Days' : timeRange === 30 ? '30 Days' : 'Year'})
-            </h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={data.uptimeData}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
-                <XAxis
-                  dataKey="day"
-                  className="fill-gray-600 dark:fill-gray-400"
-                  tick={{ fontSize: 12 }}
-                  interval={timeRange === 365 ? 30 : timeRange === 30 ? 4 : 0}
-                />
-                <YAxis
-                  domain={[95, 100]}
-                  className="fill-gray-600 dark:fill-gray-400"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => `${value}%`}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--tooltip-bg)',
-                    border: '1px solid var(--tooltip-border)',
-                    borderRadius: '0.5rem'
-                  }}
-                  wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
-                  formatter={(value: number | undefined) => value !== undefined ? [`${value.toFixed(2)}%`, 'Uptime'] : ['', '']}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="uptime"
-                  stroke="#8b5cf6"
-                  strokeWidth={2}
-                  dot={{ fill: '#8b5cf6', r: 3 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div> */}
         </div>
 
         {/* Regional Device Statistics */}
@@ -401,6 +370,10 @@ const DeviceReportDashboard = () => {
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-red-500">Offline: {region.offline}</span>
                     <span className="text-gray-500 dark:text-gray-400">{(region.offlineRate * 100).toFixed(1)}%</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-purple-500">Paired: {region.paired}</span>
+                    <span className="text-purple-500">{(region.pairedRate * 100).toFixed(1)}%</span>
                   </div>
                 </div>
               </div>
