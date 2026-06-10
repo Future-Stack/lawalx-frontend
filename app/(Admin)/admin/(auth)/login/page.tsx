@@ -95,7 +95,7 @@ export default function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
                     {showPassword ? (
                       <EyeClosed className="w-5 h-5" />
@@ -108,7 +108,7 @@ export default function LoginPage() {
                 {/* Login Button */}
                 <button
                   type="submit"
-                  className="w-full bg-bgBlue hover:bg-blue-500 text-white font-medium py-3.5 rounded-lg transition transform hover:scale-[1.02] active:scale-[0.98] shadow-customShadow"
+                  className="cursor-pointer w-full bg-bgBlue hover:bg-blue-500 text-white font-medium py-3.5 rounded-lg transition transform hover:scale-[1.02] active:scale-[0.98] shadow-customShadow"
                 >
                   Login
                 </button>

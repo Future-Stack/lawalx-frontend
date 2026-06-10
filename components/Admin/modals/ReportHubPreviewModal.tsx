@@ -9,45 +9,24 @@ import {
     DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, X } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { useGetReportPreviewQuery } from '@/redux/api/admin/reportHubApi';
 
 interface ReportHubPreviewModalProps {
     isOpen: boolean;
     onClose: () => void;
-    reportData?: {
-        title: string;
-        description: string;
-        dataSource: string;
-        columns: number;
-        rows: number;
-        data: Array<{
-            id: string;
-            name: string;
-            status: string;
-            location: string;
-            lastSync: string;
-        }>;
-    };
+    historyItem?: {
+        id: string;
+        reportName: string;
+        fileUrl?: string | null;
+    } | null;
 }
 
 export default function ReportHubPreviewModal({
     isOpen,
     onClose,
-    reportData = {
-        title: "Q4 Offline Enterprise Devices",
-        description: "Tracks offline devices for enterprise customers",
-        dataSource: "Device Data",
-        columns: 5,
-        rows: 18,
-        data: Array(18).fill(null).map((_, i) => ({
-            id: `DEV-${1000 + i}`,
-            name: `Device ${i + 1}`,
-            status: "Active",
-            location: "New York",
-            lastSync: "1 hours ago"
-        }))
-    }
+    historyItem,
 }: ReportHubPreviewModalProps) {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 6;
@@ -59,29 +38,20 @@ export default function ReportHubPreviewModal({
         }
     }, [isOpen]);
 
-    if (!isOpen) return null;
-
-    const displayData = reportData || {
-        title: "Q4 Offline Enterprise Devices",
-        description: "Tracks offline devices for enterprise customers",
-        dataSource: "Device Data",
-        columns: 5,
-        rows: 18,
-        data: Array(18).fill(null).map((_, i) => ({
-            id: `DEV-${1000 + i}`,
-            name: `Device ${i + 1}`,
-            status: "Active",
-            location: "New York",
-            lastSync: "1 hours ago"
-        }))
-    };
-
-    const totalPages = Math.ceil((displayData?.data?.length || 0) / itemsPerPage);
-
-    const paginatedData = displayData?.data?.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
+    // Fetch preview data from API
+    const { data: previewResponse, isLoading, isFetching } = useGetReportPreviewQuery(
+        { id: historyItem?.id || '', page: currentPage, limit: itemsPerPage },
+        { skip: !isOpen || !historyItem?.id }
     );
+
+    if (!isOpen || !historyItem) return null;
+
+    const previewData: Record<string, any>[] = previewResponse?.data || [];
+    const meta = previewResponse?.meta || { total: 0, page: 1, limit: itemsPerPage, totalPages: 0 };
+    const totalPages = meta.totalPages || 0;
+
+    // Dynamically extract column names from the first data item
+    const columns: string[] = previewData.length > 0 ? Object.keys(previewData[0]) : [];
 
     const handlePageChange = (newPage: number) => {
         if (newPage >= 1 && newPage <= totalPages) {
@@ -91,15 +61,15 @@ export default function ReportHubPreviewModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-3xl p-0 bg-white dark:bg-gray-900 border-none rounded-2xl overflow-hidden shadow-2xl focus:outline-none">
-                <div className="p-6">
+            <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 bg-white dark:bg-gray-900 border-none rounded-2xl overflow-hidden shadow-2xl focus:outline-none flex flex-col">
+                <div className="p-6 overflow-y-auto flex-1 min-h-0">
                     <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-6">
                         <div className="space-y-1">
                             <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white">
-                                {displayData.title}
+                                {historyItem.reportName}
                             </DialogTitle>
                             <DialogDescription className="text-sm text-gray-500 dark:text-gray-400">
-                                {displayData.description}
+                                Preview data for this report run
                             </DialogDescription>
                         </div>
                     </DialogHeader>
@@ -108,101 +78,121 @@ export default function ReportHubPreviewModal({
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 mb-6 flex items-center justify-between border border-gray-100 dark:border-gray-800">
                         <div className="flex gap-8">
                             <div>
-                                <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Data Source:</p>
-                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{displayData.dataSource}</p>
-                            </div>
-                            <div>
                                 <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Columns:</p>
-                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{displayData.columns}</p>
+                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{columns.length}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Rows:</p>
-                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{displayData.rows}</p>
+                                <p className="text-xs text-gray-400 dark:text-gray-500 mb-1">Total Rows:</p>
+                                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{meta.total}</p>
                             </div>
                         </div>
-                        <Button className="bg-bgBlue hover:bg-bgBlue/80 text-white rounded-xl px-6 flex items-center gap-2 shadow-customShadow">
-                            <Download className="w-4 h-4" />
-                            <span>Export</span>
-                        </Button>
+                        {/* {historyItem.fileUrl && (
+                            <Button
+                                className="bg-bgBlue hover:bg-bgBlue/80 text-white rounded-xl px-6 flex items-center gap-2 shadow-customShadow"
+                                onClick={() => window.open(historyItem.fileUrl!, '_blank')}
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>Download</span>
+                            </Button>
+                        )} */}
                     </div>
 
                     {/* Table */}
                     <div className="border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden mb-6 bg-white dark:bg-gray-900">
-                        <table className="w-full text-left">
-                            <thead className="bg-[#F1FBFF] dark:bg-blue-900/20 border-b border-gray-100 dark:border-gray-800">
-                                <tr>
-                                    <th className="px-4 py-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400">Device ID</th>
-                                    <th className="px-4 py-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400">Name</th>
-                                    <th className="px-4 py-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400 text-center">Status</th>
-                                    <th className="px-4 py-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400">Location</th>
-                                    <th className="px-4 py-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400">Last Sync</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                                {paginatedData?.map((item, index) => (
-                                    <tr key={index} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                                        <td className="px-4 py-4 text-sm font-bold text-gray-900 dark:text-gray-100">{item.id}</td>
-                                        <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{item.name}</td>
-                                        <td className="px-4 py-4 text-center">
-                                            <span className="px-3 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-medium rounded-full border border-gray-100 dark:border-gray-700">
-                                                {item.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{item.location}</td>
-                                        <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">{item.lastSync}</td>
-                                    </tr>
-                                ))}
-                                {paginatedData?.length === 0 && (
-                                    <tr>
-                                        <td colSpan={5} className="px-4 py-8 text-center text-gray-400">
-                                            No data available for this report
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                        {isLoading ? (
+                            <div className="flex items-center justify-center py-16">
+                                <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                                <span className="ml-3 text-sm text-gray-500 dark:text-gray-400">Loading preview...</span>
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-[#F1FBFF] dark:bg-blue-900/20 border-b border-gray-100 dark:border-gray-800">
+                                        <tr>
+                                            {columns.map((col) => (
+                                                <th
+                                                    key={col}
+                                                    className="px-4 py-3 text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap"
+                                                >
+                                                    {col}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+                                        {previewData.map((item, rowIndex) => (
+                                            <tr key={rowIndex} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
+                                                {columns.map((col, colIndex) => (
+                                                    <td
+                                                        key={col}
+                                                        className={cn(
+                                                            "px-4 py-4 text-sm whitespace-nowrap",
+                                                            colIndex === 0
+                                                                ? "font-bold text-gray-900 dark:text-gray-100"
+                                                                : "text-gray-600 dark:text-gray-400"
+                                                        )}
+                                                    >
+                                                        {item[col] != null ? String(item[col]) : '—'}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
+                                        {previewData.length === 0 && !isLoading && (
+                                            <tr>
+                                                <td colSpan={columns.length || 1} className="px-4 py-8 text-center text-gray-400">
+                                                    No data available for this report
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
 
                     {/* Pagination */}
-                    <div className="flex items-center justify-between">
-                        <p className="text-xs text-gray-400 dark:text-gray-500">
-                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, displayData?.data?.length || 0)} of {displayData?.data?.length} results
-                        </p>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                size="sm"
-                                className="h-9 px-4 rounded-xl text-gray-700 dark:text-gray-300 font-bold shadow-customShadow disabled:opacity-30 transition-all hover:bg-gray-50 bg-white dark:bg-gray-900"
-                                onClick={() => handlePageChange(currentPage - 1)}
-                                disabled={currentPage === 1}
-                            >
-                                Previous
-                            </Button>
-                            <div className="flex items-center gap-1.5 mx-1">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                                    <button
-                                        key={p}
-                                        onClick={() => setCurrentPage(p)}
-                                        className={cn(
-                                            "w-8 h-8 rounded-lg text-xs font-bold transition-all",
-                                            currentPage === p
-                                                ? "bg-blue-500 text-white shadow-customShadow shadow-blue-500/20"
-                                                : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                        )}
-                                    >
-                                        {p}
-                                    </button>
-                                ))}
+                    {totalPages > 0 && (
+                        <div className="flex items-center justify-between">
+                            <p className="text-xs text-gray-400 dark:text-gray-500">
+                                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, meta.total)} of {meta.total} results
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    size="sm"
+                                    className="h-9 px-4 rounded-xl text-gray-700 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-50/10 dark:hover:text-blue-500 dark:text-gray-300 font-bold shadow-customShadow disabled:opacity-30 transition-all hover:bg-gray-50 bg-white dark:bg-gray-900"
+                                    onClick={() => handlePageChange(currentPage - 1)}
+                                    disabled={currentPage === 1 || isFetching}
+                                >
+                                    Previous
+                                </Button>
+                                <div className="flex items-center gap-1.5 mx-1">
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                                        <button
+                                            key={p}
+                                            onClick={() => setCurrentPage(p)}
+                                            disabled={isFetching}
+                                            className={cn(
+                                                "w-8 h-8 rounded-lg text-xs font-bold transition-all",
+                                                currentPage === p
+                                                    ? "bg-blue-500 text-white shadow-customShadow shadow-blue-500/20"
+                                                    : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                            )}
+                                        >
+                                            {p}
+                                        </button>
+                                    ))}
+                                </div>
+                                <Button
+                                    size="sm"
+                                    className="h-9 px-4 rounded-xl text-gray-700 dark:text-gray-300 font-bold shadow-customShadow disabled:opacity-30 transition-all hover:bg-gray-50 bg-white dark:bg-gray-900"
+                                    onClick={() => handlePageChange(currentPage + 1)}
+                                    disabled={currentPage === totalPages || totalPages === 0 || isFetching}
+                                >
+                                    Next
+                                </Button>
                             </div>
-                            <Button
-                                size="sm"
-                                className="h-9 px-4 rounded-xl text-gray-700 dark:text-gray-300 font-bold shadow-customShadow disabled:opacity-30 transition-all hover:bg-gray-50 bg-white dark:bg-gray-900"
-                                onClick={() => handlePageChange(currentPage + 1)}
-                                disabled={currentPage === totalPages || totalPages === 0}
-                            >
-                                Next
-                            </Button>
                         </div>
-                    </div>
+                    )}
                 </div>
 
                 {/* Footer */}

@@ -7,48 +7,62 @@ export interface ReportColumn {
     options?: string[];
 }
 
+/**
+ * DATA_SOURCES keys and column ids/labels must match the backend enums exactly:
+ * - DataSourceEnum string values  →  the keys below
+ * - ReportColumnEnum string values →  the id/label values below
+ *
+ * Backend reference (ValidColumnsMap):
+ *   DEVICE_DATA        → Device ID, Device Name, Status, Location, Last Sync
+ *   FINANCIAL_DATA     → Transaction ID, Amount, Plan Type, Payment Method, Date
+ *   USER_ACTIVITY      → Activity ID, User, Action, Description, Date
+ *   SUBSCRIPTION_BILLING → Subscription ID, User, Plan, Status, Start Date, End Date
+ *   CUSTOMER_SUPPORT   → Ticket ID, User, Subject, Status, Priority, Date Created
+ *   CONTENT_PROGRAM    → Program ID, Name, Status, Date Created
+ */
 export const DATA_SOURCES: Record<string, ReportColumn[]> = {
     'Device Data': [
-        { id: 'dev_id', label: 'Device ID', type: 'number' },
-        { id: 'name', label: 'Device Name', type: 'text' },
-        { id: 'status', label: 'Status', type: 'option', options: ['Active', 'Inactive', 'Offline'] },
-        { id: 'location', label: 'Location', type: 'text' },
-        { id: 'last_sync', label: 'Last Sync', type: 'time' },
+        { id: 'Device ID',   label: 'Device ID',   type: 'text' },
+        { id: 'Device Name', label: 'Device Name', type: 'text' },
+        { id: 'Status',      label: 'Status',      type: 'option', options: ['Active', 'Inactive', 'Offline'] },
+        { id: 'Location',    label: 'Location',    type: 'text' },
+        { id: 'Last Sync',   label: 'Last Sync',   type: 'time' },
     ],
     'Financial Data': [
-        { id: 'txn_id', label: 'Transaction ID', type: 'number' },
-        { id: 'amount', label: 'Amount', type: 'number' },
-        { id: 'plan', label: 'Plan Type', type: 'option', options: ['Starter', 'Pro', 'Enterprise'] },
-        { id: 'method', label: 'Payment Method', type: 'option', options: ['Card', 'PayPal', 'Bank Transfer'] },
-        { id: 'date', label: 'Date', type: 'date' },
+        { id: 'Transaction ID',  label: 'Transaction ID',  type: 'text' },
+        { id: 'Amount',          label: 'Amount',          type: 'number' },
+        { id: 'Plan Type',       label: 'Plan Type',       type: 'option', options: ['Starter', 'Pro', 'Enterprise'] },
+        { id: 'Payment Method',  label: 'Payment Method',  type: 'option', options: ['Card', 'PayPal', 'Bank Transfer'] },
+        { id: 'Date',            label: 'Date',            type: 'date' },
     ],
     'User Activity': [
-        { id: 'user_id', label: 'User ID', type: 'number' },
-        { id: 'action', label: 'Action', type: 'text' },
-        { id: 'page', label: 'Page', type: 'text' },
-        { id: 'ip', label: 'IP Address', type: 'text' },
-        { id: 'timestamp', label: 'Timestamp', type: 'time' },
+        { id: 'Activity ID', label: 'Activity ID', type: 'text' },
+        { id: 'User',        label: 'User',        type: 'text' },
+        { id: 'Action',      label: 'Action',      type: 'text' },
+        { id: 'Description', label: 'Description', type: 'text' },
+        { id: 'Date',        label: 'Date',        type: 'date' },
     ],
-    'Subscription & Billing': [
-        { id: 'sub_id', label: 'Subscription ID', type: 'text' },
-        { id: 'customer', label: 'Customer Name', type: 'text' },
-        { id: 'plan', label: 'Plan', type: 'option', options: ['Basic', 'Premium', 'Elite'] },
-        { id: 'billing_cycle', label: 'Cycle', type: 'option', options: ['Monthly', 'Annually'] },
-        { id: 'next_invoice', label: 'Next Invoice', type: 'date' },
+    'Subscription Billing': [
+        { id: 'Subscription ID', label: 'Subscription ID', type: 'text' },
+        { id: 'User',            label: 'User',            type: 'text' },
+        { id: 'Plan',            label: 'Plan',            type: 'option', options: ['Basic', 'Premium', 'Elite'] },
+        { id: 'Status',          label: 'Status',          type: 'option', options: ['Active', 'Inactive', 'Cancelled'] },
+        { id: 'Start Date',      label: 'Start Date',      type: 'date' },
+        { id: 'End Date',        label: 'End Date',        type: 'date' },
     ],
-    'Customer Service & Support': [
-        { id: 'ticket_id', label: 'Ticket ID', type: 'number' },
-        { id: 'subject', label: 'Subject', type: 'text' },
-        { id: 'priority', label: 'Priority', type: 'option', options: ['Low', 'Medium', 'High', 'Urgent'] },
-        { id: 'status', label: 'Ticket Status', type: 'option', options: ['Open', 'In Progress', 'Resolved', 'Closed'] },
-        { id: 'assigned_to', label: 'Agent', type: 'text' },
+    'Customer Support': [
+        { id: 'Ticket ID',    label: 'Ticket ID',    type: 'text' },
+        { id: 'User',         label: 'User',         type: 'text' },
+        { id: 'Subject',      label: 'Subject',      type: 'text' },
+        { id: 'Status',       label: 'Status',       type: 'option', options: ['Open', 'In Progress', 'Resolved', 'Closed'] },
+        { id: 'Priority',     label: 'Priority',     type: 'option', options: ['Low', 'Medium', 'High', 'Urgent'] },
+        { id: 'Date Created', label: 'Date Created', type: 'date' },
     ],
-    'Content & Program': [
-        { id: 'content_id', label: 'Content ID', type: 'text' },
-        { id: 'title', label: 'Program Title', type: 'text' },
-        { id: 'type', label: 'Content Type', type: 'option', options: ['Video', 'Article', 'Quiz', 'Interactive'] },
-        { id: 'category', label: 'Category', type: 'text' },
-        { id: 'views', label: 'Total Views', type: 'number' },
+    'Content Program': [
+        { id: 'Program ID',   label: 'Program ID',   type: 'text' },
+        { id: 'Name',         label: 'Name',         type: 'text' },
+        { id: 'Status',       label: 'Status',       type: 'option', options: ['Active', 'Inactive', 'Draft'] },
+        { id: 'Date Created', label: 'Date Created', type: 'date' },
     ],
 };
 
