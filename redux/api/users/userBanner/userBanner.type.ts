@@ -67,6 +67,19 @@ export interface Banner {
   startDate: string;   // ISO Date
   endDate: string;     // ISO Date
   createdAt: string;   // ISO Date
+
+  backgroundStyle?: string;
+  backgroundColor1?: string;
+  backgroundColor2?: string;
+  backgroundDirection?: string;
+  mediaWidth?: number;
+  mediaHeight?: number;
+  mediaPosition?: string;
+  mediaShape?: string;
+  uploadBanner?: string;
+  bannerLinkRedirectURL?: string;
+  placeholderMediaUrl?: string;
+  updatedAt?: string;
 }
 
 // =========================
