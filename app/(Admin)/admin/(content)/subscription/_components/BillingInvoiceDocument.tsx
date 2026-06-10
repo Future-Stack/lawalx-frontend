@@ -96,7 +96,9 @@ const BillingInvoiceDocument: React.FC<BillingInvoiceDocumentProps> = ({
                 <div style={{ color: "#6b7280" }}>Bill To :</div>
                 <div style={{ fontWeight: 700 }}>{data.billToName}</div>
                 <div style={{ color: "#6b7280" }}>{data.billToAddress}</div>
-                <div style={{ color: "#6b7280", marginTop: "10px" }}>Bill ID :</div>
+                <div style={{ color: "#6b7280", marginTop: "10px" }}>
+                  Bill ID :
+                </div>
                 <div style={{ fontWeight: 700 }}>{data.invoiceNumber}</div>
               </td>
               <td
@@ -126,7 +128,9 @@ const BillingInvoiceDocument: React.FC<BillingInvoiceDocumentProps> = ({
           }}
         />
 
-        <div style={{ fontSize: "13px", color: "#6b7280", margin: "10px 0 8px" }}>
+        <div
+          style={{ fontSize: "13px", color: "#6b7280", margin: "10px 0 8px" }}
+        >
           Invoice details
         </div>
 
@@ -145,10 +149,20 @@ const BillingInvoiceDocument: React.FC<BillingInvoiceDocumentProps> = ({
                 borderBottom: "1px solid #9ca3af",
               }}
             >
-              <th style={{ padding: "10px 14px", borderRight: "1px solid #d1d5db" }}>
+              <th
+                style={{
+                  padding: "10px 14px",
+                  borderRight: "1px solid #d1d5db",
+                }}
+              >
                 Name
               </th>
-              <th style={{ padding: "10px 14px", borderRight: "1px solid #d1d5db" }}>
+              <th
+                style={{
+                  padding: "10px 14px",
+                  borderRight: "1px solid #d1d5db",
+                }}
+              >
                 Description
               </th>
               <th
@@ -178,7 +192,9 @@ const BillingInvoiceDocument: React.FC<BillingInvoiceDocumentProps> = ({
               >
                 Total
               </th>
-              <th style={{ padding: "10px 14px", textAlign: "right" }}>Status</th>
+              <th style={{ padding: "10px 14px", textAlign: "right" }}>
+                Status
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -259,7 +275,10 @@ const BillingInvoiceDocument: React.FC<BillingInvoiceDocumentProps> = ({
           <tbody>
             <tr>
               <td
-                style={{ padding: "10px 14px", borderRight: "1px solid #d1d5db" }}
+                style={{
+                  padding: "10px 14px",
+                  borderRight: "1px solid #d1d5db",
+                }}
               >
                 Subtotal
               </td>
@@ -312,31 +331,89 @@ const BillingInvoiceDocument: React.FC<BillingInvoiceDocumentProps> = ({
 
         {data.amountInWords && (
           <div style={{ marginTop: "16px", fontSize: "12px" }}>
-            <span style={{ fontWeight: 700 }}>Estimated Amount (In words) : </span>
+            <span style={{ fontWeight: 700 }}>
+              Estimated Amount (In words) :{" "}
+            </span>
             <span>{data.amountInWords}</span>
           </div>
         )}
 
         {(data.authorizedByImg || data.approvedByImg) && (
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "96px" }}>
+          <table
+            style={{
+              width: "100%",
+              borderCollapse: "collapse",
+              marginTop: "96px",
+            }}
+          >
             <tbody>
               <tr>
-                <td style={{ width: "50%", textAlign: "center", verticalAlign: "top", paddingTop: "6px" }}>
+                <td
+                  style={{
+                    width: "50%",
+                    textAlign: "center",
+                    verticalAlign: "top",
+                    paddingTop: "6px",
+                  }}
+                >
                   {data.authorizedByImg && (
                     <div style={{ margin: "0 auto 8px", maxWidth: "160px" }}>
-                      <img src={data.authorizedByImg} style={{ display: "block", margin: "0 auto", maxWidth: "160px", maxHeight: "60px", objectFit: "contain" }} alt="Authorized By" />
+                      <img
+                        crossOrigin="anonymous"
+                        src={data.authorizedByImg}
+                        style={{
+                          display: "block",
+                          margin: "0 auto",
+                          maxWidth: "160px",
+                          maxHeight: "60px",
+                          objectFit: "contain",
+                        }}
+                        alt="Authorized By"
+                      />
                     </div>
                   )}
-                  <div style={{ borderBottom: "1px solid #6b7280", margin: "0 auto 6px", height: "1px", width: "180px" }} />
+                  <div
+                    style={{
+                      borderBottom: "1px solid #6b7280",
+                      margin: "0 auto 6px",
+                      height: "1px",
+                      width: "180px",
+                    }}
+                  />
                   <div style={{ fontSize: "12px" }}>Authorized By</div>
                 </td>
-                <td style={{ width: "50%", textAlign: "center", verticalAlign: "top", paddingTop: "6px" }}>
+                <td
+                  style={{
+                    width: "50%",
+                    textAlign: "center",
+                    verticalAlign: "top",
+                    paddingTop: "6px",
+                  }}
+                >
                   {data.approvedByImg && (
                     <div style={{ margin: "0 auto 8px", maxWidth: "160px" }}>
-                      <img src={data.approvedByImg} style={{ display: "block", margin: "0 auto", maxWidth: "160px", maxHeight: "60px", objectFit: "contain" }} alt="Approved By" />
+                      <img
+                        crossOrigin="anonymous"
+                        src={data.approvedByImg}
+                        style={{
+                          display: "block",
+                          margin: "0 auto",
+                          maxWidth: "160px",
+                          maxHeight: "60px",
+                          objectFit: "contain",
+                        }}
+                        alt="Approved By"
+                      />
                     </div>
                   )}
-                  <div style={{ borderBottom: "1px solid #6b7280", margin: "0 auto 6px", height: "1px", width: "180px" }} />
+                  <div
+                    style={{
+                      borderBottom: "1px solid #6b7280",
+                      margin: "0 auto 6px",
+                      height: "1px",
+                      width: "180px",
+                    }}
+                  />
                   <div style={{ fontSize: "12px" }}>Approved By</div>
                 </td>
               </tr>

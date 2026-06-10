@@ -97,6 +97,7 @@ export const additionalPaymentApi = baseApi.injectEndpoints({
 export const {
   useGetAdditionalPaymentsQuery,
   useGetAdditionalPaymentByIdQuery,
+  useLazyGetAdditionalPaymentByIdQuery,
   useGetAdditionalPaymentSignersQuery,
   useGetMySignersQuery,
   useCreateAdditionalPaymentMutation,

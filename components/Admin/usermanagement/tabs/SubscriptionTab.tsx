@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Download, Edit2, Loader2 } from "lucide-react";
 import TablePagination from "@/components/shared/TablePagination";
 import { useLazyGetUserInvoicesQuery, useLazyGetSingleInvoiceQuery } from "@/redux/api/admin/usermanagementApi";
-import { generateInvoicePdf } from "@/lib/invoicePdfUtils";
+import { downloadBillingInvoicePdf, generateBillingInvoicePdfBlob } from "@/app/(Admin)/admin/(content)/subscription/_components/billings/_utils/downloadBillingInvoicePdf";
 import { toast } from "sonner";
 import JSZip from "jszip";
 
@@ -16,6 +16,8 @@ export default function SubscriptionTab({
   monthlyPayment,
   currency,
   userId,
+  userName,
+  userEmail,
 }: {
   onOpenChangePlan: () => void;
   currentPlan?: any;
@@ -23,6 +25,8 @@ export default function SubscriptionTab({
   monthlyPayment?: string;
   currency?: string;
   userId?: string;
+  userName?: string;
+  userEmail?: string;
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [downloadingAll, setDownloadingAll] = useState(false);
@@ -63,8 +67,19 @@ export default function SubscriptionTab({
 
       const zip = new JSZip();
       for (const inv of invoices) {
-        const doc = await generateInvoicePdf(inv, currency);
-        const pdfBlob = doc.output("arraybuffer");
+        // Normalize amount to a number to prevent [object Object] in PDF
+        let rawAmount = inv.amount;
+        if (typeof rawAmount === 'object' && rawAmount !== null) {
+          rawAmount = (currency === 'NGN' ? rawAmount.amount : rawAmount.originalAmount) ?? rawAmount.amount;
+        }
+        const finalAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(rawAmount) || 0;
+
+        const invoiceData = {
+          ...inv,
+          amount: finalAmount,
+          user: inv.user || { name: userName || "Unknown User", email: userEmail || "" }
+        };
+        const pdfBlob = await generateBillingInvoicePdfBlob(invoiceData, currency || "USD");
         zip.file(`${inv.invoiceNumber || inv.id}.pdf`, pdfBlob);
       }
 
@@ -89,8 +104,22 @@ export default function SubscriptionTab({
       const { data, isError } = await triggerGetSingleInvoice({ userId, paymentId: invoiceId });
       console.log('Single invoice response:', { data, isError });
       if (isError || !data?.success) return toast.error('Failed to fetch invoice');
-      const doc = await generateInvoicePdf(data.data, currency);
-      doc.save(`${invoiceId}.pdf`);
+      
+      // Normalize amount to a number to prevent [object Object] in PDF
+      let rawAmount = data.data.amount;
+      if (typeof rawAmount === 'object' && rawAmount !== null) {
+        rawAmount = (currency === 'NGN' ? rawAmount.amount : rawAmount.originalAmount) ?? rawAmount.amount;
+      }
+      const finalAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(rawAmount) || 0;
+
+      // Inject user details into the data payload
+      const invoiceData = {
+        ...data.data,
+        amount: finalAmount,
+        user: data.data.user || { name: userName || "Unknown User", email: userEmail || "" }
+      };
+
+      await downloadBillingInvoicePdf(invoiceData, currency || "USD");
       toast.success('Invoice downloaded');
     } catch (err) {
       console.error('Error downloading invoice:', err);

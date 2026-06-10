@@ -3,53 +3,15 @@
 import { createRoot } from "react-dom/client";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
-
-import { PaymentHistoryItem } from "@/redux/api/admin/payments/billings/billingsApi";
-import BillingInvoiceDocument, { UnifiedInvoiceData } from "../../BillingInvoiceDocument";
-import { formatAmount } from "@/lib/currencyUtils";
+import AdditionalPaymentInvoiceDocument, {
+  AdditionalPaymentData,
+} from "./AdditionalPaymentInvoiceDocument";
 
 const EXPORT_PX_WIDTH = 794;
 
-export function mapPaymentToUnifiedData(
-  payment: PaymentHistoryItem,
-  currency: string
-): UnifiedInvoiceData {
-  const formattedAmount = formatAmount(payment.amount, currency);
-  return {
-    platformName: "Tape",
-    invoiceNumber: payment.invoice || payment.paymentId,
-    invoiceDate: new Date(payment.date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }),
-    billToName: payment.user.name,
-    billToAddress: payment.user.email,
-    billFromName: "Tape",
-    status: payment.status,
-    items: [
-      {
-        name: "Subscription Payment",
-        description: `Payment via ${payment.paymentMethod}`,
-        cost: formattedAmount,
-        vatLabel: "Vat 0%",
-        vatAmount: formatAmount(0, currency),
-        total: formattedAmount,
-        status: payment.status,
-      },
-    ],
-    subtotal: formattedAmount,
-    discountAmount: formatAmount(0, currency),
-    grandTotal: formattedAmount,
-  };
-}
-
-export async function generateBillingInvoicePdfBlob(
-  data: PaymentHistoryItem,
-  currency: string,
-): Promise<ArrayBuffer> {
-  const unifiedData = mapPaymentToUnifiedData(data, currency);
-
+export async function downloadAdditionalPaymentInvoicePdf(
+  data: AdditionalPaymentData,
+): Promise<void> {
   const host = document.createElement("div");
   host.setAttribute("aria-hidden", "true");
   host.style.cssText = `position:fixed;left:0;top:0;width:${EXPORT_PX_WIDTH}px;margin:0;padding:0;pointer-events:none;opacity:0;z-index:-1;overflow:visible;background:#ffffff;`;
@@ -73,14 +35,15 @@ export async function generateBillingInvoicePdfBlob(
           display: "block",
         }}
       >
-        <BillingInvoiceDocument data={unifiedData} />
+        <AdditionalPaymentInvoiceDocument data={data} />
       </div>,
     );
 
     await new Promise<void>((resolve) => {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
     });
-    await new Promise((r) => setTimeout(r, 200));
+    // Give it a bit more time to render images
+    await new Promise((r) => setTimeout(r, 400));
 
     const element = mount.querySelector(
       "[data-invoice-root]",
@@ -113,7 +76,9 @@ export async function generateBillingInvoicePdfBlob(
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
       pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
-      return pdf.output("arraybuffer");
+      
+      const prefix = data.paymentStatus === "SUCCESS" ? "receipt" : "invoice";
+      pdf.save(`${prefix}-${data.invoiceNumber || data.id}.pdf`);
     } catch (pdfErr) {
       console.error("Failed to generate PDF from element:", pdfErr);
       throw pdfErr;
@@ -122,18 +87,4 @@ export async function generateBillingInvoicePdfBlob(
     root.unmount();
     document.body.removeChild(host);
   }
-}
-
-export async function downloadBillingInvoicePdf(
-  data: PaymentHistoryItem,
-  currency: string,
-): Promise<void> {
-  const arrayBuffer = await generateBillingInvoicePdfBlob(data, currency);
-  const blob = new Blob([arrayBuffer], { type: "application/pdf" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `invoice-${data.invoice || data.paymentId}.pdf`;
-  a.click();
-  URL.revokeObjectURL(url);
 }

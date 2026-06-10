@@ -297,6 +297,8 @@ export default function UserProfilePage() {
             monthlyPayment={planPrice}
             currency={currency}
             userId={userId}
+            userName={user.name}
+            userEmail={user.email}
           />
         )}
         {activeTab === "Content" && (

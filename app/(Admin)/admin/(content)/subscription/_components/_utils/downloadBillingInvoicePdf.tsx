@@ -18,7 +18,7 @@ export function mapPaymentToUnifiedData(
 ): UnifiedInvoiceData {
   const formattedAmount = formatAmount(payment.amount, currency);
   return {
-    platformName: "Lawalx",
+    platformName: "Tape",
     invoiceNumber: payment.invoice || payment.paymentId,
     invoiceDate: new Date(payment.date).toLocaleDateString("en-US", {
       year: "numeric",
@@ -27,7 +27,7 @@ export function mapPaymentToUnifiedData(
     }),
     billToName: payment.user.name,
     billToAddress: payment.user.email,
-    billFromName: "Lawalx",
+    billFromName: "Tape",
     status: payment.status,
     items: [
       {
@@ -140,7 +140,7 @@ export function mapUserInvoiceToUnifiedData(
 ): UnifiedInvoiceData {
   const formattedAmount = formatAmount(data.payment.amount, currency);
   return {
-    platformName: "Lawalx",
+    platformName: "Tape",
     invoiceNumber: data.payment.invoiceNumber || data.payment.paymentId,
     invoiceDate: new Date(data.payment.date).toLocaleDateString("en-US", {
       year: "numeric",
@@ -149,7 +149,7 @@ export function mapUserInvoiceToUnifiedData(
     }),
     billToName: data.user.fullName || data.user.username,
     billToAddress: data.user.email,
-    billFromName: "Lawalx",
+    billFromName: "Tape",
     status: data.payment.status,
     items: [
       {

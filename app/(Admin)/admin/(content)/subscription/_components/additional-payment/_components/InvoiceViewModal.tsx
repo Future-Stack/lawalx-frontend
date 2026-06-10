@@ -2,12 +2,13 @@
 
 import { useEffect } from "react";
 import { X } from "lucide-react";
-import InvoiceDocument, { type InvoiceRecord } from "./InvoiceDocument";
+import { AdditionalPaymentData } from "@/components/common/AdditionalPaymentInvoiceDocument";
+import AdditionalPaymentInvoiceDocument from "@/components/common/AdditionalPaymentInvoiceDocument";
 
 type InvoiceViewModalProps = {
   open: boolean;
   onClose: () => void;
-  data: InvoiceRecord | null;
+  data: AdditionalPaymentData | null;
 };
 
 export default function InvoiceViewModal({
@@ -62,7 +63,7 @@ export default function InvoiceViewModal({
         </div>
 
         <div className="max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain px-3 pb-4 pt-2 sm:px-5 sm:pb-6">
-          <InvoiceDocument data={data} variant="plain" />
+          <AdditionalPaymentInvoiceDocument data={data} />
         </div>
       </div>
     </div>
