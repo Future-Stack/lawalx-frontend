@@ -4,6 +4,8 @@ import type {
   CheckoutPayload,
   EnterpriseCheckoutPayload,
   MySubscriptionApiResponse,
+  ChangePlanPayload,
+  ChangePlanApiResponse,
 } from "./payment.type";
 
 export const userPaymentApi = baseApi.injectEndpoints({
@@ -45,6 +47,14 @@ export const userPaymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Subscription"],
     }),
+    changePlan: builder.mutation<ChangePlanApiResponse, ChangePlanPayload>({
+      query: (data) => ({
+        url: "/payment/change-plan",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["Subscription"],
+    }),
   }),
 });
 
@@ -54,5 +64,6 @@ export const {
   useCreateEnterpriseCheckoutMutation,
   useCancelSubscriptionMutation,
   useUpdateRecurringMutation,
+  useChangePlanMutation,
 } = userPaymentApi;
 export const useCreatePaymentMutation = useCreateCheckoutMutation;

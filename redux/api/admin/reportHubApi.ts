@@ -41,7 +41,7 @@ export const reportHubApi = baseApi.injectEndpoints({
       providesTags: (result, error, id) => [{ type: "ReportHub", id }],
     }),
     updateReport: builder.mutation({
-      query: ({ id, ...data }) => ({
+      query: ({ id, data }: { id: string; data: FormData }) => ({
         url: `/reporthub/${id}`,
         method: "PATCH",
         body: data,
@@ -72,6 +72,14 @@ export const reportHubApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["ReportHistory"],
     }),
+    getReportPreview: builder.query({
+      query: ({ id, page = 1, limit = 6 }) => ({
+        url: `/reporthub/${id}/preview`,
+        method: "GET",
+        params: { page, limit },
+      }),
+      providesTags: (result, error, { id }) => [{ type: "ReportPreview", id }],
+    }),
   }),
 });
 
@@ -85,4 +93,5 @@ export const {
   useDeleteReportMutation,
   useRunReportMutation,
   useDeleteReportHistoryMutation,
+  useGetReportPreviewQuery,
 } = reportHubApi;
