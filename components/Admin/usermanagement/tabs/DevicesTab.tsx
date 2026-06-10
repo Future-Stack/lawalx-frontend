@@ -326,7 +326,7 @@ export default function DevicesTab({ devices: devicesProp }: { devices?: any[] }
           </div>
           <Dropdown
             value={statusFilter}
-            options={['All Status', 'Online', 'Offline']}
+            options={['All Status', 'Online', 'Offline', "Paired"]}
             onChange={setStatusFilter}
           />
         </div>
@@ -385,7 +385,7 @@ export default function DevicesTab({ devices: devicesProp }: { devices?: any[] }
               ) : (
                 <tr>
                   <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                    No data from backend.
+                    No device found for this user.
                   </td>
                 </tr>
               )}
