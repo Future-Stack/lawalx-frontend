@@ -9,6 +9,28 @@ import { downloadBillingInvoicePdf, generateBillingInvoicePdfBlob } from "@/app/
 import { toast } from "sonner";
 import JSZip from "jszip";
 
+interface CurrentPlan {
+  plan?: { name?: string } | string;
+  billingCycle?: string;
+  price?: string | number;
+  nextBilling?: string | number | Date;
+  autoRenew?: string;
+  billingStatus?: string;
+  [key: string]: unknown;
+}
+
+interface PaymentHistoryItemProps {
+  invoiceNumber?: string;
+  invoice?: string;
+  paymentId?: string;
+  amount?: unknown;
+  originalAmount?: number;
+  status?: string;
+  date?: string;
+  user?: unknown;
+  [key: string]: unknown;
+}
+
 export default function SubscriptionTab({
   onOpenChangePlan,
   currentPlan,
@@ -20,8 +42,8 @@ export default function SubscriptionTab({
   userEmail,
 }: {
   onOpenChangePlan: () => void;
-  currentPlan?: any;
-  paymentHistory?: any[];
+  currentPlan?: CurrentPlan | null;
+  paymentHistory?: PaymentHistoryItemProps[];
   monthlyPayment?: string;
   currency?: string;
   userId?: string;
@@ -38,7 +60,7 @@ export default function SubscriptionTab({
 
   const history = paymentHistoryProp && paymentHistoryProp.length > 0 ? paymentHistoryProp : [];
 
-  const formatAmount = (p: any): string => {
+  const formatAmount = (p: PaymentHistoryItemProps): string => {
     const isNGN = currency === "NGN";
     const symbol = isNGN ? "₦" : "$";
     if (typeof p.amount === "number" && typeof p.originalAmount === "number") {
@@ -72,11 +94,15 @@ export default function SubscriptionTab({
         if (typeof rawAmount === 'object' && rawAmount !== null) {
           rawAmount = (currency === 'NGN' ? rawAmount.amount : rawAmount.originalAmount) ?? rawAmount.amount;
         }
-        const finalAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(rawAmount) || 0;
+        const finalAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(String(rawAmount)) || 0;
 
+        const planNameStr = typeof currentPlan?.plan === 'string' ? currentPlan.plan : currentPlan?.plan?.name || "Premium";
+        
         const invoiceData = {
           ...inv,
           amount: finalAmount,
+          planName: planNameStr.toUpperCase(),
+          planDescription: `Subscription plan payment for ${planNameStr}`,
           user: inv.user || { name: userName || "Unknown User", email: userEmail || "" }
         };
         const pdfBlob = await generateBillingInvoicePdfBlob(invoiceData, currency || "USD");
@@ -90,9 +116,9 @@ export default function SubscriptionTab({
       a.download = `invoices-${new Date().toISOString().split("T")[0]}.zip`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success(`Downloaded ${invoices.length} invoice(s)`);
+      toast.success(`Downloaded ${invoices.length} receipt(s)`);
     } catch (err) {
-      toast.error("Failed to download invoices");
+      toast.error("Failed to download receipts");
     } finally {
       setDownloadingAll(false);
     }
@@ -103,27 +129,31 @@ export default function SubscriptionTab({
     try {
       const { data, isError } = await triggerGetSingleInvoice({ userId, paymentId: invoiceId });
       console.log('Single invoice response:', { data, isError });
-      if (isError || !data?.success) return toast.error('Failed to fetch invoice');
+      if (isError || !data?.success) return toast.error('Failed to fetch receipt data');
       
       // Normalize amount to a number to prevent [object Object] in PDF
       let rawAmount = data.data.amount;
       if (typeof rawAmount === 'object' && rawAmount !== null) {
         rawAmount = (currency === 'NGN' ? rawAmount.amount : rawAmount.originalAmount) ?? rawAmount.amount;
       }
-      const finalAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(rawAmount) || 0;
+      const finalAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(String(rawAmount)) || 0;
+
+      const planNameStr = typeof currentPlan?.plan === 'string' ? currentPlan.plan : currentPlan?.plan?.name || "Premium";
 
       // Inject user details into the data payload
       const invoiceData = {
         ...data.data,
         amount: finalAmount,
+        planName: planNameStr.toUpperCase(),
+        planDescription: `Subscription plan payment for ${planNameStr}`,
         user: data.data.user || { name: userName || "Unknown User", email: userEmail || "" }
       };
 
       await downloadBillingInvoicePdf(invoiceData, currency || "USD");
-      toast.success('Invoice downloaded');
+      toast.success('Receipt downloaded successfully');
     } catch (err) {
-      console.error('Error downloading invoice:', err);
-      toast.error('Failed to download invoice');
+      console.error('Error downloading receipt:', err);
+      toast.error('Failed to download receipt');
     } finally {
       setDownloadingId(null);
     }
@@ -152,7 +182,9 @@ export default function SubscriptionTab({
           <div className="flex justify-between items-center py-3 border-b border-border">
             <span className="text-sm text-gray-500 dark:text-gray-400">Plan</span>
             {currentPlan?.plan
-              ? <span className="px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-medium border border-orange-200 dark:border-orange-800">{currentPlan.plan}</span>
+              ? <span className="px-2.5 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-medium border border-orange-200 dark:border-orange-800">
+                  {typeof currentPlan.plan === 'string' ? currentPlan.plan : currentPlan.plan.name || "Premium"}
+                </span>
               : <span className="text-sm font-bold text-gray-900 dark:text-white">N/A</span>}
           </div>
           <div className="flex justify-between items-center py-3 border-b border-border">
@@ -230,12 +262,12 @@ export default function SubscriptionTab({
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
-                    {p.date ? new Date(p.date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "N/A"}
+                    {p.date ? new Date(p.date as string).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "N/A"}
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button
                       type="button"
-                      onClick={() => handleDownloadSingle(p.paymentId || p.invoice)}
+                      onClick={() => handleDownloadSingle((p.paymentId || p.invoice) as string)}
                       disabled={downloadingId === (p.paymentId || p.invoice)}
                       className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer disabled:opacity-60"
                       title="Download Invoice"

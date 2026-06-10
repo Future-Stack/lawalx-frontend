@@ -29,8 +29,8 @@ export function mapPaymentToUnifiedData(
     status: payment.status,
     items: [
       {
-        name: "Subscription Payment",
-        description: `Payment via ${payment.paymentMethod}`,
+        name: payment.planName || "Subscription Payment",
+        description: payment.planDescription || `Payment via ${payment.paymentMethod}`,
         cost: formattedAmount,
         vatLabel: "Vat 0%",
         vatAmount: formatAmount(0, currency),
