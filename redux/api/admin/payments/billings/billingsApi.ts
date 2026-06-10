@@ -24,6 +24,8 @@ export interface PaymentHistoryItem {
   status: PaymentStatus;
   date: string;
   canViewInStripe: boolean;
+  planName?: string;
+  planDescription?: string;
 }
 
 export interface PaginationMeta {
