@@ -30,6 +30,7 @@ import {
   PaymentStatus,
   PaymentHistoryItem,
 } from "@/redux/api/admin/payments/billings/billingsApi";
+import { downloadBillingInvoicePdf } from "../_utils/downloadBillingInvoicePdf";
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 const STATUS_STYLES: Record<PaymentStatus, string> = {
@@ -102,6 +103,19 @@ const BillingTable = ({
   handleRefund,
   handleViewInGateway,
 }: BillingTableProps) => {
+  const [downloadLoadingId, setDownloadLoadingId] = React.useState<string | null>(null);
+
+  const handleDownload = async (payment: PaymentHistoryItem) => {
+    try {
+      setDownloadLoadingId(payment.paymentId);
+      await downloadBillingInvoicePdf(payment, currency);
+    } catch (err) {
+      console.error("Failed to download invoice", err);
+    } finally {
+      setDownloadLoadingId(null);
+    }
+  };
+
   return (
     <div className="overflow-x-auto scrollbar-hide">
       <div className="hidden lg:block">
@@ -183,9 +197,15 @@ const BillingTable = ({
                     size="icon"
                     variant="ghost"
                     aria-label="Download invoice"
+                    onClick={() => handleDownload(payment)}
+                    disabled={downloadLoadingId === payment.paymentId}
                     className="text-muted hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
-                    <CloudDownload className="w-4 h-4" />
+                    {downloadLoadingId === payment.paymentId ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <CloudDownload className="w-4 h-4" />
+                    )}
                   </Button>
                 </TableCell>
                 <TableCell>
@@ -285,9 +305,15 @@ const BillingTable = ({
                   size="icon"
                   variant="ghost"
                   aria-label="Download invoice"
+                  onClick={() => handleDownload(payment)}
+                  disabled={downloadLoadingId === payment.paymentId}
                   className="h-8 w-8 text-muted hover:bg-gray-100 dark:hover:bg-gray-700"
                 >
-                  <CloudDownload className="w-4 h-4" />
+                  {downloadLoadingId === payment.paymentId ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CloudDownload className="w-4 h-4" />
+                  )}
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

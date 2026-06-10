@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -71,12 +72,12 @@ export default function ImpersonationBanner() {
   if (!isImpersonating) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[200] bg-amber-400 text-amber-900 flex items-center justify-between px-4 py-2 shadow-md text-sm font-medium">
+    <div className="fixed top-0 left-0 right-0 z-200 bg-amber-400 text-amber-900 flex items-center justify-between px-4 py-2 shadow-md text-sm font-medium">
       <div className="flex items-center gap-2">
         {/* Warning Icon */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="w-4 h-4 flex-shrink-0"
+          className="w-4 h-4 shrink-0"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

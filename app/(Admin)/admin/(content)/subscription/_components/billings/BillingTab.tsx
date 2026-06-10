@@ -15,6 +15,10 @@ import {
   type PaymentHistoryItem,
 } from "@/redux/api/admin/payments/billings/billingsApi";
 import BillingTable from "./_components/BillingTable";
+import JSZip from "jszip";
+import { generateBillingInvoicePdfBlob } from "./_utils/downloadBillingInvoicePdf";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 
 const LIMIT = 10;
@@ -38,6 +42,7 @@ const BillingTab = () => {
     useState<PaymentHistoryItem | null>(null);
 
   const [gatewayLoadingId, setGatewayLoadingId] = useState<string | null>(null);
+  const [isDownloadingAll, setIsDownloadingAll] = useState(false);
 
   // Debounce search input (400 ms)
   useEffect(() => {
@@ -103,13 +108,49 @@ const BillingTab = () => {
     }
   };
 
+  const handleDownloadAll = async () => {
+    if (payments.length === 0) {
+      toast.info("No invoices to download.");
+      return;
+    }
+    
+    setIsDownloadingAll(true);
+    try {
+      const zip = new JSZip();
+      for (const payment of payments) {
+        const arrayBuffer = await generateBillingInvoicePdfBlob(payment, currency);
+        zip.file(`invoice-${payment.invoice || payment.paymentId}.pdf`, arrayBuffer);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `all-invoices-${new Date().toISOString().split("T")[0]}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      toast.success(`Downloaded ${payments.length} invoice(s)`);
+    } catch (err) {
+      console.error("Failed to download all invoices", err);
+      toast.error("Failed to generate zip file.");
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
     <SubscriptionTabLayout
       title="Payment history"
       actionButton={
-        <button className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer">
+        <button
+          onClick={handleDownloadAll}
+          disabled={isDownloadingAll || payments.length === 0}
+          className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer flex items-center gap-2 disabled:opacity-60"
+        >
+          {isDownloadingAll && <Loader2 className="w-4 h-4 animate-spin" />}
           Download All
         </button>
       }
