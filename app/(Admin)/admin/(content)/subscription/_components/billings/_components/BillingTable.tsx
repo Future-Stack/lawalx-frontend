@@ -30,7 +30,7 @@ import {
   PaymentStatus,
   PaymentHistoryItem,
 } from "@/redux/api/admin/payments/billings/billingsApi";
-import { downloadBillingInvoicePdf } from "../_utils/downloadBillingInvoicePdf";
+import { downloadBillingInvoicePdf } from "../../_utils/downloadBillingInvoicePdf";
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 const STATUS_STYLES: Record<PaymentStatus, string> = {
@@ -103,7 +103,9 @@ const BillingTable = ({
   handleRefund,
   handleViewInGateway,
 }: BillingTableProps) => {
-  const [downloadLoadingId, setDownloadLoadingId] = React.useState<string | null>(null);
+  const [downloadLoadingId, setDownloadLoadingId] = React.useState<
+    string | null
+  >(null);
 
   const handleDownload = async (payment: PaymentHistoryItem) => {
     try {
@@ -221,12 +223,12 @@ const BillingTable = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
-                      <DropdownMenuItem
+                      {/* <DropdownMenuItem
                         onClick={() => handleViewDetails(payment.user.id)}
                       >
                         <Eye className="mr-2 h-4 w-4" />
                         View Details
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                       <DropdownMenuItem>
                         <ArrowUpCircle className="mr-2 h-4 w-4" />
                         change plan
@@ -327,12 +329,12 @@ const BillingTable = ({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem
+                    {/* <DropdownMenuItem
                       onClick={() => handleViewDetails(payment.user.id)}
                     >
                       <Eye className="mr-2 h-4 w-4" />
                       View Details
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                     <DropdownMenuItem>
                       <ArrowUpCircle className="mr-2 h-4 w-4" />
                       change plan
@@ -366,7 +368,9 @@ const BillingTable = ({
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
-              <span className="text-muted whitespace-nowrap">Payment Method:</span>
+              <span className="text-muted whitespace-nowrap">
+                Payment Method:
+              </span>
               <div className="flex-shrink-0">
                 <PaymentMethodBadge method={payment.paymentMethod} />
               </div>
@@ -379,7 +383,9 @@ const BillingTable = ({
             </div>
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
               <span className="text-muted whitespace-nowrap">Date:</span>
-              <span className="text-muted whitespace-nowrap">{formatDate(payment.date)}</span>
+              <span className="text-muted whitespace-nowrap">
+                {formatDate(payment.date)}
+              </span>
             </div>
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
               <span className="text-muted whitespace-nowrap">Status:</span>

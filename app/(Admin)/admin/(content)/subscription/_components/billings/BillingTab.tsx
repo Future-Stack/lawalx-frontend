@@ -16,10 +16,9 @@ import {
 } from "@/redux/api/admin/payments/billings/billingsApi";
 import BillingTable from "./_components/BillingTable";
 import JSZip from "jszip";
-import { generateBillingInvoicePdfBlob } from "./_utils/downloadBillingInvoicePdf";
+import { generateBillingInvoicePdfBlob } from "../_utils/downloadBillingInvoicePdf";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
-
 
 const LIMIT = 10;
 const BillingTab = () => {
@@ -113,13 +112,19 @@ const BillingTab = () => {
       toast.info("No invoices to download.");
       return;
     }
-    
+
     setIsDownloadingAll(true);
     try {
       const zip = new JSZip();
       for (const payment of payments) {
-        const arrayBuffer = await generateBillingInvoicePdfBlob(payment, currency);
-        zip.file(`invoice-${payment.invoice || payment.paymentId}.pdf`, arrayBuffer);
+        const arrayBuffer = await generateBillingInvoicePdfBlob(
+          payment,
+          currency,
+        );
+        zip.file(
+          `invoice-${payment.invoice || payment.paymentId}.pdf`,
+          arrayBuffer,
+        );
       }
 
       const zipBlob = await zip.generateAsync({ type: "blob" });
@@ -129,7 +134,7 @@ const BillingTab = () => {
       a.download = `all-invoices-${new Date().toISOString().split("T")[0]}.zip`;
       a.click();
       URL.revokeObjectURL(url);
-      
+
       toast.success(`Downloaded ${payments.length} invoice(s)`);
     } catch (err) {
       console.error("Failed to download all invoices", err);
