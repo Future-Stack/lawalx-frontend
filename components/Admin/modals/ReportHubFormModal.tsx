@@ -283,7 +283,7 @@ export default function ReportHubFormModal({
                                         <Label className="text-sm font-semibold">Report Name *</Label>
                                         <Input
                                             placeholder="Report Name"
-                                            className="h-12 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl text-gray-600 dark:text-gray-400"
+                                            className="h-12 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl text-gray-900 dark:text-white"
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                         />
@@ -292,7 +292,7 @@ export default function ReportHubFormModal({
                                         <Label className="text-sm font-semibold">Description (Optional)</Label>
                                         <textarea
                                             placeholder="Describe the purpose of this report"
-                                            className="w-full min-h-[120px] p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                                            className="w-full min-h-[120px] p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500/50"
                                             value={formData.description}
                                             onChange={e => setFormData({ ...formData, description: e.target.value })}
                                         />
@@ -300,7 +300,7 @@ export default function ReportHubFormModal({
                                     <div className="space-y-2">
                                         <Label className="text-sm font-semibold">Data Source</Label>
                                         <Select value={formData.dataSource} onValueChange={v => setFormData({ ...formData, dataSource: v, selectedColumnIds: [] })}>
-                                            <SelectTrigger className="h-12 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl w-full text-gray-500 dark:text-gray-400">
+                                            <SelectTrigger className="h-12 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl text-gray-900 dark:text-white">
                                                 <SelectValue placeholder="Select data source" />
                                             </SelectTrigger>
                                             <SelectContent className="rounded-xl w-full bg-navbarBg">
@@ -373,6 +373,7 @@ export default function ReportHubFormModal({
                                         </div>
                                     </div>
 
+                                    {/* Commented out filters part for now as requested
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
                                             <div>
@@ -459,6 +460,7 @@ export default function ReportHubFormModal({
                                             })}
                                         </div>
                                     </div>
+                                    */}
                                 </motion.div>
                             )}
 
@@ -494,7 +496,7 @@ export default function ReportHubFormModal({
                                             <div className="space-y-2">
                                                 <Label className="text-xs font-bold">Frequency</Label>
                                                 <Select value={formData.frequency} onValueChange={v => setFormData({ ...formData, frequency: v })}>
-                                                    <SelectTrigger className="h-11 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl">
+                                                    <SelectTrigger className="h-11 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl text-gray-900 dark:text-white">
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent className="rounded-xl">
@@ -529,13 +531,13 @@ export default function ReportHubFormModal({
                                                 </div>
                                             )}
                                             <div className="space-y-2">
-                                                <Label className="text-xs font-bold">Time</Label>
+                                                <Label className="text-xs font-bold text-gray-900 dark:text-gray-300">Time</Label>
                                                 <div className="relative">
                                                     <Input
                                                         type="time"
                                                         value={formData.time}
                                                         onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                                        className="h-11 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl pr-10"
+                                                        className="h-11 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl pr-10 text-gray-900 dark:text-white"
                                                     />
                                                     <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                                                 </div>
@@ -554,7 +556,7 @@ export default function ReportHubFormModal({
                                                 <Label className="text-xs font-bold">Email Recipients</Label>
                                                 <Input
                                                     placeholder="comma separated emails"
-                                                    className="h-11 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl"
+                                                    className="h-11 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl text-gray-900 dark:text-white"
                                                     value={formData.emailRecipients}
                                                     onChange={e => setFormData({ ...formData, emailRecipients: e.target.value })}
                                                 />
