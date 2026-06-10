@@ -3,14 +3,62 @@
 import { Download } from "lucide-react";
 import type { SubscriptionPayment } from "@/redux/api/users/payment/payment.type";
 import { formatCurrency, formatDateTime } from "./format";
+import { downloadBillingInvoicePdf } from "@/app/(Admin)/admin/(content)/subscription/_components/billings/_utils/downloadBillingInvoicePdf";
+import { useGetSettingsUserProfileQuery } from "@/redux/api/users/settings/settingsApi";
+import { PaymentHistoryItem } from "@/redux/api/admin/payments/billings/billingsApi";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 interface BillingHistoryTableProps {
   payments: SubscriptionPayment[];
+  planName?: string;
 }
 
 export default function BillingHistoryTable({
   payments,
+  planName = "Premium",
 }: BillingHistoryTableProps) {
+  const { data: profileRes } = useGetSettingsUserProfileQuery(undefined);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownload = async (row: SubscriptionPayment) => {
+    setDownloadingId(row.id);
+    try {
+      // Normalize amount to prevent object conversion issues
+      let rawAmount: unknown = row.amount;
+      if (typeof rawAmount === 'object' && rawAmount !== null) {
+        const amtObj = rawAmount as Record<string, number>;
+        rawAmount = (row.currency === 'NGN' ? amtObj.amount : amtObj.originalAmount) ?? amtObj.amount;
+      }
+      const finalAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(String(rawAmount)) || 0;
+
+      const invoiceData = {
+        paymentId: row.id,
+        invoice: row.transactionId || row.id,
+        date: row.createdAt,
+        amount: finalAmount,
+        status: row.status,
+        paymentMethod: row.gateway,
+        planName: planName.toUpperCase(),
+        planDescription: `Subscription plan payment for ${planName}`,
+        user: {
+          name: profileRes?.data?.full_name || profileRes?.data?.username || "Tape User",
+          email: row.email || profileRes?.data?.email || ""
+        }
+      };
+      
+      // We pass "USD" as default, but ideally it should match row.currency or settings currency
+      await downloadBillingInvoicePdf(invoiceData as unknown as PaymentHistoryItem, row.currency || "USD");
+      toast.success("Receipt downloaded successfully!");
+    } catch (error) {
+      console.error("Failed to download receipt:", error);
+      toast.error("Failed to download receipt.");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   return (
     <div className="border border-border rounded-xl overflow-hidden text-sm">
       <table className="w-full text-left">
@@ -65,7 +113,19 @@ export default function BillingHistoryTable({
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-400 hover:text-gray-600 cursor-pointer">
-                    <Download className="w-4 h-4" />
+                    <button
+                      type="button"
+                      onClick={() => handleDownload(row)}
+                      disabled={downloadingId === row.id}
+                      className="cursor-pointer disabled:opacity-50"
+                      title="Download Receipt"
+                    >
+                      {downloadingId === row.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Download className="w-4 h-4" />
+                      )}
+                    </button>
                   </td>
                 </tr>
               );

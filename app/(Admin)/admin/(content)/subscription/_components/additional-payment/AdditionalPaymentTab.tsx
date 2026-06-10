@@ -5,10 +5,12 @@ import { Search, Loader2 } from "lucide-react";
 import AdditionalPaymentTable from "./_components/AdditionalPaymentTable";
 import BaseSelect from "@/common/BaseSelect";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
-import { useGetAdditionalPaymentsQuery } from "@/redux/api/admin/payments/additional-payment/additionalPaymentApi";
+import { useGetAdditionalPaymentsQuery, useLazyGetAdditionalPaymentByIdQuery } from "@/redux/api/admin/payments/additional-payment/additionalPaymentApi";
 import type { AdditionalPaymentListRow } from "@/redux/api/admin/payments/additional-payment/additionalPayment.type";
-import { getUrl } from "@/lib/content-utils";
 import { toast } from "sonner";
+import { downloadAdditionalPaymentInvoicePdf } from "@/components/common/downloadAdditionalPaymentInvoice";
+import { AdditionalPaymentData } from "@/components/common/AdditionalPaymentInvoiceDocument";
+import InvoiceViewModal from "./_components/InvoiceViewModal";
 
 const STATUS_PARAM: Record<string, string | undefined> = {
   all: "ALL",
@@ -27,6 +29,11 @@ const AdditionalPaymentTab = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("all");
+  
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<AdditionalPaymentData | null>(null);
+
+  const [getAdditionalPaymentDetails] = useLazyGetAdditionalPaymentByIdQuery();
 
   const { data, isLoading, isError } = useGetAdditionalPaymentsQuery({
     page,
@@ -42,50 +49,40 @@ const AdditionalPaymentTab = () => {
   const totalPages = meta?.totalPages ?? 1;
 
   const handleDownloadInvoice = async (item: AdditionalPaymentListRow) => {
-    const invoiceUrl = item.downloadUrl || item.invoiceUrl;
-    if (!invoiceUrl) {
-      toast.error("Invoice file is not available yet.");
-      return;
-    }
-    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
-    const cleanPath = invoiceUrl.startsWith("/") ? invoiceUrl.slice(1) : invoiceUrl;
-    const url = `${baseUrl}/${cleanPath}`;
-
+    let toastId: string | number | undefined;
     try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Network response was not ok");
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = `Invoice-${item.invoiceNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error("Failed to download PDF:", error);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `Invoice-${item.invoiceNumber}.pdf`;
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      toastId = toast.loading("Preparing invoice download...");
+      const response = await getAdditionalPaymentDetails(item.id).unwrap();
+      if (response?.data) {
+        await downloadAdditionalPaymentInvoicePdf(response.data);
+        toast.success("Invoice downloaded successfully!", { id: toastId });
+      } else {
+        toast.error("Failed to fetch invoice details.", { id: toastId });
+      }
+    } catch (err) {
+      console.error(err);
+      if (toastId) toast.error("Failed to download invoice.", { id: toastId });
+      else toast.error("Failed to download invoice.");
     }
   };
 
-  const handleViewInvoice = (item: AdditionalPaymentListRow) => {
-    const invoiceUrl = item.invoiceUrl;
-    if (!invoiceUrl) {
-      toast.error("Invoice file is not available yet.");
-      return;
+  const handleViewInvoice = async (item: AdditionalPaymentListRow) => {
+    let toastId: string | number | undefined;
+    try {
+      toastId = toast.loading("Loading invoice details...");
+      const response = await getAdditionalPaymentDetails(item.id).unwrap();
+      if (response?.data) {
+        toast.dismiss(toastId);
+        setSelectedInvoice(response.data);
+        setViewModalOpen(true);
+      } else {
+        toast.error("Failed to fetch invoice details.", { id: toastId });
+      }
+    } catch (err) {
+      console.error(err);
+      if (toastId) toast.error("Failed to load invoice.", { id: toastId });
+      else toast.error("Failed to load invoice.");
     }
-    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
-    const cleanPath = invoiceUrl.startsWith("/") ? invoiceUrl.slice(1) : invoiceUrl;
-    const url = `${baseUrl}/${cleanPath}`;
-
-    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -189,6 +186,15 @@ const AdditionalPaymentTab = () => {
           onView={handleViewInvoice}
         />
       )}
+      
+      <InvoiceViewModal 
+        open={viewModalOpen} 
+        onClose={() => {
+          setViewModalOpen(false);
+          setTimeout(() => setSelectedInvoice(null), 300);
+        }} 
+        data={selectedInvoice} 
+      />
     </SubscriptionTabLayout>
   );
 };

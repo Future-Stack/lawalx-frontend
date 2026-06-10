@@ -3,46 +3,33 @@
 import { Download, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useGetMyAdditionalPaymentsQuery } from "@/redux/api/users/additional-payment/additionalPayment.api";
-import { getUrl } from "@/lib/content-utils";
+import { useGetMyAdditionalPaymentsQuery, useLazyGetMyAdditionalPaymentByIdQuery } from "@/redux/api/users/additional-payment/additionalPayment.api";
 import { formatCurrency, formatDateTime } from "./format";
+import { downloadAdditionalPaymentInvoicePdf } from "@/components/common/downloadAdditionalPaymentInvoice";
+import { AdditionalPaymentData } from "@/components/common/AdditionalPaymentInvoiceDocument";
 
 export default function MyAdditionalPaymentTable() {
   const router = useRouter();
   const { data, isLoading } = useGetMyAdditionalPaymentsQuery();
+  const [getInvoiceDetails] = useLazyGetMyAdditionalPaymentByIdQuery();
   const invoices = data?.data ?? [];
 
-  const handleDownload = async (invoiceUrl: string, invoiceNumber: string) => {
-    if (!invoiceUrl) {
-      toast.error("Invoice file is not available yet.");
-      return;
-    }
-    
-    const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL ?? "";
-    const cleanPath = invoiceUrl.startsWith("/") ? invoiceUrl.slice(1) : invoiceUrl;
-    const url = `${baseUrl}/${cleanPath}`;
-
+  const handleDownload = async (invoiceId: string) => {
+    let toastId: string | number | undefined;
     try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Network response was not ok");
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = `Invoice-${invoiceNumber}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
+      toastId = toast.loading("Preparing invoice download...");
+      const response = await getInvoiceDetails(invoiceId).unwrap();
+      
+      if (response?.data) {
+        await downloadAdditionalPaymentInvoicePdf(response.data as AdditionalPaymentData);
+        toast.success("Invoice downloaded successfully!", { id: toastId });
+      } else {
+        toast.error("Failed to fetch invoice details.", { id: toastId });
+      }
     } catch (error) {
       console.error("Failed to download PDF:", error);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `Invoice-${invoiceNumber}.pdf`;
-      link.target = "_blank";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      if (toastId) toast.error("Failed to download invoice.", { id: toastId });
+      else toast.error("Failed to download invoice.");
     }
   };
 
@@ -120,7 +107,7 @@ export default function MyAdditionalPaymentTable() {
                       <button
                         type="button"
                         onClick={() =>
-                          handleDownload(row.invoiceUrl, row.invoiceNumber)
+                          handleDownload(row.id)
                         }
                         aria-label="Download invoice"
                         className="text-gray-400 hover:text-gray-600 cursor-pointer"

@@ -407,7 +407,7 @@ export default function Subscriptions() {
         </div>
 
         {billingTab === "billing" ? (
-          <BillingHistoryTable payments={payments} />
+          <BillingHistoryTable payments={payments} planName={subscription?.plan?.name || "Premium"} />
         ) : (
           <MyAdditionalPaymentTable />
         )}

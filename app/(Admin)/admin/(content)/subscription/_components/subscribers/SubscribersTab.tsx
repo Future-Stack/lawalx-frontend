@@ -145,6 +145,7 @@ const SubscribersTab = () => {
                 { label: "Basic", value: "basic" },
                 { label: "Business", value: "business" },
                 { label: "Premium", value: "premium" },
+                { label: "Enterprise", value: "enterprise" },
               ]}
               value={planFilter}
               onChange={(value) => {
