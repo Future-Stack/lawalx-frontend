@@ -55,10 +55,15 @@ import {
     useGetReportHistoryQuery, 
     useGetReportStatsQuery, 
     useRunReportMutation, 
-    useUpdateReportMutation 
+    useUpdateReportMutation,
+    useLazyDownloadReportDataQuery
 } from '@/redux/api/admin/reportHubApi';
 import { toast } from 'sonner';
 import { DATA_SOURCES } from '@/constants/reportHubConstants';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { addPdfHeader } from '@/lib/pdfUtils';
 
 export default function ReportHub() {
     const [activeTab, setActiveTab] = useState<'saved' | 'history'>('saved');
@@ -86,6 +91,11 @@ export default function ReportHub() {
     const [selectedCreator, setSelectedCreator] = useState('All Creators');
     const [selectedSchedule, setSelectedSchedule] = useState('All Schedules');
 
+    // Run History specific Search & Filter State
+    const [historySearchQuery, setHistorySearchQuery] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState('All Statuses');
+    const [selectedTriggerer, setSelectedTriggerer] = useState('All Triggered By');
+
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -108,11 +118,10 @@ export default function ReportHub() {
         schedule: selectedSchedule === 'All Schedules' ? undefined : selectedSchedule.toLowerCase()
     });
 
-    // History Query
+    // History Query (only pass page/limit for pagination, filtering is client-side)
     const { data: historyData, isLoading: isHistoryLoading } = useGetReportHistoryQuery({
         page: currentPage,
-        limit: itemsPerPage,
-        search: searchQuery || undefined
+        limit: itemsPerPage
     });
 
     // Mutations
@@ -121,16 +130,55 @@ export default function ReportHub() {
     const [deleteReport] = useDeleteReportMutation();
     const [runReport] = useRunReportMutation();
     const [deleteHistory] = useDeleteReportHistoryMutation();
+    const [triggerDownload] = useLazyDownloadReportDataQuery();
 
     const savedReports = reportsData?.data || [];
     const runHistory = historyData?.data || [];
+
+    const uniqueTriggerers = useMemo(() => {
+        if (!runHistory) return [];
+        const triggerers = runHistory.map((run: any) => run.triggeredBy).filter(Boolean);
+        return Array.from(new Set(triggerers)) as string[];
+    }, [runHistory]);
+
+    const filteredRunHistory = useMemo(() => {
+        if (!runHistory) return [];
+        return runHistory.filter((run: any) => {
+            // Search by Report Name and Recipients
+            if (historySearchQuery) {
+                const searchLower = historySearchQuery.toLowerCase();
+                const reportName = run.reportHub?.name?.toLowerCase() || '';
+                const recipients = run.recipients?.join(', ').toLowerCase() || '';
+                if (!reportName.includes(searchLower) && !recipients.includes(searchLower)) {
+                    return false;
+                }
+            }
+            // Filter by Status
+            if (selectedStatus !== 'All Statuses') {
+                if (selectedStatus === 'PENDING') {
+                    if (run.status !== 'PROCESSING' && run.status !== 'PENDING') {
+                        return false;
+                    }
+                } else if (run.status !== selectedStatus) {
+                    return false;
+                }
+            }
+            // Filter by Triggered By
+            if (selectedTriggerer !== 'All Triggered By') {
+                if (run.triggeredBy !== selectedTriggerer) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }, [runHistory, historySearchQuery, selectedStatus, selectedTriggerer]);
 
     // Pagination logic
     const reportsTotalPages = reportsData?.meta?.totalPages || 0;
     const historyTotalPages = historyData?.meta?.totalPages || 0;
 
     const totalPages = activeTab === 'saved' ? reportsTotalPages : historyTotalPages;
-    const currentDataCount = activeTab === 'saved' ? savedReports.length : runHistory.length;
+    const currentDataCount = activeTab === 'saved' ? savedReports.length : filteredRunHistory.length;
     const totalDataCount = activeTab === 'saved' ? reportsData?.meta?.total || 0 : historyData?.meta?.total || 0;
 
     const handleRun = async (report: any) => {
@@ -235,6 +283,98 @@ export default function ReportHub() {
         setIsPreviewOpen(true);
     };
 
+    const handleDownloadReport = async (run: any, format: 'PDF' | 'EXCEL') => {
+        try {
+            const loadingToast = toast.loading(`Preparing download data for "${run.reportHub?.name}"...`);
+            const response = await triggerDownload(run.id).unwrap();
+            toast.dismiss(loadingToast);
+
+            const data = response?.data || [];
+            if (data.length === 0) {
+                toast.error("No data found for this report.");
+                return;
+            }
+
+            const reportName = run.reportHub?.name || 'Report';
+            const formattedDate = new Date(run.runDate).toLocaleString();
+
+            if (format === 'EXCEL') {
+                const worksheet = XLSX.utils.json_to_sheet(data);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Report Data");
+                
+                // Auto-fit column widths
+                const maxLens = data.reduce((acc: any, row: any) => {
+                    Object.keys(row).forEach(key => {
+                        const valStr = row[key] ? String(row[key]) : '';
+                        acc[key] = Math.max(acc[key] || key.length, valStr.length);
+                    });
+                    return acc;
+                }, {});
+                
+                worksheet['!cols'] = Object.keys(maxLens).map(key => ({
+                    wch: Math.min(Math.max(maxLens[key] + 3, 10), 50)
+                }));
+
+                XLSX.writeFile(workbook, `${reportName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                toast.success("Excel downloaded successfully");
+            } else if (format === 'PDF') {
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Branded header identical to device-report
+                const currentY = await addPdfHeader(
+                    doc,
+                    reportName,
+                    `Triggered By: ${run.triggeredBy}  |  Generated: ${formattedDate}`
+                );
+
+                const columns = Object.keys(data[0]);
+                const rows = data.map((item: any) => 
+                    columns.map(col => item[col] != null ? String(item[col]) : '—')
+                );
+
+                autoTable(doc, {
+                    startY: currentY,
+                    head: [columns],
+                    body: rows,
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: [15, 90, 128], // #0F5A80
+                        textColor: 255,
+                        fontSize: 9,
+                        fontStyle: 'bold',
+                        halign: 'left'
+                    },
+                    bodyStyles: {
+                        fontSize: 8,
+                        textColor: [51, 51, 51]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [248, 249, 250]
+                    },
+                    margin: { top: 40, left: 14, right: 14, bottom: 20 },
+                    didDrawPage: (dataDraw) => {
+                        const str = `Page ${dataDraw.pageNumber} of ${doc.getNumberOfPages()}`;
+                        doc.setFontSize(8);
+                        doc.setTextColor(150);
+                        doc.text(str, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10);
+                        doc.text("Generated via Tape Report Hub", 14, doc.internal.pageSize.height - 10);
+                    }
+                });
+
+                doc.save(`${reportName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+                toast.success("PDF downloaded successfully");
+            }
+        } catch (error) {
+            toast.error("Failed to generate report download file.");
+            console.error(error);
+        }
+    };
+
     return (
         <div className="min-h-screen">
             {/* Breadcrumbs */}
@@ -307,55 +447,85 @@ export default function ReportHub() {
             <div className="border border-border rounded-2xl overflow-hidden bg-navbarBg shadow-sm">
                 {/* Search and Filters */}
                 <div className="p-4 border-b border-gray-50 dark:border-gray-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="relative flex-1 max-w-lg">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                            placeholder="Search by name, creator..."
-                            value={searchQuery}
-                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                            className="pl-10 h-11 bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-bgBlue"
-                        />
-                    </div>
-                    <div className="flex items-center gap-3 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-                        <Select value={selectedDataSource} onValueChange={(v) => { setSelectedDataSource(v); setCurrentPage(1); }}>
-                            <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[160px]">
-                                <SelectValue placeholder="All Data Sources" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl bg-navbarBg border border-border">
-                                <SelectItem value="All Data Sources">All Data Sources</SelectItem>
-                                <SelectItem value="Device Data">Device Data</SelectItem>
-                                <SelectItem value="Financial Data">Financial Data</SelectItem>
-                                <SelectItem value="User Activity">User Activity</SelectItem>
-                                <SelectItem value="Subscription & Billing">Subscription & Billing</SelectItem>
-                                <SelectItem value="Customer Service & Support">Customer Service & Support</SelectItem>
-                                <SelectItem value="Content & Program">Content & Program</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    {activeTab === 'saved' ? (
+                        <>
+                            <div className="relative flex-1 max-w-lg">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                    placeholder="Search by name, creator..."
+                                    value={searchQuery}
+                                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                                    className="pl-10 h-11 bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-bgBlue"
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                                <Select value={selectedDataSource} onValueChange={(v) => { setSelectedDataSource(v); setCurrentPage(1); }}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[160px]">
+                                        <SelectValue placeholder="All Data Sources" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl bg-navbarBg border border-border">
+                                        <SelectItem value="All Data Sources">All Data Sources</SelectItem>
+                                        <SelectItem value="Device Data">Device Data</SelectItem>
+                                        <SelectItem value="Financial Data">Financial Data</SelectItem>
+                                        <SelectItem value="User Activity">User Activity</SelectItem>
+                                        <SelectItem value="Subscription & Billing">Subscription & Billing</SelectItem>
+                                        <SelectItem value="Customer Service & Support">Customer Service & Support</SelectItem>
+                                        <SelectItem value="Content & Program">Content & Program</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                        {/* <Select value={selectedCreator} onValueChange={(v) => { setSelectedCreator(v); setCurrentPage(1); }}>
-                            <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[140px]">
-                                <SelectValue placeholder="All Creators" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl bg-navbarBg border border-border">
-                                <SelectItem value="All Creators">All Creators</SelectItem>
-                                <SelectItem value="Sarah Wilson">Sarah Wilson</SelectItem>
-                                <SelectItem value="John Doe">John Doe</SelectItem>
-                            </SelectContent>
-                        </Select> */}
+                                <Select value={selectedSchedule} onValueChange={(v) => { setSelectedSchedule(v); setCurrentPage(1); }}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[140px]">
+                                        <SelectValue placeholder="All Schedules" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl bg-navbarBg border border-border">
+                                        <SelectItem value="All Schedules">All Schedules</SelectItem>
+                                        <SelectItem value="Daily">Daily</SelectItem>
+                                        <SelectItem value="Weekly">Weekly</SelectItem>
+                                        <SelectItem value="Monthly">Monthly</SelectItem>
+                                        <SelectItem value="Not Scheduled">Not Scheduled</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="relative flex-1 max-w-lg">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                    placeholder="Search by report name, recipients..."
+                                    value={historySearchQuery}
+                                    onChange={(e) => { setHistorySearchQuery(e.target.value); setCurrentPage(1); }}
+                                    className="pl-10 h-11 bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-bgBlue"
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                                <Select value={selectedStatus} onValueChange={(v) => { setSelectedStatus(v); setCurrentPage(1); }}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[140px]">
+                                        <SelectValue placeholder="All Statuses" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl bg-navbarBg border border-border">
+                                        <SelectItem value="All Statuses">All Statuses</SelectItem>
+                                        <SelectItem value="COMPILED">Compiled</SelectItem>
+                                        <SelectItem value="PENDING">Pending</SelectItem>
+                                        <SelectItem value="FAILED">Failed</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                        <Select value={selectedSchedule} onValueChange={(v) => { setSelectedSchedule(v); setCurrentPage(1); }}>
-                            <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[140px]">
-                                <SelectValue placeholder="All Schedules" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl bg-navbarBg border border-border">
-                                <SelectItem value="All Schedules">All Schedules</SelectItem>
-                                <SelectItem value="Daily">Daily</SelectItem>
-                                <SelectItem value="Weekly">Weekly</SelectItem>
-                                <SelectItem value="Monthly">Monthly</SelectItem>
-                                <SelectItem value="Not Scheduled">Not Scheduled</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                                <Select value={selectedTriggerer} onValueChange={(v) => { setSelectedTriggerer(v); setCurrentPage(1); }}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[160px]">
+                                        <SelectValue placeholder="All Triggered By" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl bg-navbarBg border border-border">
+                                        <SelectItem value="All Triggered By">All Triggered By</SelectItem>
+                                        {uniqueTriggerers.map(t => (
+                                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Table */}
@@ -400,7 +570,7 @@ export default function ReportHub() {
                                             <div className="text-sm font-bold text-gray-900 dark:text-white">{report.name}</div>
                                         </td>
                                         <td className="px-6 py-5">
-                                            <span className="px-3 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-medium rounded-full border border-gray-100 dark:border-gray-700">
+                                            <span className="px-2 text-nowrap text-xs py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium rounded-full border border-gray-100 dark:border-gray-700">
                                                 {report.dataSource}
                                             </span>
                                         </td>
@@ -480,7 +650,7 @@ export default function ReportHub() {
                                     </tr>
                                 ))
                             ) : (
-                                runHistory.map((run: any) => (
+                                filteredRunHistory.map((run: any) => (
                                     <tr key={run.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                         <td className="px-6 py-5">
                                             <div className="text-sm font-bold text-gray-900 dark:text-white">{run.reportHub?.name}</div>
@@ -512,15 +682,32 @@ export default function ReportHub() {
                                         </td>
                                         <td className="px-6 py-5 text-right">
                                             <div className="flex items-center justify-end gap-3">
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    className="h-9 px-4 rounded-xl border-gray-200 cursor-pointer hover:bg-green-400 dark:hover:bg-green-600 dark:hover:text-white dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold shadow-none"
-                                                    onClick={() => window.open(run.fileUrl, '_blank')}
-                                                    disabled={!run.fileUrl}
-                                                >
-                                                    Download
-                                                </Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-9 px-4 rounded-xl border-gray-200 cursor-pointer hover:bg-green-400 hover:text-white dark:hover:bg-green-600 dark:hover:text-white dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold shadow-none flex items-center gap-1.5"
+                                                        >
+                                                            <Download className="w-3.5 h-3.5" />
+                                                            Download
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="rounded-xl w-36 bg-navbarBg border border-border text-gray-600 dark:text-gray-400">
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer font-medium"
+                                                            onClick={() => handleDownloadReport(run, 'PDF')}
+                                                        >
+                                                            As PDF
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer font-medium"
+                                                            onClick={() => handleDownloadReport(run, 'EXCEL')}
+                                                        >
+                                                            As Excel
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                                 <Button
                                                     variant="ghost"
                                                     className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 gap-2 h-9 rounded-lg"
