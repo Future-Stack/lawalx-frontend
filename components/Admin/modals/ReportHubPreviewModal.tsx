@@ -59,6 +59,33 @@ export default function ReportHubPreviewModal({
         }
     };
 
+    const getPaginationRange = () => {
+        const delta = 1;
+        const range = [];
+        const rangeWithDots = [];
+        let l;
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
+                range.push(i);
+            }
+        }
+
+        for (let i of range) {
+            if (l) {
+                if (i - l === 2) {
+                    rangeWithDots.push(l + 1);
+                } else if (i - l !== 1) {
+                    rangeWithDots.push('...');
+                }
+            }
+            rangeWithDots.push(i);
+            l = i;
+        }
+
+        return rangeWithDots;
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
             <DialogContent className="max-w-[90vw] max-h-[90vh] p-0 bg-white dark:bg-gray-900 border-none rounded-2xl overflow-hidden shadow-2xl focus:outline-none flex flex-col">
@@ -152,7 +179,7 @@ export default function ReportHubPreviewModal({
 
                     {/* Pagination */}
                     {totalPages > 0 && (
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                             <p className="text-xs text-gray-400 dark:text-gray-500">
                                 Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, meta.total)} of {meta.total} results
                             </p>
@@ -166,20 +193,26 @@ export default function ReportHubPreviewModal({
                                     Previous
                                 </Button>
                                 <div className="flex items-center gap-1.5 mx-1">
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                                        <button
-                                            key={p}
-                                            onClick={() => setCurrentPage(p)}
-                                            disabled={isFetching}
-                                            className={cn(
-                                                "w-8 h-8 rounded-lg text-xs font-bold transition-all",
-                                                currentPage === p
-                                                    ? "bg-blue-500 text-white shadow-customShadow shadow-blue-500/20"
-                                                    : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                            )}
-                                        >
-                                            {p}
-                                        </button>
+                                    {getPaginationRange().map((p, idx) => (
+                                        p === '...' ? (
+                                            <span key={`dots-${idx}`} className="px-2 text-xs text-gray-400 font-bold">
+                                                ...
+                                            </span>
+                                        ) : (
+                                            <button
+                                                key={p}
+                                                onClick={() => setCurrentPage(Number(p))}
+                                                disabled={isFetching}
+                                                className={cn(
+                                                    "w-8 h-8 rounded-lg text-xs font-bold transition-all",
+                                                    currentPage === p
+                                                        ? "bg-blue-500 text-white shadow-customShadow shadow-blue-500/20"
+                                                        : "text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                                )}
+                                            >
+                                                {p}
+                                            </button>
+                                        )
                                     ))}
                                 </div>
                                 <Button
