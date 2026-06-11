@@ -153,8 +153,8 @@ export default function CreateEnterprisePlanDialog({
                 <SelectContent className="z-[99999]">
                   <SelectItem value="FREE_TRIAL">Free Trial</SelectItem>
                   <SelectItem value="BASIC">Basic</SelectItem>
-                  <SelectItem value="BUSINESS">Business</SelectItem>
                   <SelectItem value="PREMIUM">Premium</SelectItem>
+                  <SelectItem value="BUSINESS">Business</SelectItem>
                   <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
                 </SelectContent>
               </Select>
@@ -186,7 +186,9 @@ export default function CreateEnterprisePlanDialog({
               <input
                 type="number"
                 value={formData.screenSize}
-                onChange={(e) => handleInputChange("screenSize", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("screenSize", e.target.value)
+                }
                 className={inputClass}
               />
             </div>
@@ -195,39 +197,53 @@ export default function CreateEnterprisePlanDialog({
               <input
                 type="number"
                 value={formData.deviceLimit}
-                onChange={(e) => handleInputChange("deviceLimit", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("deviceLimit", e.target.value)
+                }
                 className={inputClass}
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[14px] text-[#404040]">Storage Limit (GB)</Label>
+              <Label className="text-[14px] text-[#404040]">
+                Storage Limit (GB)
+              </Label>
               <input
                 type="number"
                 value={formData.storageLimitGb}
-                onChange={(e) => handleInputChange("storageLimitGb", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("storageLimitGb", e.target.value)
+                }
                 className={inputClass}
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[14px] text-[#404040]">Template Limit</Label>
+              <Label className="text-[14px] text-[#404040]">
+                Template Limit
+              </Label>
               <input
                 type="number"
                 value={formData.templateLimit}
-                onChange={(e) => handleInputChange("templateLimit", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("templateLimit", e.target.value)
+                }
                 className={inputClass}
               />
             </div>
           </div>
 
           <div className="space-y-3 pt-2">
-            <Label className="text-[14px] font-bold text-headings">Upload Limits</Label>
+            <Label className="text-[14px] font-bold text-headings">
+              Upload Limits
+            </Label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
                 <Label className="text-[12px] text-[#667085]">Photo</Label>
                 <input
                   type="number"
                   value={formData.photoLimit}
-                  onChange={(e) => handleInputChange("photoLimit", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("photoLimit", e.target.value)
+                  }
                   className={inputClass}
                 />
               </div>
@@ -236,7 +252,9 @@ export default function CreateEnterprisePlanDialog({
                 <input
                   type="number"
                   value={formData.audioLimit}
-                  onChange={(e) => handleInputChange("audioLimit", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("audioLimit", e.target.value)
+                  }
                   className={inputClass}
                 />
               </div>
@@ -245,7 +263,9 @@ export default function CreateEnterprisePlanDialog({
                 <input
                   type="number"
                   value={formData.videoLimit}
-                  onChange={(e) => handleInputChange("videoLimit", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("videoLimit", e.target.value)
+                  }
                   className={inputClass}
                 />
               </div>
@@ -253,13 +273,17 @@ export default function CreateEnterprisePlanDialog({
           </div>
 
           <div className="space-y-3 pt-2">
-            <Label className="text-[14px] font-bold text-headings">Features</Label>
+            <Label className="text-[14px] font-bold text-headings">
+              Features
+            </Label>
             <div className="flex gap-2">
               <input
                 placeholder="Add a feature..."
                 value={newFeature}
                 onChange={(e) => setNewFeature(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddFeature())}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), handleAddFeature())
+                }
                 className={inputClass}
               />
               <button
@@ -277,7 +301,9 @@ export default function CreateEnterprisePlanDialog({
                   key={index}
                   className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-[#F2F4F7] dark:border-gray-800"
                 >
-                  <span className="text-[14px] text-[#404040] dark:text-gray-300">{feature}</span>
+                  <span className="text-[14px] text-[#404040] dark:text-gray-300">
+                    {feature}
+                  </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveFeature(index)}
@@ -288,7 +314,9 @@ export default function CreateEnterprisePlanDialog({
                 </div>
               ))}
               {formData.features.length === 0 && (
-                <p className="text-[12px] text-gray-400 text-center py-2">No features added yet.</p>
+                <p className="text-[12px] text-gray-400 text-center py-2">
+                  No features added yet.
+                </p>
               )}
             </div>
           </div>

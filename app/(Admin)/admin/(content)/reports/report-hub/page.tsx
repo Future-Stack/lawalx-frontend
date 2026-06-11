@@ -55,15 +55,20 @@ import {
     useGetReportHistoryQuery, 
     useGetReportStatsQuery, 
     useRunReportMutation, 
-    useUpdateReportMutation 
+    useUpdateReportMutation,
+    useLazyDownloadReportDataQuery
 } from '@/redux/api/admin/reportHubApi';
 import { toast } from 'sonner';
 import { DATA_SOURCES } from '@/constants/reportHubConstants';
-
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
+import { addPdfHeader } from '@/lib/pdfUtils';
+import { fetchAddressFromCoordinates, delay } from '@/lib/geocodeUtils';
 export default function ReportHub() {
     const [activeTab, setActiveTab] = useState<'saved' | 'history'>('saved');
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [previewData, setPreviewData] = useState<any>(null);
+    const [previewHistoryItem, setPreviewHistoryItem] = useState<{ id: string; reportName: string; fileUrl?: string | null } | null>(null);
 
     // Form/Edit Modal State
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -85,6 +90,11 @@ export default function ReportHub() {
     const [selectedDataSource, setSelectedDataSource] = useState('All Data Sources');
     const [selectedCreator, setSelectedCreator] = useState('All Creators');
     const [selectedSchedule, setSelectedSchedule] = useState('All Schedules');
+
+    // Run History specific Search & Filter State
+    const [historySearchQuery, setHistorySearchQuery] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState('All Statuses');
+    const [selectedTriggerer, setSelectedTriggerer] = useState('All Triggered By');
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
@@ -108,11 +118,10 @@ export default function ReportHub() {
         schedule: selectedSchedule === 'All Schedules' ? undefined : selectedSchedule.toLowerCase()
     });
 
-    // History Query
+    // History Query (only pass page/limit for pagination, filtering is client-side)
     const { data: historyData, isLoading: isHistoryLoading } = useGetReportHistoryQuery({
         page: currentPage,
-        limit: itemsPerPage,
-        search: searchQuery || undefined
+        limit: itemsPerPage
     });
 
     // Mutations
@@ -121,16 +130,55 @@ export default function ReportHub() {
     const [deleteReport] = useDeleteReportMutation();
     const [runReport] = useRunReportMutation();
     const [deleteHistory] = useDeleteReportHistoryMutation();
+    const [triggerDownload] = useLazyDownloadReportDataQuery();
 
     const savedReports = reportsData?.data || [];
     const runHistory = historyData?.data || [];
+
+    const uniqueTriggerers = useMemo(() => {
+        if (!runHistory) return [];
+        const triggerers = runHistory.map((run: any) => run.triggeredBy).filter(Boolean);
+        return Array.from(new Set(triggerers)) as string[];
+    }, [runHistory]);
+
+    const filteredRunHistory = useMemo(() => {
+        if (!runHistory) return [];
+        return runHistory.filter((run: any) => {
+            // Search by Report Name and Recipients
+            if (historySearchQuery) {
+                const searchLower = historySearchQuery.toLowerCase();
+                const reportName = run.reportHub?.name?.toLowerCase() || '';
+                const recipients = run.recipients?.join(', ').toLowerCase() || '';
+                if (!reportName.includes(searchLower) && !recipients.includes(searchLower)) {
+                    return false;
+                }
+            }
+            // Filter by Status
+            if (selectedStatus !== 'All Statuses') {
+                if (selectedStatus === 'PENDING') {
+                    if (run.status !== 'PROCESSING' && run.status !== 'PENDING') {
+                        return false;
+                    }
+                } else if (run.status !== selectedStatus) {
+                    return false;
+                }
+            }
+            // Filter by Triggered By
+            if (selectedTriggerer !== 'All Triggered By') {
+                if (run.triggeredBy !== selectedTriggerer) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    }, [runHistory, historySearchQuery, selectedStatus, selectedTriggerer]);
 
     // Pagination logic
     const reportsTotalPages = reportsData?.meta?.totalPages || 0;
     const historyTotalPages = historyData?.meta?.totalPages || 0;
 
     const totalPages = activeTab === 'saved' ? reportsTotalPages : historyTotalPages;
-    const currentDataCount = activeTab === 'saved' ? savedReports.length : runHistory.length;
+    const currentDataCount = activeTab === 'saved' ? savedReports.length : filteredRunHistory.length;
     const totalDataCount = activeTab === 'saved' ? reportsData?.meta?.total || 0 : historyData?.meta?.total || 0;
 
     const handleRun = async (report: any) => {
@@ -146,31 +194,45 @@ export default function ReportHub() {
         }
     };
 
+    const getFormDataToSend = (data: any) => {
+        const dataSourceFields = DATA_SOURCES[data.dataSource] || [];
+        const mappedColumns = (data.selectedColumnIds || []).map((id: string) => {
+            const field = dataSourceFields.find(f => f.id === id);
+            return field ? field.label : id;
+        });
+
+        const dayOfWeekMap: Record<string, string> = {
+            'Monday': 'Mon',
+            'Tuesday': 'Tue',
+            'Wednesday': 'Wed',
+            'Thursday': 'Thu',
+            'Friday': 'Fri',
+            'Saturday': 'Sat',
+            'Sunday': 'Sun'
+        };
+
+        const formData = new FormData();
+        formData.append('name', data.name);
+        formData.append('description', data.description || "");
+        formData.append('dataSource', data.dataSource);
+        formData.append('columns', mappedColumns.join(','));
+        formData.append('filters', ''); // Filters commented out
+        formData.append('scheduleEnabled', String(data.enableSchedule));
+        formData.append('scheduleType', data.frequency?.toLowerCase() || "");
+        formData.append('emailRecipients', data.emailRecipients || "");
+        formData.append('outputFormat', data.outputFormat?.toUpperCase() || "EXCEL");
+        formData.append('emailSubject', data.emailSubject || `${data.name} Report`);
+        formData.append('scheduleTime', data.time || "");
+        formData.append('scheduleDayOfWeek', data.frequency === 'Weekly' ? (dayOfWeekMap[data.dayOfWeek] || "") : "");
+        formData.append('scheduleDayOfMonth', data.frequency === 'Monthly' ? (data.dayOfMonth || "") : "");
+
+        return formData;
+    };
+
     const handleCreateReport = async (data: any) => {
         try {
-            const dataSourceFields = DATA_SOURCES[data.dataSource] || [];
-            const mappedColumns = (data.selectedColumnIds || []).map((id: string) => {
-                const field = dataSourceFields.find(f => f.id === id);
-                return field ? field.label : id;
-            });
-
-            const mappedFilters = (data.filters || []).reduce((acc: any, filter: any) => {
-                acc[filter.fieldId] = filter.value;
-                return acc;
-            }, {});
-
-            await createReport({
-                name: data.name,
-                description: data.description || "",
-                dataSource: data.dataSource,
-                columns: mappedColumns,
-                filters: mappedFilters,
-                scheduleEnabled: data.enableSchedule,
-                scheduleType: data.frequency?.toLowerCase(),
-                emailRecipients: data.emailRecipients ? [data.emailRecipients] : [],
-                outputFormat: data.outputFormat?.toUpperCase() || "EXCEL",
-                emailSubject: data.emailSubject || `${data.name} Report`
-            }).unwrap();
+            const formDataToSend = getFormDataToSend(data);
+            await createReport(formDataToSend).unwrap();
             setIsFormOpen(false);
             toast.success("Report created successfully");
         } catch (error) {
@@ -180,29 +242,10 @@ export default function ReportHub() {
 
     const handleUpdateReport = async (data: any) => {
         try {
-            const dataSourceFields = DATA_SOURCES[data.dataSource] || [];
-            const mappedColumns = (data.selectedColumnIds || []).map((id: string) => {
-                const field = dataSourceFields.find(f => f.id === id);
-                return field ? field.label : id;
-            });
-
-            const mappedFilters = (data.filters || []).reduce((acc: any, filter: any) => {
-                acc[filter.fieldId] = filter.value;
-                return acc;
-            }, {});
-
+            const formDataToSend = getFormDataToSend(data);
             await updateReport({
                 id: editingReport.id,
-                name: data.name,
-                description: data.description,
-                dataSource: data.dataSource,
-                columns: mappedColumns,
-                filters: mappedFilters,
-                scheduleEnabled: data.enableSchedule,
-                scheduleType: data.frequency?.toLowerCase(),
-                emailRecipients: data.emailRecipients ? [data.emailRecipients] : [],
-                outputFormat: data.outputFormat?.toUpperCase() || "EXCEL",
-                emailSubject: data.emailSubject
+                data: formDataToSend
             }).unwrap();
             setIsEditOpen(false);
             toast.success("Report updated successfully");
@@ -232,21 +275,159 @@ export default function ReportHub() {
     };
 
     const handlePreview = (run: any) => {
-        setPreviewData({
-            title: run.name,
-            description: "Detailed report view for " + run.name,
-            dataSource: "Device Data", // This could be more dynamic if available
-            columns: 5,
-            rows: 18,
-            data: Array(18).fill(null).map((_, i) => ({
-                id: `DEV-${1000 + i}`,
-                name: `Device ${i + 1}`,
-                status: "Active",
-                location: "New York",
-                lastSync: "1 hours ago"
-            }))
+        setPreviewHistoryItem({
+            id: run.id,
+            reportName: run.reportHub?.name || 'Report Preview',
+            fileUrl: run.fileUrl,
         });
         setIsPreviewOpen(true);
+    };
+
+    const handleDownloadReport = async (run: any, format: 'PDF' | 'EXCEL') => {
+        try {
+            const loadingToast = toast.loading(`Preparing download data for "${run.reportHub?.name}"...`);
+            const response = await triggerDownload(run.id).unwrap();
+            toast.dismiss(loadingToast);
+
+            const rawData = response?.data || [];
+            if (rawData.length === 0) {
+                toast.error("No data found for this report.");
+                return;
+            }
+
+            // Clone data to avoid mutating RTK query cache
+            const data = JSON.parse(JSON.stringify(rawData));
+
+            // Perform geocoding if Location column exists
+            const hasLocationColumn = data.some((item: any) => Object.keys(item).some(k => k.toLowerCase() === 'location'));
+            if (hasLocationColumn) {
+                let count = 0;
+                let toastId: string | number | undefined;
+                
+                for (let i = 0; i < data.length; i++) {
+                    for (const key of Object.keys(data[i])) {
+                        if (key.toLowerCase() === 'location' && data[i][key]) {
+                            let lat = NaN;
+                            let lng = NaN;
+                            let originalValue = String(data[i][key]);
+                            
+                            if (typeof data[i][key] === 'string') {
+                                try {
+                                    const loc = JSON.parse(data[i][key]);
+                                    if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+                                        lat = loc.lat;
+                                        lng = loc.lng;
+                                    }
+                                } catch (e) {
+                                    if (data[i][key].includes(',')) {
+                                        const parts = data[i][key].split(',');
+                                        lat = parseFloat(parts[0]);
+                                        lng = parseFloat(parts[1]);
+                                    }
+                                }
+                            } else if (typeof data[i][key] === 'object') {
+                                originalValue = JSON.stringify(data[i][key]);
+                                if (typeof data[i][key].lat === 'number' && typeof data[i][key].lng === 'number') {
+                                    lat = data[i][key].lat;
+                                    lng = data[i][key].lng;
+                                }
+                            }
+                            
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                if (count === 0 || count % 5 === 0) {
+                                    toastId = toast.loading(`Geocoding location data (${count + 1}/${data.length})...`, { id: toastId });
+                                }
+                                const address = await fetchAddressFromCoordinates(lat, lng);
+                                data[i][key] = address;
+                                await delay(600); // Respect Nominatim rate limit
+                                count++;
+                            } else {
+                                data[i][key] = originalValue;
+                            }
+                        }
+                    }
+                }
+                if (toastId) toast.dismiss(toastId);
+            }
+
+            const reportName = run.reportHub?.name || 'Report';
+            const formattedDate = new Date(run.runDate).toLocaleString();
+
+            if (format === 'EXCEL') {
+                const worksheet = XLSX.utils.json_to_sheet(data);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Report Data");
+                
+                // Auto-fit column widths
+                const maxLens = data.reduce((acc: any, row: any) => {
+                    Object.keys(row).forEach(key => {
+                        const valStr = row[key] ? String(row[key]) : '';
+                        acc[key] = Math.max(acc[key] || key.length, valStr.length);
+                    });
+                    return acc;
+                }, {});
+                
+                worksheet['!cols'] = Object.keys(maxLens).map(key => ({
+                    wch: Math.min(Math.max(maxLens[key] + 3, 10), 50)
+                }));
+
+                XLSX.writeFile(workbook, `${reportName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`);
+                toast.success("Excel downloaded successfully");
+            } else if (format === 'PDF') {
+                const doc = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Branded header identical to device-report
+                const currentY = await addPdfHeader(
+                    doc,
+                    reportName,
+                    `Triggered By: ${run.triggeredBy}  |  Generated: ${formattedDate}`
+                );
+
+                const columns = Object.keys(data[0]);
+                const rows = data.map((item: any) => 
+                    columns.map(col => item[col] != null ? String(item[col]) : '—')
+                );
+
+                autoTable(doc, {
+                    startY: currentY,
+                    head: [columns],
+                    body: rows,
+                    theme: 'striped',
+                    headStyles: {
+                        fillColor: [15, 90, 128], // #0F5A80
+                        textColor: 255,
+                        fontSize: 9,
+                        fontStyle: 'bold',
+                        halign: 'left'
+                    },
+                    bodyStyles: {
+                        fontSize: 8,
+                        textColor: [51, 51, 51]
+                    },
+                    alternateRowStyles: {
+                        fillColor: [248, 249, 250]
+                    },
+                    margin: { top: 40, left: 14, right: 14, bottom: 20 },
+                    didDrawPage: (dataDraw) => {
+                        const str = `Page ${dataDraw.pageNumber} of ${doc.getNumberOfPages()}`;
+                        doc.setFontSize(8);
+                        doc.setTextColor(150);
+                        doc.text(str, doc.internal.pageSize.width - 25, doc.internal.pageSize.height - 10);
+                        doc.text("Generated via Tape Report Hub", 14, doc.internal.pageSize.height - 10);
+                    }
+                });
+
+                doc.save(`${reportName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`);
+                toast.success("PDF downloaded successfully");
+            }
+        } catch (error) {
+            toast.error("Failed to generate report download file.");
+            console.error(error);
+        }
     };
 
     return (
@@ -321,55 +502,85 @@ export default function ReportHub() {
             <div className="border border-border rounded-2xl overflow-hidden bg-navbarBg shadow-sm">
                 {/* Search and Filters */}
                 <div className="p-4 border-b border-gray-50 dark:border-gray-800 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    <div className="relative flex-1 max-w-lg">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <Input
-                            placeholder="Search by name, creator..."
-                            value={searchQuery}
-                            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-                            className="pl-10 h-11 bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-bgBlue"
-                        />
-                    </div>
-                    <div className="flex items-center gap-3 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
-                        <Select value={selectedDataSource} onValueChange={(v) => { setSelectedDataSource(v); setCurrentPage(1); }}>
-                            <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[160px]">
-                                <SelectValue placeholder="All Data Sources" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl bg-navbarBg border border-border">
-                                <SelectItem value="All Data Sources">All Data Sources</SelectItem>
-                                <SelectItem value="Device Data">Device Data</SelectItem>
-                                <SelectItem value="Financial Data">Financial Data</SelectItem>
-                                <SelectItem value="User Activity">User Activity</SelectItem>
-                                <SelectItem value="Subscription & Billing">Subscription & Billing</SelectItem>
-                                <SelectItem value="Customer Service & Support">Customer Service & Support</SelectItem>
-                                <SelectItem value="Content & Program">Content & Program</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    {activeTab === 'saved' ? (
+                        <>
+                            <div className="relative flex-1 max-w-lg">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                    placeholder="Search by name, creator..."
+                                    value={searchQuery}
+                                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                                    className="pl-10 h-11 bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-bgBlue"
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                                <Select value={selectedDataSource} onValueChange={(v) => { setSelectedDataSource(v); setCurrentPage(1); }}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[160px]">
+                                        <SelectValue placeholder="All Data Sources" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl bg-navbarBg border border-border">
+                                        <SelectItem value="All Data Sources">All Data Sources</SelectItem>
+                                        <SelectItem value="Device Data">Device Data</SelectItem>
+                                        <SelectItem value="Financial Data">Financial Data</SelectItem>
+                                        <SelectItem value="User Activity">User Activity</SelectItem>
+                                        <SelectItem value="Subscription & Billing">Subscription & Billing</SelectItem>
+                                        <SelectItem value="Customer Service & Support">Customer Service & Support</SelectItem>
+                                        <SelectItem value="Content & Program">Content & Program</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                        <Select value={selectedCreator} onValueChange={(v) => { setSelectedCreator(v); setCurrentPage(1); }}>
-                            <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[140px]">
-                                <SelectValue placeholder="All Creators" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl bg-navbarBg border border-border">
-                                <SelectItem value="All Creators">All Creators</SelectItem>
-                                <SelectItem value="Sarah Wilson">Sarah Wilson</SelectItem>
-                                <SelectItem value="John Doe">John Doe</SelectItem>
-                            </SelectContent>
-                        </Select>
+                                <Select value={selectedSchedule} onValueChange={(v) => { setSelectedSchedule(v); setCurrentPage(1); }}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[140px]">
+                                        <SelectValue placeholder="All Schedules" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl bg-navbarBg border border-border">
+                                        <SelectItem value="All Schedules">All Schedules</SelectItem>
+                                        <SelectItem value="Daily">Daily</SelectItem>
+                                        <SelectItem value="Weekly">Weekly</SelectItem>
+                                        <SelectItem value="Monthly">Monthly</SelectItem>
+                                        <SelectItem value="Not Scheduled">Not Scheduled</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="relative flex-1 max-w-lg">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                <Input
+                                    placeholder="Search by report name, recipients..."
+                                    value={historySearchQuery}
+                                    onChange={(e) => { setHistorySearchQuery(e.target.value); setCurrentPage(1); }}
+                                    className="pl-10 h-11 bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 border-none rounded-xl focus-visible:ring-1 focus-visible:ring-bgBlue"
+                                />
+                            </div>
+                            <div className="flex items-center gap-3 overflow-x-auto pb-2 lg:pb-0 scrollbar-hide">
+                                <Select value={selectedStatus} onValueChange={(v) => { setSelectedStatus(v); setCurrentPage(1); }}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[140px]">
+                                        <SelectValue placeholder="All Statuses" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl bg-navbarBg border border-border">
+                                        <SelectItem value="All Statuses">All Statuses</SelectItem>
+                                        <SelectItem value="COMPILED">Compiled</SelectItem>
+                                        <SelectItem value="PENDING">Pending</SelectItem>
+                                        <SelectItem value="FAILED">Failed</SelectItem>
+                                    </SelectContent>
+                                </Select>
 
-                        <Select value={selectedSchedule} onValueChange={(v) => { setSelectedSchedule(v); setCurrentPage(1); }}>
-                            <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[140px]">
-                                <SelectValue placeholder="All Schedules" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-xl bg-navbarBg border border-border">
-                                <SelectItem value="All Schedules">All Schedules</SelectItem>
-                                <SelectItem value="Daily">Daily</SelectItem>
-                                <SelectItem value="Weekly">Weekly</SelectItem>
-                                <SelectItem value="Monthly">Monthly</SelectItem>
-                                <SelectItem value="Not Scheduled">Not Scheduled</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                                <Select value={selectedTriggerer} onValueChange={(v) => { setSelectedTriggerer(v); setCurrentPage(1); }}>
+                                    <SelectTrigger className="h-11 rounded-xl bg-navbarBg border border-border text-gray-600 dark:text-gray-400 gap-2 px-4 shadow-none min-w-[160px]">
+                                        <SelectValue placeholder="All Triggered By" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-xl bg-navbarBg border border-border">
+                                        <SelectItem value="All Triggered By">All Triggered By</SelectItem>
+                                        {uniqueTriggerers.map(t => (
+                                            <SelectItem key={t} value={t}>{t}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Table */}
@@ -395,12 +606,12 @@ export default function ReportHub() {
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 w-1/4">
                                         Report Name <ChevronDown className="w-3 h-3 inline-block ml-1" />
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">Run Date</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">Triggered By</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Run Date</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Triggered By</th>
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">
                                         Status <AlertCircle className="w-3 h-3 inline-block ml-1 opacity-50" />
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">Recipients</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Recipients</th>
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-right">Actions</th>
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-center w-10">Delete</th>
                                 </tr>
@@ -414,7 +625,7 @@ export default function ReportHub() {
                                             <div className="text-sm font-bold text-gray-900 dark:text-white">{report.name}</div>
                                         </td>
                                         <td className="px-6 py-5">
-                                            <span className="px-3 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-medium rounded-full border border-gray-100 dark:border-gray-700">
+                                            <span className="px-2 text-nowrap text-xs py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium rounded-full border border-gray-100 dark:border-gray-700">
                                                 {report.dataSource}
                                             </span>
                                         </td>
@@ -438,7 +649,7 @@ export default function ReportHub() {
                                             <div className="flex items-center justify-end gap-2">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="icon-sm" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                                                        <Button variant="ghost" size="icon-sm" className="text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-200">
                                                             <MoreHorizontal className="w-5 h-5" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
@@ -451,19 +662,25 @@ export default function ReportHub() {
                                                                     return field ? field.id : label;
                                                                 });
                                                                 
-                                                                const apiFilters = report.filters || {};
-                                                                const mappedFilters = Object.entries(apiFilters).map(([fieldId, value]) => {
-                                                                    const field = dataSourceFields.find(f => f.id === fieldId);
-                                                                    const operator = field?.type === 'option' ? 'is' : 'eq';
-                                                                    return { fieldId, operator, value: String(value) };
-                                                                });
+                                                                const shortToLongDayMap: Record<string, string> = {
+                                                                    'Mon': 'Monday',
+                                                                    'Tue': 'Tuesday',
+                                                                    'Wed': 'Wednesday',
+                                                                    'Thu': 'Thursday',
+                                                                    'Fri': 'Friday',
+                                                                    'Sat': 'Saturday',
+                                                                    'Sun': 'Sunday'
+                                                                };
 
                                                                 setEditingReport({
                                                                     ...report,
                                                                     selectedColumnIds,
-                                                                    filters: mappedFilters,
+                                                                    filters: [], // Filters commented out
                                                                     enableSchedule: report.scheduleEnabled,
                                                                     frequency: report.scheduleType ? (report.scheduleType.charAt(0).toUpperCase() + report.scheduleType.slice(1)) : 'Weekly',
+                                                                    dayOfWeek: report.scheduleDayOfWeek ? (shortToLongDayMap[report.scheduleDayOfWeek] || report.scheduleDayOfWeek) : 'Monday',
+                                                                    dayOfMonth: report.scheduleDayOfMonth ? String(report.scheduleDayOfMonth) : '1',
+                                                                    time: report.scheduleTime || '09:00',
                                                                     emailRecipients: report.emailRecipients?.join(', ') || ''
                                                                 }); 
                                                                 setIsEditOpen(true); 
@@ -488,12 +705,12 @@ export default function ReportHub() {
                                     </tr>
                                 ))
                             ) : (
-                                runHistory.map((run: any) => (
+                                filteredRunHistory.map((run: any) => (
                                     <tr key={run.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                                         <td className="px-6 py-5">
                                             <div className="text-sm font-bold text-gray-900 dark:text-white">{run.reportHub?.name}</div>
                                         </td>
-                                        <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400">{new Date(run.runDate).toLocaleString()}</td>
+                                        <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400 text-nowrap">{new Date(run.runDate).toLocaleString()}</td>
                                         <td className="px-6 py-5">
                                             <span className="px-3 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-medium rounded-full border border-gray-100 dark:border-gray-700">
                                                 {run.triggeredBy}
@@ -502,13 +719,13 @@ export default function ReportHub() {
                                         <td className="px-6 py-5">
                                             <div className={cn(
                                                 "flex items-center gap-2 text-sm font-medium",
-                                                run.status === 'Processing' ? 'text-blue-500 animate-pulse' :
-                                                    run.status === 'Failed' ? 'text-red-500' :
+                                                run.status === 'PROCESSING' ? 'text-blue-500 animate-pulse' :
+                                                    run.status === 'FAILED' ? 'text-red-500' :
                                                         'text-green-500'
                                             )}>
-                                                {run.status === 'Processing' && <RefreshCcw className="w-4 h-4 animate-spin" />}
-                                                {run.status === 'Failed' && <AlertCircle className="w-4 h-4" />}
-                                                {run.status === 'Compiled' && <CheckCircle2 className="w-4 h-4" />}
+                                                {run.status === 'PROCESSING' && <RefreshCcw className="w-4 h-4 animate-spin" />}
+                                                {run.status === 'FAILED' && <AlertCircle className="w-4 h-4" />}
+                                                {run.status === 'COMPILED' && <CheckCircle2 className="w-4 h-4" />}
                                                 {run.status}
                                             </div>
                                         </td>
@@ -520,15 +737,32 @@ export default function ReportHub() {
                                         </td>
                                         <td className="px-6 py-5 text-right">
                                             <div className="flex items-center justify-end gap-3">
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    className="h-9 px-4 rounded-xl border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold shadow-none"
-                                                    onClick={() => window.open(run.fileUrl, '_blank')}
-                                                    disabled={!run.fileUrl}
-                                                >
-                                                    Download
-                                                </Button>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            className="h-9 px-4 rounded-xl border-gray-200 cursor-pointer hover:bg-green-400 hover:text-white dark:hover:bg-green-600 dark:hover:text-white dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold shadow-none flex items-center gap-1.5"
+                                                        >
+                                                            <Download className="w-3.5 h-3.5" />
+                                                            Download
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end" className="rounded-xl w-36 bg-navbarBg border border-border text-gray-600 dark:text-gray-400">
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer font-medium"
+                                                            onClick={() => handleDownloadReport(run, 'PDF')}
+                                                        >
+                                                            As PDF
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem 
+                                                            className="cursor-pointer font-medium"
+                                                            onClick={() => handleDownloadReport(run, 'EXCEL')}
+                                                        >
+                                                            As Excel
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                                 <Button
                                                     variant="ghost"
                                                     className="text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 gap-2 h-9 rounded-lg"
@@ -575,7 +809,7 @@ export default function ReportHub() {
                             variant="outline" size="sm"
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className={cn("h-9 px-4 rounded-xl border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold shadow-none", currentPage === 1 && "opacity-50 cursor-not-allowed")}
+                            className={cn("h-9 px-4 rounded-xl hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-50/10 dark:hover:text-blue-500 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold shadow-none", currentPage === 1 && "opacity-50 cursor-not-allowed")}
                         >
                             Previous
                         </Button>
@@ -584,7 +818,7 @@ export default function ReportHub() {
                                 <button
                                     key={p}
                                     onClick={() => setCurrentPage(p)}
-                                    className={cn("w-8 h-8 rounded-lg text-xs font-bold transition-all", currentPage === p ? "bg-blue-500 text-white" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700")}
+                                    className={cn("w-8 h-8 cursor-pointer rounded-lg text-xs font-bold transition-all", currentPage === p ? "bg-blue-500 text-white" : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700")}
                                 >
                                     {p}
                                 </button>
@@ -594,7 +828,7 @@ export default function ReportHub() {
                             variant="outline" size="sm"
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages || totalPages === 0}
-                            className={cn("h-9 px-4 rounded-xl border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold shadow-none", (currentPage === totalPages || totalPages === 0) && "opacity-50 cursor-not-allowed")}
+                            className={cn("h-9 px-4 rounded-xl hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-50/10 dark:hover:text-blue-500 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-semibold shadow-none", (currentPage === totalPages || totalPages === 0) && "opacity-50 cursor-not-allowed")}
                         >
                             Next
                         </Button>
@@ -605,8 +839,8 @@ export default function ReportHub() {
             {/* Preview Modal (Now triggered by 'Run') */}
             <ReportHubPreviewModal
                 isOpen={isPreviewOpen}
-                onClose={() => setIsPreviewOpen(false)}
-                reportData={previewData}
+                onClose={() => { setIsPreviewOpen(false); setPreviewHistoryItem(null); }}
+                historyItem={previewHistoryItem}
             />
 
             {/* Create Form Modal */}

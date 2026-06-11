@@ -32,6 +32,13 @@ const userRoleApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["AdminSettings"],
     }),
+    deleteEmployeeHard: builder.mutation({
+      query: (id) => ({
+        url: `/admin/support/employee/${id}/hard`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["AdminSettings"],
+    }),
   }),
 });
 
@@ -39,5 +46,6 @@ export const {
   useGetAllEmployeesQuery, 
   useCreateEmployeeMutation, 
   useGetEmployeeByIdQuery, 
-  useUpdateEmployeeMutation 
+  useUpdateEmployeeMutation,
+  useDeleteEmployeeHardMutation
 } = userRoleApi;

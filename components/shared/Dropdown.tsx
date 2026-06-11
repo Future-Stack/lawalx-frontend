@@ -128,7 +128,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       <button
         ref={triggerRef}
         onClick={toggleDropdown}
-        className="cursor-pointer flex items-center gap-2 px-4 py-2 text-black dark:text-white bg-navbarBg border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm w-full justify-between outline-none"
+        className="cursor-pointer flex items-center gap-2 px-4 py-2 text-black dark:text-white bg-navbarBg border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm w-full h-full justify-between outline-none"
       >
         <div className="flex items-center gap-2">
           {Icon && <Icon className="w-4 h-4 text-gray-400" />}

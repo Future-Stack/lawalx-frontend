@@ -44,7 +44,6 @@ export default function EmployeesMobileView({
           const displayName = emp.user.full_name || emp.user.username;
           const initials = getInitials(displayName);
           const online = isOnline(emp);
-          
           return (
             <div key={emp.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-4 shadow-sm">
               {/* Header: Avatar, Name, and Status */}
@@ -83,7 +82,6 @@ export default function EmployeesMobileView({
                     </div>
                   </div>
                 </div>
-                
                 <span
                   className={cn(
                     'inline-flex flex-shrink-0 items-center px-2 py-0.5 rounded text-[10px] font-medium border',

@@ -3,19 +3,22 @@
 import React from "react";
 import {
   Check,
-  Download,
   Monitor,
   HardDrive,
-  Plus,
+  CreditCard,
+  CalendarClock,
   Loader2,
+  Download,
 } from "lucide-react";
 import { useGetMySubscriptionQuery, useCancelSubscriptionMutation, useUpdateRecurringMutation } from "@/redux/api/users/payment/payment.api";
+import { useGetPlanByIdQuery } from "@/redux/api/users/plan/plan.api";
 import CancelSubscriptionModal from "@/components/common/CancelSubscriptionModal";
 import AutoRenewConfirmModal from "@/components/common/AutoRenewConfirmModal";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import BillingHistoryTable from "./_components/BillingHistoryTable";
 import MyAdditionalPaymentTable from "./_components/MyAdditionalPaymentTable";
+import ChangePlanModal from "./_components/change-plan/ChangePlanModal";
 
 function formatCurrency(amount: number, currency: string) {
   try {
@@ -47,6 +50,7 @@ export default function Subscriptions() {
   const [updateRecurring, { isLoading: isUpdatingRecurring }] = useUpdateRecurringMutation();
   const [isCancelModalOpen, setIsCancelModalOpen] = React.useState(false);
   const [isAutoRenewModalOpen, setIsAutoRenewModalOpen] = React.useState(false);
+  const [isChangePlanOpen, setIsChangePlanOpen] = React.useState(false);
 
   const handleCancelPlan = async () => {
     if (!mySubscriptionRes?.data?.userId) return;
@@ -62,6 +66,18 @@ export default function Subscriptions() {
 
   const subscription = mySubscriptionRes?.data ?? null;
   const isAutoRenewEnabled = subscription?.recurring ?? false;
+
+  const { data: currentPlanRes, isLoading: isLoadingCurrentPlan } = useGetPlanByIdQuery(
+    {
+      id: subscription?.planId || "",
+      billing: subscription?.billingCycle === "ANNUAL" ? "YEARLY" : "MONTHLY",
+      screenSize: subscription?.screenSize ?? 0,
+      deviceQuantity: subscription?.deviceQuantity,
+    },
+    {
+      skip: !subscription?.planId,
+    }
+  );
 
   const handleToggleAutoRenew = async () => {
     try {
@@ -83,8 +99,14 @@ export default function Subscriptions() {
   const nextBilling = subscription?.endDate
     ? formatDate(subscription.endDate)
     : "N/A";
-  const planPriceText = latestPayment
-    ? `${formatCurrency(latestPayment.amount, latestPayment.currency)}/${billingUnit}`
+
+  const currentPlanPrice = currentPlanRes?.data?.price;
+  const currentPlanCurrency = currentPlanRes?.data?.currency || "USD";
+
+  const planPriceText = currentPlanPrice !== undefined
+    ? `${formatCurrency(currentPlanPrice, currentPlanCurrency)}/${billingUnit}`
+    : isLoadingCurrentPlan
+    ? `Loading...`
     : `--/${billingUnit}`;
   const planStatus = subscription?.status ?? "Inactive";
   const deviceQuantity = subscription?.deviceQuantity ?? 0;
@@ -136,6 +158,32 @@ export default function Subscriptions() {
             </div>
           ) : (
             <>
+              {subscription?.scheduledPlanChange && (
+                <div className="flex items-start gap-3 rounded-xl border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/40 p-4 mb-4">
+                  <CalendarClock className="w-5 h-5 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-orange-800 dark:text-orange-200">
+                      Scheduled Plan Change
+                    </p>
+                    <p className="text-xs text-orange-700 dark:text-orange-300 mt-0.5">
+                      Your plan will be changed to{" "}
+                      <strong>
+                        {subscription.scheduledPlanChange.plan.name.charAt(0) +
+                          subscription.scheduledPlanChange.plan.name.slice(1).toLowerCase()}
+                      </strong>{" "}
+                      on{" "}
+                      <strong>
+                        {new Date(subscription.scheduledPlanChange.effectiveDate).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </strong>.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
@@ -153,10 +201,14 @@ export default function Subscriptions() {
                     </span>
                   </div>
                   <p className="text-xs text-muted">
-                    {planPriceText} • Next billing: {nextBilling}
+                    {/* {planPriceText} • */}
+                     Next billing: {nextBilling}
                   </p>
                 </div>
-                <button className="px-4 py-2 bg-white border border-border text-body text-sm font-medium rounded-lg hover:bg-gray-50 flex items-center gap-2 cursor-pointer shadow-customShadow">
+                <button
+                  className="px-4 py-2 bg-white border border-border text-body text-sm font-medium rounded-lg hover:bg-gray-50 flex items-center gap-2 cursor-pointer shadow-customShadow"
+                  onClick={() => setIsChangePlanOpen(true)}
+                >
                   <svg
                     className="w-4 h-4"
                     fill="none"
@@ -407,7 +459,7 @@ export default function Subscriptions() {
         </div>
 
         {billingTab === "billing" ? (
-          <BillingHistoryTable payments={payments} />
+          <BillingHistoryTable payments={payments} planName={subscription?.plan?.name || "Premium"} />
         ) : (
           <MyAdditionalPaymentTable />
         )}
@@ -426,6 +478,15 @@ export default function Subscriptions() {
         isLoading={isUpdatingRecurring}
         isEnabling={!isAutoRenewEnabled}
       />
+      {subscription && (
+        <ChangePlanModal
+          isOpen={isChangePlanOpen}
+          onClose={() => setIsChangePlanOpen(false)}
+          currentPlanName={subscription.plan?.name || ""}
+          currentScreenSize={subscription.screenSize ?? 21}
+          currentBillingCycle={subscription.billingCycle === "ANNUAL" ? "ANNUAL" : "MONTHLY"}
+        />
+      )}
     </div>
   );
 }

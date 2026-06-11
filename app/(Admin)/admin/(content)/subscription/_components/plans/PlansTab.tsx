@@ -17,6 +17,7 @@ import EditPlanDialog from "./_components/EditPlanDialog";
 import BaseSelect from "@/common/BaseSelect";
 import SubscriptionTabLayout from "../SubscriptionTabLayout";
 import { Loader2 } from "lucide-react";
+import { sortPlansByTier } from "@/lib/planSort";
 
 const PlansTab = () => {
   const { data: discountData } = useGetYearlyDiscountsQuery();
@@ -47,12 +48,7 @@ const PlansTab = () => {
   });
   const plans = useMemo(() => {
     const rawPlans = plansData?.data || [];
-    const order: Record<string, number> = { basic: 1, business: 2, premium: 3 };
-    return [...rawPlans].sort(
-      (a, b) =>
-        (order[a.name?.toLowerCase()] || 99) -
-        (order[b.name?.toLowerCase()] || 99),
-    );
+    return sortPlansByTier(rawPlans);
   }, [plansData?.data]);
 
   const discountInfo = discountData?.data?.[0];

@@ -289,20 +289,43 @@ export default function UserManagementPage() {
     setSelectedUsers(new Set());
   };
 
-  const handleAddUser = (data: any) => {
-    // Current API doesn't have an add user endpoint in usermanagementApi.ts provided in the prompt
-    // Assuming it's handled elsewhere or needs to be added later.
-    toast.info("Add user functionality not yet connected to backend.");
-    setIsModalOpen(false);
-  };
+
 
   const handleLoginAsUser = async (userId: string) => {
     try {
       const res = await loginAsUser(userId).unwrap();
       if (res.success) {
-        toast.success("Login tokens generated successfully");
-        // Store tokens and redirect if needed
-        console.log("Tokens:", res.data);
+        // 1. Save the admin's current token in sessionStorage so we can restore it later
+        const adminToken = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('token='))
+          ?.split('=')[1] || '';
+        const adminRefreshToken = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('refreshToken='))
+          ?.split('=')[1] || '';
+
+        sessionStorage.setItem('impersonation_original_token', adminToken);
+        sessionStorage.setItem('impersonation_original_refresh_token', adminRefreshToken);
+
+        // 2. Set the impersonated user's tokens as the active session
+        //    We use cookies (same as authSlice) so the app auth picks them up
+        const newToken = res.data.accessToken;
+        const newRefreshToken = res.data.refreshToken;
+
+        // Write cookies with the same settings used by authSlice
+        document.cookie = `token=${newToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `refreshToken=${newRefreshToken}; path=/; max-age=${30 * 24 * 60 * 60}; secure; samesite=strict`;
+
+        toast.success(`Impersonating ${res.data.user?.email || 'user'}. Redirecting...`);
+
+        // 3. Hard redirect to user dashboard or supporter portal — forces a full page reload
+        //    so the app picks up the new cookies and renders as the user
+        const role = res.data.user?.role?.toUpperCase() || 'USER';
+        const targetUrl = role === 'SUPPORTER' ? '/supporter/overview' : '/dashboard';
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 1000);
       }
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to login as user");
@@ -509,7 +532,7 @@ export default function UserManagementPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full xl:w-auto">
               <Dropdown
                 value={planFilter}
-                options={["All Plans", "Free trial", "Basic", "Business", "Premium", "Enterprise"]}
+                options={["All Plans", "Free Trial", "Basic", "Premium", "Business", "Enterprise"]}
                 onChange={setPlanFilter}
                 className="w-full"
               />
@@ -1105,7 +1128,6 @@ export default function UserManagementPage() {
       <AddUserModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAddUser={handleAddUser}
       />
 
       {/* Reusable Modals */}

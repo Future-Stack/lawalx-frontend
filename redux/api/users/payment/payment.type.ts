@@ -50,6 +50,45 @@ export interface SubscriptionPlanSummary {
   name: string;
 }
 
+export interface ChangePlanPayload {
+  planId: string;
+  billingCycle: "MONTHLY" | "ANNUAL";
+  screenSize: number;
+  deviceQuantity?: number;
+  country: string;
+  couponCode?: string;
+  gateway: "stripe" | "paystack";
+}
+
+export interface ChangePlanBreakdown {
+  subtotal: number;
+  remainingCredit: number;
+  couponDiscount: number;
+  tax: number;
+  taxRate: string;
+  total: number;
+  currency: string;
+}
+
+export interface ChangePlanResponseData {
+  paymentId: string;
+  checkoutUrl: string;
+  referenceId: string;
+  gateway: string;
+  changeType: "UPGRADE" | "DOWNGRADE";
+  currentPlan: string;
+  targetPlan: string;
+  effectiveDate: string;
+  breakdown: ChangePlanBreakdown;
+  message: string;
+}
+
+export interface ChangePlanApiResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: ChangePlanResponseData;
+}
 export interface SubscriptionPayment {
   id: string;
   amount: number;
@@ -90,6 +129,14 @@ export interface UserSubscription {
   createdAt: string;
   plan: SubscriptionPlanSummary;
   payments: SubscriptionPayment[];
+  scheduledPlanChange?: {
+    subscriptionId: string;
+    plan: SubscriptionPlanSummary;
+    billingCycle: string;
+    effectiveDate: string;
+    deviceQuantity: number;
+    screenSize: number;
+  } | null;
 }
 
 export interface MySubscriptionApiResponse {

@@ -1,15 +1,41 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { X, Users, Shield, User, CreditCard, Sliders, Building2, Upload, Info, Plus } from "lucide-react";
-import Dropdown from "@/components/shared/Dropdown";
+import { X, Users, Shield, User, CreditCard, Sliders, Building2, Plus, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { countries, getCountryByCode } from "@/constants/countries";
+import Dropdown from "@/components/shared/Dropdown";
+import { useAddUserMutation } from "@/redux/api/admin/usermanagementApi";
+import { useGetActiveScreenSizesQuery } from "@/redux/api/users/plan/plan.api";
+
+// ── Plan name mapping ─────────────────────────────────────────────────────────
+const PLAN_OPTIONS = [
+  "Free Trial",
+  "Basic",
+  "Premium",
+  "Business",
+  "Enterprise",
+];
+const PLAN_API_MAP: Record<string, string> = {
+  "Free Trial": "FREE_TRIAL",
+  Basic: "BASIC",
+  Premium: "PREMIUM",
+  Business: "BUSINESS",
+  Enterprise: "ENTERPRISE",
+};
 
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddUser: (data: any) => void;
 }
 
-export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModalProps) {
+export default function AddUserModal({ isOpen, onClose }: AddUserModalProps) {
+  const [addUser, { isLoading }] = useAddUserMutation();
+  const { data: screenSizesRes, isLoading: isLoadingSizes } = useGetActiveScreenSizesQuery();
+  const screenSizes = screenSizesRes?.data ?? [];
+  const screenSizeOptions = isLoadingSizes
+    ? ["Loading..."]
+    : screenSizes.map((s) => `${s.size}"`);
+
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -19,89 +45,108 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
     designation: "",
     location: "",
     phoneNumber: "+1",
-    // Subscription
-    deviceSize: "24\"",
-    plan: "Basic",
-    deviceLimit: "50",
-    storageLimit: "100",
-    price: "$99",
-    // Advance Customization
-    advanceCustomization: false,
-    imageLimit: "1000",
-    maxImageSize: "20MB",
-    imageFormat: "JPG, PNG, WEBP",
-    videoLimit: "1000",
-    maxVideoSize: "200MB",
-    videoFormat: "MP4, MKV",
-    audioLimit: "1000",
-    maxAudioSize: "50MB",
-    audioFormat: "MP3",
-    // Branding & Company
-    enableCustomBranding: false,
-    companyName: "",
-    industryType: "Select industry",
-    website: "",
-    companyLocation: "",
     countryCode: "US",
-    companyLogo: null as File | null,
-    companyLogoPreview: "" as string,
+    // Subscription
+    deviceSize: "",
+    billingCycle: "MONTHLY",
+    plan: "Basic",
+    deviceQuantity: 1,
+    // Enterprise only
+    deviceLimit: "",
+    storageLimit: "",
+    price: "",
+    description: "",
+    // Advance Customization (Enterprise only)
+    advanceCustomization: false,
+    templateLimit: "",
+    photoLimit: "",
+    audioLimit: "",
+    videoLimit: "",
   });
 
-  const [industries, setIndustries] = useState(["Technology", "Healthcare", "Finance", "Education", "Manufacturing", "Retail"]);
-  const [industrySearchTerm, setIndustrySearchTerm] = useState("");
-  const [showAddIndustryModal, setShowAddIndustryModal] = useState(false);
-  const [newIndustryName, setNewIndustryName] = useState("");
+  // Features state — like EditPlanDialog
+  const [features, setFeatures] = useState<string[]>([]);
+  const [newFeature, setNewFeature] = useState("");
 
-  const filteredIndustries = industries.filter(industry =>
-    industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
-  );
-
-  const handleIndustrySearchChange = (val: string) => {
-    setIndustrySearchTerm(val);
-    const exactMatch = industries.find(i => i.toLowerCase() === val.toLowerCase());
-    if (exactMatch) {
-      setFormData({ ...formData, industryType: exactMatch });
+  const handleAddFeature = () => {
+    if (newFeature.trim()) {
+      setFeatures([...features, newFeature.trim()]);
+      setNewFeature("");
     }
   };
 
-  const handleAddIndustry = () => {
-    if (newIndustryName.trim() && !industries.includes(newIndustryName.trim())) {
-      setIndustries([...industries, newIndustryName.trim()]);
-      setFormData({ ...formData, industryType: newIndustryName.trim() });
-      setNewIndustryName("");
-      setShowAddIndustryModal(false);
-    }
+  const handleRemoveFeature = (index: number) => {
+    setFeatures(features.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
-    onAddUser(formData);
-    onClose();
-  };
+  const isEnterprise = formData.plan === "Enterprise";
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const country = getCountryByCode(formData.countryCode);
     if (!country) return;
-
     let val = e.target.value;
-    
-    // Ensure it always starts with the dial code
     if (!val.startsWith(country.dialCode)) {
-      // If user tries to delete the dial code, put it back
       val = country.dialCode;
     } else {
-      // Only allow digits after the dial code
-      const subscriberPart = val.slice(country.dialCode.length).replace(/[^\d]/g, '');
-      
-      // Limit the length based on country metadata
+      const subscriberPart = val.slice(country.dialCode.length).replace(/[^\d]/g, "");
       if (subscriberPart.length <= country.maxLength) {
         val = country.dialCode + subscriberPart;
       } else {
-        // If exceeds limit, keep previous value
         val = formData.phoneNumber;
       }
     }
-    
     setFormData({ ...formData, phoneNumber: val });
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.fullName.trim() || !formData.email.trim() || !formData.password.trim()) {
+      toast.error("Full name, email, and password are required");
+      return;
+    }
+
+    // Parse screen size number from e.g. "24""
+    const screenSizeNum = parseInt(formData.deviceSize.replace(/[^\d]/g, ""), 10) || 0;
+    if (screenSizeNum <= 0) {
+      toast.error("Please select a screen size");
+      return;
+    }
+
+    const payload: Record<string, any> = {
+      fullName: formData.fullName.trim(),
+      email: formData.email.trim(),
+      password: formData.password,
+      organization: formData.organization.trim() || undefined,
+      designation: formData.designation.trim() || undefined,
+      location: formData.location.trim() || undefined,
+      phoneCountry: formData.countryCode,
+      phoneNumber: formData.phoneNumber,
+      planName: PLAN_API_MAP[formData.plan] || "BASIC",
+      screenSize: screenSizeNum,
+      billingCycle: formData.billingCycle,
+      deviceQuantity: Number(formData.deviceQuantity) || 1,
+    };
+
+    if (isEnterprise) {
+      payload.price = Number(formData.price) || 0;
+      payload.storageLimitGb = Number(formData.storageLimit) || 0;
+      payload.description = formData.description.trim() || undefined;
+
+      if (formData.advanceCustomization) {
+        payload.templateLimit = Number(formData.templateLimit) || 0;
+        payload.photoLimit = Number(formData.photoLimit) || 0;
+        payload.audioLimit = Number(formData.audioLimit) || 0;
+        payload.videoLimit = Number(formData.videoLimit) || 0;
+        payload.features = features;
+      }
+    }
+
+    try {
+      await addUser(payload).unwrap();
+      toast.success("User created successfully");
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to create user");
+    }
   };
 
   if (!isOpen) return null;
@@ -134,17 +179,16 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
 
         {/* Body */}
         <div className="px-6 pb-6 space-y-6 overflow-y-auto scrollbar-hide flex-1">
+
           {/* User Credentials - Green Theme */}
           <div className="bg-green-50/50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-xl p-4">
             <h3 className="text-sm font-bold text-green-700 dark:text-green-400 mb-4 flex items-center gap-2">
               <Shield className="w-4 h-4" />
               User Credentials
             </h3>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Full Name *
-                </label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Full Name *</label>
                 <input
                   type="text"
                   placeholder="John Doe"
@@ -154,9 +198,7 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Email *
-                </label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Email *</label>
                 <input
                   type="email"
                   placeholder="user@example.com"
@@ -166,9 +208,7 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Password *
-                </label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Password *</label>
                 <input
                   type="password"
                   placeholder="Enter secured Password"
@@ -186,11 +226,9 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
               <User className="w-4 h-4" />
               Personal Info
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Organization
-                </label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Organization</label>
                 <input
                   type="text"
                   placeholder="TechCorp Inc."
@@ -200,9 +238,7 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Designation
-                </label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Designation</label>
                 <input
                   type="text"
                   placeholder="CEO"
@@ -212,9 +248,7 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Location
-                </label>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Location</label>
                 <div className="relative">
                   <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
@@ -227,25 +261,19 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Phone Number
-                </label>
-                <div className="flex gap-2">
-                  <div className="w-24">
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Phone Number</label>
+                <div className="grid grid-cols-4 gap-1">
+                  <div className="col-span-1">
                     <Dropdown
                       value={formData.countryCode}
-                      options={countries.map(c => c.code)}
+                      options={countries.map((c) => c.code)}
                       onChange={(val) => {
                         const country = getCountryByCode(val);
                         if (country) {
-                          setFormData({ 
-                            ...formData, 
-                            countryCode: val,
-                            phoneNumber: country.dialCode
-                          });
+                          setFormData({ ...formData, countryCode: val, phoneNumber: country.dialCode });
                         }
                       }}
-                      className="w-full h-[38px]"
+                      className="w-full h-10"
                     />
                   </div>
                   <input
@@ -254,7 +282,7 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                     placeholder="Enter phone number"
                     value={formData.phoneNumber}
                     onChange={handlePhoneNumberChange}
-                    className="flex-1 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                    className="col-span-3 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white h-10"
                   />
                 </div>
               </div>
@@ -268,62 +296,109 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
               Subscription Plan
             </h3>
             <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Device Size
-                </label>
-                <Dropdown
-                  value={formData.deviceSize}
-                  options={["24\"", "32\"", "43\"", "55\""]}
-                  onChange={(val) => setFormData({ ...formData, deviceSize: val })}
-                  className="w-full h-10"
-                />
+
+              {/* Device Size + Device Quantity side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                    Device Size *
+                  </label>
+                  {isLoadingSizes ? (
+                    <div className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-sm text-gray-400 bg-navbarBg h-10">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Loading...
+                    </div>
+                  ) : (
+                    <Dropdown
+                      value={formData.deviceSize || (screenSizeOptions[0] ?? "")}
+                      options={screenSizeOptions}
+                      onChange={(val) => setFormData({ ...formData, deviceSize: val })}
+                      className="w-full h-10"
+                    />
+                  )}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                    Device Quantity *
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    placeholder="e.g. 5"
+                    value={formData.deviceQuantity}
+                    onChange={(e) => setFormData({ ...formData, deviceQuantity: Number(e.target.value) })}
+                    className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-gray-900 dark:text-white"
+                  />
+                </div>
               </div>
 
+              {/* Billing Cycle */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Billing Cycle
+                </label>
+                <div className="flex gap-2">
+                  {["MONTHLY", "YEARLY"].map((cycle) => (
+                    <button
+                      key={cycle}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, billingCycle: cycle })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-colors cursor-pointer ${
+                        formData.billingCycle === cycle
+                          ? "bg-orange-500 text-white border-orange-500"
+                          : "bg-navbarBg text-gray-600 dark:text-gray-400 border-border hover:bg-gray-50 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      {cycle === "MONTHLY" ? "Monthly" : "Yearly"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Choose Plan */}
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Choose Plan * <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                  Choose Plan *
                 </label>
                 <Dropdown
                   value={formData.plan}
-                  options={["Demo (For developers)","Free Trial", "Basic", "Pro", "Enterprise"]}
+                  options={PLAN_OPTIONS}
                   onChange={(val) => setFormData({ ...formData, plan: val })}
                   className="w-full h-10"
                 />
               </div>
 
-              {formData.plan === "Enterprise" && (
-                <div className="grid grid-cols-3 gap-4">
+              {/* Enterprise only fields */}
+              {isEnterprise && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Device Limit
-                    </label>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Storage Limit (GB)</label>
                     <input
-                      type="text"
-                      value={formData.deviceLimit}
-                      onChange={(e) => setFormData({ ...formData, deviceLimit: e.target.value })}
-                      className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Storage Limit (GB)
-                    </label>
-                    <input
-                      type="text"
+                      type="number"
+                      min={0}
                       value={formData.storageLimit}
+                      placeholder="e.g. 200"
                       onChange={(e) => setFormData({ ...formData, storageLimit: e.target.value })}
                       className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-gray-900 dark:text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Price
-                    </label>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Price ($)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={formData.price}
+                      placeholder="e.g. 5000"
+                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Description</label>
                     <input
                       type="text"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                      value={formData.description}
+                      placeholder="Enterprise Plan"
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                       className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-orange-500 text-gray-900 dark:text-white"
                     />
                   </div>
@@ -332,8 +407,8 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
             </div>
           </div>
 
-          {/* Advance Customization */}
-          {formData.plan === "Enterprise" && (
+          {/* Advance Customization — Enterprise only */}
+          {isEnterprise && (
             <div className="border-t border-gray-100 dark:border-gray-800 pt-4">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
@@ -353,176 +428,93 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
 
               {formData.advanceCustomization && (
                 <div className="space-y-4">
-                  {/* Limits Grid */}
-                  {[
-                    { label: "Image", limit: formData.imageLimit, size: formData.maxImageSize, format: formData.imageFormat, setterKey: "image" },
-                    { label: "Video", limit: formData.videoLimit, size: formData.maxVideoSize, format: formData.videoFormat, setterKey: "video" },
-                    { label: "Audio", limit: formData.audioLimit, size: formData.maxAudioSize, format: formData.audioFormat, setterKey: "audio" },
-                  ].map((item, idx) => (
-                    <div key={idx} className="grid grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">{item.label} Limit</label>
-                        <input
-                          type="text"
-                          value={item.limit}
-                          onChange={(e) => setFormData({ ...formData, [`${item.setterKey}Limit` as any]: e.target.value })}
-                          className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Max {item.label} Size</label>
-                        <input
-                          type="text"
-                          value={item.size}
-                          onChange={(e) => setFormData({ ...formData, [`max${item.label}Size` as any]: e.target.value })}
-                          className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Format</label>
-                        <div className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-500 dark:text-gray-400">
-                          {item.format}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Custom Branding Checkbox */}
-                  <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl p-4">
-                    <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Template Limit</label>
                       <input
-                        type="checkbox"
-                        checked={formData.enableCustomBranding}
-                        onChange={(e) => setFormData({ ...formData, enableCustomBranding: e.target.checked })}
-                        className="w-4 h-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500"
+                        type="number"
+                        min={0}
+                        value={formData.templateLimit}
+                        placeholder="e.g. 1"
+                        onChange={(e) => setFormData({ ...formData, templateLimit: e.target.value })}
+                        className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                       />
-                      <div>
-                        <div className="text-sm font-bold text-gray-900 dark:text-white">Enable Custom Branding</div>
-                        <div className="text-[10px] text-gray-400">Allow custom logo, colors, and white-label features</div>
-                      </div>
-                    </label>
-                  </div>
-
-                  {/* Company Info */}
-                  {formData.enableCustomBranding && (
-                    <div className="space-y-4 pt-2">
-                      <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Building2 className="w-4 h-4 text-gray-400" />
-                        Company Info
-                      </h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Company Name</label>
-                          <input
-                            type="text"
-                            value={formData.companyName}
-                            placeholder="TechCorp Inc."
-                            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                            className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex justify-between items-center">
-                            Industry Type
-                          </label>
-                          <div className="flex gap-2 mb-2">
-                            <div className="flex-1">
-                              <Dropdown
-                                value={formData.industryType}
-                                options={["Select industry", ...filteredIndustries]}
-                                onChange={(val) => setFormData({ ...formData, industryType: val })}
-                                className="w-full h-10"
-                              />
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => setShowAddIndustryModal(true)}
-                              className="w-10 h-10 flex shrink-0 items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors shadow-customShadow"
-                            >
-                              <Plus className="w-5 h-5" />
-                            </button>
-                          </div>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              placeholder="Search industry..."
-                              value={industrySearchTerm}
-                              onChange={(e) => handleIndustrySearchChange(e.target.value)}
-                              className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Website</label>
-                          <input
-                            type="text"
-                            value={formData.website}
-                            placeholder="https://example.com"
-                            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                            className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
-                          />
-                        </div>
-                        <div className="col-span-1">
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Company Location</label>
-                          <input
-                            type="text"
-                            value={formData.companyLocation}
-                            placeholder="City, Country"
-                            onChange={(e) => setFormData({ ...formData, companyLocation: e.target.value })}
-                            className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Logo Upload */}
-                      <div>
-                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Company Logo</label>
-                        <div className="relative border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors overflow-hidden">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                setFormData({
-                                  ...formData,
-                                  companyLogo: file,
-                                  companyLogoPreview: URL.createObjectURL(file)
-                                });
-                              }
-                            }}
-                            className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                          />
-                          {formData.companyLogoPreview ? (
-                            <div className="relative w-full h-32 flex items-center justify-center bg-navbarBg rounded-lg">
-                              <img
-                                src={formData.companyLogoPreview}
-                                alt="Logo Preview"
-                                className="max-h-full object-contain"
-                              />
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setFormData({ ...formData, companyLogo: null, companyLogoPreview: "" });
-                                }}
-                                className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-20"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          ) : (
-                            <>
-                              <div className="w-10 h-10 bg-navbarBg rounded-lg flex items-center justify-center">
-                                <Upload className="w-5 h-5 text-gray-400" />
-                              </div>
-                              <p className="text-xs text-blue-500 font-bold">Click to Upload <span className="text-gray-400 font-normal">or drag and drop</span></p>
-                              <p className="text-[10px] text-gray-400">SVG, PNG, or JPG (Max 800 x 800px)</p>
-                            </>
-                          )}
-                        </div>
-                      </div>
                     </div>
-                  )}
+                    <div>
+                      <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Photo Limit</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.photoLimit}
+                        placeholder="e.g. 5"
+                        onChange={(e) => setFormData({ ...formData, photoLimit: e.target.value })}
+                        className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Audio Limit</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.audioLimit}
+                        placeholder="e.g. 10"
+                        onChange={(e) => setFormData({ ...formData, audioLimit: e.target.value })}
+                        className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Video Limit</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={formData.videoLimit}
+                        placeholder="e.g. 5"
+                        onChange={(e) => setFormData({ ...formData, videoLimit: e.target.value })}
+                        className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  {/* Features — same pattern as EditPlanDialog */}
+                  <div>
+                    <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Features</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="Add a feature..."
+                        value={newFeature}
+                        onChange={(e) => setNewFeature(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), handleAddFeature())}
+                        className="flex-1 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddFeature}
+                        className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer shrink-0"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="space-y-1.5 mt-2 max-h-[120px] overflow-y-auto scrollbar-hide">
+                      {features.map((feature, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 px-3 py-1.5 rounded-lg border border-border"
+                        >
+                          <span className="text-xs text-gray-700 dark:text-gray-300">{feature}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFeature(index)}
+                            className="text-gray-400 hover:text-red-500 transition-colors ml-2 cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      {features.length === 0 && (
+                        <p className="text-[10px] text-gray-400 text-center py-1">No features added yet.</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -539,44 +531,13 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
           </button>
           <button
             onClick={handleSubmit}
-            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-customShadow"
+            disabled={isLoading}
+            className="px-6 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-60 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-customShadow cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> Add User
+            {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            {isLoading ? "Creating..." : "Add User"}
           </button>
         </div>
-
-        {/* Add Industry Modal */}
-        {showAddIndustryModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-            <div className="bg-navbarBg border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Add New Industry</h3>
-              <input
-                type="text"
-                placeholder="Enter industry name..."
-                value={newIndustryName}
-                onChange={(e) => setNewIndustryName(e.target.value)}
-                className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500 mb-6"
-              />
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setShowAddIndustryModal(false);
-                    setNewIndustryName("");
-                  }}
-                  className="px-4 py-2 border border-border text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddIndustry}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-bold transition-colors shadow-customShadow"
-                >
-                  Add
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

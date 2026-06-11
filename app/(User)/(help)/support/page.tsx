@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import CreateTicketModal from "@/components/support/CreateTicketModal";
 
 import {
@@ -39,6 +40,7 @@ function isImageUrl(url: string) {
 }
 
 const Support = () => {
+  const searchParams = useSearchParams();
   const { data: ticketsResponse, isLoading } = useGetMyTicketsQuery();
   const [createSupportTicket] = useCreateSupportTicketMutation();
   const token = useAppSelector(selectCurrentToken);
@@ -77,12 +79,25 @@ const Support = () => {
 
   const { messages, sendMessage, isConnected } = useTicketChat(selectedTicket?.id ?? null, initialMessages);
 
-  // Set initial selected ticket safely
+  // Open specific ticket from notification deep-link (?openTicket=uuid)
   useEffect(() => {
+    const openTicketId = searchParams.get('openTicket');
+    if (!openTicketId || tickets.length === 0 || isLoading) return;
+
+    const match = tickets.find((t: { id: string }) => t.id === openTicketId);
+    if (match) {
+      setSelectedTicket(match);
+      setShowChatOnMobile(true);
+    }
+  }, [searchParams, tickets, isLoading]);
+
+  // Default: select first ticket when no deep-link param
+  useEffect(() => {
+    if (searchParams.get('openTicket')) return;
     if (tickets.length > 0 && !selectedTicket) {
       setSelectedTicket(tickets[0]);
     }
-  }, [tickets, selectedTicket]);
+  }, [tickets, selectedTicket, searchParams]);
 
   // Scroll to bottom when new messages arrive
   useEffect(() => {

@@ -106,7 +106,7 @@ const SubscriptionPageInner = () => {
 
         <Link
           href="/admin/reports/subscription-&-billing-report"
-          className="flex items-center gap-2 px-3 py-2 md:px-4 md:py-3 border border-border rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out"
+          className="flex items-center gap-2 px-3 py-1 md:px-4 md:py-2 border border-border rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 hover:text-bgBlue text-headings transition-all duration-300 ease-in-out"
         >
           <Eye className="w-5 h-5 mr-2" /> View Reports
         </Link>

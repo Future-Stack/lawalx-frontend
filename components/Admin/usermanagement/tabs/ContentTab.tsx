@@ -11,9 +11,6 @@ import {
   Play,
   LayoutGrid,
   List as ListIcon,
-  ChevronDown,
-  Trash2,
-  MoreVertical,
 } from "lucide-react";
 import {
   PieChart,
@@ -23,12 +20,6 @@ import {
   Tooltip,
 } from "recharts";
 import Dropdown from "@/components/shared/Dropdown";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import TablePagination from "@/components/shared/TablePagination";
 
 // --- Types ---
@@ -50,12 +41,12 @@ interface ContentItem {
 
 // --- Demo Data ---
 const statsData = [
-  { label: "Total Videos", value: 0, total: "—" },
-  { label: "Total Images", value: 0, total: "—" },
-  { label: "Total Audios", value: 0, total: "—" },
-  { label: "Total Screens", value: 0, total: "—" },
-  { label: "Total Schedules", value: 0, total: "—" },
-  { label: "Total Templates", value: 0, total: "—" },
+  { label: "Total Videos", value: 0, total: null },
+  { label: "Total Images", value: 0, total: null },
+  { label: "Total Audios", value: 0, total: null },
+  { label: "Total Programs", value: 0, total: null },
+  { label: "Total Schedules", value: 0, total: null },
+  { label: "Total Templates", value: 0, total: null },
 ];
 
 const initialContentData: ContentItem[] = [];
@@ -137,7 +128,7 @@ const MediaModal = ({
       <div className="bg-white dark:bg-gray-800 rounded-xl max-w-3xl w-full overflow-hidden flex flex-col max-h-[90vh]">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
           <h3 className="font-semibold text-lg text-gray-900 dark:text-white">{item.name}</h3>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-900 dark:hover:text-white text-2xl leading-none">&times;</button>
+          <button onClick={onClose} className="cursor-pointer text-gray-500 hover:text-gray-900 dark:hover:text-white text-2xl leading-none">&times;</button>
         </div>
         <div className="bg-black flex-1 flex items-center justify-center min-h-[300px] w-full">
           {item.type === "Video" && item.url ? (
@@ -181,27 +172,27 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
 
   const contentData: ContentItem[] = files && files.length > 0
     ? files.map((f: any) => ({
-        id: f.id,
-        name: f.name,
-        type: f.fileType ? (f.fileType.charAt(0) + f.fileType.slice(1).toLowerCase()) as ContentType : "Image",
-        size: f.sizeAndDuration?.split(" - ")[0] || "N/A",
-        duration: f.sizeAndDuration?.split(" - ")[1] || "",
-        uploadDate: f.uploadedDate ? new Date(f.uploadedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "N/A",
-        assignedTo: f.programAssigned || "None",
-        status: "Active" as ContentStatus,
-        url: f.url ? `${process.env.NEXT_PUBLIC_SOCKET_URL || "https://lawaltwo.sakibalhasa.xyz"}/${f.url}` : undefined,
-      }))
+      id: f.id,
+      name: f.name,
+      type: f.fileType ? (f.fileType.charAt(0) + f.fileType.slice(1).toLowerCase()) as ContentType : "Image",
+      size: f.sizeAndDuration?.split(" - ")[0] || "N/A",
+      duration: f.sizeAndDuration?.split(" - ")[1] || "",
+      uploadDate: f.uploadedDate ? new Date(f.uploadedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "N/A",
+      assignedTo: f.programAssigned || "None",
+      status: "Active" as ContentStatus,
+      url: f.url ? `${process.env.NEXT_PUBLIC_SOCKET_URL || "https://lawaltwo.sakibalhasa.xyz"}/${f.url}` : undefined,
+    }))
     : [];
 
   const resolvedStatsData = statsProp
     ? [
-        { label: "Total Videos", value: statsProp.content?.totalVideos ?? 0, total: statsProp.content?.limits?.videoLimit ?? "—" },
-        { label: "Total Images", value: statsProp.content?.totalImages ?? 0, total: statsProp.content?.limits?.imageLimit ?? "—" },
-        { label: "Total Audios", value: statsProp.content?.totalAudios ?? 0, total: statsProp.content?.limits?.audioLimit ?? "—" },
-        { label: "Total Programs", value: statsProp.content?.totalScreens ?? statsProp.content?.totalPrograms ?? 0, total: statsProp.content?.limits?.deviceLimit ?? "—" },
-        { label: "Total Schedules", value: statsProp.content?.totalSchedules ?? 0, total: "—" },
-        { label: "Total Templates", value: statsProp.content?.totalTemplates ?? 0, total: "—" },
-      ]
+      { label: "Total Videos", value: statsProp.content?.totalVideos ?? 0, total: statsProp.content?.limits?.videoLimit ?? null },
+      { label: "Total Images", value: statsProp.content?.totalImages ?? 0, total: statsProp.content?.limits?.imageLimit ?? null },
+      { label: "Total Audios", value: statsProp.content?.totalAudios ?? 0, total: statsProp.content?.limits?.audioLimit ?? null },
+      { label: "Total Programs", value: statsProp.content?.totalPrograms ?? statsProp.content?.totalScreens ?? 0, total: null },
+      { label: "Total Schedules", value: statsProp.content?.totalSchedules ?? 0, total: null },
+      { label: "Total Templates", value: statsProp.content?.totalTemplates ?? 0, total: statsProp.content?.limits?.templateLimit ?? null },
+    ]
     : statsData;
 
   const filteredData = contentData
@@ -276,7 +267,10 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
               <div key={i} className="flex justify-between items-center border-b border-border pb-2">
                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</span>
                 <span className="text-sm font-bold text-gray-900 dark:text-white">
-                  {stat.value} <span className="text-gray-400 font-normal">/{stat.total}</span>
+                  {stat.total != null
+                    ? <>{stat.value} <span className="text-gray-400 font-normal">/ {stat.total}</span></>
+                    : stat.value
+                  }
                 </span>
               </div>
             ))}
@@ -336,12 +330,12 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
             Content ({filteredData.length})
           </h3>
-          <button
+          {/* <button
             onClick={handleDownloadAll}
             className="px-4 shadow-customShadow py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center gap-2 transition-colors cursor-pointer"
           >
             Download All
-          </button>
+          </button> */}
         </div>
 
         {/* Content View */}
@@ -362,24 +356,25 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
                   <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-start gap-3">
-                        <div className={`
-                                            w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0
-                                            ${item.type === 'Video' || item.type === 'Image' ? 'bg-cover bg-center' : 'bg-gray-100 dark:bg-gray-700'}
-                                        `}>
-                          {item.type === 'Image' ? (
+                        <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                          {item.type === 'Image' && item.url ? (
+                            <img src={item.url} alt={item.name} className="w-10 h-10 rounded-lg object-cover" />
+                          ) : item.type === 'Video' && item.url ? (
+                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-500 relative">
+                              <FileVideo className="w-5 h-5" />
+                            </div>
+                          ) : item.type === 'Image' ? (
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-500">
                               <FileImage className="w-5 h-5" />
-                            </div>
-                          ) : item.type === 'Video' ? (
-                            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-500">
-                              <FileVideo className="w-5 h-5" />
                             </div>
                           ) : item.type === 'Audio' ? (
                             <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center text-pink-500">
                               <Music className="w-5 h-5" />
                             </div>
                           ) : (
-                            <FileText className="w-5 h-5 text-gray-400" />
+                            <div className="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                              <FileText className="w-5 h-5 text-gray-400" />
+                            </div>
                           )}
                         </div>
                         <div>
@@ -408,17 +403,17 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
                         <button
                           onClick={() => setPlayingItem(item)}
                           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full transition-all cursor-pointer"
-                          title="Play"
+                          title="Preview"
                         >
                           <Play className="w-4 h-4 fill-current" />
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => handleDownload(item)}
                           className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all cursor-pointer"
                           title="Download"
                         >
                           <Download className="w-4 h-4" />
-                        </button>
+                        </button> */}
                       </div>
                     </td>
                   </tr>
@@ -429,18 +424,29 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 bg-navbarBg p-4 rounded-xl">
             {currentItems.map((item) => (
-              <div key={item.id} className="group relative bg-navbarBg rounded-xl p-4 border border-border hover:border-blue-200 dark:hover:border-blue-800 transition-all hover:shadow-md cursor-pointer" onClick={() => setPlayingItem(item)}>
-                <div className="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
-                  {item.type === 'Image' ? (
-                    <FileImage className="w-12 h-12 text-blue-400" />
+              <div key={item.id} className="group relative bg-navbarBg rounded-xl border border-border hover:border-blue-200 dark:hover:border-blue-800 transition-all hover:shadow-md cursor-pointer" onClick={() => setPlayingItem(item)}>
+                <div className="aspect-square rounded-t-xl overflow-hidden bg-gray-200 dark:bg-gray-700 relative">
+                  {item.type === 'Image' && item.url ? (
+                    <img src={item.url} alt={item.name} className="w-full h-full object-cover" />
+                  ) : item.type === 'Video' && item.url ? (
+                    <video src={item.url} className="w-full h-full object-cover" muted playsInline />
+                  ) : item.type === 'Image' ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FileImage className="w-12 h-12 text-blue-400" />
+                    </div>
                   ) : item.type === 'Video' ? (
-                    <FileVideo className="w-12 h-12 text-purple-400" />
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FileVideo className="w-12 h-12 text-purple-400" />
+                    </div>
                   ) : item.type === 'Audio' ? (
-                    <Music className="w-12 h-12 text-pink-400" />
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Music className="w-12 h-12 text-pink-400" />
+                    </div>
                   ) : (
-                    <FileText className="w-12 h-12 text-gray-400" />
+                    <div className="w-full h-full flex items-center justify-center">
+                      <FileText className="w-12 h-12 text-gray-400" />
+                    </div>
                   )}
-
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <button
                       onClick={(e) => { e.stopPropagation(); setPlayingItem(item); }}
@@ -448,30 +454,20 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
                     >
                       <Play className="w-5 h-5 fill-current" />
                     </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDownload(item); }}
+                      className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/40 transition-colors"
+                    >
+                      <Download className="w-5 h-5" />
+                    </button>
                   </div>
                 </div>
-                <h4 className="font-medium text-gray-900 dark:text-white truncate" title={item.name}>{item.name}</h4>
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-xs text-gray-500">{item.size}</span>
-                  <span className="text-xs text-gray-400">{item.uploadDate}</span>
-                </div>
-
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button onClick={(e) => e.stopPropagation()} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded">
-                        <MoreVertical className="w-4 h-4 text-gray-500" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDownload(item); }}>
-                        <Download className="w-4 h-4 mr-2" /> Download
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600" onClick={(e) => e.stopPropagation()}>
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                <div className="p-3">
+                  <h4 className="font-medium text-gray-900 dark:text-white truncate text-sm" title={item.name}>{item.name}</h4>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-xs text-gray-500">{item.size}</span>
+                    <span className="text-xs text-gray-400">{item.uploadDate}</span>
+                  </div>
                 </div>
               </div>
             ))}

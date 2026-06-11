@@ -9,6 +9,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { getSocket, disconnectSocket } from '@/lib/socket';
 import { useAppSelector } from '@/redux/store/hook';
 import { selectCurrentToken } from '@/redux/features/auth/authSlice';
+import ImpersonationBanner from '@/components/common/ImpersonationBanner';
 
 export default function SupporterLayout({
   children,
@@ -56,6 +57,7 @@ export default function SupporterLayout({
   return (
     <ThemeProvider>
       <ProtectedRoute allowedRoles={['SUPPORTER']}>
+        <ImpersonationBanner />
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
           <SupporterNavbar
             isCollapsed={isCollapsed}

@@ -29,7 +29,8 @@ import {
   Info,
 } from "lucide-react";
 import Link from "next/link";
-import { useGetGlobalDeviceDetailsQuery, useDeleteDeviceMutation, useSyncDeviceMutation, useGetDeviceActivityLogsQuery } from "@/redux/api/admin/globalDevicesApi";
+import { useGetGlobalDeviceDetailsQuery, useDeleteDeviceMutation, useSyncDeviceMutation, useGetDeviceActivityLogsQuery, useClearDeviceDataMutation } from "@/redux/api/admin/globalDevicesApi";
+import { toast } from 'sonner';
 import AdminLeafletMap from "@/components/Admin/map/AdminLeafletMap";
 import AdminPreviewDeviceModal from "@/components/Admin/modals/AdminPreviewDeviceModal";
 
@@ -63,7 +64,7 @@ const PremiumModal = ({ isOpen, onClose, title, children }: { isOpen: boolean; o
       <div className="relative bg-white dark:bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in duration-300">
         <div className="flex items-center justify-between p-6 border-b border-gray-50 dark:border-gray-800">
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h3>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors group">
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors group cursor-pointer">
             <X className="w-5 h-5 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300" />
           </button>
         </div>
@@ -80,6 +81,7 @@ export default function DeviceDetailsPage() {
 
   const { data: response, isLoading, isError, refetch } = useGetGlobalDeviceDetailsQuery(deviceId);
   const [deleteDevice, { isLoading: isDeleting }] = useDeleteDeviceMutation();
+  const [clearDeviceData, { isLoading: isClearing }] = useClearDeviceDataMutation();
   const [syncDevice, { isLoading: isSyncing }] = useSyncDeviceMutation();
   const { data: activityLogsResponse } = useGetDeviceActivityLogsQuery(deviceId);
   const activityLogs = activityLogsResponse?.data || [];
@@ -120,13 +122,19 @@ export default function DeviceDetailsPage() {
 
   const device = response?.data;
 
-  const handleDelete = async () => {
+  const handleClearData = async () => {
     try {
-      await deleteDevice({ id: deviceId }).unwrap();
+      // Pass the deviceId directly as the argument matching the mutation definition
+      const result = await clearDeviceData(deviceId).unwrap();
+      if (result.success) {
+        toast.success(result.message || 'Device data cleared successfully');
+      } else {
+        toast.error(result.message || 'Failed to clear device data');
+      }
       setIsDeleteModalOpen(false);
-      router.push("/admin/devices");
     } catch (err) {
-      console.error("Failed to delete device:", err);
+      console.error('Failed to clear device data:', err);
+      toast.error('Failed to clear device data');
     }
   };
 
@@ -172,31 +180,6 @@ export default function DeviceDetailsPage() {
             <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
             {isSyncing ? "Syncing..." : "Force Sync"}
           </button>
-
-          {/* <div className="relative">
-            <button
-              onClick={() => setIsActionMenuOpen(!isActionMenuOpen)}
-              className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-gray-400 hover:bg-gray-50 transition-all cursor-pointer shadow-sm"
-            >
-              <MoreVertical className="w-4 h-4" />
-            </button>
-            {isActionMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setIsActionMenuOpen(false)} />
-                <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-gray-800 border border-border rounded-xl shadow-xl z-20 overflow-hidden py-1">
-                  <button 
-                    onClick={() => {
-                      setIsDeleteModalOpen(true);
-                      setIsActionMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Delete Device
-                  </button>
-                </div>
-              </>
-            )}
-          </div> */}
         </div>
       </div>
 
@@ -357,7 +340,7 @@ export default function DeviceDetailsPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-3 pt-2">
-                <button className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 bg-red-500 text-white rounded-xl text-xs font-bold hover:bg-red-600 transition-all shadow-md shadow-red-200 dark:shadow-none active:scale-[0.98]">
+                <button onClick={() => setIsDeleteModalOpen(true)} className="cursor-pointer w-full flex items-center justify-center gap-2 py-3 bg-red-500 text-white rounded-xl text-xs font-bold hover:bg-red-600 transition-all shadow-md shadow-red-200 dark:shadow-none active:scale-[0.98]">
                   <Trash2 className="w-3.5 h-3.5" />
                   Clear Data
                 </button>
@@ -411,7 +394,7 @@ export default function DeviceDetailsPage() {
       <PremiumModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
-        title="Confirm Deletion"
+        title="Confirm Clear Data"
       >
         <div className="space-y-6">
           <div className="flex items-center gap-4 p-4 bg-red-50 dark:bg-red-900/10 rounded-2xl text-red-600">
@@ -421,16 +404,16 @@ export default function DeviceDetailsPage() {
           <div className="flex gap-3">
             <button
               onClick={() => setIsDeleteModalOpen(false)}
-              className="flex-1 py-3 px-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-bold text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="flex-1 cursor-pointer py-3 px-4 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl font-bold text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>
             <button
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="flex-[1.5] py-3 px-4 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-colors shadow-lg shadow-red-200 dark:shadow-none disabled:opacity-50"
+              onClick={handleClearData}
+              disabled={isClearing}
+              className="flex-[1.5] cursor-pointer py-3 px-4 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 transition-colors shadow-lg shadow-red-200 dark:shadow-none disabled:opacity-50"
             >
-              {isDeleting ? "Deleting..." : "Yes, Delete Device"}
+              {isClearing ? "Clearing..." : "Yes, Clear Data"}
             </button>
           </div>
         </div>

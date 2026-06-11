@@ -41,7 +41,8 @@ export default function CancelSubscriptionModal({
               {title || "Cancel Subscription?"}
             </DialogTitle>
             <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 text-center px-4">
-              {description || "Are you sure you want to cancel your subscription? Your access will remain active until the end of the current billing cycle."}
+              {description ||
+                "Are you sure you want to cancel your subscription? Your access will remain active until the end of the current billing cycle."}
             </DialogDescription>
           </DialogHeader>
 

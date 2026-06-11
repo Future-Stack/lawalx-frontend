@@ -20,6 +20,15 @@ export const usermanagementApi = baseApi.injectEndpoints({
       providesTags: ["User"],
     }),
 
+    addUser: builder.mutation({
+      query: (data) => ({
+        url: `/usermanagement/add-user`,
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
+
     getUserStats: builder.query({
       query: () => ({
         url: "/usermanagement/stats",
@@ -86,11 +95,27 @@ export const usermanagementApi = baseApi.injectEndpoints({
     }),
 
     getUserProfile: builder.query({
-      query: (userId: string) => ({
+      query: ({ userId, currency }: { userId: string; currency?: string }) => ({
         url: `/usermanagement/${userId}`,
         method: "GET",
       }),
       providesTags: ["User"],
+    }),
+
+    getUserInvoices: builder.query({
+      query: ({ userId, page, limit }: { userId: string; page?: number; limit?: number }) => {
+        const params = new URLSearchParams();
+        if (page) params.append("page", page.toString());
+        if (limit) params.append("limit", limit.toString());
+        return { url: `/usermanagement/${userId}/invoices?${params.toString()}`, method: "GET" };
+      },
+    }),
+
+    getSingleInvoice: builder.query({
+      query: ({ userId, paymentId }: { userId: string; paymentId: string }) => ({
+        url: `/usermanagement/${userId}/invoices/${paymentId}`,
+        method: "GET",
+      }),
     }),
   }),
 });
@@ -100,10 +125,13 @@ export const {
   useGetUserStatsQuery,
   useGetExportDataQuery,
   useLazyGetExportDataQuery,
+  useAddUserMutation,
   useDeleteUserMutation,
   useLoginAsUserMutation,
   useAdminResetPasswordMutation,
   useSuspendUserMutation,
   useUnsuspendUserMutation,
   useGetUserProfileQuery,
+  useLazyGetUserInvoicesQuery,
+  useLazyGetSingleInvoiceQuery,
 } = usermanagementApi;

@@ -1,4 +1,15 @@
-import { X, Edit2, Shield, User, CreditCard, Sliders, Building2, Upload, Plus, Info } from "lucide-react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import {
+  X,
+  Edit2,
+  Shield,
+  User,
+  Sliders,
+  Building2,
+  Upload,
+  Plus,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import Dropdown from "@/components/shared/Dropdown";
 import { countries, getCountryByCode } from "@/constants/countries";
@@ -25,7 +36,12 @@ interface Props {
   userData: UserData | null;
 }
 
-export default function EditUserModal({ isOpen, onClose, onSave, userData }: Props) {
+export default function EditUserModal({
+  isOpen,
+  onClose,
+  onSave,
+  userData,
+}: Props) {
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -36,7 +52,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
     location: "",
     phoneNumber: "",
     // Subscription
-    deviceSize: "24\"",
+    deviceSize: '24"',
     plan: "Basic",
     deviceLimit: "50",
     storageLimit: "100",
@@ -63,25 +79,37 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
     companyLogoPreview: "" as string,
   });
 
-  const [industries, setIndustries] = useState(["Technology", "Healthcare", "Finance", "Education", "Manufacturing", "Retail"]);
+  const [industries, setIndustries] = useState([
+    "Technology",
+    "Healthcare",
+    "Finance",
+    "Education",
+    "Manufacturing",
+    "Retail",
+  ]);
   const [industrySearchTerm, setIndustrySearchTerm] = useState("");
   const [showAddIndustryModal, setShowAddIndustryModal] = useState(false);
   const [newIndustryName, setNewIndustryName] = useState("");
 
-  const filteredIndustries = industries.filter(industry =>
-    industry.toLowerCase().includes(industrySearchTerm.toLowerCase())
+  const filteredIndustries = industries.filter((industry) =>
+    industry.toLowerCase().includes(industrySearchTerm.toLowerCase()),
   );
 
   const handleIndustrySearchChange = (val: string) => {
     setIndustrySearchTerm(val);
-    const exactMatch = industries.find(i => i.toLowerCase() === val.toLowerCase());
+    const exactMatch = industries.find(
+      (i) => i.toLowerCase() === val.toLowerCase(),
+    );
     if (exactMatch) {
       setFormData({ ...formData, industryType: exactMatch });
     }
   };
 
   const handleAddIndustry = () => {
-    if (newIndustryName.trim() && !industries.includes(newIndustryName.trim())) {
+    if (
+      newIndustryName.trim() &&
+      !industries.includes(newIndustryName.trim())
+    ) {
       setIndustries([...industries, newIndustryName.trim()]);
       setFormData({ ...formData, industryType: newIndustryName.trim() });
       setNewIndustryName("");
@@ -99,10 +127,14 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
         designation: userData.designation || "CEO",
         location: userData.location || "USA",
         phoneNumber: userData.phone || "+10101010101",
-        deviceSize: "24\"",
+        deviceSize: '24"',
         plan: userData.plan || "Basic",
-        deviceLimit: userData.device?.split("/")?.[1] || (userData.plan === "Enterprise" ? "100" : "50"),
-        storageLimit: userData.storage?.replace(" GB", "") || (userData.plan === "Enterprise" ? "200" : "100"),
+        deviceLimit:
+          userData.device?.split("/")?.[1] ||
+          (userData.plan === "Enterprise" ? "100" : "50"),
+        storageLimit:
+          userData.storage?.replace(" GB", "") ||
+          (userData.plan === "Enterprise" ? "200" : "100"),
         price: userData.plan === "Enterprise" ? "$5000" : "$99",
         advanceCustomization: userData.plan === "Enterprise",
         imageLimit: "1000",
@@ -136,15 +168,17 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
     if (!country) return;
 
     let val = e.target.value;
-    
+
     // Ensure it always starts with the dial code
     if (!val.startsWith(country.dialCode)) {
       // If user tries to delete the dial code, put it back
       val = country.dialCode;
     } else {
       // Only allow digits after the dial code
-      const subscriberPart = val.slice(country.dialCode.length).replace(/[^\d]/g, '');
-      
+      const subscriberPart = val
+        .slice(country.dialCode.length)
+        .replace(/[^\d]/g, "");
+
       // Limit the length based on country metadata
       if (subscriberPart.length <= country.maxLength) {
         val = country.dialCode + subscriberPart;
@@ -153,7 +187,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
         val = formData.phoneNumber;
       }
     }
-    
+
     setFormData({ ...formData, phoneNumber: val });
   };
 
@@ -201,7 +235,9 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                 <input
                   type="text"
                   value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-900 dark:text-white"
                 />
               </div>
@@ -212,7 +248,9 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-900 dark:text-white"
                 />
               </div>
@@ -224,7 +262,9 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                   type="password"
                   placeholder="Leave blank to keep current"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-900 dark:text-white"
                 />
               </div>
@@ -245,7 +285,9 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                 <input
                   type="text"
                   value={formData.organization}
-                  onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, organization: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
                 />
               </div>
@@ -256,7 +298,9 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                 <input
                   type="text"
                   value={formData.designation}
-                  onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, designation: e.target.value })
+                  }
                   className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
                 />
               </div>
@@ -269,7 +313,9 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                   <input
                     type="text"
                     value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, location: e.target.value })
+                    }
                     className="w-full pl-9 pr-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
                   />
                 </div>
@@ -278,18 +324,18 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
                   Phone Number
                 </label>
-                <div className="flex gap-2">
-                  <div className="w-24">
+                <div className="grid grid-cols-4 gap-1">
+                  <div className="col-span-1">
                     <Dropdown
                       value={formData.countryCode}
-                      options={countries.map(c => c.code)}
+                      options={countries.map((c) => c.code)}
                       onChange={(val) => {
                         const country = getCountryByCode(val);
                         if (country) {
-                          setFormData({ 
-                            ...formData, 
+                          setFormData({
+                            ...formData,
                             countryCode: val,
-                            phoneNumber: country.dialCode
+                            phoneNumber: country.dialCode,
                           });
                         }
                       }}
@@ -302,7 +348,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                     placeholder="Enter phone number"
                     value={formData.phoneNumber}
                     onChange={handlePhoneNumberChange}
-                    className="flex-1 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                    className="col-span-3 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white h-10"
                   />
                 </div>
               </div>
@@ -310,7 +356,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
           </div>
 
           {/* Subscription Plan - Orange Theme */}
-          <div className="bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-xl p-4">
+          {/* <div className="bg-orange-50/50 dark:bg-orange-900/10 border border-orange-100 dark:border-orange-900/30 rounded-xl p-4">
             <h3 className="text-sm font-bold text-orange-700 dark:text-orange-400 mb-4 flex items-center gap-2">
               <CreditCard className="w-4 h-4" />
               Subscription Plan
@@ -378,7 +424,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
 
           {/* Advance Customization */}
           {formData.plan === "Enterprise" && (
@@ -386,13 +432,20 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Sliders className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-bold text-gray-900 dark:text-white">Advance Customization</span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">
+                    Advance Customization
+                  </span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formData.advanceCustomization}
-                    onChange={(e) => setFormData({ ...formData, advanceCustomization: e.target.checked })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        advanceCustomization: e.target.checked,
+                      })
+                    }
                     className="sr-only peer"
                   />
                   <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
@@ -403,31 +456,65 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                 <div className="space-y-4">
                   {/* Limits Grid */}
                   {[
-                    { label: "Image", limit: formData.imageLimit, size: formData.maxImageSize, format: formData.imageFormat, setterKey: "image" },
-                    { label: "Video", limit: formData.videoLimit, size: formData.maxVideoSize, format: formData.videoFormat, setterKey: "video" },
-                    { label: "Audio", limit: formData.audioLimit, size: formData.maxAudioSize, format: formData.audioFormat, setterKey: "audio" },
+                    {
+                      label: "Image",
+                      limit: formData.imageLimit,
+                      size: formData.maxImageSize,
+                      format: formData.imageFormat,
+                      setterKey: "image",
+                    },
+                    {
+                      label: "Video",
+                      limit: formData.videoLimit,
+                      size: formData.maxVideoSize,
+                      format: formData.videoFormat,
+                      setterKey: "video",
+                    },
+                    {
+                      label: "Audio",
+                      limit: formData.audioLimit,
+                      size: formData.maxAudioSize,
+                      format: formData.audioFormat,
+                      setterKey: "audio",
+                    },
                   ].map((item, idx) => (
                     <div key={idx} className="grid grid-cols-3 gap-4">
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">{item.label} Limit</label>
+                        <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">
+                          {item.label} Limit
+                        </label>
                         <input
                           type="text"
                           value={item.limit}
-                          onChange={(e) => setFormData({ ...formData, [`${item.setterKey}Limit` as any]: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [`${item.setterKey}Limit` as any]: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Max {item.label} Size</label>
+                        <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">
+                          Max {item.label} Size
+                        </label>
                         <input
                           type="text"
                           value={item.size}
-                          onChange={(e) => setFormData({ ...formData, [`max${item.label}Size` as any]: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              [`max${item.label}Size` as any]: e.target.value,
+                            })
+                          }
                           className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">Format</label>
+                        <label className="block text-[10px] font-medium text-gray-500 uppercase mb-1">
+                          Format
+                        </label>
                         <div className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-500 dark:text-gray-400">
                           {item.format}
                         </div>
@@ -441,12 +528,21 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                       <input
                         type="checkbox"
                         checked={formData.enableCustomBranding}
-                        onChange={(e) => setFormData({ ...formData, enableCustomBranding: e.target.checked })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            enableCustomBranding: e.target.checked,
+                          })
+                        }
                         className="w-4 h-4 text-blue-500 rounded border-gray-300 focus:ring-blue-500"
                       />
                       <div>
-                        <div className="text-sm font-bold text-gray-900 dark:text-white">Enable Custom Branding</div>
-                        <div className="text-[10px] text-gray-400">Allow custom logo, colors, and white-label features</div>
+                        <div className="text-sm font-bold text-gray-900 dark:text-white">
+                          Enable Custom Branding
+                        </div>
+                        <div className="text-[10px] text-gray-400">
+                          Allow custom logo, colors, and white-label features
+                        </div>
                       </div>
                     </label>
                   </div>
@@ -460,24 +556,39 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                       </h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Company Name</label>
+                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                            Company Name
+                          </label>
                           <input
                             type="text"
                             value={formData.companyName}
-                            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                companyName: e.target.value,
+                              })
+                            }
                             className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                           />
                         </div>
                         <div className="col-span-1">
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex justify-between items-center">
+                          <label className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5 flex justify-between items-center">
                             Industry Type
                           </label>
                           <div className="flex gap-2 mb-2">
                             <div className="flex-1">
                               <Dropdown
                                 value={formData.industryType}
-                                options={["Select industry", ...filteredIndustries]}
-                                onChange={(val) => setFormData({ ...formData, industryType: val })}
+                                options={[
+                                  "Select industry",
+                                  ...filteredIndustries,
+                                ]}
+                                onChange={(val) =>
+                                  setFormData({
+                                    ...formData,
+                                    industryType: val,
+                                  })
+                                }
                                 className="w-full h-10"
                               />
                             </div>
@@ -494,26 +605,42 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                               type="text"
                               placeholder="Search industry..."
                               value={industrySearchTerm}
-                              onChange={(e) => handleIndustrySearchChange(e.target.value)}
+                              onChange={(e) =>
+                                handleIndustrySearchChange(e.target.value)
+                              }
                               className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Website</label>
+                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                            Website
+                          </label>
                           <input
                             type="text"
                             value={formData.website}
-                            onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                website: e.target.value,
+                              })
+                            }
                             className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                           />
                         </div>
                         <div className="col-span-1">
-                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Company Location</label>
+                          <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                            Company Location
+                          </label>
                           <input
                             type="text"
                             value={formData.companyLocation}
-                            onChange={(e) => setFormData({ ...formData, companyLocation: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                companyLocation: e.target.value,
+                              })
+                            }
                             className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm text-gray-900 dark:text-white focus:outline-none"
                           />
                         </div>
@@ -521,7 +648,9 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
 
                       {/* Logo Upload */}
                       <div>
-                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">Company Logo</label>
+                        <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                          Company Logo
+                        </label>
                         <div className="relative border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl p-8 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors overflow-hidden">
                           <input
                             type="file"
@@ -532,7 +661,7 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                                 setFormData({
                                   ...formData,
                                   companyLogo: file,
-                                  companyLogoPreview: URL.createObjectURL(file)
+                                  companyLogoPreview: URL.createObjectURL(file),
                                 });
                               }
                             }}
@@ -548,7 +677,11 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setFormData({ ...formData, companyLogo: null, companyLogoPreview: "" });
+                                  setFormData({
+                                    ...formData,
+                                    companyLogo: null,
+                                    companyLogoPreview: "",
+                                  });
                                 }}
                                 className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors z-20"
                               >
@@ -560,8 +693,15 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
                               <div className="w-10 h-10 bg-navbarBg rounded-lg flex items-center justify-center">
                                 <Upload className="w-5 h-5 text-gray-400" />
                               </div>
-                              <p className="text-xs text-blue-500 font-bold">Click to Upload <span className="text-gray-400 font-normal">or drag and drop</span></p>
-                              <p className="text-[10px] text-gray-400">SVG, PNG, or JPG (Max 800 x 800px)</p>
+                              <p className="text-xs text-blue-500 font-bold">
+                                Click to Upload{" "}
+                                <span className="text-gray-400 font-normal">
+                                  or drag and drop
+                                </span>
+                              </p>
+                              <p className="text-[10px] text-gray-400">
+                                SVG, PNG, or JPG (Max 800 x 800px)
+                              </p>
                             </>
                           )}
                         </div>
@@ -592,9 +732,11 @@ export default function EditUserModal({ isOpen, onClose, onSave, userData }: Pro
 
         {/* Add Industry Modal */}
         {showAddIndustryModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60 p-4">
             <div className="bg-navbarBg border border-border rounded-xl p-6 w-full max-w-sm shadow-2xl">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Add New Industry</h3>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                Add New Industry
+              </h3>
               <input
                 type="text"
                 placeholder="Enter industry name..."

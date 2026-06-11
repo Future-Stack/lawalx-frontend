@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSelector } from "react-redux";
 import {
   Building2,
   User,
@@ -44,11 +45,33 @@ export default function UserProfilePage() {
   const params = useParams();
   const router = useRouter();
   const userId = params.id as string;
+  const currency = useSelector((state: any) => state.settings.currency);
 
-  const { data: profileData, isLoading } = useGetUserProfileQuery(userId);
+  const { data: profileData, isLoading } = useGetUserProfileQuery({ userId, currency });
   const profile = profileData?.data;
 
   const [activeTab, setActiveTab] = useState<TabType>("Details");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tab = searchParams.get("tab");
+      const allowedTabs: TabType[] = ["Details", "Subscription & Billing", "Content", "Devices", "Activity Logs"];
+      if (tab && allowedTabs.includes(tab as TabType)) {
+        setActiveTab(tab as TabType);
+      }
+    }
+  }, []);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState(null, "", url.toString());
+    }
+  };
+
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditPersonalInfoOpen, setIsEditPersonalInfoOpen] = useState(false);
@@ -66,7 +89,35 @@ export default function UserProfilePage() {
   const handleLoginAsUser = async (id: string) => {
     try {
       const res = await loginAsUser(id).unwrap();
-      if (res.success) toast.success("Login tokens generated successfully");
+      if (res.success) {
+        // 1. Save admin's current tokens to sessionStorage for "Return to Admin" banner
+        const adminToken = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('token='))
+          ?.split('=')[1] || '';
+        const adminRefreshToken = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('refreshToken='))
+          ?.split('=')[1] || '';
+
+        sessionStorage.setItem('impersonation_original_token', adminToken);
+        sessionStorage.setItem('impersonation_original_refresh_token', adminRefreshToken);
+
+        // 2. Replace cookies with the user's impersonated tokens
+        const newToken = res.data.accessToken;
+        const newRefreshToken = res.data.refreshToken;
+        document.cookie = `token=${newToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `refreshToken=${newRefreshToken}; path=/; max-age=${30 * 24 * 60 * 60}; secure; samesite=strict`;
+
+        toast.success(`Impersonating ${res.data.user?.email || 'user'}. Redirecting...`);
+
+        // 3. Hard redirect to user dashboard or supporter portal
+        const role = res.data.user?.role?.toUpperCase() || 'USER';
+        const targetUrl = role === 'SUPPORTER' ? '/supporter/overview' : '/dashboard';
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 1000);
+      }
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to login as user");
     }
@@ -98,9 +149,30 @@ export default function UserProfilePage() {
   const currentSub = profile.currentSubscription;
   const storagePct = profile.stats?.storage?.usagePercentage || 0;
 
+  const formatPrice = (price: any): string => {
+    if (!price) return "N/A";
+    if (typeof price === "string") {
+      const num = parseFloat(price);
+      return isNaN(num) ? price : `$${num.toFixed(2)}`;
+    }
+    if (typeof price === "number") return `$${price.toFixed(2)}`;
+    if (typeof price === "object") {
+      if (currency === "NGN") {
+        const amt = price.amount ?? price.originalAmount;
+        return amt != null ? `₦${Number(amt).toFixed(2)}` : "N/A";
+      } else {
+        const amt = price.originalAmount ?? price.amount;
+        return amt != null ? `$${Number(amt).toFixed(2)}` : "N/A";
+      }
+    }
+    return "N/A";
+  };
+
   const planPrice = currentSub?.plan?.price
-    ? `$${parseFloat(currentSub.plan.price).toFixed(2)}/month`
-    : profile.currentPlan?.price || "N/A";
+    ? `${formatPrice(currentSub.plan.price)}/month`
+    : profile.currentPlan?.price
+      ? `${formatPrice(profile.currentPlan.price)}/month`
+      : "N/A";
 
   const user = {
     id: profile.id,
@@ -185,12 +257,12 @@ export default function UserProfilePage() {
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setIsActionMenuOpen(false)} />
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50">
-                    <button onClick={() => { setIsResetPasswordOpen(true); setIsActionMenuOpen(false); }} className="w-full cursor-pointer px-4 py-3 text-left flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                    {/* <button onClick={() => { setIsResetPasswordOpen(true); setIsActionMenuOpen(false); }} className="w-full cursor-pointer px-4 py-3 text-left flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors">
                       <RotateCcw className="w-4 h-4" /> Reset Password
                     </button>
                     <button onClick={() => { setIsChangePlanOpen(true); setIsActionMenuOpen(false); }} className="w-full cursor-pointer px-4 py-3 text-left flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700 transition-colors">
                       <Shuffle className="w-4 h-4" /> Change Plan
-                    </button>
+                    </button> */}
                     <button onClick={() => { setIsSuspendOpen(true); setIsActionMenuOpen(false); }} className="w-full cursor-pointer px-4 py-3 text-left flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm text-orange-600 dark:text-orange-400 border-t border-gray-200 dark:border-gray-700 transition-colors">
                       <UserX className="w-4 h-4" /> Suspend User
                     </button>
@@ -210,7 +282,7 @@ export default function UserProfilePage() {
         {(["Details", "Subscription & Billing", "Content", "Devices", "Activity Logs"] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => handleTabChange(tab)}
             className={`px-4 py-2 text-sm rounded-full mr-2 font-medium whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${
               activeTab === tab
                 ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-customShadow"
@@ -244,6 +316,10 @@ export default function UserProfilePage() {
             currentPlan={profile.currentPlan}
             paymentHistory={profile.paymentHistory}
             monthlyPayment={planPrice}
+            currency={currency}
+            userId={userId}
+            userName={user.name}
+            userEmail={user.email}
           />
         )}
         {activeTab === "Content" && (
