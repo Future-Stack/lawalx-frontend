@@ -70,6 +70,14 @@ function genId() {
     return Math.random().toString(36).slice(2);
 }
 
+function getUploadErrorMessage(error: any) {
+    if (typeof error?.data?.message === "string") return error.data.message;
+    if (Array.isArray(error?.data?.message)) return error.data.message.join(", ");
+    if (typeof error?.message === "string") return error.message;
+    if (typeof error?.error === "string") return error.error;
+    return "Something went wrong. Please try again.";
+}
+
 export default function UploadFileModal({
     isOpen,
     onClose,
@@ -271,6 +279,7 @@ export default function UploadFileModal({
             let hasErrorOccurred = false;
             let successCount = 0;
             let failureCount = 0;
+            let firstErrorMessage = "";
             const BATCH_SIZE = 4;
 
             const uploadedResults: any[] = [];
@@ -318,6 +327,9 @@ export default function UploadFileModal({
                     } catch (fileError: any) {
                         hasErrorOccurred = true;
                         failureCount++;
+                        if (!firstErrorMessage) {
+                            firstErrorMessage = getUploadErrorMessage(fileError);
+                        }
                         setFiles((prev) =>
                             prev.map((f) =>
                                 f.id === entry.id ? { ...f, status: "error", progress: 0 } : f
@@ -340,16 +352,14 @@ export default function UploadFileModal({
                 setIsPageLoading(false);
                 onClose();
             } else {
-                toast.error(`Upload completed with errors. ${successCount} succeeded, ${failureCount} failed.`);
+                toast.error(firstErrorMessage || `Upload completed with errors. ${successCount} succeeded, ${failureCount} failed.`);
                 // If at least some succeeded, we should still pass them back but maybe not close automatically if there are errors to show
                 if (uploadedResults.length > 0 && onSuccess) {
                     onSuccess(uploadedResults);
                 }
             }
         } catch (error: any) {
-            toast.error(
-                error?.data?.message || "Something went wrong. Please try again."
-            );
+            toast.error(getUploadErrorMessage(error));
         } finally {
             setIsPageLoading(false);
         }

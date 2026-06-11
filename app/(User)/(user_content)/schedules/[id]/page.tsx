@@ -22,6 +22,7 @@ import AssignedScreensSection from "./_components/AssignedScreensSection";
 import ContentPreview from "./_components/ContentPreview";
 import AddScreenDialog from "./_components/AddScreenDialog";
 import AddContentDialog from "./_components/AddContentDialog";
+import AddLowerThirdDialog from "./_components/AddLowerThirdDialog";
 import { DeleteConfirmationModal } from "@/components/schedules/DeleteModal";
 
 type ScheduleTargetDevice = {
@@ -109,8 +110,11 @@ export default function ScheduleDetailPage() {
 
   const [isAddScreenOpen, setIsAddScreenOpen] = useState(false);
   const [isAddContentOpen, setIsAddContentOpen] = useState(false);
+  const [isAddLowerThirdOpen, setIsAddLowerThirdOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [removedFileIds, setRemovedFileIds] = useState<string[]>([]);
+  const [localLowerThirdIds, setLocalLowerThirdIds] = useState<string[] | null>(null);
+  const [localLowerThirdData, setLocalLowerThirdData] = useState<any>(null);
 
   // Shared state for the currently playing content item
   const [playingIndex, setPlayingIndex] = useState(0);
@@ -130,7 +134,7 @@ export default function ScheduleDetailPage() {
   const [localDescription, setLocalDescription] = useState<string | null>(null);
   const [localContentType, setLocalContentType] = useState<string | null>(null);
   const [localRepeat, setLocalRepeat] = useState<string | null>(null);
-  const [localFile, setLocalFile] = useState<any | null>(null);
+  const [localFiles, setLocalFiles] = useState<any[] | null>(null);
 
   // Date & Time selection (initial state needs to be null to use fallback)
   const [localStartTime, setLocalStartTime] = useState<string | null>(null);
@@ -155,8 +159,17 @@ export default function ScheduleDetailPage() {
   const endDate = localEndDate ?? (schedule?.endDate ? dayjs(schedule.endDate).format("YYYY-MM-DD") : "");
 
   // Map API file data to ContentItem[] for ContentSection (handle all items)
-  const allContent: ContentItem[] = localFile
-    ? [localFile as ContentItem]
+  const allContent: ContentItem[] = localFiles
+    ? localFiles.map((f: any) => ({
+        id: f.id,
+        title: f.originalName || f.title,
+        type: f.type === "VIDEO" ? "video" : f.type === "AUDIO" || f.type === "audio" ? "audio" : "image",
+        thumbnail: f.type === "IMAGE" ? getUrl(f.url || f.thumbnail) : (f.url ? getUrl(f.url) : f.thumbnail || ""),
+        video: f.type === "VIDEO" ? getUrl(f.url || f.video) : undefined,
+        audio: f.type === "AUDIO" || f.type === "audio" ? getUrl(f.url || f.audio) : undefined,
+        size: formatBytes(f.size) || f.size,
+        duration: String(f.duration),
+      }))
     : ((schedule?.files && schedule.files.length > 0
       ? schedule.files
         .filter(f => !removedFileIds.includes(f.id))
@@ -297,12 +310,15 @@ export default function ScheduleDetailPage() {
     const apiContentType = pContentType === "image-video" ? "IMAGE_VIDEO" : pContentType === "audio" ? "AUDIO" : pContentType === "lower-third" ? "LOWERTHIRD" : "ALL_CONTENT";
 
     // Ensure we only send file IDs for actual files
-    const fileIds = localFile ? [localFile.id] : (schedule?.files ? schedule.files.filter(f => !removedFileIds.includes(f.id)).map(f => f.id) : []);
+    const fileIds = localFiles ? localFiles.map((f: any) => f.id) : (schedule?.files ? schedule.files.filter(f => !removedFileIds.includes(f.id)).map(f => f.id) : []);
 
     // Filter for valid UUIDs to prevent backend 400 errors
+    const lowerThirdIds = localLowerThirdIds ?? (schedule?.lowerThirdId ? [schedule.lowerThirdId] : []);
+
     const validProgramIds = pPrograms.map((p: any) => p.id).filter(isUUID);
     const validDeviceIds = pTargets.filter((t: any) => t.isEnabled).map((t: any) => t.deviceId).filter(isUUID);
     const validFileIds = fileIds.filter(isUUID);
+    const validLowerThirdIds = lowerThirdIds.filter(isUUID);
 
     return {
       name: pName,
@@ -320,6 +336,7 @@ export default function ScheduleDetailPage() {
       programIds: validProgramIds,
       deviceIds: validDeviceIds,
       fileIds: validFileIds,
+      lowerThirdIds: validLowerThirdIds.length > 0 ? validLowerThirdIds : undefined,
       status: schedule?.status || "playing",
     };
   };
@@ -370,8 +387,21 @@ export default function ScheduleDetailPage() {
       return;
     }
 
+    const fileIds = localFiles
+      ? localFiles.map((f: any) => f.id)
+      : (schedule?.files ? schedule.files.filter(f => !removedFileIds.includes(f.id)).map(f => f.id) : []);
+    const lowerThirdIds = localLowerThirdIds ?? (schedule?.lowerThirdId ? [schedule.lowerThirdId] : []);
+    const validFileIds = fileIds.filter(isUUID);
+    const validLowerThirdIds = lowerThirdIds.filter(isUUID);
+
     try {
-      await updateSchedule({ id: id as string, data: getPayload() }).unwrap();
+      await updateSchedule({
+        id: id as string,
+        data: {
+          fileIds: validFileIds,
+          lowerThirdIds: validLowerThirdIds.length > 0 ? validLowerThirdIds : undefined,
+        },
+      }).unwrap();
       toast.success("Schedule updated successfully");
       router.push("/schedules");
     } catch (err: any) {
@@ -464,15 +494,17 @@ export default function ScheduleDetailPage() {
           />
 
           <ContentSection
+            scheduleId={id as string}
             contentType={contentType}
             setContentType={(val) => setLocalContentType(val)}
             content={content}
             playingIndex={playingIndex}
             onItemClick={setPlayingIndex}
             onAddContent={() => setIsAddContentOpen(true)}
+            onAddTextSection={() => setIsAddLowerThirdOpen(true)}
             onRemoveContent={(id) => {
-              if (localFile?.id === id) {
-                setLocalFile(null);
+              if (localFiles) {
+                setLocalFiles(prev => (prev ?? []).filter((f: any) => f.id !== id));
               } else {
                 setRemovedFileIds(prev => [...prev, id]);
               }
@@ -518,7 +550,7 @@ export default function ScheduleDetailPage() {
           scheduleTime={scheduleTimeDisplay}
           playingIndex={playingIndex}
           setPlayingIndex={setPlayingIndex}
-          lowerThird={schedule?.lowerThird || (schedule?.lowerThirds && schedule.lowerThirds.length > 0 ? schedule.lowerThirds[0] : undefined)}
+          lowerThird={localLowerThirdData || schedule?.lowerThird || (schedule?.lowerThirds && schedule.lowerThirds.length > 0 ? schedule.lowerThirds[0] : undefined)}
           localActive={localActive}
           isUpdating={isUpdating}
         />
@@ -533,11 +565,38 @@ export default function ScheduleDetailPage() {
       <AddContentDialog
         isOpen={isAddContentOpen}
         onClose={() => setIsAddContentOpen(false)}
-        onSelect={(file) => {
-          setLocalFile(file);
+        onSelect={(files) => {
+          const existing = localFiles ?? (schedule?.files || []);
+          const existingIds = new Set(existing.map((f: any) => f.id));
+          const merged = [...existing, ...files.filter((f: any) => !existingIds.has(f.id))];
+          setLocalFiles(merged as any);
           setRemovedFileIds([]);
         }}
-        initialContentType={contentType === "all" ? "all" : contentType}
+        existingFileIds={schedule?.files?.map(f => f.id) || []}
+      />
+
+      <AddLowerThirdDialog
+        isOpen={isAddLowerThirdOpen}
+        onClose={() => setIsAddLowerThirdOpen(false)}
+        onLowerThirdCreated={(id, config) => {
+          setLocalLowerThirdIds([id]);
+          if (config) {
+            setLocalLowerThirdData({
+              text: config.message,
+              textColor: config.textColor,
+              font: config.fontFamily,
+              fontSize: config.fontSize === "14" ? "Small" : config.fontSize === "16" ? "Medium" : "Large",
+              duration: config.duration,
+              backgroundColor: config.backgroundColor,
+              backgroundOpacity: String(config.backgroundOpacity),
+              animation: config.enableAnimation ? (config.animationDirection === "right-to-left" ? "Right_to_Left" : "Left_to_Light") : "None",
+              loop: config.loop,
+              speed: config.speed === "slow" ? 20 : config.speed === "medium" ? 40 : 60,
+              position: config.position === "top" ? "Top" : "Bottom",
+            });
+          }
+        }}
+        existingLowerThird={schedule?.lowerThird || (schedule?.lowerThirds && schedule.lowerThirds.length > 0 ? schedule.lowerThirds[0] : undefined)}
       />
 
       <DeleteConfirmationModal
