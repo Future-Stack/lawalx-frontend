@@ -10,12 +10,18 @@ import PlanSelection from "@/components/auth/PlanSelection";
 import CustomEnterpriseForm from "@/components/auth/CustomEnterpriseForm";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { useGetAuthImageQuery } from "@/redux/api/admin/profile&settings/signImageApi";
+import { getUrl } from "@/lib/content-utils";
 
 type SignupStep = "details" | "verification" | "password" | "plans" | "enterprise" | "success";
 
 const SignUpPage = () => {
     const [step, setStep] = useState<SignupStep>("details");
     const [formData, setFormData] = useState<any>({});
+    
+    const { data: authImage } = useGetAuthImageQuery('signup');
+    const imageUrl = authImage?.data?.imageUrl ? getUrl(authImage.data.imageUrl) : undefined;
+
     // const [showSuccess, setShowSuccess] = useState(false);
 
     const handleNext = (stepData: any) => {
@@ -122,7 +128,7 @@ const SignUpPage = () => {
     if (!useLayout) return renderStep();
 
     return (
-        <AuthLayout>
+        <AuthLayout imageSrc={imageUrl}>
             {renderStep()}
         </AuthLayout>
     );
