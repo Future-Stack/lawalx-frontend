@@ -42,7 +42,7 @@ export const DATA_SOURCES: Record<string, ReportColumn[]> = {
         { id: 'Description', label: 'Description', type: 'text' },
         { id: 'Date',        label: 'Date',        type: 'date' },
     ],
-    'Subscription Billing': [
+    'Subscription & Billing': [
         { id: 'Subscription ID', label: 'Subscription ID', type: 'text' },
         { id: 'User',            label: 'User',            type: 'text' },
         { id: 'Plan',            label: 'Plan',            type: 'option', options: ['Basic', 'Premium', 'Elite'] },
@@ -50,7 +50,7 @@ export const DATA_SOURCES: Record<string, ReportColumn[]> = {
         { id: 'Start Date',      label: 'Start Date',      type: 'date' },
         { id: 'End Date',        label: 'End Date',        type: 'date' },
     ],
-    'Customer Support': [
+    'Customer Service & Support': [
         { id: 'Ticket ID',    label: 'Ticket ID',    type: 'text' },
         { id: 'User',         label: 'User',         type: 'text' },
         { id: 'Subject',      label: 'Subject',      type: 'text' },
@@ -58,7 +58,7 @@ export const DATA_SOURCES: Record<string, ReportColumn[]> = {
         { id: 'Priority',     label: 'Priority',     type: 'option', options: ['Low', 'Medium', 'High', 'Urgent'] },
         { id: 'Date Created', label: 'Date Created', type: 'date' },
     ],
-    'Content Program': [
+    'Content & Program': [
         { id: 'Program ID',   label: 'Program ID',   type: 'text' },
         { id: 'Name',         label: 'Name',         type: 'text' },
         { id: 'Status',       label: 'Status',       type: 'option', options: ['Active', 'Inactive', 'Draft'] },
