@@ -72,14 +72,14 @@ export default function DevicesFilter({
 }: DevicesFilterProps) {
   return (
     <div className="p-2 md:p-4 gap-2 rounded-[16px] border border-border bg-navbarBg flex flex-col lg:flex-row items-center self-stretch">
-      <div className="flex p-3 items-center gap-2 rounded-xl bg-input dark:bg-gray-800 flex-1 w-full">
+      <div className="flex p-3 items-center gap-2 rounded-lg bg-[#F9FAFB] dark:bg-gray-800 border border-border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex-1 w-full">
         <Search className="w-6 h-6 text-[#A3A3A3]" />
         <input
           type="text"
           placeholder="Search devices..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full text-base font-normal text-[#171717] dark:text-white placeholder:text-[#A3A3A3] focus:outline-none bg-transparent"
+          className="w-full text-sm font-medium text-black dark:text-white placeholder:text-[#A3A3A3] focus:outline-none bg-transparent"
         />
       </div>
       <div className="flex gap-2 w-full lg:w-auto">

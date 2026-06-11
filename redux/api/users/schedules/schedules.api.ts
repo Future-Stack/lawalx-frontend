@@ -21,6 +21,15 @@ const schedulesAPI = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Schedules"],
     }),
+    
+    updateLowerThird: build.mutation<SuccessResponse, { id: string; data: LowerThirdPayload }>({
+      query: ({ id, data }) => ({
+        url: `/lower-third/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["Schedules"],
+    }),
     getAllSchedulesData: build.query<GetSchedulesResponse, void>({
       query: () => ({
         url: "/schedule",
@@ -50,14 +59,24 @@ const schedulesAPI = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Schedules"],
     }),
+    deleteScheduleSingleContent: build.mutation<SuccessResponse, { id: string; contentId: string }
+    >({
+      query: ({ id, contentId }) => ({
+        url: `/schedule/${id}/content/${contentId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Schedules", "Content"],
+    }),
   }),
 });
 
 export const {
   useCreateScheduleMutation,
   useCreateLowerThirdMutation,
+  useUpdateLowerThirdMutation,
   useGetAllSchedulesDataQuery,
   useGetSingleScheduleDataQuery,
   useUpdateScheduleMutation,
   useDeleteScheduleMutation,
+  useDeleteScheduleSingleContentMutation,
 } = schedulesAPI;
