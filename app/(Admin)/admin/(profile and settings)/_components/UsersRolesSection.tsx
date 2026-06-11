@@ -5,7 +5,7 @@ import { Plus, Search, Calendar, Shield, Trash2, Edit, Eye, EyeOff, Clock, User,
 import BaseDialog from '@/common/BaseDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useGetAllEmployeesQuery, useCreateEmployeeMutation, useUpdateEmployeeMutation } from '@/redux/api/admin/profile&settings/userRoleApi';
+import { useGetAllEmployeesQuery, useCreateEmployeeMutation, useUpdateEmployeeMutation, useDeleteEmployeeHardMutation } from '@/redux/api/admin/profile&settings/userRoleApi';
 import { toast } from 'sonner';
 import { getUrl } from '@/lib/content-utils';
 import Image from 'next/image';
@@ -141,6 +141,10 @@ export default function UsersRolesSection() {
     const { data: employeesData, isLoading: isLoadingEmployees } = useGetAllEmployeesQuery(undefined);
     const [createEmployee, { isLoading: isCreating }] = useCreateEmployeeMutation();
     const [updateEmployee, { isLoading: isUpdating }] = useUpdateEmployeeMutation();
+    const [deleteEmployee, { isLoading: isDeleting }] = useDeleteEmployeeHardMutation();
+
+    const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+    const [employeeToDelete, setEmployeeToDelete] = useState<any | null>(null);
 
     // Modal Form State
     const [formData, setFormData] = useState<{
@@ -148,14 +152,14 @@ export default function UsersRolesSection() {
         email: string;
         password: string;
         role: string;
-        supporterRole: string;
+        supporterRole: string[];
         skills: string[];
     }>({
         name: '',
         email: '',
         password: '',
         role: '',
-        supporterRole: '',
+        supporterRole: [],
         skills: []
     });
 
@@ -173,7 +177,7 @@ export default function UsersRolesSection() {
         setIsEditing(false);
         setViewOnly(false);
         setCurrentUser(null);
-        setFormData({ name: '', email: '', password: '', role: '', supporterRole: '', skills: [] });
+        setFormData({ name: '', email: '', password: '', role: '', supporterRole: [], skills: [] });
         setErrors({});
         setAddEmployeeOpen(true);
     };
@@ -187,7 +191,7 @@ export default function UsersRolesSection() {
             email: emp.user?.account?.email || '',
             password: '••••••••', // Placeholder
             role: emp.user?.role === 'ADMIN' ? 'Admin' : 'Supporter',
-            supporterRole: emp.supporterRole?.[0] || '',
+            supporterRole: emp.supporterRole || [],
             skills: emp.skills || []
         });
         setErrors({});
@@ -203,7 +207,7 @@ export default function UsersRolesSection() {
             email: emp.user?.account?.email || '',
             password: '••••••••',
             role: emp.user?.role === 'ADMIN' ? 'Admin' : 'Supporter',
-            supporterRole: emp.supporterRole?.[0] || '',
+            supporterRole: emp.supporterRole || [],
             skills: emp.skills || []
         });
         setErrors({});
@@ -242,7 +246,7 @@ export default function UsersRolesSection() {
         if (!formData.role) newErrors.role = "Role is required";
 
         if (formData.role === 'Supporter') {
-            if (!formData.supporterRole) newErrors.supporterRole = "Supporter role is required";
+            if (!formData.supporterRole || formData.supporterRole.length === 0) newErrors.supporterRole = "Supporter role is required";
             if (formData.skills.length === 0) newErrors.skills = "At least one skill is required";
         }
 
@@ -254,14 +258,10 @@ export default function UsersRolesSection() {
         try {
             if (isEditing && currentUser) {
                 const patchData: any = {
-                    username: formData.name,
+                    employeeRole: formData.role.toUpperCase(),
                 };
-                // Only send password if admin has filled it in
-                if (formData.password && formData.password.trim() !== '' && formData.password !== '••••••••') {
-                    patchData.password = formData.password;
-                }
                 if (formData.role === 'Supporter') {
-                    patchData.supporterRole = [formData.supporterRole];
+                    patchData.supporterRole = formData.supporterRole;
                     patchData.skills = formData.skills;
                 }
 
@@ -281,7 +281,7 @@ export default function UsersRolesSection() {
             };
 
             if (formData.role === 'Supporter') {
-                payload.supporterRole = [formData.supporterRole];
+                payload.supporterRole = formData.supporterRole;
                 payload.skills = formData.skills;
             }
 
@@ -292,6 +292,20 @@ export default function UsersRolesSection() {
             }
         } catch (error: any) {
             toast.error(error?.data?.message || "Something went wrong");
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (!employeeToDelete) return;
+        try {
+            const res = await deleteEmployee(employeeToDelete.id).unwrap();
+            if (res.success) {
+                toast.success(res.message || "Employee deleted successfully");
+                setDeleteModalOpen(false);
+                setEmployeeToDelete(null);
+            }
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Failed to delete employee");
         }
     };
 
@@ -390,7 +404,13 @@ export default function UsersRolesSection() {
                                             >
                                                 <Edit className="w-5 h-5" />
                                             </button>
-                                            <button className="text-muted hover:text-red-500 transition-colors cursor-pointer">
+                                            <button 
+                                                onClick={() => {
+                                                    setEmployeeToDelete(emp);
+                                                    setDeleteModalOpen(true);
+                                                }}
+                                                className="text-muted hover:text-red-500 transition-colors cursor-pointer"
+                                            >
                                                 <Trash2 className="w-5 h-5" />
                                             </button>
                                         </div>
@@ -442,15 +462,19 @@ export default function UsersRolesSection() {
                             </div>
 
                             {formData.role === 'Supporter' && (
-                                <div className="bg-gray-50/50 dark:bg-gray-800/20 p-4 rounded-xl border border-border/50 space-y-1">
-                                    <p className="text-[10px] uppercase tracking-widest font-bold text-muted/80">Specialization</p>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-md bg-orange-500/10 flex items-center justify-center text-orange-500">
+                                <div className="bg-gray-50/50 dark:bg-gray-800/20 p-4 rounded-xl border border-border/50 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <p className="text-[10px] uppercase tracking-widest font-bold text-muted/80">Specialization</p>
+                                        <div className="w-6 h-6 rounded-md bg-orange-500/10 flex items-center justify-center text-orange-500 flex-shrink-0">
                                             <Calendar className="w-3.5 h-3.5" />
                                         </div>
-                                        <p className="text-sm font-bold text-headings">
-                                            {formData.supporterRole.replace('_', ' ')}
-                                        </p>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {Array.isArray(formData.supporterRole) && formData.supporterRole.map((r, i) => (
+                                            <span key={i} className="px-2 py-1 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-md text-[10px] font-bold border border-orange-200 dark:border-orange-500/20 whitespace-nowrap">
+                                                {r.replace(/_/g, ' ')}
+                                            </span>
+                                        ))}
                                     </div>
                                 </div>
                             )}
@@ -504,61 +528,65 @@ export default function UsersRolesSection() {
                     </div>
                 ) : (
                     <div className="space-y-4 pt-4 pb-10">
-                        <div className="space-y-1.5">
-                            <Label className="text-sm font-bold text-headings">Username <span className="text-red-500">*</span></Label>
-                            <div className="relative">
-                                <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.name ? 'text-red-400' : 'text-muted'}`} />
-                                <Input
-                                    placeholder="Jon Smith"
-                                    value={formData.name}
-                                    required
-                                    disabled={viewOnly}
-                                    onChange={(e) => handleInputChange('name', e.target.value)}
-                                    className={`bg-navbarBg h-11 pl-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.name ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${viewOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                />
-                            </div>
-                            {errors.name && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.name}</p>}
-                        </div>
+                        {!isEditing && (
+                            <>
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm font-bold text-headings">Username <span className="text-red-500">*</span></Label>
+                                    <div className="relative">
+                                        <User className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.name ? 'text-red-400' : 'text-muted'}`} />
+                                        <Input
+                                            placeholder="Jon Smith"
+                                            value={formData.name}
+                                            required
+                                            disabled={viewOnly}
+                                            onChange={(e) => handleInputChange('name', e.target.value)}
+                                            className={`bg-navbarBg h-11 pl-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.name ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${viewOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        />
+                                    </div>
+                                    {errors.name && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.name}</p>}
+                                </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="text-sm font-bold text-headings">Email <span className="text-red-500">*</span></Label>
-                            <div className="relative">
-                                <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.email ? 'text-red-400' : 'text-muted'}`} />
-                                <Input
-                                    placeholder="lawal@tape.com"
-                                    value={formData.email}
-                                    type="email"
-                                    required
-                                    disabled={viewOnly || isEditing}
-                                    onChange={(e) => handleInputChange('email', e.target.value)}
-                                    className={`bg-navbarBg h-11 pl-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${(viewOnly || isEditing) ? 'opacity-60 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`}
-                                />
-                            </div>
-                            {errors.email && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.email}</p>}
-                        </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm font-bold text-headings">Email <span className="text-red-500">*</span></Label>
+                                    <div className="relative">
+                                        <Mail className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.email ? 'text-red-400' : 'text-muted'}`} />
+                                        <Input
+                                            placeholder="lawal@tape.com"
+                                            value={formData.email}
+                                            type="email"
+                                            required
+                                            disabled={viewOnly || isEditing}
+                                            onChange={(e) => handleInputChange('email', e.target.value)}
+                                            className={`bg-navbarBg h-11 pl-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.email ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${(viewOnly || isEditing) ? 'opacity-60 cursor-not-allowed bg-gray-50 dark:bg-gray-800/50' : ''}`}
+                                        />
+                                    </div>
+                                    {errors.email && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.email}</p>}
+                                </div>
 
-                        <div className="space-y-1.5">
-                            <Label className="text-sm font-bold text-headings">Password <span className="text-red-500">*</span></Label>
-                            <div className="relative">
-                                <Shield className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.password ? 'text-red-400' : 'text-muted'}`} />
-                                <Input
-                                    type={showPassword ? "text" : "password"}
-                                    placeholder="H2di%hGa3d"
-                                    value={formData.password}
-                                    disabled={viewOnly}
-                                    onChange={(e) => handleInputChange('password', e.target.value)}
-                                    className={`bg-navbarBg h-11 pl-10 pr-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${viewOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-bgBlue transition-colors cursor-pointer"
-                                >
-                                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                </button>
-                            </div>
-                            {errors.password && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.password}</p>}
-                        </div>
+                                <div className="space-y-1.5">
+                                    <Label className="text-sm font-bold text-headings">Password <span className="text-red-500">*</span></Label>
+                                    <div className="relative">
+                                        <Shield className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${errors.password ? 'text-red-400' : 'text-muted'}`} />
+                                        <Input
+                                            type={showPassword ? "text" : "password"}
+                                            placeholder="H2di%hGa3d"
+                                            value={formData.password}
+                                            disabled={viewOnly}
+                                            onChange={(e) => handleInputChange('password', e.target.value)}
+                                            className={`bg-navbarBg h-11 pl-10 pr-10 text-headings focus:ring-2 placeholder:text-gray-400 transition-all ${errors.password ? 'border-red-500 focus:ring-red-500/20' : 'border-border focus:ring-bgBlue/30 focus:border-bgBlue'} ${viewOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-bgBlue transition-colors cursor-pointer"
+                                        >
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                        </button>
+                                    </div>
+                                    {errors.password && <p className="text-[10px] font-bold text-red-500 mt-1">{errors.password}</p>}
+                                </div>
+                            </>
+                        )}
 
                         <div className="space-y-1.5">
                             <Label className="text-sm font-bold text-headings">Role <span className="text-red-500">*</span></Label>
@@ -591,6 +619,7 @@ export default function UsersRolesSection() {
                                         ]}
                                         placeholder="Supporter Role"
                                         value={formData.supporterRole}
+                                        multiple={true}
                                         disabled={viewOnly}
                                         className={errors.supporterRole ? 'border-red-500' : ''}
                                         onChange={(val: any) => handleInputChange('supporterRole', val)}
@@ -637,12 +666,31 @@ export default function UsersRolesSection() {
                     </div>
                 )}
             </BaseDialog>
+
+            {/* Delete Confirmation Modal */}
+            <BaseDialog
+                open={deleteModalOpen}
+                setOpen={setDeleteModalOpen}
+                title="Delete Employee"
+                description="Are you sure you want to delete this employee? This action cannot be undone."
+                maxWidth="sm"
+            >
+                <div className="pt-4 flex gap-4">
+                    <button
+                        onClick={() => setDeleteModalOpen(false)}
+                        className="cursor-pointer flex-1 px-4 py-2 border border-border rounded-xl font-bold text-headings hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={confirmDelete}
+                        disabled={isDeleting}
+                        className="cursor-pointer flex-1 bg-red-500 text-nowrap hover:bg-red-600 text-white px-4 py-2 rounded-xl font-bold transition-colors disabled:opacity-70"
+                    >
+                        {isDeleting ? "Deleting..." : "Delete Employee"}
+                    </button>
+                </div>
+            </BaseDialog>
         </div>
     );
 }
-
-
-
-
-
-

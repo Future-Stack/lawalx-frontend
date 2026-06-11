@@ -283,7 +283,7 @@ export default function ReportHubFormModal({
                                         <Label className="text-sm font-semibold">Report Name *</Label>
                                         <Input
                                             placeholder="Report Name"
-                                            className="h-12 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl text-gray-900 dark:text-white"
+                                            className="h-12 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl text-gray-900 dark:text-white "
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                         />
@@ -292,7 +292,7 @@ export default function ReportHubFormModal({
                                         <Label className="text-sm font-semibold">Description (Optional)</Label>
                                         <textarea
                                             placeholder="Describe the purpose of this report"
-                                            className="w-full min-h-[120px] p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500/50"
+                                            className="w-full min-h-[120px] p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-black-500/50"
                                             value={formData.description}
                                             onChange={e => setFormData({ ...formData, description: e.target.value })}
                                         />
@@ -639,7 +639,7 @@ export default function ReportHubFormModal({
                 <div className="px-8 py-6 bg-gray-50/30 dark:bg-gray-800/20 border-t border-gray-50 dark:border-gray-800 flex items-center gap-4">
                     <Button
                         variant="outline"
-                        className="flex-1 rounded-xl h-12 font-bold border-gray-200 dark:border-gray-700 shadow-none"
+                        className="flex-1 rounded-xl cursor-pointer bg-gray-100 dark:bg-gray-800 text-red-500 dark:text-red-500 hover:bg-red-500 dark:hover:bg-red-500 dark:hover:text-white h-12 font-bold border-gray-200 dark:border-gray-700 shadow-none"
                         onClick={step === 1 ? onClose : () => setStep(step - 1)}
                     >
                         {step === 1 ? 'Cancel' : 'Back'}

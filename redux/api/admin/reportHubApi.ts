@@ -80,6 +80,12 @@ export const reportHubApi = baseApi.injectEndpoints({
       }),
       providesTags: (result, error, { id }) => [{ type: "ReportPreview", id }],
     }),
+    downloadReportData: builder.query({
+      query: (id) => ({
+        url: `/reporthub/${id}/download`,
+        method: "GET",
+      }),
+    }),
   }),
 });
 
@@ -94,4 +100,6 @@ export const {
   useRunReportMutation,
   useDeleteReportHistoryMutation,
   useGetReportPreviewQuery,
+  useDownloadReportDataQuery,
+  useLazyDownloadReportDataQuery,
 } = reportHubApi;
