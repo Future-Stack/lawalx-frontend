@@ -9,6 +9,10 @@ const PLAN_UI: Record<
   string,
   { buttonColor: string; borderColor: string; highlight?: boolean }
 > = {
+  FREE_TRIAL: {
+    buttonColor: "bg-[#0F172A] text-white hover:opacity-90 shadow-customShadow",
+    borderColor: "border-color",
+  },
   BASIC: {
     buttonColor:
       "bg-primary text-gray-500 hover:bg-gray-600 shadow-customShadow",

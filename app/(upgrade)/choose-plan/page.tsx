@@ -20,6 +20,7 @@ import {
   useGetPlanByIdQuery,
   useGetYearlyDiscountsQuery,
 } from "@/redux/api/users/plan/plan.api";
+import { sortPlansByTier } from "@/lib/planSort";
 import {
   formatScreenSizeLabel,
   parseScreenSize,
@@ -164,12 +165,7 @@ function ChoosePlanPageInner() {
   const checkoutPlan = planRes?.data ?? null;
   const plans = useMemo(() => {
     const rawPlans = plansRes?.data ?? [];
-    const order: Record<string, number> = { basic: 1, business: 2, premium: 3 };
-    return [...rawPlans].sort(
-      (a, b) =>
-        (order[a.name?.toLowerCase()] || 99) -
-        (order[b.name?.toLowerCase()] || 99),
-    );
+    return sortPlansByTier(rawPlans);
   }, [plansRes?.data]);
 
   const handleBillingToggle = () => {

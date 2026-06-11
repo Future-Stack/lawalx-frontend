@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Loader2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useGetReportPreviewQuery } from '@/redux/api/admin/reportHubApi';
+import DeviceLocation from '@/components/common/DeviceLocation';
 
 interface ReportHubPreviewModalProps {
     isOpen: boolean;
@@ -159,7 +160,44 @@ export default function ReportHubPreviewModal({
                                                                 : "text-gray-600 dark:text-gray-400"
                                                         )}
                                                     >
-                                                        {item[col] != null ? String(item[col]) : '—'}
+                                                        {col.toLowerCase() === 'location' && item[col] ? (() => {
+                                                            let lat = NaN;
+                                                            let lng = NaN;
+                                                            let originalValue = String(item[col]);
+                                                            
+                                                            // Handle string formats
+                                                            if (typeof item[col] === 'string') {
+                                                                try {
+                                                                    // Try JSON format like '{"lat":40.7128,"lng":-74.006}'
+                                                                    const loc = JSON.parse(item[col]);
+                                                                    if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+                                                                        lat = loc.lat;
+                                                                        lng = loc.lng;
+                                                                    }
+                                                                } catch (e) {
+                                                                    // Try comma-separated format like '40.7128,-74.006'
+                                                                    if (item[col].includes(',')) {
+                                                                        const parts = item[col].split(',');
+                                                                        lat = parseFloat(parts[0]);
+                                                                        lng = parseFloat(parts[1]);
+                                                                    }
+                                                                }
+                                                            } else if (typeof item[col] === 'object') {
+                                                                // Handle object format like { lat: 40.7128, lng: -74.006 }
+                                                                originalValue = JSON.stringify(item[col]);
+                                                                if (item[col] && typeof item[col].lat === 'number' && typeof item[col].lng === 'number') {
+                                                                    lat = item[col].lat;
+                                                                    lng = item[col].lng;
+                                                                }
+                                                            }
+
+                                                            if (!isNaN(lat) && !isNaN(lng)) {
+                                                                return <DeviceLocation lat={lat} lng={lng} />;
+                                                            }
+                                                            return originalValue;
+                                                        })() : (
+                                                            item[col] != null ? (typeof item[col] === 'object' ? JSON.stringify(item[col]) : String(item[col])) : '—'
+                                                        )}
                                                     </td>
                                                 ))}
                                             </tr>

@@ -8,12 +8,19 @@ import { useAddUserMutation } from "@/redux/api/admin/usermanagementApi";
 import { useGetActiveScreenSizesQuery } from "@/redux/api/users/plan/plan.api";
 
 // ── Plan name mapping ─────────────────────────────────────────────────────────
-const PLAN_OPTIONS = ["Basic", "Business", "Premium", "Enterprise"];
+const PLAN_OPTIONS = [
+  "Free Trial",
+  "Basic",
+  "Premium",
+  "Business",
+  "Enterprise",
+];
 const PLAN_API_MAP: Record<string, string> = {
-  "Basic": "BASIC",
-  "Business": "BUSINESS",
-  "Premium": "PREMIUM",
-  "Enterprise": "ENTERPRISE",
+  "Free Trial": "FREE_TRIAL",
+  Basic: "BASIC",
+  Premium: "PREMIUM",
+  Business: "BUSINESS",
+  Enterprise: "ENTERPRISE",
 };
 
 interface AddUserModalProps {

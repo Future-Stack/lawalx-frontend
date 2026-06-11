@@ -3,6 +3,11 @@
 import { createRoot } from "react-dom/client";
 import { toPng } from "html-to-image";
 import jsPDF from "jspdf";
+import {
+  enrichAdditionalPaymentInvoice,
+  preloadSignerImages,
+} from "@/lib/additionalPaymentInvoiceUtils";
+import type { AdditionalPaymentInvoice } from "@/redux/api/admin/payments/additional-payment/additionalPayment.type";
 import AdditionalPaymentInvoiceDocument, {
   AdditionalPaymentData,
 } from "./AdditionalPaymentInvoiceDocument";
@@ -10,8 +15,12 @@ import AdditionalPaymentInvoiceDocument, {
 const EXPORT_PX_WIDTH = 794;
 
 export async function downloadAdditionalPaymentInvoicePdf(
-  data: AdditionalPaymentData,
+  data: AdditionalPaymentData | AdditionalPaymentInvoice,
+  options?: { listFallback?: AdditionalPaymentInvoice | null },
 ): Promise<void> {
+  const enriched = await preloadSignerImages(
+    enrichAdditionalPaymentInvoice(data, options?.listFallback),
+  );
   const host = document.createElement("div");
   host.setAttribute("aria-hidden", "true");
   host.style.cssText = `position:fixed;left:0;top:0;width:${EXPORT_PX_WIDTH}px;margin:0;padding:0;pointer-events:none;opacity:0;z-index:-1;overflow:visible;background:#ffffff;`;
@@ -35,15 +44,14 @@ export async function downloadAdditionalPaymentInvoicePdf(
           display: "block",
         }}
       >
-        <AdditionalPaymentInvoiceDocument data={data} />
+        <AdditionalPaymentInvoiceDocument data={enriched} />
       </div>,
     );
 
     await new Promise<void>((resolve) => {
       requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
     });
-    // Give it a bit more time to render images
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 300));
 
     const element = mount.querySelector(
       "[data-invoice-root]",
@@ -77,8 +85,8 @@ export async function downloadAdditionalPaymentInvoicePdf(
 
       pdf.addImage(dataUrl, "PNG", 0, 0, pdfWidth, pdfHeight);
       
-      const prefix = data.paymentStatus === "SUCCESS" ? "receipt" : "invoice";
-      pdf.save(`${prefix}-${data.invoiceNumber || data.id}.pdf`);
+      const prefix = enriched.paymentStatus === "SUCCESS" ? "receipt" : "invoice";
+      pdf.save(`${prefix}-${enriched.invoiceNumber || enriched.id}.pdf`);
     } catch (pdfErr) {
       console.error("Failed to generate PDF from element:", pdfErr);
       throw pdfErr;

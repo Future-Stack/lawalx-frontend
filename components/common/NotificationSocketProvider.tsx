@@ -5,7 +5,7 @@ import { useAppSelector } from '@/redux/store/hook';
 import { selectCurrentToken } from '@/redux/features/auth/authSlice';
 import { getNotificationSocket, disconnectNotificationSocket } from '@/lib/notificationSocket';
 import { toast } from 'sonner';
-import type { RealtimeNotificationPayload, NotificationType } from '@/types/notification';
+import type { RealtimeNotificationPayload } from '@/types/notification';
 import { baseApi } from '@/redux/api/baseApi';
 import { useAppDispatch } from '@/redux/store/hook';
 
@@ -17,16 +17,15 @@ function showNotificationToast(payload: RealtimeNotificationPayload) {
     duration: 5000,
   };
 
-  const type: NotificationType = payload.type;
+  const type = (payload.type ?? 'INFO').toUpperCase();
 
-  if (type === 'SUCCESS') {
-    toast.success(payload.title, options);
-  } else if (type === 'WARNING') {
+  if (type === 'WARNING' || type === 'ALERT') {
     toast.warning(payload.title, options);
-  } else if (type === 'ERROR') {
+  } else if (type === 'ERROR' || type === 'SYSTEM') {
     toast.error(payload.title, options);
+  } else if (type === 'PROMOTION' || type === 'MESSAGE') {
+    toast.success(payload.title, options);
   } else {
-    // INFO (default)
     toast.info(payload.title, options);
   }
 }
@@ -47,7 +46,6 @@ export default function NotificationSocketProvider() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    // Only connect when the user is authenticated
     if (!token) {
       disconnectNotificationSocket();
       return;
@@ -80,8 +78,6 @@ export default function NotificationSocketProvider() {
     socket.on('notification', onNotification);
     socket.on('connect_error', onConnectError);
 
-    // Cleanup: remove listeners only (do NOT disconnect — keep socket alive
-    // for the entire session, just like the chat socket pattern)
     return () => {
       socket.off('connectionSuccess', onConnectionSuccess);
       socket.off('notification', onNotification);

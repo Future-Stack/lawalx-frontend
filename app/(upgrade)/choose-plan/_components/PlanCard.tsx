@@ -91,15 +91,20 @@ export default function PlanCard({
   const sectionGap = compact ? "space-y-3" : "space-y-6";
   const pricePad = compact ? "px-3 py-3" : "px-4 py-5";
   const featurePad = compact ? "p-3 space-y-2" : "p-4 space-y-3";
+  const visibleFeatures = compact
+    ? displayPlan.features.slice(0, 3)
+    : displayPlan.features;
 
   return (
     <div
-      className={`relative flex w-full flex-col overflow-hidden rounded-[24px] border bg-navbarBg transition-all duration-300 ${ui.borderColor} ${isSelected ? "ring-2 ring-primary-action" : ""}`}
+      className={`relative flex h-full w-full flex-col overflow-hidden rounded-[24px] border bg-navbarBg transition-all duration-300 ${ui.borderColor} ${isSelected ? "ring-2 ring-primary-action" : ""}`}
     >
       {/* Header */}
       <div className={pad}>
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div
+            className={`flex flex-wrap items-center gap-2 ${compact ? "min-h-[40px]" : ""}`}
+          >
             <h2 className={`font-inter ${nameSize} font-bold leading-normal text-headings`}>
               {displayName}
             </h2>
@@ -134,11 +139,16 @@ export default function PlanCard({
             {priceLabel}
           </span>
         </div>
-        {isAnnual && displayPlan.yearlyDiscount?.hasYearlyDiscount && (
-          <p className={`text-center ${compact ? "text-[11px]" : "text-[13px]"} font-medium text-bgGreen`}>
-            {displayPlan.yearlyDiscount.yearlyDiscountRate}% yearly discount applied
-          </p>
-        )}
+        <div className={compact ? "min-h-[16px]" : undefined}>
+          {isAnnual && displayPlan.yearlyDiscount?.hasYearlyDiscount && (
+            <p
+              className={`text-center ${compact ? "text-[11px]" : "text-[13px]"} font-medium text-bgGreen`}
+            >
+              {displayPlan.yearlyDiscount.yearlyDiscountRate}% yearly discount
+              applied
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Specs */}
@@ -216,18 +226,30 @@ export default function PlanCard({
       </div>
 
       {/* Features */}
-      {displayPlan.features.length > 0 && (
-        <div className={`${padX} pb-3 pt-0`}>
-          <p className={`font-inter ${compact ? "text-[9px]" : "text-[12px]"} font-bold tracking-wider text-gray mb-2 uppercase`}>
+      {(visibleFeatures.length > 0 || compact) && (
+        <div
+          className={`${padX} flex flex-1 flex-col pb-3 pt-0 ${compact ? "min-h-[104px]" : ""}`}
+        >
+          <p
+            className={`font-inter ${compact ? "text-[9px]" : "text-[12px]"} mb-2 font-bold uppercase tracking-wider text-gray`}
+          >
             Features
           </p>
-          <div className={`rounded-[10px] bg-cardBackground2 ${featurePad} border border-color`}>
-            {displayPlan.features.map((feature, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <Check className="h-3.5 w-3.5 text-bgGreen flex-shrink-0" />
-                <span className={`${featureTextSize} font-medium text-body`}>{feature}</span>
-              </div>
-            ))}
+          <div
+            className={`flex-1 rounded-[10px] bg-cardBackground2 ${featurePad} border border-color`}
+          >
+            {visibleFeatures.length > 0 ? (
+              visibleFeatures.map((feature, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <Check className="h-3.5 w-3.5 flex-shrink-0 text-bgGreen" />
+                  <span className={`${featureTextSize} font-medium text-body`}>
+                    {feature}
+                  </span>
+                </div>
+              ))
+            ) : (
+              <span className={`${featureTextSize} text-muted`}>—</span>
+            )}
           </div>
         </div>
       )}
