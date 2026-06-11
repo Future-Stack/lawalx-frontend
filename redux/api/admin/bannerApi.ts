@@ -54,6 +54,7 @@ export const bannerApi = baseApi.injectEndpoints({
         url: "/banners/active",
         method: "GET",
       }),
+      providesTags: ["Banner"],
       transformResponse: (response: any) => response.data,
     }),
     getBannerCount: builder.query({

@@ -261,7 +261,7 @@ const AddExistingContentDialog = ({ open, setOpen, targetFolderId }: AddExisting
                         placeholder="Search Content in your library..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10 bg-input border-borderGray text-headings h-11"
+                        className="pl-10 bg-input border-borderGray text-headings h-auto py-2"
                     />
                 </div>
 

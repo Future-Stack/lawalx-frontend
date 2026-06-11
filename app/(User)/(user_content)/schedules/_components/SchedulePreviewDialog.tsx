@@ -106,6 +106,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     }, [activeSchedule]);
 
     const currentItem = allItems[playingIndex];
+    const shouldShowLowerThird = Boolean(currentItem && effectiveLowerThird?.text);
 
     // Sync audio playback and volume with localActive
     useEffect(() => {
@@ -419,7 +420,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                         className={cn(
                             "absolute inset-0 z-0 transition-all duration-300",
                             isFading ? "animate-preview-exit" : "animate-preview-enter",
-                            effectiveLowerThird?.text && effectiveLowerThird.position !== "Top" ? "pb-12" : ""
+                            shouldShowLowerThird && effectiveLowerThird?.position !== "Top" ? "pb-12" : ""
                         )}
                     >
                         {getPreviewContent() || (
@@ -440,6 +441,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     )}
 
                     {/* OVERLAY TICKERS */}
+                    {shouldShowLowerThird && (
                     <div className="absolute inset-0 pointer-events-none flex flex-col justify-between z-10">
                         {/* TOP TICKER */}
                         {effectiveLowerThird?.text && effectiveLowerThird.position === "Top" && (
@@ -506,6 +508,7 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                             </div>
                         )}
                     </div>
+                    )}
                 </div>
 
                 {/* Metadata Row 1: Content Name and Play/Pause Action */}
