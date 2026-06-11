@@ -1,4 +1,8 @@
 import React from "react";
+import {
+  resolveBillToDisplay,
+  resolveSignerImageUrl,
+} from "@/lib/additionalPaymentInvoiceUtils";
 
 export interface AdditionalPaymentItem {
   id: string;
@@ -84,8 +88,10 @@ const AdditionalPaymentInvoiceDocument: React.FC<AdditionalPaymentInvoiceProps> 
   data,
 }) => {
   const platformName = "tape";
-  const baseUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "";
   const currency = data.currency || "USD";
+  const authorizedByImg = resolveSignerImageUrl(data.authorizedBy?.imageUrl);
+  const approvedByImg = resolveSignerImageUrl(data.approvedBy?.imageUrl);
+  const { name: billToName, subtext: billToSubtext } = resolveBillToDisplay(data);
 
   const dateToUse = data.billingDate || (data as any).createdAt || new Date().toISOString();
   const invoiceDate = new Date(dateToUse).toLocaleDateString("en-US", {
@@ -161,10 +167,10 @@ const AdditionalPaymentInvoiceDocument: React.FC<AdditionalPaymentInvoiceProps> 
                 }}
               >
                 <div style={{ color: "#6b7280" }}>Bill To :</div>
-                <div style={{ fontWeight: 700 }}>
-                  {data.billTo || data.user?.fullName || data.user?.username}
-                </div>
-                <div style={{ color: "#6b7280" }}>{data.address || data.user?.email}</div>
+                <div style={{ fontWeight: 700 }}>{billToName}</div>
+                {billToSubtext ? (
+                  <div style={{ color: "#6b7280" }}>{billToSubtext}</div>
+                ) : null}
                 <div style={{ color: "#6b7280", marginTop: "10px" }}>Bill ID :</div>
                 <div style={{ fontWeight: 700 }}>{data.invoiceNumber || data.id}</div>
               </td>
@@ -362,11 +368,11 @@ const AdditionalPaymentInvoiceDocument: React.FC<AdditionalPaymentInvoiceProps> 
                   paddingTop: "6px",
                 }}
               >
-                {data.authorizedBy?.imageUrl && (
+                {authorizedByImg && (
                   <div style={{ margin: "0 auto 8px", maxWidth: "160px" }}>
                     <img
                       crossOrigin="anonymous"
-                      src={`${baseUrl}/${data.authorizedBy.imageUrl}`}
+                      src={authorizedByImg}
                       style={{
                         display: "block",
                         margin: "0 auto",
@@ -396,11 +402,11 @@ const AdditionalPaymentInvoiceDocument: React.FC<AdditionalPaymentInvoiceProps> 
                   paddingTop: "6px",
                 }}
               >
-                {data.approvedBy?.imageUrl && (
+                {approvedByImg && (
                   <div style={{ margin: "0 auto 8px", maxWidth: "160px" }}>
                     <img
                       crossOrigin="anonymous"
-                      src={`${baseUrl}/${data.approvedBy.imageUrl}`}
+                      src={approvedByImg}
                       style={{
                         display: "block",
                         margin: "0 auto",

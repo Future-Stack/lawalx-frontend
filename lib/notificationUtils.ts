@@ -132,9 +132,57 @@ export function normalizePanelRole(role: string | null | undefined): PanelRole {
 
 // ─── Navigation ────────────────────────────────────────────────────────────────
 
+const TICKET_RESOURCE_TYPES = ['OTHER', 'MESSAGE', 'TASK'];
+
+function getUserSupportRoute(ticketId?: string | null): string {
+  return ticketId ? `/support?openTicket=${ticketId}` : '/support';
+}
+
+/**
+ * Extract the support TICKET uuid from a notification.
+ * Primary source: notification.resourceId (same contract as admin panel).
+ * Never use notification.id / notificationId — those are notification record IDs.
+ */
 function getTicketId(item: NotificationHistoryItem): string | null {
   const n = item.notification;
-  return (n?.resourceId as string) || (n?.metadata?.ticketId as string) || null;
+  const meta = n?.metadata as Record<string, unknown> | null | undefined;
+  const resourceId = n?.resourceId;
+  const resourceType = n?.resourceType;
+  const type = (n?.type ?? '').toUpperCase();
+  const status = resolveNotificationStatus(item);
+
+  // Primary: resourceId is the ticket uuid (admin uses this for ?openTicket=)
+  if (resourceId && typeof resourceId === 'string') {
+    if (resourceType && TICKET_RESOURCE_TYPES.includes(resourceType)) {
+      return resourceId;
+    }
+    if (type === 'MESSAGE' || type === 'TASK') {
+      return resourceId;
+    }
+    if (status?.includes('ticket')) {
+      return resourceId;
+    }
+  }
+
+  if (meta?.ticketId && typeof meta.ticketId === 'string') {
+    return meta.ticketId;
+  }
+  if (meta?.supportTicketId && typeof meta.supportTicketId === 'string') {
+    return meta.supportTicketId;
+  }
+
+  return null;
+}
+
+function isTicketRelatedNotification(item: NotificationHistoryItem): boolean {
+  const rt = item.notification?.resourceType;
+  if (rt && TICKET_RESOURCE_TYPES.includes(rt)) return true;
+  if (getTicketId(item)) return true;
+  const status = resolveNotificationStatus(item);
+  if (status?.includes('ticket')) return true;
+  const type = (item.notification?.type ?? '').toUpperCase();
+  if (type === 'MESSAGE' || type === 'TASK') return true;
+  return false;
 }
 
 /** Returns the page URL to navigate to when a notification is clicked */
@@ -155,8 +203,23 @@ export function getNotificationRoute(
       'device connections': '/devices',
       'payment successful': '/profile-settings/subscriptions',
       'payment warning': '/profile-settings/subscriptions',
+      'ticket tagged': getUserSupportRoute(ticketId),
     };
     if (routes[status]) return routes[status];
+  }
+
+  // USER ticket deep-link via resourceId — same pattern as admin ?openTicket=
+  if (role === 'USER' && ticketId) {
+    const type = (item.notification?.type ?? '').toUpperCase();
+    const isTicketLink =
+      (resourceType && TICKET_RESOURCE_TYPES.includes(resourceType)) ||
+      type === 'MESSAGE' ||
+      type === 'TASK' ||
+      Boolean(status?.includes('ticket'));
+
+    if (isTicketLink) {
+      return getUserSupportRoute(ticketId);
+    }
   }
 
   if (status && role === 'ADMIN') {
@@ -195,10 +258,10 @@ export function getNotificationRoute(
     if (resourceType === 'SCHEDULE') return `/schedules/${resourceId}`;
     if (resourceType === 'FILE') return `/content/${resourceId}`;
     if (resourceType === 'SYSTEM' && role === 'ADMIN') return '/admin/system-health';
-    if (resourceType === 'OTHER' && ticketId) {
+    if (TICKET_RESOURCE_TYPES.includes(resourceType) && ticketId) {
       if (role === 'ADMIN') return `/admin/support/support-tickets?openTicket=${ticketId}`;
       if (role === 'SUPPORTER') return `/supporter/overview?openTicket=${ticketId}`;
-      if (role === 'USER') return '/support';
+      if (role === 'USER') return getUserSupportRoute(ticketId);
     }
   }
 
@@ -206,7 +269,12 @@ export function getNotificationRoute(
   if (ticketId) {
     if (role === 'ADMIN') return `/admin/support/support-tickets?openTicket=${ticketId}`;
     if (role === 'SUPPORTER') return `/supporter/overview?openTicket=${ticketId}`;
-    if (role === 'USER') return '/support';
+    if (role === 'USER') return getUserSupportRoute(ticketId);
+  }
+
+  // ── USER catch-all: any ticket-related notification → /support ────────────
+  if (role === 'USER' && isTicketRelatedNotification(item)) {
+    return getUserSupportRoute(ticketId);
   }
 
   return null;

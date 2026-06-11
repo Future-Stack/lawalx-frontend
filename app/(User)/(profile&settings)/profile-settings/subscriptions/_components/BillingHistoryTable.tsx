@@ -27,15 +27,20 @@ export default function BillingHistoryTable({
     try {
       // Normalize amount to prevent object conversion issues
       let rawAmount: unknown = row.amount;
-      if (typeof rawAmount === 'object' && rawAmount !== null) {
+      if (typeof rawAmount === "object" && rawAmount !== null) {
         const amtObj = rawAmount as Record<string, number>;
-        rawAmount = (row.currency === 'NGN' ? amtObj.amount : amtObj.originalAmount) ?? amtObj.amount;
+        rawAmount =
+          (row.currency === "NGN" ? amtObj.amount : amtObj.originalAmount) ??
+          amtObj.amount;
       }
-      const finalAmount = typeof rawAmount === 'number' ? rawAmount : parseFloat(String(rawAmount)) || 0;
+      const finalAmount =
+        typeof rawAmount === "number"
+          ? rawAmount
+          : parseFloat(String(rawAmount)) || 0;
 
       const invoiceData = {
         paymentId: row.id,
-        invoice: row.transactionId || row.id,
+        invoice: row.transactionId,
         date: row.createdAt,
         amount: finalAmount,
         status: row.status,
@@ -43,13 +48,19 @@ export default function BillingHistoryTable({
         planName: planName.toUpperCase(),
         planDescription: `Subscription plan payment for ${planName}`,
         user: {
-          name: profileRes?.data?.full_name || profileRes?.data?.username || "Tape User",
-          email: row.email || profileRes?.data?.email || ""
-        }
+          name:
+            profileRes?.data?.full_name ||
+            profileRes?.data?.username ||
+            "Tape User",
+          email: row.email || profileRes?.data?.email || "",
+        },
       };
-      
+
       // We pass "USD" as default, but ideally it should match row.currency or settings currency
-      await downloadBillingInvoicePdf(invoiceData as unknown as PaymentHistoryItem, row.currency || "USD");
+      await downloadBillingInvoicePdf(
+        invoiceData as unknown as PaymentHistoryItem,
+        row.currency || "USD",
+      );
       toast.success("Receipt downloaded successfully!");
     } catch (error) {
       console.error("Failed to download receipt:", error);
