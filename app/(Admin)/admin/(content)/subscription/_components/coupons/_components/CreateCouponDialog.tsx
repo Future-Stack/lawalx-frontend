@@ -18,8 +18,8 @@ import { Calendar } from "@/components/ui/calendar";
 const APPLICABLE_PLAN_OPTIONS = [
   { label: "Free Trial", value: "FREE_TRIAL" },
   { label: "Basic", value: "BASIC" },
-  { label: "Business", value: "BUSINESS" },
   { label: "Premium", value: "PREMIUM" },
+  { label: "Business", value: "BUSINESS" },
 ] as const;
 
 const formatDateToYMD = (date: Date) => {
