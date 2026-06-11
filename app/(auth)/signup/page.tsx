@@ -19,8 +19,8 @@ const SignUpPage = () => {
     const [step, setStep] = useState<SignupStep>("details");
     const [formData, setFormData] = useState<any>({});
     
-    const { data: authImage } = useGetAuthImageQuery('signup');
-    const imageUrl = authImage?.data?.imageUrl ? getUrl(authImage.data.imageUrl) : undefined;
+    const { data: authImage, isLoading } = useGetAuthImageQuery('signup');
+    const imageUrl = authImage?.data?.imageUrl ? getUrl(authImage.data.imageUrl) : "/images/authImage.png";
 
     // const [showSuccess, setShowSuccess] = useState(false);
 
@@ -128,7 +128,7 @@ const SignUpPage = () => {
     if (!useLayout) return renderStep();
 
     return (
-        <AuthLayout imageSrc={imageUrl}>
+        <AuthLayout imageSrc={imageUrl} loading={isLoading}>
             {renderStep()}
         </AuthLayout>
     );
