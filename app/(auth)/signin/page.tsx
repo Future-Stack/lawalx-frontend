@@ -6,11 +6,11 @@ import { useGetAuthImageQuery } from "@/redux/api/admin/profile&settings/signIma
 import { getUrl } from "@/lib/content-utils";
 
 export default function SignInPage() {
-    const { data: authImage } = useGetAuthImageQuery('signin');
-    const imageUrl = authImage?.data?.imageUrl ? getUrl(authImage.data.imageUrl) : undefined;
+    const { data: authImage, isLoading } = useGetAuthImageQuery('signin');
+    const imageUrl = authImage?.data?.imageUrl ? getUrl(authImage.data.imageUrl) : "/images/signIn.png";
 
     return (
-        <AuthLayout imageSrc={imageUrl || "/images/signIn.png"}>
+        <AuthLayout imageSrc={imageUrl} loading={isLoading}>
             <SignInForm />
         </AuthLayout>
     );
