@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   Select,
@@ -50,6 +51,7 @@ function buildPageNumbers(current: number, total: number): (number | '...')[] {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export default function TicketsTable() {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TicketStatus | 'all'>('all');
   const [priorityFilter, setPriorityFilter] = useState<TicketPriority | 'all'>('all');
@@ -121,6 +123,17 @@ export default function TicketsTable() {
   // Dialog state
   const [viewTicket, setViewTicket] = useState<Ticket | null>(null);
   const [editTicket, setEditTicket] = useState<Ticket | null>(null);
+
+  // Open ticket from notification deep-link (?openTicket=uuid)
+  useEffect(() => {
+    const openTicketId = searchParams.get('openTicket');
+    if (!openTicketId || apiTickets.length === 0) return;
+
+    const match = apiTickets.find((t) => t.id === openTicketId);
+    if (match) {
+      setViewTicket(match);
+    }
+  }, [searchParams, apiTickets]);
 
   // Assign flow: step 1 → TeamWorkload, step 2 → AssignTicket
   const [workloadTicket, setWorkloadTicket] = useState<Ticket | null>(null);

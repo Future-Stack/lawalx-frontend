@@ -1,7 +1,8 @@
 /* eslint-disable */
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   ChevronDown,
   ChevronLeft,
@@ -72,6 +73,7 @@ function buildPageNumbers(current: number, total: number): (number | "...")[] {
 }
 
 export default function SupportTicketTable() {
+  const searchParams = useSearchParams();
   const { data: ticketsResponse, isLoading } = useGetAssignedTicketsQuery(
     undefined,
     {
@@ -118,6 +120,18 @@ export default function SupportTicketTable() {
       raw: t,
     }));
   }, [ticketsResponse]);
+
+  // Open ticket from notification deep-link (?openTicket=uuid)
+  useEffect(() => {
+    const openTicketId = searchParams.get('openTicket');
+    if (!openTicketId || tickets.length === 0) return;
+
+    const match = tickets.find((t) => t.id === openTicketId);
+    if (match) {
+      setActiveTicket(match);
+      setConversationOpen(true);
+    }
+  }, [searchParams, tickets]);
 
   const filtered = useMemo(() => {
     return tickets.filter((t) => {
