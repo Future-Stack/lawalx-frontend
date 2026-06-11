@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import {
@@ -51,6 +51,27 @@ export default function UserProfilePage() {
   const profile = profileData?.data;
 
   const [activeTab, setActiveTab] = useState<TabType>("Details");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const tab = searchParams.get("tab");
+      const allowedTabs: TabType[] = ["Details", "Subscription & Billing", "Content", "Devices", "Activity Logs"];
+      if (tab && allowedTabs.includes(tab as TabType)) {
+        setActiveTab(tab as TabType);
+      }
+    }
+  }, []);
+
+  const handleTabChange = (tab: TabType) => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("tab", tab);
+      window.history.replaceState(null, "", url.toString());
+    }
+  };
+
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEditPersonalInfoOpen, setIsEditPersonalInfoOpen] = useState(false);
@@ -261,7 +282,7 @@ export default function UserProfilePage() {
         {(["Details", "Subscription & Billing", "Content", "Devices", "Activity Logs"] as const).map((tab) => (
           <button
             key={tab}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => handleTabChange(tab)}
             className={`px-4 py-2 text-sm rounded-full mr-2 font-medium whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${
               activeTab === tab
                 ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shadow-customShadow"

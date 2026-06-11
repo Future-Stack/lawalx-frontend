@@ -275,8 +275,8 @@ export default function EnterprisePlanDialog({
                     <SelectContent className="z-99999">
                       <SelectItem value="FREE_TRIAL">Free Trial</SelectItem>
                       <SelectItem value="BASIC">Basic</SelectItem>
-                      <SelectItem value="BUSINESS">Business</SelectItem>
                       <SelectItem value="PREMIUM">Premium</SelectItem>
+                      <SelectItem value="BUSINESS">Business</SelectItem>
                       <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
                     </SelectContent>
                   </Select>

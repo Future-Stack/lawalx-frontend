@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useGetMyAdditionalPaymentsQuery, useLazyGetMyAdditionalPaymentByIdQuery } from "@/redux/api/users/additional-payment/additionalPayment.api";
 import { formatCurrency, formatDateTime } from "./format";
 import { downloadAdditionalPaymentInvoicePdf } from "@/components/common/downloadAdditionalPaymentInvoice";
-import { AdditionalPaymentData } from "@/components/common/AdditionalPaymentInvoiceDocument";
 
 export default function MyAdditionalPaymentTable() {
   const router = useRouter();
@@ -18,10 +17,13 @@ export default function MyAdditionalPaymentTable() {
     let toastId: string | number | undefined;
     try {
       toastId = toast.loading("Preparing invoice download...");
+      const listItem = invoices.find((row) => row.id === invoiceId);
       const response = await getInvoiceDetails(invoiceId).unwrap();
-      
+
       if (response?.data) {
-        await downloadAdditionalPaymentInvoicePdf(response.data as AdditionalPaymentData);
+        await downloadAdditionalPaymentInvoicePdf(response.data, {
+          listFallback: listItem,
+        });
         toast.success("Invoice downloaded successfully!", { id: toastId });
       } else {
         toast.error("Failed to fetch invoice details.", { id: toastId });

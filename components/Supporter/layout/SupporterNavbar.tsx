@@ -7,24 +7,16 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useTheme } from '@/components/Admin/layout/ThemeProvider';
 import { useGetUserProfileQuery } from '@/redux/api/users/userProfileApi';
-import { useGetMyNotificationsQuery, useReadAllNotificationsMutation, useReadNotificationMutation } from '@/redux/api/users/notificationApi';
-import { formatDistanceToNow } from 'date-fns';
-import { User, Monitor, Settings as SettingsIcon } from 'lucide-react';
+import { useGetMyNotificationsQuery, useReadAllNotificationsMutation } from '@/redux/api/users/notificationApi';
+import NotificationListItem from '@/components/notifications/NotificationListItem';
+import { useNotificationClick } from '@/hooks/useNotificationClick';
+import type { NotificationHistoryItem } from '@/types/notification';
 
 const getFullImageUrl = (path: string | null | undefined) => {
   if (!path) return null;
   if (path.startsWith('http')) return path;
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL?.replace('/api/v1', '');
   return `${baseUrl}${path.startsWith('/') ? '' : '/'}${path}`;
-};
-
-const getNotificationIcon = (type: string) => {
-  switch (type) {
-    case 'USER': return User;
-    case 'DEVICE': return Monitor;
-    case 'SYSTEM': return SettingsIcon;
-    default: return Bell;
-  }
 };
 
 interface SupporterNavbarProps {
@@ -43,7 +35,9 @@ export default function SupporterNavbar({
   // ── Notifications ────────────────────────────────────────────────────────────
   const { data: notificationData } = useGetMyNotificationsQuery();
   const [readAllNotifications] = useReadAllNotificationsMutation();
-  const [readNotification] = useReadNotificationMutation();
+  const { handleNotificationClick } = useNotificationClick({
+    onAfterClick: () => setNotifOpen(false),
+  });
 
   const allNotifications = notificationData?.data || [];
   const unreadCount = allNotifications.filter((n: any) => !n.isRead).length;
@@ -63,16 +57,6 @@ export default function SupporterNavbar({
     }
   };
 
-  const handleNotificationClick = async (id: string, isRead: boolean) => {
-    if (!isRead) {
-      try {
-        await readNotification(id).unwrap();
-      } catch (error) {
-        console.error('Failed to mark as read', error);
-      }
-    }
-    setNotifOpen(false);
-  };
   // ─────────────────────────────────────────────────────────────────────────────
 
   const profile = profileData?.data;
@@ -164,36 +148,13 @@ export default function SupporterNavbar({
                         No notifications yet
                       </div>
                     ) : (
-                      sortedNotifications.slice(0, 6).map((item: any) => {
-                        const IconComponent = getNotificationIcon(item.notification.actorType || 'SYSTEM');
-                        return (
-                          <div
-                            key={item.notificationId}
-                            onClick={() => handleNotificationClick(item.notificationId, item.isRead)}
-                            className={`px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-700 cursor-pointer transition-colors ${!item.isRead ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''}`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="mt-1">
-                                <IconComponent className="w-9 h-9 text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 rounded-full p-2" />
-                              </div>
-                              <div className="flex-1">
-                                <h4 className={`text-sm font-semibold mb-1 ${!item.isRead ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'}`}>
-                                  {item.notification.title}
-                                </h4>
-                                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                                  {item.notification.body}
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-500">
-                                  {formatDistanceToNow(new Date(item.notification.createdAt), { addSuffix: true })}
-                                </p>
-                              </div>
-                              {!item.isRead && (
-                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
+                      sortedNotifications.slice(0, 6).map((item: NotificationHistoryItem) => (
+                        <NotificationListItem
+                          key={item.notificationId}
+                          item={item}
+                          onClick={handleNotificationClick}
+                        />
+                      ))
                     )}
                   </div>
 

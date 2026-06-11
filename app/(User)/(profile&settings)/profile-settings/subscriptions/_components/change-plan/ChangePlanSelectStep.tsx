@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { sortPlansByTier } from "@/lib/planSort";
 import {
   formatScreenSizeLabel,
   parseScreenSize,
@@ -66,12 +67,7 @@ export default function ChangePlanSelectStep({
 
   const plans = useMemo(() => {
     const rawPlans = plansRes?.data ?? [];
-    const order: Record<string, number> = { basic: 1, business: 2, premium: 3 };
-    return [...rawPlans].sort(
-      (a, b) =>
-        (order[a.name?.toLowerCase()] || 99) -
-        (order[b.name?.toLowerCase()] || 99)
-    );
+    return sortPlansByTier(rawPlans);
   }, [plansRes?.data]);
 
   const { data: taxRes, isLoading: isTaxLoading } = useGetActiveTaxRegionsQuery();
@@ -168,7 +164,7 @@ export default function ChangePlanSelectStep({
           <span className="text-sm">Loading plans...</span>
         </div>
       ) : (
-        <div className="flex gap-4 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory">
+        <div className="flex items-stretch gap-4 overflow-x-auto pb-3 -mx-1 px-1 snap-x snap-mandatory custom-scrollbar">
           {plans.map((plan) => {
             const isCurrent =
               plan.name.toUpperCase() === currentPlanName.toUpperCase();
@@ -177,7 +173,7 @@ export default function ChangePlanSelectStep({
             return (
               <div
                 key={plan.id}
-                className="min-w-[260px] sm:min-w-[280px] flex-shrink-0 snap-start"
+                className="flex min-h-0 min-w-[260px] flex-shrink-0 snap-start self-stretch sm:min-w-[280px]"
               >
                 <PlanCard
                   plan={plan}

@@ -1,11 +1,28 @@
 /**
- * Notification Types
- * All possible notification statuses from the backend docs.
+ * Notification types — aligned with backend Prisma enums + API response.
  */
 
-// ─── Status string constants ───────────────────────────────────────────────────
+export type NotificationType =
+  | 'INFO'
+  | 'WARNING'
+  | 'ALERT'
+  | 'MESSAGE'
+  | 'TASK'
+  | 'SYSTEM'
+  | 'PROMOTION';
 
-/** Statuses that a regular USER can receive */
+export type NotificationResourceType =
+  | 'PROJECT'
+  | 'TASK'
+  | 'PROGRAM'
+  | 'MESSAGE'
+  | 'SYSTEM'
+  | 'FILE'
+  | 'SCHEDULE'
+  | 'OTHER';
+
+export type NotificationActorType = 'USER' | 'SYSTEM' | 'DEVICE';
+
 export type UserNotificationStatus =
   | 'scheduler start'
   | 'total storage'
@@ -14,7 +31,6 @@ export type UserNotificationStatus =
   | 'payment warning'
   | 'impersonate user';
 
-/** Statuses that an ADMIN / SUPERADMIN can receive */
 export type AdminNotificationStatus =
   | 'payment failed'
   | 'enterprise ticket created'
@@ -22,35 +38,41 @@ export type AdminNotificationStatus =
   | 'system error'
   | 'storage warning';
 
-/** All possible notification statuses (union) */
 export type NotificationStatus = UserNotificationStatus | AdminNotificationStatus;
 
-// ─── Notification type / severity ────────────────────────────────────────────
-
-export type NotificationType = 'INFO' | 'WARNING' | 'ERROR' | 'SUCCESS';
-
-// ─── Real-time socket payload (sent by the 'notification' event) ──────────────
+export type PanelRole = 'USER' | 'ADMIN' | 'SUPPORTER';
 
 export interface RealtimeNotificationPayload {
   notificationId: string;
   title: string;
   body: string;
-  type: NotificationType;
-  resourceId?: string;
-  notificationStatus: NotificationStatus;
+  type: NotificationType | string;
+  resourceId?: string | null;
+  notificationStatus?: NotificationStatus | string | null;
   createdAt: string;
 }
 
-// ─── REST history item (from GET /notification/my-notification) ──────────────
+export interface NotificationDetail {
+  id: string;
+  actorType?: NotificationActorType | string;
+  actorId?: string | null;
+  title: string;
+  body: string;
+  type?: NotificationType | string;
+  resourceType?: NotificationResourceType | string;
+  resourceId?: string | null;
+  notificationStatus?: NotificationStatus | string | null;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+  updatedAt?: string;
+}
 
 export interface NotificationHistoryItem {
+  userId?: string;
   notificationId: string;
   isRead: boolean;
-  notificationStatus: NotificationStatus;
-  notification: {
-    title: string;
-    body: string;
-    createdAt: string;
-    actorType?: string; // e.g. "USER", "DEVICE", "SYSTEM"
-  };
+  readAt?: string | null;
+  isDelivered?: boolean;
+  notificationStatus?: NotificationStatus | string | null;
+  notification: NotificationDetail;
 }

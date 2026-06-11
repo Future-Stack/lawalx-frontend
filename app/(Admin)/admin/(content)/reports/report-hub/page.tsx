@@ -64,7 +64,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { addPdfHeader } from '@/lib/pdfUtils';
-
+import { fetchAddressFromCoordinates, delay } from '@/lib/geocodeUtils';
 export default function ReportHub() {
     const [activeTab, setActiveTab] = useState<'saved' | 'history'>('saved');
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -289,10 +289,65 @@ export default function ReportHub() {
             const response = await triggerDownload(run.id).unwrap();
             toast.dismiss(loadingToast);
 
-            const data = response?.data || [];
-            if (data.length === 0) {
+            const rawData = response?.data || [];
+            if (rawData.length === 0) {
                 toast.error("No data found for this report.");
                 return;
+            }
+
+            // Clone data to avoid mutating RTK query cache
+            const data = JSON.parse(JSON.stringify(rawData));
+
+            // Perform geocoding if Location column exists
+            const hasLocationColumn = data.some((item: any) => Object.keys(item).some(k => k.toLowerCase() === 'location'));
+            if (hasLocationColumn) {
+                let count = 0;
+                let toastId: string | number | undefined;
+                
+                for (let i = 0; i < data.length; i++) {
+                    for (const key of Object.keys(data[i])) {
+                        if (key.toLowerCase() === 'location' && data[i][key]) {
+                            let lat = NaN;
+                            let lng = NaN;
+                            let originalValue = String(data[i][key]);
+                            
+                            if (typeof data[i][key] === 'string') {
+                                try {
+                                    const loc = JSON.parse(data[i][key]);
+                                    if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') {
+                                        lat = loc.lat;
+                                        lng = loc.lng;
+                                    }
+                                } catch (e) {
+                                    if (data[i][key].includes(',')) {
+                                        const parts = data[i][key].split(',');
+                                        lat = parseFloat(parts[0]);
+                                        lng = parseFloat(parts[1]);
+                                    }
+                                }
+                            } else if (typeof data[i][key] === 'object') {
+                                originalValue = JSON.stringify(data[i][key]);
+                                if (typeof data[i][key].lat === 'number' && typeof data[i][key].lng === 'number') {
+                                    lat = data[i][key].lat;
+                                    lng = data[i][key].lng;
+                                }
+                            }
+                            
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                if (count === 0 || count % 5 === 0) {
+                                    toastId = toast.loading(`Geocoding location data (${count + 1}/${data.length})...`, { id: toastId });
+                                }
+                                const address = await fetchAddressFromCoordinates(lat, lng);
+                                data[i][key] = address;
+                                await delay(600); // Respect Nominatim rate limit
+                                count++;
+                            } else {
+                                data[i][key] = originalValue;
+                            }
+                        }
+                    }
+                }
+                if (toastId) toast.dismiss(toastId);
             }
 
             const reportName = run.reportHub?.name || 'Report';

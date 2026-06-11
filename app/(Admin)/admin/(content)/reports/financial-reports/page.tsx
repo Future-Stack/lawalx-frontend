@@ -28,6 +28,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { addPdfHeader } from '@/lib/pdfUtils';
+import { sortByPlanNameField } from '@/lib/planSort';
 import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
@@ -326,37 +327,56 @@ const FinancialReport = () => {
           cancellations: item.cancellations,
           netGrowth: item.netGrowth
         })),
-        churnByPlan: churnRateByPlan.map((item: any) => ({
-          plan: item.planName,
-          rate: item.churnRate
-        }))
+        churnByPlan: sortByPlanNameField(
+          churnRateByPlan.map((item: any) => ({
+            planName: item.planName,
+            plan: item.planName,
+            rate: item.churnRate,
+          })),
+        ),
       },
       plans: {
-        allPlans: (planStatsData?.data || []).map((item: any) => ({
-          name: item.planName,
-          subscribers: item.subscribers || 0,
-          revenue: item.revenue || 0,
-          avgUser: item.avgUser || 0,
-          churnRate: item.churnRate || 0,
-          growth: item.growth || 0
-        })),
-        revenueData: (planRevenueData?.data?.points || []).map((item: any) => ({
-          plan: (item.planName || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-          revenue: item.value || 0
-        })),
-        subscribersData: (planSubscribersData?.data?.points || []).map((item: any) => ({
-          plan: (item.planName || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
-          subscribers: item.value || 0
-        }))
+        allPlans: sortByPlanNameField(
+          (planStatsData?.data || []).map((item: any) => ({
+            planName: item.planName,
+            name: item.planName,
+            subscribers: item.subscribers || 0,
+            revenue: item.revenue || 0,
+            avgUser: item.avgUser || 0,
+            churnRate: item.churnRate || 0,
+            growth: item.growth || 0,
+          })),
+        ),
+        revenueData: sortByPlanNameField(
+          (planRevenueData?.data?.points || []).map((item: any) => ({
+            planName: item.planName,
+            plan: (item.planName || '')
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+            revenue: item.value || 0,
+          })),
+        ),
+        subscribersData: sortByPlanNameField(
+          (planSubscribersData?.data?.points || []).map((item: any) => ({
+            planName: item.planName,
+            plan: (item.planName || '')
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c: string) => c.toUpperCase()),
+            subscribers: item.value || 0,
+          })),
+        ),
       },
       arpu: {
         overall: arpuStatsData?.data?.overall?.arpu || 0,
         overallGrowth: arpuStatsData?.data?.overall?.growth || 0,
-        byPlan: (arpuStatsData?.data?.byPlan || []).map((item: any) => ({
-          name: item.planName,
-          arpu: item.arpu,
-          growth: item.growth
-        })),
+        byPlan: sortByPlanNameField(
+          (arpuStatsData?.data?.byPlan || []).map((item: any) => ({
+            planName: item.planName,
+            name: item.planName,
+            arpu: item.arpu,
+            growth: item.growth,
+          })),
+        ),
         arpuTrend: (() => {
           const overallPoints = arpuTrendData?.data?.overall || [];
           const planData = arpuTrendData?.data?.byPlan || [];
@@ -391,12 +411,15 @@ const FinancialReport = () => {
         trialsStarted: trialStatsData?.data?.trialsStarted || 0,
         convertedToPaid: trialStatsData?.data?.convertedToPaid || 0,
         avgTrialDuration: trialStatsData?.data?.avgTrialDurationDays || 0,
-        conversionByPlan: (trialConvertData?.data?.plans || []).map((item: any) => ({
-          plan: item.planName,
-          trials: item.trialCount,
-          converted: item.convertedCount,
-          rate: item.conversionRate
-        })),
+        conversionByPlan: sortByPlanNameField(
+          (trialConvertData?.data?.plans || []).map((item: any) => ({
+            planName: item.planName,
+            plan: item.planName,
+            trials: item.trialCount,
+            converted: item.convertedCount,
+            rate: item.conversionRate,
+          })),
+        ),
         topFeature: 'N/A',
         featureUsage: 0,
         avgTimeToConvert: 0
