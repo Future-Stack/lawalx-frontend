@@ -65,7 +65,16 @@ const devicesAPI = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Devices"],
     }),
+
+    deviceSync: build.mutation<SuccessResponse, { deviceId: string }>({
+      query: ({ deviceId }) => ({
+        url: `/device/${deviceId}/sync`,
+        method: "PATCH",
+      }),
+      invalidatesTags: ["Devices"],
+    }),
+
   }),
 });
 
-export const { useAddDeviceMutation, useGetMyAllDevicesDataQuery, useGetSingleDeviceDataQuery, useDeleteDeviceMutation, useAssignDeviceToProgramMutation, useRenameDeviceMutation, useGetDevicePinWiseDataQuery } = devicesAPI;
+export const { useAddDeviceMutation, useGetMyAllDevicesDataQuery, useGetSingleDeviceDataQuery, useDeleteDeviceMutation, useAssignDeviceToProgramMutation, useRenameDeviceMutation, useGetDevicePinWiseDataQuery, useDeviceSyncMutation } = devicesAPI;
