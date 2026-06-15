@@ -89,7 +89,6 @@ export default function UploadFileModal({
     const dispatch = useDispatch();
 
     const [uploadFile] = useUploadFileMutation();
-    const { data: userProfile } = useGetUserProfileQuery();
     const [files, setFiles] = useState<FileEntry[]>([]);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
