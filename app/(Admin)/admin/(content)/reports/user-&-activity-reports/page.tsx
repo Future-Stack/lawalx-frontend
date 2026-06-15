@@ -698,7 +698,7 @@ const UserActivityReports = () => {
               </div>
             </div>
 
-            <div className="bg-navbarBg rounded-lg p-6 border border-border">
+            {/* <div className="bg-navbarBg rounded-lg p-6 border border-border">
               <h3 className="font-semibold mb-4">Feature Usage</h3>
               <div className="space-y-4">
                 {data.userAdoption.featureUsage.map((feature: any, idx: number) => (
@@ -722,7 +722,7 @@ const UserActivityReports = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="bg-navbarBg rounded-lg p-6 border border-border">
@@ -1009,7 +1009,12 @@ const UserActivityReports = () => {
                       {data.authentication.authEvents.map((event: any, idx: number) => (
                         <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                           <td className="py-3 px-4 text-sm text-nowrap">{event.id}</td>
-                          <td className="py-3 px-4 text-sm text-nowrap">{event.timestamp}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">
+                            {new Date(event.timestamp).toLocaleString(undefined, {
+                              dateStyle: 'medium',
+                              timeStyle: 'short'
+                            })}
+                          </td>
                           <td className="py-3 px-4 text-sm text-nowrap">{event.user}</td>
                           <td className="py-3 px-4 text-sm text-nowrap">
                             <span className="inline-flex items-center gap-1.5">
