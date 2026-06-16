@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { AudioLines, FilePlay, GalleryThumbnails } from "lucide-react";
+import { GalleryThumbnails } from "lucide-react";
 import NextImage from "next/image";
 import BaseSelect from "@/common/BaseSelect";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
@@ -55,7 +55,6 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
     data,
     onChange,
     onLowerThirdCreated,
-    onContentTypeChange,
     isAlreadyCreated,
     onSubmitLowerThird,
     isSubmitting = false,
@@ -191,12 +190,12 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
         { label: "Montserrat", value: "Montserrat" },
     ];
 
-    const contentTypeOptions = [
-        { label: "Select Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-muted" /> },
-        { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-muted" /> },
-        { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-muted" /> },
-        // { label: "Text Section", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-muted" /> }
-    ];
+    // const contentTypeOptions = [
+    //     { label: "Select Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-muted" /> },
+    //     { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-muted" /> },
+    //     { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-muted" /> },
+    //     { label: "Text Section", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-muted" /> }
+    // ];
 
     // const relatedContent = mockContent
     //     .filter((item) => item.id !== data.selectedContent.id)
@@ -207,12 +206,12 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
     return (
         <div className="space-y-6">
             {/* Content Type */}
-            <BaseSelect
+            {/* <BaseSelect
                 label="Content Type"
                 options={contentTypeOptions}
                 value="lower-third"
                 onChange={(v) => onContentTypeChange?.(v)}
-            />
+            /> */}
 
             <div className="flex flex-col xl:flex-row gap-6 w-full">
                 {/* LEFT */}
