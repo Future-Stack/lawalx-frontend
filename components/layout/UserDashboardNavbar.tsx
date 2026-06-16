@@ -26,7 +26,10 @@ import { useTheme } from "next-themes";
 import { useAppDispatch } from "@/redux/store/hook";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { logout } from "@/redux/features/auth/authSlice";
-import { useGetMyNotificationsQuery, useReadAllNotificationsMutation } from "@/redux/api/users/notificationApi";
+import {
+  useGetMyNotificationsQuery,
+  useReadAllNotificationsMutation,
+} from "@/redux/api/users/notificationApi";
 import NotificationListItem from "@/components/notifications/NotificationListItem";
 import { useNotificationClick } from "@/hooks/useNotificationClick";
 import type { NotificationHistoryItem } from "@/types/notification";
@@ -42,7 +45,6 @@ import CreateFolderDialog from "@/components/content/CreateFolderDialog";
 import CreateScheduleDialog from "@/app/(User)/(user_content)/schedules/_components/CreateScheduleDialog";
 import LogoutConfirmModal from "@/components/common/LogoutConfirmModal";
 import { getUrl } from "@/lib/content-utils";
-
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -114,7 +116,16 @@ export default function UserDashboardNavbar() {
         startOnboarding();
       }
     }
-  }, [pathname, userInfo?.firstTimeLogin, onboardingStep, startOnboarding, mounted, setOnboardingStep, setIsAddDeviceOpen, setIsCreateProgramOpen]);
+  }, [
+    pathname,
+    userInfo?.firstTimeLogin,
+    onboardingStep,
+    startOnboarding,
+    mounted,
+    setOnboardingStep,
+    setIsAddDeviceOpen,
+    setIsCreateProgramOpen,
+  ]);
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -142,7 +153,10 @@ export default function UserDashboardNavbar() {
   // Sort: Unread first, then by date (assuming API returns recent first or we sort by createdAt)
   const sortedNotifications = [...allNotifications].sort((a: any, b: any) => {
     if (a.isRead === b.isRead) {
-      return new Date(b.notification.createdAt).getTime() - new Date(a.notification.createdAt).getTime();
+      return (
+        new Date(b.notification.createdAt).getTime() -
+        new Date(a.notification.createdAt).getTime()
+      );
     }
     return a.isRead ? 1 : -1;
   });
@@ -182,9 +196,10 @@ export default function UserDashboardNavbar() {
                 href={item.href}
                 className={`
                   relative px-3 xl:px-3 ml-2 py-2 text-sm sm:text-base font-semibold transition-colors whitespace-nowrap group
-                  ${isActive(item.href)
-                    ? "text-bgBlue dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 w-fit rounded"
-                    : "text-navGray dark:text-gray-400 hover:text-bgBlue dark:hover:text-blue-400"
+                  ${
+                    isActive(item.href)
+                      ? "text-bgBlue dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/20 w-fit rounded"
+                      : "text-navGray dark:text-gray-400 hover:text-bgBlue dark:hover:text-blue-400"
                   }
                 `}
               >
@@ -221,7 +236,10 @@ export default function UserDashboardNavbar() {
               </button>
               {helpOpen && (
                 <>
-                  <div className="fixed inset-0 z-30" onClick={() => setHelpOpen(false)} />
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setHelpOpen(false)}
+                  />
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg overflow-hidden z-40 p-2">
                     <Link href="/faqs" onClick={() => setHelpOpen(false)}>
                       <button className="flex items-center w-full px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 rounded border-b border-gray-200 dark:border-gray-700 cursor-pointer">
@@ -229,7 +247,10 @@ export default function UserDashboardNavbar() {
                         <span className="ml-2">FAQs</span>
                       </button>
                     </Link>
-                    <Link href="/video_tutorials" onClick={() => setHelpOpen(false)}>
+                    <Link
+                      href="/video_tutorials"
+                      onClick={() => setHelpOpen(false)}
+                    >
                       <button className="flex items-center w-full px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 rounded border-b border-gray-200 dark:border-gray-700 cursor-pointer">
                         <VideoIcon className="w-4 h-4" />
                         <span className="ml-2">Video Tutorials</span>
@@ -274,7 +295,10 @@ export default function UserDashboardNavbar() {
 
             {notificationOpen && (
               <>
-                <div className="fixed inset-0 z-30" onClick={() => setNotificationOpen(false)} />
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setNotificationOpen(false)}
+                />
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg overflow-hidden z-40">
                   <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
@@ -288,14 +312,16 @@ export default function UserDashboardNavbar() {
                     </button>
                   </div>
                   <div className="overflow-y-auto max-h-96">
-                    {sortedNotifications.slice(0, 6).map((item: NotificationHistoryItem) => (
-                      <NotificationListItem
-                        key={item.notificationId}
-                        item={item}
-                        onClick={handleNotificationClick}
-                        size="md"
-                      />
-                    ))}
+                    {sortedNotifications
+                      .slice(0, 6)
+                      .map((item: NotificationHistoryItem) => (
+                        <NotificationListItem
+                          key={item.notificationId}
+                          item={item}
+                          onClick={handleNotificationClick}
+                          size="md"
+                        />
+                      ))}
                   </div>
 
                   <div className="px-6 py-3 text-center border-t border-gray-200 dark:border-gray-700">
@@ -315,8 +341,8 @@ export default function UserDashboardNavbar() {
             onClick={(e) => {
               const x = e.clientX;
               const y = e.clientY;
-              document.documentElement.style.setProperty('--x', `${x}px`);
-              document.documentElement.style.setProperty('--y', `${y}px`);
+              document.documentElement.style.setProperty("--x", `${x}px`);
+              document.documentElement.style.setProperty("--y", `${y}px`);
 
               if (!(document as any).startViewTransition) {
                 toggleTheme();
@@ -333,8 +359,12 @@ export default function UserDashboardNavbar() {
               <Moon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             ) : (
               <>
-                <Sun className={`w-5 h-5 text-yellow-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${isDarkTheme ? 'opacity-100 scale-100 rotate-0 group-hover:opacity-0 group-hover:scale-75 group-hover:-rotate-90' : 'opacity-0 scale-75 rotate-90 group-hover:opacity-100 group-hover:scale-100 group-hover:rotate-0'}`} />
-                <Moon className={`w-5 h-5 text-gray-600 dark:text-gray-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${!isDarkTheme ? 'opacity-100 scale-100 rotate-0 group-hover:opacity-0 group-hover:scale-75 group-hover:-rotate-90' : 'opacity-0 scale-75 rotate-90 group-hover:opacity-100 group-hover:scale-100 group-hover:rotate-0'}`} />
+                <Sun
+                  className={`w-5 h-5 text-yellow-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${isDarkTheme ? "opacity-100 scale-100 rotate-0 group-hover:opacity-0 group-hover:scale-75 group-hover:-rotate-90" : "opacity-0 scale-75 rotate-90 group-hover:opacity-100 group-hover:scale-100 group-hover:rotate-0"}`}
+                />
+                <Moon
+                  className={`w-5 h-5 text-gray-600 dark:text-gray-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${!isDarkTheme ? "opacity-100 scale-100 rotate-0 group-hover:opacity-0 group-hover:scale-75 group-hover:-rotate-90" : "opacity-0 scale-75 rotate-90 group-hover:opacity-100 group-hover:scale-100 group-hover:rotate-0"}`}
+                />
               </>
             )}
           </button>
@@ -366,45 +396,65 @@ export default function UserDashboardNavbar() {
             </button>
             {profileOpen && (
               <>
-                <div className="fixed inset-0 z-30" onClick={() => setProfileOpen(false)} />
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setProfileOpen(false)}
+                />
                 <div className="absolute right-0 mt-2 w-64 md:w-72 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-xl overflow-hidden z-40">
                   <div className="px-6 py-3">
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                          {userInfo?.full_name || "User"}
-                        </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{userInfo?.username || "username"}</p>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {userInfo?.full_name || "User"}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {userInfo?.username || "username"}
+                      </p>
                     </div>
                   </div>
 
                   <div className="px-6 py-2">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {userInfo?.role === "ADMIN" ? "Admin Access" : "My Plans"}
+                        {userInfo?.role === "ADMIN"
+                          ? "Admin Access"
+                          : "My Plans"}
                       </p>
                       <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-semibold px-2 py-0.5 rounded-full">
                         {userInfo?.role === "ADMIN" ? "Admin" : "Pro"}
                       </span>
                     </div>
-                    
+
                     {/* Storage Info */}
                     <div className="mt-2 space-y-1">
                       <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">
                         <span>Storage</span>
-                        <span>{((userInfo?.usedStorage || 0) / (userInfo?.totalStorage || 1) * 100).toFixed(1)}%</span>
+                        <span>
+                          {(
+                            ((userInfo?.usedStorage || 0) /
+                              (userInfo?.totalStorage || 1)) *
+                            100
+                          ).toFixed(1)}
+                          %
+                        </span>
                       </div>
                       <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-blue-500 rounded-full" 
-                          style={{ width: `${Math.min(((userInfo?.usedStorage || 0) / (userInfo?.totalStorage || 1) * 100), 100)}%` }}
+                        <div
+                          className="h-full bg-blue-500 rounded-full"
+                          style={{
+                            width: `${Math.min(((userInfo?.usedStorage || 0) / (userInfo?.totalStorage || 1)) * 100, 100)}%`,
+                          }}
                         />
                       </div>
                       <p className="text-[10px] text-gray-400">
-                        {userInfo?.usedStorage?.toFixed(2)} GB of {userInfo?.totalStorage} GB used
+                        {userInfo?.usedStorage?.toFixed(2)} GB of{" "}
+                        {userInfo?.totalStorage} GB used
                       </p>
                     </div>
 
-                    <Link href="/choose-plan" className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1">
+                    <Link
+                      href="/choose-plan"
+                      className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1"
+                    >
                       Manage Plans
                     </Link>
                   </div>
@@ -421,13 +471,19 @@ export default function UserDashboardNavbar() {
                       </Link> */}
                     </div>
                     <div className="px-4">
-                      <Link href="/profile-settings/general" className="flex items-center w-full text-left py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 px-2">
+                      <Link
+                        href="/profile-settings/general"
+                        className="flex items-center w-full text-left py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 px-2"
+                      >
                         <SettingsIcon className="w-4 h-4 mr-2" />
                         Edit Profile & Settings
                       </Link>
                     </div>
                     <div className="px-4">
-                      <Link href="/support" className="flex items-center w-full text-left py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 px-2">
+                      <Link
+                        href="/support"
+                        className="flex items-center w-full text-left py-2 text-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 px-2"
+                      >
                         <HelpCircleIcon className="w-4 h-4 mr-2" />
                         Support
                       </Link>
@@ -474,10 +530,11 @@ export default function UserDashboardNavbar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`block px-4 py-2.5 text-sm rounded-md transition-colors ${isActive(item.href)
-                  ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
-                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
-                  }`}
+                className={`block px-4 py-2.5 text-sm rounded-md transition-colors ${
+                  isActive(item.href)
+                    ? "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+                }`}
               >
                 {item.label}
               </Link>
@@ -487,7 +544,9 @@ export default function UserDashboardNavbar() {
 
             {/* Create New Section */}
             <div className="px-4 py-2">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Create New</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Create New
+              </p>
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -530,32 +589,67 @@ export default function UserDashboardNavbar() {
 
             {/* Help Section */}
             <div className="px-4 py-2">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Help & Support</p>
-              <Link href="/faqs" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Help & Support
+              </p>
+              <Link
+                href="/faqs"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400"
+              >
                 <HelpCircle className="w-4 h-4 mr-3" /> FAQs
               </Link>
-              <Link href="/video_tutorials" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400">
+              <Link
+                href="/video_tutorials"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400"
+              >
                 <VideoIcon className="w-4 h-4 mr-3" /> Video Tutorials
               </Link>
-              <Link href="/support" onClick={() => setMobileMenuOpen(false)} className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400">
+              <Link
+                href="/support"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center w-full py-2 text-sm text-gray-600 dark:text-gray-300 hover:text-bgBlue dark:hover:text-blue-400"
+              >
                 <Headphones className="w-4 h-4 mr-3" /> Support
               </Link>
             </div>
-
           </nav>
 
           <div className="border-t border-gray-200 dark:border-gray-700 px-4 py-3 space-y-3">
             {/* Mobile Help/Support */}
             <div className="space-y-1">
-              <p className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Support</p>
-              <Link href="/faqs" onClick={() => setMobileMenuOpen(false)} className="block px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded">FAQs</Link>
-              <Link href="/video_tutorials" onClick={() => setMobileMenuOpen(false)} className="block px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded">Video Tutorials</Link>
-              <Link href="/support" onClick={() => setMobileMenuOpen(false)} className="block px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded">Help Center</Link>
+              <p className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Support
+              </p>
+              <Link
+                href="/faqs"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded"
+              >
+                FAQs
+              </Link>
+              <Link
+                href="/video_tutorials"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded"
+              >
+                Video Tutorials
+              </Link>
+              <Link
+                href="/support"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded"
+              >
+                Help Center
+              </Link>
             </div>
 
             {/* Mobile Quick Actions */}
             <div className="space-y-1">
-              <p className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Quick Actions</p>
+              <p className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Quick Actions
+              </p>
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
@@ -614,15 +708,22 @@ export default function UserDashboardNavbar() {
                   )}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{userInfo?.full_name || "User"}</p>
-                  <p className="text-xs text-gray-500">@{userInfo?.username || "username"}</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">
+                    {userInfo?.full_name || "User"}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    @{userInfo?.username || "username"}
+                  </p>
                 </div>
               </div>
               <div className="space-y-1">
                 {/* <button onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2">
                   <UserRoundCogIcon className="w-4 h-4" /> Edit Profile
                 </button> */}
-                <button onClick={() => setMobileMenuOpen(false)} className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2">
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-left px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 rounded flex items-center gap-2"
+                >
                   <SettingsIcon className="w-4 h-4" /> Edit Profile & Settings
                 </button>
                 <button
@@ -710,11 +811,12 @@ export default function UserDashboardNavbar() {
         <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
           <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-gray-200 dark:border-gray-700">
             <CommonLoader size={56} text="Uploading files..." />
-            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium animate-pulse">Please do not close this page</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium animate-pulse">
+              Please do not close this page
+            </p>
           </div>
         </div>
       )}
     </header>
-
   );
 }
