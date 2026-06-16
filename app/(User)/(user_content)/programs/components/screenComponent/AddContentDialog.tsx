@@ -169,7 +169,7 @@ const AddContentDialog = ({ open, setOpen, programId, programName, existingFileI
                             : "border-borderGray dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-bgBlue hover:bg-blue-50 dark:hover:bg-blue-950/20"
                         )}
                       >
-                        <div onClick={(e) => e.stopPropagation()} className="shrink-0">
+                        <div className="shrink-0">
                           <div
                             className={cn(
                               "w-5 h-5 rounded border flex items-center justify-center transition-all",
