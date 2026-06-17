@@ -957,7 +957,7 @@ const UserActivityReports = () => {
                 </button> */}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
                   <div className="text-sm text-green-600 dark:text-green-400 mb-1">Successful Logins</div>
                   <div className="text-3xl font-bold text-green-700 dark:text-green-300">{data.authentication.successfulLogins}</div>
@@ -967,11 +967,6 @@ const UserActivityReports = () => {
                   <div className="text-sm text-red-600 dark:text-red-400 mb-1">Failed Attempts</div>
                   <div className="text-3xl font-bold text-red-700 dark:text-red-300">{data.authentication.failedAttempts}</div>
                   <div className="text-xs text-red-600 dark:text-red-400 mt-1">Requires review</div>
-                </div>
-                <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-                  <div className="text-sm text-blue-600 dark:text-blue-400 mb-1">2FA Verified</div>
-                  <div className="text-3xl font-bold text-blue-700 dark:text-blue-300">{data.authentication.twoFactorVerified}</div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">Enhanced security</div>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
                   <div className="text-sm text-green-600 dark:text-green-400 mb-1">Success Rate</div>
