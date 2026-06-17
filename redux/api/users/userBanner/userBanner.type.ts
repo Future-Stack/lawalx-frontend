@@ -17,9 +17,11 @@ export enum BannerType {
 
 export enum TargetUserType {
   ALL_USERS = "ALL_USERS",
-  STARTER = "STARTER",
-  BUSINESS = "BUSINESS",
   FREE_TRIAL = "FREE_TRIAL",
+  BASIC = "BASIC",
+  BUSINESS = "BUSINESS",
+  PREMIUM = "PREMIUM",
+  ENTERPRISE = "ENTERPRISE",
 }
 
 export enum SubscriptionPlanName {
