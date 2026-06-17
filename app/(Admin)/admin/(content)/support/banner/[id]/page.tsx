@@ -80,7 +80,7 @@ export default function EditBannerPage() {
                 secondaryButtonLink: banner.secondaryButtonUrl || '',
                 startDate: banner.startDate ? new Date(banner.startDate).toISOString().split('T')[0] : '',
                 endDate: banner.endDate ? new Date(banner.endDate).toISOString().split('T')[0] : '',
-                targetUserType: banner.targetUserType || 'ALL_USERS',
+                targetUserType: banner.targetUserType || '',
                 primaryButtonIcon: banner.primaryButtonIcon || '',
                 secondaryButtonIcon: banner.secondaryButtonIcon || '',
                 status: banner.status ? formatValue(banner.status) : 'Draft',
