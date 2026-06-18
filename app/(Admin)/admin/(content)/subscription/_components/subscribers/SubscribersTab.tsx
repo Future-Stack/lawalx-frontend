@@ -142,7 +142,6 @@ const SubscribersTab = () => {
               placeholder="All Plans"
               options={[
                 { label: "All Plans", value: "all" },
-                { label: "Free Trial", value: "free_trial" },
                 { label: "Basic", value: "basic" },
                 { label: "Premium", value: "premium" },
                 { label: "Business", value: "business" },
