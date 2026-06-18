@@ -69,6 +69,16 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
   const videoSrc = content?.video || (content?.type === "video" ? content?.thumbnail : undefined);
   const thumbnailSrc = content?.thumbnail;
   const currentFileName = content?.title || "No content selected";
+  const hasLowerThird = Boolean(lowerThird?.text);
+  const shouldShowLowerThird = hasLowerThird && Boolean(content);
+  const isTopLowerThird = lowerThird?.position === "Top";
+  const lowerThirdBackground = lowerThird
+    ? `${lowerThird.backgroundColor}${Math.round(
+        parseInt(lowerThird.backgroundOpacity || "80") * 2.55
+      ).toString(16).padStart(2, "0")}`
+    : undefined;
+  const lowerThirdFontSize =
+    lowerThird?.fontSize === "Small" ? "14px" : lowerThird?.fontSize === "Medium" ? "16px" : "20px";
 
   useEffect(() => {
     if (playingIndex >= items.length && items.length > 0) {
@@ -168,37 +178,11 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
       <div className="border border-border p-4 sm:p-6 rounded-xl bg-navbarBg space-y-4 sm:space-y-6 shadow-lg transition-shadow hover:shadow-xl overflow-hidden">
         {/* Media Container */}
         <div className="aspect-[16/11] relative overflow-hidden rounded-lg bg-black">
-          <div className={`w-full h-full ${isFading ? "animate-preview-exit" : "animate-preview-enter"}`}>
-            {/* TOP TICKER */}
-            {lowerThird?.text && lowerThird.position === "Top" && (
-              <div
-                className="absolute top-0 left-0 right-0 z-10 py-3 overflow-hidden"
-                style={{
-                  backgroundColor: `${lowerThird.backgroundColor}${Math.round(
-                    parseInt(lowerThird.backgroundOpacity || "80") * 2.55
-                  ).toString(16).padStart(2, "0")}`,
-                }}
-              >
-                <Marquee
-                  speed={lowerThird.speed || 40}
-                  direction={lowerThird.animation === "Right_to_Left" ? "left" : "right"}
-                  gradient={false}
-                  loop={lowerThird.loop ? 0 : 1}
-                >
-                  <p
-                    className="font-semibold px-4"
-                    style={{
-                      color: lowerThird.textColor,
-                      fontSize: lowerThird.fontSize === "Small" ? "14px" : lowerThird.fontSize === "Medium" ? "16px" : "20px",
-                      fontFamily: lowerThird.font || "inherit",
-                    }}
-                  >
-                    {lowerThird.text}
-                  </p>
-                </Marquee>
-              </div>
-            )}
-
+          <div
+            className={`absolute inset-0 z-0 transition-all duration-300 ${
+              isFading ? "animate-preview-exit" : "animate-preview-enter"
+            } ${shouldShowLowerThird && !isTopLowerThird ? "pb-12" : ""}`}
+          >
             {/* VIDEO */}
             {content?.type === "video" && videoSrc ? (
               <div className="w-full h-full">
@@ -223,7 +207,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                       }
                     }}
                     onReady={() => setIsMediaReady(true)}
-                    className={lowerThird?.text && lowerThird.position !== "Top" ? "plyr-has-ticker" : ""}
+                    className=""
                   />
               </div>
 
@@ -275,7 +259,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                 {/* Audio Controls Bar */}
                 <div 
                   className={`absolute left-5 right-5 z-20 flex items-center gap-3.5 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-500 ${
-                    lowerThird?.text && lowerThird.position !== "Top" ? "bottom-20" : "bottom-6"
+                    shouldShowLowerThird && !isTopLowerThird ? "bottom-20" : "bottom-6"
                   }`}
                 >
                   {/* Play/Pause */}
@@ -387,37 +371,64 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
                 <span className="text-sm">{items.length === 0 ? "No content added yet" : "Cannot preview this content type"}</span>
               </div>
             )}
-
-            {/* BOTTOM TICKER */}
-            {lowerThird?.text && lowerThird.position !== "Top" && (
-              <div
-                className="absolute bottom-0 left-0 right-0 z-10 py-2.5 overflow-hidden"
-                style={{
-                  backgroundColor: `${lowerThird.backgroundColor}${Math.round(
-                    parseInt(lowerThird.backgroundOpacity || "80") * 2.55
-                  ).toString(16).padStart(2, "0")}`,
-                }}
-              >
-                <Marquee
-                  speed={lowerThird.speed || 40}
-                  direction={lowerThird.animation === "Right_to_Left" ? "left" : "right"}
-                  gradient={false}
-                  loop={lowerThird.loop ? 0 : 1}
-                >
-                  <p
-                    className="font-semibold px-4"
-                    style={{
-                      color: lowerThird.textColor,
-                      fontSize: lowerThird.fontSize === "Small" ? "14px" : lowerThird.fontSize === "Medium" ? "16px" : "20px",
-                      fontFamily: lowerThird.font || "inherit",
-                    }}
-                  >
-                    {lowerThird.text}
-                  </p>
-                </Marquee>
-              </div>
-            )}
           </div>
+
+          {/* Lower third overlay */}
+          {shouldShowLowerThird && lowerThird && (
+            <div className="absolute inset-0 pointer-events-none flex flex-col justify-between z-10">
+              {isTopLowerThird && (
+                <div
+                  className="py-2.5 overflow-hidden shrink-0 pointer-events-auto"
+                  style={{ backgroundColor: lowerThirdBackground }}
+                >
+                  <Marquee
+                    speed={lowerThird.speed || 40}
+                    direction={lowerThird.animation === "Right_to_Left" ? "left" : "right"}
+                    gradient={false}
+                    loop={lowerThird.loop ? 0 : 1}
+                  >
+                    <p
+                      className="font-semibold px-4"
+                      style={{
+                        color: lowerThird.textColor,
+                        fontSize: lowerThirdFontSize,
+                        fontFamily: lowerThird.font || "inherit",
+                      }}
+                    >
+                      {lowerThird.text}
+                    </p>
+                  </Marquee>
+                </div>
+              )}
+
+              <div className="flex-1" />
+
+              {!isTopLowerThird && (
+                <div
+                  className="py-2.5 overflow-hidden shrink-0 pointer-events-auto"
+                  style={{ backgroundColor: lowerThirdBackground }}
+                >
+                  <Marquee
+                    speed={lowerThird.speed || 40}
+                    direction={lowerThird.animation === "Right_to_Left" ? "left" : "right"}
+                    gradient={false}
+                    loop={lowerThird.loop ? 0 : 1}
+                  >
+                    <p
+                      className="font-semibold px-4"
+                      style={{
+                        color: lowerThird.textColor,
+                        fontSize: lowerThirdFontSize,
+                        fontFamily: lowerThird.font || "inherit",
+                      }}
+                    >
+                      {lowerThird.text}
+                    </p>
+                  </Marquee>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* CENTRAL SPINNER (YouTube Style) */}
           {showSpinner && content && content.type !== "video" && (

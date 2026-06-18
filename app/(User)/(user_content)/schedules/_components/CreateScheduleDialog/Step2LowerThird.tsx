@@ -2,7 +2,7 @@
 "use client";
 
 import React from "react";
-import { AudioLines, FilePlay, GalleryThumbnails } from "lucide-react";
+import { GalleryThumbnails } from "lucide-react";
 import NextImage from "next/image";
 import BaseSelect from "@/common/BaseSelect";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Marquee from "react-fast-marquee";
 import { Switch } from "@/components/ui/switch";
 import { useCreateLowerThirdMutation } from "@/redux/api/users/schedules/schedules.api";
+import { LowerThirdPayload } from "@/redux/api/users/schedules/schedules.type";
 import { toast } from "sonner";
 
 /* =====================
@@ -44,14 +45,21 @@ interface Step2LowerThirdProps {
     onLowerThirdCreated?: (id: string) => void;
     onContentTypeChange?: (type: string) => void;
     isAlreadyCreated?: boolean;
+    onSubmitLowerThird?: (payload: LowerThirdPayload) => Promise<void>;
+    isSubmitting?: boolean;
+    submitLabel?: string;
+    loadingLabel?: string;
 }
 
 const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
     data,
     onChange,
     onLowerThirdCreated,
-    onContentTypeChange,
     isAlreadyCreated,
+    onSubmitLowerThird,
+    isSubmitting = false,
+    submitLabel = "Add Text Section",
+    loadingLabel = "Creating...",
 }) => {
     const [createLowerThird, { isLoading }] = useCreateLowerThirdMutation();
     const [isAdded, setIsAdded] = React.useState(false);
@@ -116,7 +124,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
             return 60;
         };
 
-        const payload = {
+        const payload: LowerThirdPayload = {
             text: lowerThirdConfig.message,
             textColor: lowerThirdConfig.textColor,
             font: lowerThirdConfig.fontFamily,
@@ -129,6 +137,12 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
             speed: mapSpeed(lowerThirdConfig.speed),
             position: mapPosition(lowerThirdConfig.position),
         };
+
+        if (onSubmitLowerThird) {
+            await onSubmitLowerThird(payload);
+            setIsAdded(true);
+            return;
+        }
 
         try {
             const response = await createLowerThird(payload).unwrap();
@@ -176,12 +190,12 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
         { label: "Montserrat", value: "Montserrat" },
     ];
 
-    const contentTypeOptions = [
-        { label: "Select Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-muted" /> },
-        { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-muted" /> },
-        { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-muted" /> },
-        // { label: "Text Section", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-muted" /> }
-    ];
+    // const contentTypeOptions = [
+    //     { label: "Select Content Type", value: "all", icon: <FilePlay className="w-5 h-5 text-muted" /> },
+    //     { label: "Image or Video", value: "image-video", icon: <FilePlay className="w-5 h-5 text-muted" /> },
+    //     { label: "Audio", value: "audio", icon: <AudioLines className="w-5 h-5 text-muted" /> },
+    //     { label: "Text Section", value: "lower-third", icon: <GalleryThumbnails className="w-5 h-5 text-muted" /> }
+    // ];
 
     // const relatedContent = mockContent
     //     .filter((item) => item.id !== data.selectedContent.id)
@@ -192,12 +206,12 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
     return (
         <div className="space-y-6">
             {/* Content Type */}
-            <BaseSelect
+            {/* <BaseSelect
                 label="Content Type"
                 options={contentTypeOptions}
                 value="lower-third"
                 onChange={(v) => onContentTypeChange?.(v)}
-            />
+            /> */}
 
             <div className="flex flex-col xl:flex-row gap-6 w-full">
                 {/* LEFT */}
@@ -504,15 +518,15 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                     <div className="mt-4">
                         <button
                             onClick={handleCreateLowerThird}
-                            disabled={isLoading || !data.lowerThirdConfig.message}
+                            disabled={isLoading || isSubmitting || !data.lowerThirdConfig.message}
                             className={`w-full h-11 bg-bgBlue text-white font-semibold rounded-xl hover:bg-blue-600 disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-customShadow cursor-pointer`}
                         >
-                            {isLoading ? (
+                            {isLoading || isSubmitting ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
                                 <GalleryThumbnails className="w-5 h-5" />
                             )}
-                            {isLoading ? "Creating..." : isAdded ? "Added ✓" : "Add Text Section"}
+                            {isLoading || isSubmitting ? loadingLabel : isAdded ? "Added ✓" : submitLabel}
                         </button>
                     </div>
                 </div>

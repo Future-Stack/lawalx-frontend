@@ -1,10 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { Eye, PencilLine, Trash2, MapPin, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Eye, PencilLine, Trash2, MapPin, Loader2, MonitorSmartphone } from "lucide-react";
 import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 import { Progress } from "@/components/ui/progress";
 import DeviceLocation from "@/components/common/DeviceLocation";
 import { DeviceView } from "../page";
+import { useDeviceSyncMutation } from "@/redux/api/users/devices/devices.api";
+import { toast } from "sonner";
 
 interface DevicesTableProps {
   isLoading: boolean;
@@ -36,6 +40,25 @@ export default function DevicesTable({
   onAction,
   onSelectLocation,
 }: DevicesTableProps) {
+  const [deviceSync] = useDeviceSyncMutation();
+  const [syncingId, setSyncingId] = useState<string | null>(null);
+
+  const handleSync = async (deviceId: string) => {
+    setSyncingId(deviceId);
+    try {
+      const res = await deviceSync({ deviceId }).unwrap();
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error("Failed to sync device");
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to sync device");
+    } finally {
+      setSyncingId(null);
+    }
+  };
+
   return (
     <div className="bg-navbarBg rounded-t-xl border border-border overflow-hidden">
       <div className="overflow-x-auto">
@@ -113,6 +136,25 @@ export default function DevicesTable({
                       title="Rename"
                     >
                       <PencilLine className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSync(device.id);
+                      }}
+                      disabled={syncingId !== null}
+                      className={`p-1.5 rounded-md transition-all cursor-pointer ${
+                        syncingId === device.id
+                          ? "bg-blue-50 dark:bg-blue-900/20 text-bgBlue"
+                          : "hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 hover:text-bgBlue"
+                      } ${syncingId !== null ? "opacity-50 cursor-not-allowed" : ""}`}
+                      title="Device Sync"
+                    >
+                      {syncingId === device.id ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <MonitorSmartphone className="w-5 h-5 md:w-6 md:h-6" />
+                      )}
                     </button>
                     <button
                       onClick={(e) => {

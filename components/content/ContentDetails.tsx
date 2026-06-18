@@ -40,6 +40,14 @@ import { sortByName, allContent } from "./MyContent";
 import { useUploadFileMutation, useGetSingleContentFolderDataQuery, useUpdateFolderNameMutation, useUpdateFileNameMutation, useDeleteFileMutation, useDeleteFolderMutation } from "@/redux/api/users/content/content.api";
 import { transformFile, transformFolder } from "@/lib/content-utils";
 
+const getUploadErrorMessage = (error: any) => {
+  if (typeof error?.data?.message === "string") return error.data.message;
+  if (Array.isArray(error?.data?.message)) return error.data.message.join(", ");
+  if (typeof error?.message === "string") return error.message;
+  if (typeof error?.error === "string") return error.error;
+  return "Upload failed. Please try again.";
+};
+
 interface ContentDetailsProps {
   content: ContentItem;
 }
@@ -154,7 +162,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (err: any) {
       console.error("Upload failed:", err);
-      toast.error(err?.data?.message || "Upload failed. Please try again.");
+      toast.error(getUploadErrorMessage(err));
     }
   };
 

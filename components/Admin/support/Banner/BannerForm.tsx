@@ -119,15 +119,18 @@ export default function BannerForm({ data, onChange, mode }: BannerFormProps) {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Targeted User</label>
-                        <Select value={data.targetUserType} onValueChange={(val) => handleChange('targetUserType', val)}>
+                        <Select value={data.targetUserType || '--'} onValueChange={(val) => handleChange('targetUserType', val === '--' ? '' : val)}>
                             <SelectTrigger className="w-full bg-navbarBg border-border">
                                 <SelectValue placeholder="Select target users" />
                             </SelectTrigger>
                             <SelectContent className="bg-navbarBg border-border">
-                                <SelectItem value="ALL_USERS">All Users</SelectItem> 
+                                <SelectItem value="--">--</SelectItem>
+                                <SelectItem value="ALL_USERS">All Users</SelectItem>
+                                <SelectItem value="FREE_TRIAL">Free Trial</SelectItem>
                                 <SelectItem value="BASIC">Basic</SelectItem>
                                 <SelectItem value="BUSINESS">Business</SelectItem>
                                 <SelectItem value="PREMIUM">Premium</SelectItem>
+                                <SelectItem value="ENTERPRISE">Enterprise</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

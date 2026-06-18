@@ -12,14 +12,52 @@ import { useAppDispatch } from '@/redux/store/hook';
 // ─── Toast style based on notification type ────────────────────────────────────
 
 function showNotificationToast(payload: RealtimeNotificationPayload) {
+  const title = (payload.title || '').toLowerCase();
+  const body = (payload.body || '').toLowerCase();
+  const textToTest = `${title} ${body}`;
+
+  // Suppress duplicate socket notification toasts for synchronous actions
+  // as they already display immediate HTTP success toasts locally.
+  const isSyncAction = 
+    title.includes('program') || body.includes('program') ||
+    title.includes('device') || body.includes('device') ||
+    title.includes('schedule') || body.includes('schedule') ||
+    title.includes('folder') || body.includes('folder');
+
+  const isVideo = textToTest.includes('video') || textToTest.includes('upload');
+
+  if (isSyncAction && !isVideo) {
+    return;
+  }
+
   const options = {
     description: payload.body,
     duration: 5000,
   };
 
   const type = (payload.type ?? 'INFO').toUpperCase();
+  
+  const hasSuccessKeywords = 
+    textToTest.includes('success') || 
+    textToTest.includes('complete') || 
+    textToTest.includes('uploaded') ||
+    textToTest.includes('created') ||
+    textToTest.includes('added') ||
+    textToTest.includes('deleted') ||
+    textToTest.includes('removed') ||
+    textToTest.includes('assigned');
 
-  if (type === 'WARNING' || type === 'ALERT') {
+  const hasErrorKeywords = 
+    textToTest.includes('fail') || 
+    textToTest.includes('error') || 
+    textToTest.includes('invalid') || 
+    textToTest.includes('reject');
+  
+  const isImplicitSuccess = hasSuccessKeywords && !hasErrorKeywords;
+
+  if (isImplicitSuccess) {
+    toast.success(payload.title, options);
+  } else if (type === 'WARNING' || type === 'ALERT') {
     toast.warning(payload.title, options);
   } else if (type === 'ERROR' || type === 'SYSTEM') {
     toast.error(payload.title, options);

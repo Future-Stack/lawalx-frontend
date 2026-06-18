@@ -32,6 +32,13 @@ interface AddDeviceModalProps {
   forceShowProgram?: boolean;
 }
 
+const getAddDeviceErrorMessage = (error: any) => {
+  if (typeof error?.data?.message === "string") return error.data.message;
+  if (typeof error?.message === "string") return error.message;
+  if (typeof error?.error === "string") return error.error;
+  return "Failed to add device";
+};
+
 function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgram }: AddDeviceModalProps) {
   const [pin, setPin] = useState("");
   const [deviceName, setDeviceName] = useState("");
@@ -132,8 +139,7 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
         toast.success(res.message || "Device added successfully");
       }
     } catch (err: any) {
-      const error = err as { data?: { message?: string } };
-      toast.error(error?.data?.message || "Failed to add device");
+      toast.error(getAddDeviceErrorMessage(err));
     }
   };
 
