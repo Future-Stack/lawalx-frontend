@@ -265,14 +265,14 @@ const BillingTable = ({
                         <Eye className="mr-2 h-4 w-4" />
                         View Details
                       </DropdownMenuItem> */}
-                      <DropdownMenuItem>
+                      {/* <DropdownMenuItem>
                         <ArrowUpCircle className="mr-2 h-4 w-4" />
                         change plan
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      </DropdownMenuItem> */}
+                      {/* <DropdownMenuItem>
                         <Mail className="mr-2 h-4 w-4" />
                         Resend Receipt
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
 
                       <DropdownMenuItem
                         onClick={() => handleViewInGateway(payment.paymentId)}

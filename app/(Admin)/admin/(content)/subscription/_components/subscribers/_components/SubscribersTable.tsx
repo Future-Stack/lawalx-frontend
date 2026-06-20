@@ -137,9 +137,9 @@ const SubscribersTable = ({
                         <CreditCard className="mr-2 h-4 w-4" /> Additional
                         payment
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      {/* <DropdownMenuItem>
                         <ArrowUpCircle className="mr-2 h-4 w-4" /> Change Plan
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
                       <DropdownMenuItem
                         className="text-red-500 focus:text-red-500"
                         onClick={() => handleCancelPlan(sub.userId)}
