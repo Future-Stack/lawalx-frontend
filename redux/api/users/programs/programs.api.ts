@@ -59,7 +59,17 @@ const programsAPI = baseApi.injectEndpoints({
       invalidatesTags: ["Programs", "Content"],
     }),
 
+    // Program sync api
+    createProgramSync: build.mutation<SuccessResponse, { programId: string }>({
+      query: ({ programId }) => ({
+        url: `/program/${programId}/sync`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Devices"],
+    }),
+    // ----------------------
+
   }),
 });
 
-export const { useCreateProgramMutation, useGetAllProgramsDataQuery, useGetSingleProgramDataQuery, useUpdateSingleProgramMutation, useDeleteProgramMutation, useDeleteTimelineItemMutation } = programsAPI;
+export const { useCreateProgramMutation, useGetAllProgramsDataQuery, useGetSingleProgramDataQuery, useUpdateSingleProgramMutation, useDeleteProgramMutation, useDeleteTimelineItemMutation, useCreateProgramSyncMutation } = programsAPI;

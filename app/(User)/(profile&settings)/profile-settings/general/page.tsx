@@ -36,8 +36,8 @@ export default function General() {
 
     const region = watch("region");
     const timeZone = watch("timeZone");
-    const theme = watchPref("theme");
-    const language = watchPref("language");
+    // const theme = watchPref("theme");
+    // const language = watchPref("language");
     const timeFormat = watchPref("timeFormat");
     const dateFormat = watchPref("dateFormat");
 
