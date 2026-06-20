@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from "react";
-import { FileText, Tv, ChevronDown, ChevronUp, Monitor, WifiOff, ListTree, Clock } from "lucide-react";
+"use client";
+
+import { FileText, Tv, ChevronDown, ChevronUp, Monitor, ListTree, Clock } from "lucide-react";
 import ResolvedLocation from "@/common/ResolvedLocation";
+import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 
 interface ProgramOverviewProps {
   assignedContent: string;
@@ -88,31 +90,7 @@ const ProgramOverview = ({
 
                   {/* Actionable Status Badge */}
                   <div className="shrink-0">
-                    {device.status === "ONLINE" ? (
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#ECFDF5] border border-[#A7F3D0] text-[#059669] text-[10px] font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" />
-                        Online
-                      </div>
-                    ) : device.status === "OFFLINE" ? (
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#FEF2F2] border border-[#FECACA] text-[#DC2626] text-[10px] font-bold">
-                        <WifiOff className="w-3 h-3" />
-                        Offline
-                      </div>
-                    ) : device.status === "PAIRED" ? (
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                        Paired
-                      </div>
-                    ) : device.status === "WAITING" ? (
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-orange-50 border border-orange-200 text-orange-700 text-[10px] font-bold">
-                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
-                        Waiting
-                      </div>
-                    ) : (
-                      <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-[#F5F5F5] border border-[#E5E5E5] text-[#737373] text-[10px] font-bold">
-                        {device.status}
-                      </div>
-                    )}
+                    <DeviceStatusBadge status={device.status} />
                   </div>
                 </div>
               ))}

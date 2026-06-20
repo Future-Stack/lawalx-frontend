@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import {
@@ -9,15 +10,17 @@ import {
   Music,
   Play,
   Pause,
+  RefreshCw,
 } from "lucide-react";
 import React, { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Program, WorkoutStatus } from "@/redux/api/users/programs/programs.type";
-import { useUpdateSingleProgramMutation } from "@/redux/api/users/programs/programs.api";
+import { useUpdateSingleProgramMutation, useCreateProgramSyncMutation } from "@/redux/api/users/programs/programs.api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect } from "react";
 import Image from "next/image";
+import { toast } from "sonner";
 dayjs.extend(relativeTime);
 
 interface ScreenCardProps {
@@ -27,6 +30,7 @@ interface ScreenCardProps {
 const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   const [loading, setLoading] = useState(false);
   const [updateProgram, { isLoading: isUpdating }] = useUpdateSingleProgramMutation();
+  const [createProgramSync, { isLoading: isSyncing }] = useCreateProgramSyncMutation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFading, setIsFading] = useState(false);
   const videoRef = React.useRef<HTMLVideoElement>(null);
@@ -128,6 +132,20 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
       });
   };
 
+  // Program sync api
+  const handleSyncClick = async () => {
+    try {
+      const res = await createProgramSync({ programId: program.id }).unwrap();
+      if (res?.success) {
+        toast.success(res?.message || "Program synced successfully");
+      } else {
+        toast.error(res?.message || "Failed to sync program");
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to sync program");
+    }
+  };
+
   return (
     <div className="group bg-navbarBg border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
       {/* Video Section (ONLY this has p-3) */}
@@ -177,7 +195,6 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
         <h3 className="text-base sm:text-lg md:text-xl font-semibold text-headings truncate">
           {program.name}
         </h3>
-
         <p className="text-sm sm:text-base text-body truncate py-1 md:py-2">
           {program.description}
         </p>
@@ -225,6 +242,20 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
                 Manage
               </>
             )}
+          </button>
+
+          {/* Sync Button */}
+          <button
+            type="button"
+            onClick={handleSyncClick}
+            disabled={isSyncing}
+            aria-label="Sync Program"
+            className="shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
+              py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed
+              bg-bgBlue hover:bg-blue-500"
+            title="Sync Program"
+          >
+            <RefreshCw className={`w-4 h-4 sm:w-5 sm:h-5 ${isSyncing ? "animate-spin" : ""}`} />
           </button>
 
           {/* Power Button */}
