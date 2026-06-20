@@ -96,11 +96,6 @@ export function BillingStatsCards() {
             <div className={`text-2xl font-bold ${card.color} break-all leading-tight`}>
               {formatCurrency(card.amount, card.currency || "NGN")}
             </div>
-            {card.originalAmount > 0 && card.originalCurrency && (
-              <div className="text-xs text-muted mt-1 opacity-90 font-medium">
-                ({formatCurrency(card.originalAmount, card.originalCurrency)})
-              </div>
-            )}
           </div>
         </div>
       ))}
