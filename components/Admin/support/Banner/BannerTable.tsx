@@ -128,7 +128,7 @@ export default function BannerTable() {
             secondaryButtonLink: banner.secondaryButtonUrl || '',
             startDate: banner.startDate || '',
             endDate: banner.endDate || '',
-            targetUserType: banner.targetUserType || 'ALL_USERS',
+            targetUserType: banner.targetUserType || '',
             primaryButtonIcon: banner.primaryButtonIcon || '',
             secondaryButtonIcon: banner.secondaryButtonIcon || '',
             status: banner.status || 'Draft',
@@ -218,7 +218,7 @@ export default function BannerTable() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <span className="text-sm text-gray-900 dark:text-white font-medium">
-                                                {normalizeValue(banner.targetUserType || 'ALL_USERS')}
+                                                {banner.targetUserType ? normalizeValue(banner.targetUserType) : '--'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">

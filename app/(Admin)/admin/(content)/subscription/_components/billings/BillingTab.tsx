@@ -15,6 +15,7 @@ import {
   type PaymentHistoryItem,
 } from "@/redux/api/admin/payments/billings/billingsApi";
 import BillingTable from "./_components/BillingTable";
+import { BillingStatsCards } from "./_components/BillingStatsCards";
 import JSZip from "jszip";
 import { generateBillingInvoicePdfBlob } from "../_utils/downloadBillingInvoicePdf";
 import { toast } from "sonner";
@@ -28,7 +29,7 @@ const BillingTab = () => {
   const [statusFilter, setStatusFilter] = useState<PaymentStatus | "all">(
     "all",
   );
-  const [period, setPeriod] = useState("ALL");
+  const [timeRange, setTimeRange] = useState("ALL");
 
   const currency = useSelector((state: RootState) => state.settings.currency);
 
@@ -58,8 +59,8 @@ const BillingTab = () => {
     setPage(1);
   }, []);
 
-  const handlePeriodChange = useCallback((val: string) => {
-    setPeriod(val);
+  const handleTimeRangeChange = useCallback((val: string) => {
+    setTimeRange(val);
     setPage(1);
   }, []);
 
@@ -70,7 +71,7 @@ const BillingTab = () => {
     limit: LIMIT,
     search: debouncedSearch || undefined,
     status: statusFilter === "all" ? undefined : statusFilter,
-    period,
+    timeRange: timeRange === "ALL" ? undefined : timeRange,
   });
 
   const [triggerViewInGateway] = useLazyViewInGatewayQuery();
@@ -147,7 +148,9 @@ const BillingTab = () => {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <SubscriptionTabLayout
+    <div className="space-y-6">
+      <BillingStatsCards />
+      <SubscriptionTabLayout
       title="Payment history"
       actionButton={
         <button
@@ -193,14 +196,13 @@ const BillingTab = () => {
                 placeholder="All Time"
                 options={[
                   { label: "All Time", value: "ALL" },
-                  { label: "This Month", value: "THIS_MONTH" },
-                  { label: "Last Month", value: "LAST_MONTH" },
-                  { label: "Last 7 Days", value: "LAST_7_DAYS" },
-                  { label: "Last 30 Days", value: "LAST_30_DAYS" },
-                  { label: "This Year", value: "THIS_YEAR" },
+                  { label: "Last 1 Day", value: "last 1 day" },
+                  { label: "Last 7 Days", value: "last 7 days" },
+                  { label: "Last 30 Days", value: "last 30 days" },
+                  { label: "Last 1 Year", value: "last 1 year" },
                 ]}
-                value={period}
-                onChange={handlePeriodChange}
+                value={timeRange}
+                onChange={handleTimeRangeChange}
                 showLabel={false}
               />
             </div>
@@ -257,6 +259,7 @@ const BillingTab = () => {
         payment={selectedPayment}
       />
     </SubscriptionTabLayout>
+    </div>
   );
 };
 

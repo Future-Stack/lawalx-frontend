@@ -20,7 +20,11 @@ export interface PaymentHistoryItem {
   invoice: string;
   user: BillingUser;
   paymentMethod: string;
+  brand?: string | null;
+  last4?: string | null;
   amount: number;
+  originalAmount?: number;
+  originalCurrency?: string;
   status: PaymentStatus;
   date: string;
   canViewInStripe: boolean;
@@ -48,7 +52,53 @@ export interface GetPaymentHistoryParams {
   limit?: number;
   search?: string;
   status?: PaymentStatus | "";
-  period?: string;
+  timeRange?: string;
+}
+
+// Stats
+export interface BillingStatsData {
+  totalActivePaymentsAmount: number;
+  totalActivePaymentsCount: number;
+  totalActivePaymentsCurrency: string;
+  totalActivePaymentsOriginalAmount: number;
+  totalActivePaymentsOriginalCurrency: string;
+  totalFailedPaymentsAmount: number;
+  totalFailedPaymentsCount: number;
+  totalFailedPaymentsCurrency: string;
+  totalFailedPaymentsOriginalAmount: number;
+  totalFailedPaymentsOriginalCurrency: string;
+  totalRefundedPaymentsAmount: number;
+  totalRefundedPaymentsCount: number;
+  totalRefundedPaymentsCurrency: string;
+  totalRefundedPaymentsOriginalAmount: number;
+  totalRefundedPaymentsOriginalCurrency: string;
+  totalPartiallyRefundedPaymentsAmount: number;
+  totalPartiallyRefundedPaymentsCount: number;
+  totalPartiallyRefundedPaymentsCurrency: string;
+  totalPartiallyRefundedPaymentsOriginalAmount: number;
+  totalPartiallyRefundedPaymentsOriginalCurrency: string;
+  totalCancelledPaymentsAmount: number;
+  totalCancelledPaymentsCount: number;
+  totalCancelledPaymentsCurrency: string;
+  totalCancelledPaymentsOriginalAmount: number;
+  totalCancelledPaymentsOriginalCurrency: string;
+  totalPendingPaymentsAmount: number;
+  totalPendingPaymentsCount: number;
+  totalPendingPaymentsCurrency: string;
+  totalPendingPaymentsOriginalAmount: number;
+  totalPendingPaymentsOriginalCurrency: string;
+  totalSuccessPaymentsAmount: number;
+  totalSuccessPaymentsCount: number;
+  totalSuccessPaymentsCurrency: string;
+  totalSuccessPaymentsOriginalAmount: number;
+  totalSuccessPaymentsOriginalCurrency: string;
+}
+
+export interface BillingStatsResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: BillingStatsData;
 }
 
 // View-in-gateway
@@ -101,6 +151,27 @@ export const billingsApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
+
+    getBillingStats: builder.query<
+      BillingStatsResponse,
+      { timeRange?: string; status?: string }
+    >({
+      query: (params) => {
+        const cleaned: Record<string, unknown> = {};
+        if (params.timeRange && params.timeRange !== "ALL") {
+          cleaned.timeRange = params.timeRange;
+        }
+        if (params.status && params.status !== "all") {
+          cleaned.status = params.status;
+        }
+        return {
+          url: "/billings/stats",
+          method: "GET",
+          params: cleaned,
+        };
+      },
+      providesTags: ["Billing", "FinancialData"],
+    }),
   }),
 });
 
@@ -108,4 +179,5 @@ export const {
   useGetPaymentHistoryQuery,
   useLazyGetPaymentHistoryQuery,
   useLazyViewInGatewayQuery,
+  useGetBillingStatsQuery,
 } = billingsApi;

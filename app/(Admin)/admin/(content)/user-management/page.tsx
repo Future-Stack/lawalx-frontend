@@ -194,7 +194,7 @@ export default function UserManagementPage() {
           user.id || 'N/A',
           user.full_name || user.username || 'N/A',
           user.account?.email || 'N/A',
-          (user.payments?.[0]?.plan?.name || "Free Trial").replace("_", " "),
+          (user.payments?.[0]?.plan?.name || "N/A").replace("_", " "),
           user.role || 'N/A',
           user.status || 'N/A'
         ];
@@ -245,7 +245,7 @@ export default function UserManagementPage() {
           user.id || 'N/A',
           user.full_name || user.username || 'N/A',
           user.account?.email || 'N/A',
-          (user.payments?.[0]?.plan?.name || "Free Trial").replace("_", " "),
+          (user.payments?.[0]?.plan?.name || "N/A").replace("_", " "),
           user.role || 'N/A',
           user.status || 'N/A'
         ])
@@ -532,7 +532,7 @@ export default function UserManagementPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full xl:w-auto">
               <Dropdown
                 value={planFilter}
-                options={["All Plans", "Free Trial", "Basic", "Premium", "Business", "Enterprise"]}
+                options={["All Plans", "Basic", "Premium", "Business", "Enterprise"]}
                 onChange={setPlanFilter}
                 className="w-full"
               />
@@ -554,7 +554,7 @@ export default function UserManagementPage() {
 
         {/* Table */}
         {/* Table/Card View */}
-        <div className="overflow-x-auto scrollbar-hide hidden lg:block">
+        <div className="overflow-x-auto hidden lg:block">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
@@ -701,13 +701,13 @@ export default function UserManagementPage() {
                         {statusStr}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-nowrap">
+                    <td className="px-4 py-3">
                       {user.issues && user.issues.length > 0 && user.issues[0] !== "No issues" ? (
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-1.5">
                           {user.issues.map((issue: string, idx: number) => (
                             <span
                               key={idx}
-                              className="px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-xs"
+                              className="px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-xs whitespace-nowrap"
                             >
                               {issue}
                             </span>
