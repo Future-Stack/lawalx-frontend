@@ -223,11 +223,6 @@ const BillingTable = ({
                   <div className="font-semibold text-headings">
                     {formatCurrency(payment.amount, currency)}
                   </div>
-                  {payment.originalAmount !== undefined && payment.originalCurrency && (
-                    <div className="text-xs text-muted mt-0.5">
-                      {formatCurrency(payment.originalAmount, payment.originalCurrency)}
-                    </div>
-                  )}
                 </TableCell>
                 <TableCell>
                   <StatusBadge status={payment.status} />
@@ -426,11 +421,6 @@ const BillingTable = ({
                 <div className="font-semibold text-headings break-all">
                   {formatCurrency(payment.amount, currency)}
                 </div>
-                {payment.originalAmount !== undefined && payment.originalCurrency && (
-                  <div className="text-xs text-muted mt-0.5">
-                    {formatCurrency(payment.originalAmount, payment.originalCurrency)}
-                  </div>
-                )}
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
