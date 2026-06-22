@@ -60,6 +60,14 @@ export default function ChangePlanSelectStep({
     [screenSizesRes?.data]
   );
 
+  useEffect(() => {
+    if (screenSizes.length === 0) return;
+    const isValidScreenSize = screenSizes.some((s) => s.size === screenSize);
+    if (!isValidScreenSize) {
+      setScreenSize(screenSizes[0].size);
+    }
+  }, [screenSize, screenSizes]);
+
   const { data: plansRes, isLoading: isLoadingPlans } = useGetActivePlansQuery(
     { billing, screenSize },
     { skip: screenSize <= 0 }
