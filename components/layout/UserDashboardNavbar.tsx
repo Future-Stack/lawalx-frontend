@@ -55,6 +55,12 @@ const navItems = [
   { href: "/schedules", label: "Schedules" },
 ];
 
+const formatPlanName = (name?: string) => {
+  if (!name) return "";
+  const formatted = name.replace(/_/g, " ").toLowerCase();
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+};
+
 export default function UserDashboardNavbar() {
   const pathname = usePathname();
   const [helpOpen, setHelpOpen] = useState(false);
@@ -65,8 +71,11 @@ export default function UserDashboardNavbar() {
   const dispatch = useAppDispatch();
 
   // User Profile
-  const { data: userProfile } = useGetUserProfileQuery(undefined);
+  const { data: userProfile } = useGetUserProfileQuery(undefined)
+  
   const userInfo = userProfile?.data;
+  console.log("user data", userInfo);
+  
 
   // Subscription
   const { data: mySubscriptionRes } = useGetMySubscriptionQuery(undefined, { skip: userInfo?.role === "ADMIN" });
@@ -402,7 +411,7 @@ export default function UserDashboardNavbar() {
                 />
               ) : (
                 <div className="flex items-center justify-center h-full w-full text-xs font-bold text-gray-500 uppercase">
-                  {userInfo?.full_name?.substring(0, 2) || "JD"}
+                  {userInfo?.full_name?.substring(0, 2) || "User"}
                 </div>
               )}
             </button>
@@ -419,7 +428,7 @@ export default function UserDashboardNavbar() {
                         {userInfo?.full_name || "User"}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {userInfo?.username || "username"}
+                        {userInfo?.email || "[EMAIL_ADDRESS]"}
                       </p>
                     </div>
                   </div>
