@@ -109,13 +109,14 @@ export interface UserSubscription {
   planId: string;
   billingCycle: "MONTHLY" | "ANNUAL" | string;
   recurring: boolean;
-  gateway: "stripe" | "paystack" | string;
+  gateway: "stripe" | "paystack" | string | null;
   gatewaySubscriptionId: string | null;
   gatewayCustomerId: string | null;
   gatewaySubscriptionToken: string | null;
   startDate: string;
   endDate: string;
   status: string;
+  cancelledAt: string | null;
   deviceLimit: number;
   storageLimitGb: number;
   templateLimit: number;
@@ -123,12 +124,28 @@ export interface UserSubscription {
   audioLimit: number;
   videoLimit: number;
   features: string[];
-  screenSize: number;
+  screenSize: number | null;
   deviceQuantity: number;
-  isAdvanceEnabled: boolean;
+  isAdvanceEnabled: boolean | null;
+  scheduledPlanId: string | null;
+  scheduledBillingCycle: string | null;
+  scheduledScreenSize: number | null;
+  scheduledDeviceQuantity: number | null;
+  scheduledEffectiveDate: string | null;
+  scheduledPaymentId: string | null;
   createdAt: string;
   plan: SubscriptionPlanSummary;
   payments: SubscriptionPayment[];
+  deviceUsage?: {
+    used: number;
+    total: number;
+    remaining: number;
+  };
+  storageUsage?: {
+    usedGb: number;
+    totalGb: number;
+    remainingGb: number;
+  };
   scheduledPlanChange?: {
     subscriptionId: string;
     plan: SubscriptionPlanSummary;

@@ -25,6 +25,7 @@ import Image from "next/image";
 import { useTheme } from "next-themes";
 import { useAppDispatch } from "@/redux/store/hook";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
+import { useGetMySubscriptionQuery } from "@/redux/api/users/payment/payment.api";
 import { logout } from "@/redux/features/auth/authSlice";
 import {
   useGetMyNotificationsQuery,
@@ -75,6 +76,17 @@ export default function UserDashboardNavbar() {
   const userInfo = userProfile?.data;
   console.log("user data", userInfo);
   
+
+  // Subscription
+  const { data: mySubscriptionRes } = useGetMySubscriptionQuery(undefined, { skip: userInfo?.role === "ADMIN" });
+  const subscription = mySubscriptionRes?.data;
+  const storageUsage = subscription?.storageUsage;
+  const storageUsedGb = storageUsage?.usedGb ?? 0;
+  const storageTotalGb = storageUsage?.totalGb ?? (subscription?.storageLimitGb ?? 0);
+  const storagePercentage = storageTotalGb > 0 ? Math.min((storageUsedGb / storageTotalGb) * 100, 100) : 0;
+  const planName = subscription?.plan?.name
+    ? subscription.plan.name.charAt(0) + subscription.plan.name.slice(1).toLowerCase()
+    : "Free";
 
   const {
     isAddDeviceOpen,
@@ -426,39 +438,33 @@ export default function UserDashboardNavbar() {
                       <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {userInfo?.role === "ADMIN"
                           ? "Admin Access"
-                          : "My Plans"}
+                          : "My Plan"}
                       </p>
                       <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-semibold px-2 py-0.5 rounded-full">
-                        {formatPlanName(userInfo?.plan?.name || userInfo?.role)}
+                        {userInfo?.role === "ADMIN" ? "Admin" : planName}
                       </span>
                     </div>
 
                     {/* Storage Info */}
-                    <div className="mt-2 space-y-1">
-                      <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">
-                        <span>Storage</span>
-                        <span>
-                          {(
-                            ((userInfo?.usedStorage || 0) /
-                              (userInfo?.totalStorage || 1)) *
-                            100
-                          ).toFixed(1)}
-                          %
-                        </span>
+                    {userInfo?.role !== "ADMIN" && (
+                      <div className="mt-2 space-y-1">
+                        <div className="flex justify-between text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold tracking-wider">
+                          <span>Storage</span>
+                          <span>{storagePercentage.toFixed(1)}%</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                            style={{
+                              width: `${storagePercentage}%`,
+                            }}
+                          />
+                        </div>
+                        <p className="text-[10px] text-gray-400">
+                          {storageUsedGb.toFixed(2)} GB of {storageTotalGb} GB used
+                        </p>
                       </div>
-                      <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-blue-500 rounded-full"
-                          style={{
-                            width: `${Math.min(((userInfo?.usedStorage || 0) / (userInfo?.totalStorage || 1)) * 100, 100)}%`,
-                          }}
-                        />
-                      </div>
-                      <p className="text-[10px] text-gray-400">
-                        {userInfo?.usedStorage?.toFixed(2)} GB of{" "}
-                        {userInfo?.totalStorage} GB used
-                      </p>
-                    </div>
+                    )}
 
                     <Link
                       href="/choose-plan"
