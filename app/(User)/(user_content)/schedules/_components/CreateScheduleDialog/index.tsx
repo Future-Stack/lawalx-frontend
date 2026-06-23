@@ -151,9 +151,10 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({ open, setOp
             contentType = "AUDIO";
         }
 
-        // Format startTime / endTime as epoch-based ISO (1970-01-01T...Z)
-        const startTime = `1970-01-01T${step4Data.playTime}:00Z`;
-        const endTime = `1970-01-01T${step4Data.endTime || step4Data.playTime}:00Z`;
+        // Format startTime / endTime with dynamic today's date (YYYY-MM-DDTHH:MM:00Z)
+        const today = dayjs().format("YYYY-MM-DD");
+        const startTime = `${today}T${step4Data.playTime}:00Z`;
+        const endTime = `${today}T${step4Data.endTime || step4Data.playTime}:00Z`;
 
         // Segregate programs and files while validating UUIDs
         const selectedPrograms = activeContent.filter(c => (c as any).isProgram).map(c => c.id).filter(isUUID);

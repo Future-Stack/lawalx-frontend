@@ -93,14 +93,15 @@ function formatPayloadDate(dateStr: string | null | undefined, isEnd = false): s
   return isEnd ? `${dateOnly}T23:59:59Z` : `${dateOnly}T00:00:00Z`;
 }
 
-// Helper: Format time for backend payload (must be 1970-01-01THH:MM:00Z)
+// Helper: Format time for backend payload (dynamically sends today's date)
 function formatPayloadTime(timeStr: string | null | undefined): string {
-  if (!timeStr) return "1970-01-01T00:00:00Z";
+  const today = dayjs().format("YYYY-MM-DD");
+  if (!timeStr) return `${today}T00:00:00Z`;
   const cleanTime = timeStr.includes("T") ? timeStr.split("T")[1]?.substring(0, 5) : timeStr;
   const parts = cleanTime.split(":");
   const hh = parts[0]?.padStart(2, "0") || "00";
   const mm = parts[1]?.padStart(2, "0") || "00";
-  return `1970-01-01T${hh}:${mm}:00Z`;
+  return `${today}T${hh}:${mm}:00Z`;
 }
 
 // Helper: Validate UUID format
