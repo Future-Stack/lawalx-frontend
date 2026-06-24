@@ -126,7 +126,7 @@ const DetailsModal = ({ isOpen, onClose, data, type }: { isOpen: boolean, onClos
     if (!data) return null;
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl bg-white dark:bg-cardBg border-none rounded-2xl p-6">
+            <DialogContent className="max-w-2xl bg-navbarBg border-none rounded-2xl p-6">
                 <DialogHeader className="border-b border-border/50 pb-4 mb-4">
                     <DialogTitle className="text-xl font-bold text-headings">
                         {type === 'FAQ' ? 'FAQ Details' : 'Video Tutorial Details'}
@@ -471,7 +471,7 @@ export default function KnowledgeBase() {
 
             {/* Filters and Search */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-                <div className="flex gap-2 p-2 dark:bg-navbarBg justify-between items-center w-full border border-border rounded-2xl p-1">
+                <div className="flex gap-2 p-2 bg-navbarBg justify-between items-center w-full border border-border rounded-2xl">
                     {/* Search */}
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />

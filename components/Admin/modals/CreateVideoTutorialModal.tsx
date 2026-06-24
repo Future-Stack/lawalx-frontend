@@ -94,7 +94,7 @@ export default function CreateVideoTutorialModal({ isOpen, onClose, onSave, init
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && !isSaving && onClose()}>
-            <DialogContent showCloseButton={false} className="max-w-2xl p-0 bg-white dark:bg-cardBg border-none rounded-2xl overflow-hidden focus:outline-none">
+            <DialogContent showCloseButton={false} className="max-w-2xl p-0 bg-navbarBg border-none rounded-2xl overflow-hidden focus:outline-none">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-border/50">
                     <DialogTitle className="text-xl font-bold text-headings">
