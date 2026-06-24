@@ -694,17 +694,17 @@ export default function UploadFileModal({
 }
 
 
-// /* eslint-disable @typescript-eslint/no-explicit-any */
+
+
+
 // "use client";
 
 // import { useState, useRef, useCallback, useEffect } from "react";
 
 // import { X, Trash2, CheckCircle, UploadCloud } from "lucide-react";
 // import { toast } from "sonner";
-// import { useDispatch } from "react-redux";
-// import { useUploadFileMutation } from "@/redux/api/users/content/content.api";
+// import { useDispatch, useSelector } from "react-redux";
 // import { baseApi } from "@/redux/api/baseApi";
-// import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 
 // import {
 //     Dialog,
@@ -721,6 +721,7 @@ export default function UploadFileModal({
 //     progress: number;
 //     status: UploadStatus;
 //     uploaded: number;
+//     responseData?: any;
 // }
 
 // interface UploadFileModalProps {
@@ -774,6 +775,91 @@ export default function UploadFileModal({
 //     return "Something went wrong. Please try again.";
 // }
 
+// const uploadFileCustom = (
+//     entry: FileEntry,
+//     programId: string | undefined,
+//     token: string | null,
+//     currency: string | null,
+//     onProgress: (progress: number, uploaded: number) => void
+// ): Promise<any> => {
+//     return new Promise((resolve, reject) => {
+//         const xhr = new XMLHttpRequest();
+        
+//         const params = new URLSearchParams();
+//         if (programId) params.append("programId", programId);
+//         const queryString = params.toString();
+        
+//         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+//         const normalizedBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+        
+//         // Construct absolute URL if baseUrl is relative, to bypass Next.js dev server rewrite proxy
+//         let url = "";
+//         const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || "";
+//         if (normalizedBaseUrl.startsWith("/") && socketUrl && (socketUrl.startsWith("http://") || socketUrl.startsWith("https://"))) {
+//             const normalizedSocketUrl = socketUrl.endsWith("/") ? socketUrl.slice(0, -1) : socketUrl;
+//             url = `${normalizedSocketUrl}${normalizedBaseUrl}/content/upload-file${queryString ? `?${queryString}` : ""}`;
+//         } else {
+//             url = `${normalizedBaseUrl}/content/upload-file${queryString ? `?${queryString}` : ""}`;
+//         }
+        
+//         xhr.open("POST", url, true);
+        
+//         if (token) {
+//             xhr.setRequestHeader("authorization", token);
+//         }
+//         xhr.setRequestHeader("ngrok-skip-browser-warning", "true");
+//         if (currency) {
+//             xhr.setRequestHeader("X-Display-Currency", currency);
+//         }
+        
+//         xhr.upload.addEventListener("progress", (event) => {
+//             if (event.lengthComputable) {
+//                 const progress = Math.round((event.loaded / event.total) * 100);
+//                 onProgress(progress, event.loaded);
+//             }
+//         });
+        
+//         xhr.onload = () => {
+//             let response: any;
+//             try {
+//                 response = JSON.parse(xhr.responseText);
+//             } catch {
+//                 response = xhr.responseText;
+//             }
+            
+//             if (xhr.status >= 200 && xhr.status < 300) {
+//                 resolve(response);
+//             } else {
+//                 reject({
+//                     status: xhr.status,
+//                     data: response,
+//                     message: response?.message || `Upload failed with status ${xhr.status}`
+//                 });
+//             }
+//         };
+        
+//         xhr.onerror = () => {
+//             reject({
+//                 message: "Network error occurred during file upload."
+//             });
+//         };
+        
+//         xhr.onabort = () => {
+//             reject({
+//                 message: "Upload aborted."
+//             });
+//         };
+        
+//         const formData = new FormData();
+//         formData.append("file", entry.file);
+//         if (programId) {
+//             formData.append("programId", programId);
+//         }
+        
+//         xhr.send(formData);
+//     });
+// };
+
 // export default function UploadFileModal({
 //     isOpen,
 //     onClose,
@@ -783,8 +869,9 @@ export default function UploadFileModal({
 // }: UploadFileModalProps) {
 //     const programId = propProgramId;
 //     const dispatch = useDispatch();
+//     const token = useSelector((state: any) => state.auth.token);
+//     const currency = useSelector((state: any) => state.settings.currency);
 
-//     const [uploadFile] = useUploadFileMutation();
 //     const [files, setFiles] = useState<FileEntry[]>([]);
 //     const [isDragging, setIsDragging] = useState(false);
 //     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -977,6 +1064,7 @@ export default function UploadFileModal({
 //             let firstErrorMessage = "";
 //             const BATCH_SIZE = 4;
 
+//             let lastSuccessMessage = "";
 //             const uploadedResults: any[] = [];
 //             for (let i = 0; i < filesToUpload.length; i += BATCH_SIZE) {
 //                 const batch = filesToUpload.slice(i, i + BATCH_SIZE);
@@ -989,24 +1077,33 @@ export default function UploadFileModal({
 //                         }
 //                     }
 
-//                     const formData = new FormData();
-//                     formData.append("file", entry.file);
-//                     if (programId) {
-//                         formData.append("programId", programId);
-//                     }
-
 //                     try {
 //                         setFiles((prev) =>
 //                             prev.map((f) =>
-//                                 f.id === entry.id ? { ...f, status: "uploading" } : f
+//                                 f.id === entry.id ? { ...f, status: "uploading", progress: 0 } : f
 //                             )
 //                         );
 
-//                         const payload = programId
-//                             ? { formData, programId }
-//                             : formData;
+//                         const res = await uploadFileCustom(
+//                             entry,
+//                             programId,
+//                             token,
+//                             currency,
+//                             (progress, uploaded) => {
+//                                 setFiles((prev) =>
+//                                     prev.map((f) =>
+//                                         f.id === entry.id
+//                                             ? { ...f, progress, uploaded }
+//                                             : f
+//                                     )
+//                                 );
+//                             }
+//                         );
 
-//                         const res = await uploadFile(payload as any).unwrap();
+//                         if (res?.message) {
+//                             lastSuccessMessage = res.message;
+//                         }
+
 //                         successCount++;
 //                         if (res?.data) {
 //                             uploadedResults.push(res.data);
@@ -1015,7 +1112,7 @@ export default function UploadFileModal({
 //                         setFiles((prev) =>
 //                             prev.map((f) =>
 //                                 f.id === entry.id
-//                                     ? ({ ...f, status: "done", responseData: res.data } as any)
+//                                     ? ({ ...f, status: "done", progress: 100, uploaded: entry.file.size, responseData: res.data } as any)
 //                                     : f
 //                             )
 //                         );
@@ -1037,7 +1134,10 @@ export default function UploadFileModal({
 //             dispatch(baseApi.util.invalidateTags(["Content"] as any));
 
 //             if (!hasErrorOccurred) {
-//                 toast.success(filesToUpload.length > 1 ? `All ${filesToUpload.length} files uploaded successfully!` : "File uploaded successfully!");
+//                 const hasVideo = filesToUpload.some(f => f.file.type.startsWith("video/") || f.file.name.toLowerCase().endsWith(".mkv"));
+//                 if (!hasVideo) {
+//                     toast.success(lastSuccessMessage || (filesToUpload.length > 1 ? `All ${filesToUpload.length} files uploaded successfully!` : "File uploaded successfully!"));
+//                 }
 
 //                 if (uploadedResults.length > 0 && onSuccess) {
 //                     onSuccess(uploadedResults);

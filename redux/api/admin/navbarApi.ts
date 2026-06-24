@@ -27,6 +27,6 @@ export const navbarApi = baseApi.injectEndpoints({
       invalidatesTags: ["Preferences", "FinancialData"],
     }),
   }),
-});
+});  
 
 export const { useGetPreferencesQuery, useUpdatePreferencesMutation } = navbarApi;

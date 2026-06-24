@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Image as ImageIcon, AudioLines, FilePlay, ArrowRight, Play, Loader2, GalleryThumbnails, ChevronRight, CircleCheckBigIcon } from "lucide-react";
+import { Search, Image as ImageIcon, AudioLines, FilePlay, ArrowRight, Play, Loader2, ChevronRight, CircleCheckBigIcon } from "lucide-react";
 import NextImage from "next/image";
 import folderIcon from "@/public/icons/folder.svg";
 import BaseSelect from "@/common/BaseSelect";

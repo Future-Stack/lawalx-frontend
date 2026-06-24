@@ -248,11 +248,15 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
                 setIsDark(!isDark);
               });
             }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-300 relative h-9 w-9 flex items-center justify-center overflow-hidden"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-300 relative h-9 w-9 flex items-center justify-center overflow-hidden group cursor-pointer"
             aria-label="Toggle dark mode"
           >
-            <Sun className={`w-5 h-5 text-yellow-500 absolute transition-all duration-500 ease-in-out ${isDark ? 'translate-y-0 opacity-100 rotate-0' : 'translate-y-10 opacity-0 -rotate-90'}`} />
-            <Moon className={`w-5 h-5 text-gray-900 dark:text-gray-100 absolute transition-all duration-500 ease-in-out ${!isDark ? 'translate-y-0 opacity-100 rotate-0' : '-translate-y-10 opacity-0 rotate-90'}`} />
+            <Sun
+              className={`w-5 h-5 text-yellow-500 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${isDark ? "opacity-100 scale-100 rotate-0 group-hover:opacity-0 group-hover:scale-75 group-hover:-rotate-90" : "opacity-0 scale-75 rotate-90 group-hover:opacity-100 group-hover:scale-100 group-hover:rotate-0"}`}
+            />
+            <Moon
+              className={`w-5 h-5 text-gray-900 dark:text-gray-100 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${!isDark ? "opacity-100 scale-100 rotate-0 group-hover:opacity-0 group-hover:scale-75 group-hover:-rotate-90" : "opacity-0 scale-75 rotate-90 group-hover:opacity-100 group-hover:scale-100 group-hover:rotate-0"}`}
+            />
           </button>
 
           <div className="hidden xs:flex items-center gap-3 pl-3 border-l border-gray-200 dark:border-gray-700">
