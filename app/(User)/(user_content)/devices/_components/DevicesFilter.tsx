@@ -79,7 +79,7 @@ export default function DevicesFilter({
           placeholder="Search devices..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full text-sm font-medium text-black dark:text-white placeholder:text-[#A3A3A3] focus:outline-none bg-transparent"
+          className="w-full text-sm font-medium text-black dark:text-white placeholder:text-[#A3A3A3] focus:outline-none bg-transparent h-full"
         />
       </div>
       <div className="flex gap-2 w-full lg:w-auto">
