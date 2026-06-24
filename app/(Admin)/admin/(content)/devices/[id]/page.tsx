@@ -175,9 +175,9 @@ export default function DeviceDetailsPage() {
               }
             }}
             disabled={isSyncing}
-            className="cursor-pointer flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white hover:bg-gray-50 transition-all shadow-sm active:scale-95 disabled:opacity-50"
+            className="group cursor-pointer flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm active:scale-95 disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 transition-transform duration-500 group-hover:rotate-180 ${isSyncing ? "animate-spin" : ""}`} />
             {isSyncing ? "Syncing..." : "Force Sync"}
           </button>
         </div>
@@ -192,8 +192,8 @@ export default function DeviceDetailsPage() {
         <div className="lg:col-span-2 space-y-6">
 
           {/* Device Information Card */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
+          <div className="bg-navbarBg rounded-2xl border border-border overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/30 border-b border-border">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">Device Information</h2>
               <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Hardware and software specifications</p>
             </div>
@@ -210,7 +210,7 @@ export default function DeviceDetailsPage() {
                 </div>
               </div>
 
-              <div className="mt-8 h-px bg-gray-50 dark:bg-gray-800" />
+              <div className="mt-8 h-px bg-border" />
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
                 <InfoItem label="Device Type" value={device?.deviceType || "N/A"} />
@@ -221,8 +221,8 @@ export default function DeviceDetailsPage() {
           </div>
 
           {/* Location Card */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
+          <div className="bg-navbarBg rounded-2xl border border-border overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/30 border-b border-border">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">Location</h2>
               <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Physical location and network information</p>
             </div>
@@ -253,8 +253,8 @@ export default function DeviceDetailsPage() {
           </div>
 
           {/* Activity Logs Section */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
+          <div className="bg-navbarBg rounded-2xl border border-border overflow-hidden">
+            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/30 border-b border-border">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">Activity Logs</h2>
               <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Recent device events and status changes</p>
             </div>
@@ -282,8 +282,8 @@ export default function DeviceDetailsPage() {
         <div className="space-y-6">
 
           {/* Status Card */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden h-fit">
-            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
+          <div className="bg-navbarBg rounded-2xl border border-border overflow-hidden h-fit">
+            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/30 border-b border-border">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">Status</h2>
               <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Current device status</p>
             </div>
@@ -314,8 +314,8 @@ export default function DeviceDetailsPage() {
           </div>
 
           {/* Storage Card */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden h-fit">
-            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
+          <div className="bg-navbarBg rounded-2xl border border-border overflow-hidden h-fit">
+            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/30 border-b border-border">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">Storage</h2>
               <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Device storage usage</p>
             </div>
@@ -349,8 +349,8 @@ export default function DeviceDetailsPage() {
           </div>
 
           {/* Program Card */}
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 overflow-hidden h-fit">
-            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-50 dark:border-gray-800">
+          <div className="bg-navbarBg rounded-2xl border border-border overflow-hidden h-fit">
+            <div className="px-6 py-4 bg-gray-50/50 dark:bg-gray-800/30 border-b border-border">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">Active Program</h2>
               <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">Currently assigned content</p>
             </div>
@@ -523,7 +523,6 @@ function LogCard({
           </p>
         </div>
       </div>
-      <ChevronRight className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity" />
     </div>
   );
 }
@@ -534,8 +533,8 @@ const getLogStyle = (action: string) => {
     return {
       icon: RefreshCw,
       color: "text-blue-500",
-      bg: "bg-blue-50/40",
-      border: "border-blue-100/50",
+      bg: "bg-blue-50/40 dark:bg-blue-950/20",
+      border: "border-blue-100/50 dark:border-blue-900/30",
     };
   }
   if (
@@ -546,8 +545,8 @@ const getLogStyle = (action: string) => {
     return {
       icon: Wifi,
       color: "text-green-500",
-      bg: "bg-green-50/40",
-      border: "border-green-100/50",
+      bg: "bg-green-50/40 dark:bg-green-950/20",
+      border: "border-green-100/50 dark:border-green-900/30",
     };
   }
   if (
@@ -558,8 +557,8 @@ const getLogStyle = (action: string) => {
     return {
       icon: WifiOff,
       color: "text-gray-500",
-      bg: "bg-gray-50/40",
-      border: "border-gray-100/50",
+      bg: "bg-gray-50/40 dark:bg-gray-900/20",
+      border: "border-gray-100/50 dark:border-gray-800/30",
     };
   }
   if (
@@ -571,8 +570,8 @@ const getLogStyle = (action: string) => {
     return {
       icon: Database,
       color: "text-purple-500",
-      bg: "bg-purple-50/40",
-      border: "border-purple-100/50",
+      bg: "bg-purple-50/40 dark:bg-purple-950/20",
+      border: "border-purple-100/50 dark:border-purple-900/30",
     };
   }
   if (
@@ -584,15 +583,15 @@ const getLogStyle = (action: string) => {
     return {
       icon: AlertTriangle,
       color: "text-red-500",
-      bg: "bg-red-50/40",
-      border: "border-red-100/50",
+      bg: "bg-red-50/40 dark:bg-red-950/20",
+      border: "border-red-100/50 dark:border-red-900/30",
     };
   }
   return {
     icon: Activity,
     color: "text-blue-500",
-    bg: "bg-blue-50/40",
-    border: "border-blue-100/50",
+    bg: "bg-blue-50/40 dark:bg-blue-950/20",
+    border: "border-blue-100/50 dark:border-blue-900/30",
   };
 };
 
@@ -610,7 +609,7 @@ function InfoItem({
       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
         {label}
       </p>
-      <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2 group">
+      <div className="flex items-center justify-between border-b border-border pb-2 group">
         <div className="flex items-center gap-3">
           {Icon && (
             <Icon className="w-4 h-4 text-gray-300 group-hover:text-bgBlue transition-colors" />
@@ -634,7 +633,7 @@ function StorageStatCard({
   subLabel: string;
 }) {
   return (
-    <div className="bg-gray-50/50 dark:bg-gray-800/30 p-4 rounded-xl border border-gray-100 dark:border-gray-800 text-center space-y-2 hover:border-bgBlue/30 transition-all active:scale-[0.98]">
+    <div className="bg-gray-50/50 dark:bg-gray-800/30 p-4 rounded-xl border border-border text-center space-y-2 hover:border-bgBlue/30 transition-all active:scale-[0.98]">
       <Icon className="w-5 h-5 text-gray-300 mx-auto" />
       <div>
         <p className="text-sm font-bold text-gray-900 dark:text-white leading-none mb-1.5">

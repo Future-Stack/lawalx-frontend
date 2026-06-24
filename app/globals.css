@@ -9,7 +9,7 @@ body {
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
-/* View Transition API - Circular Reveal Animation */
+/* View Transition API - Window Shutter Reveal Animation */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -22,18 +22,15 @@ body {
 
 ::view-transition-new(root) {
   z-index: 9999;
-  animation: 1.7s ease-in-out both circle-reveal;
+  animation: 1.2s cubic-bezier(0.76, 0, 0.24, 1) both window-close;
 }
 
-@keyframes circle-reveal {
+@keyframes window-close {
   from {
-    clip-path: circle(0% at var(--x, 50%) var(--y, 50%));
-    opacity: 0;
+    clip-path: polygon(0% 0%, 0% 100%, 0% 100%, 0% 0%, 100% 0%, 100% 100%, 100% 100%, 100% 0%);
   }
-
   to {
-    clip-path: circle(150% at var(--x, 50%) var(--y, 50%));
-    opacity: 1;
+    clip-path: polygon(0% 0%, 0% 100%, 50% 100%, 50% 0%, 50% 0%, 50% 100%, 100% 100%, 100% 0%);
   }
 }
 

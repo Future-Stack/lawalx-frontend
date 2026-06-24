@@ -332,7 +332,7 @@ export default function DevicesTab({ devices: devicesProp }: { devices?: any[] }
         </div>
       </div>
       {/* Device Management */}
-      <div className="bg-navbarBg border border-border rounded-xl">
+      <div className="bg-navbarBg border border-border rounded-xl overflow-hidden">
 
         {/* Table */}
         <div className="overflow-x-auto scrollbar-hide rounded-t-xl">
