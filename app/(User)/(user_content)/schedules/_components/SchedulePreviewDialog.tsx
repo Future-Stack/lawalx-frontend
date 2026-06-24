@@ -338,13 +338,13 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
 
     const formatTime = (isoTime: string): string => {
         try {
-            const date = new Date(isoTime);
-            return date.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: date.getUTCMinutes() === 0 ? undefined : "2-digit",
-                hour12: true,
-                timeZone: "UTC"
-            });
+            // Parse the time from the ISO string directly to avoid timezone shifts
+            const timePart = isoTime.includes("T") ? isoTime.split("T")[1]?.substring(0, 5) : isoTime;
+            if (!timePart) return isoTime;
+            const [hh, mm] = timePart.split(":").map(Number);
+            const period = hh >= 12 ? "PM" : "AM";
+            const displayHour = hh % 12 || 12;
+            return mm === 0 ? `${displayHour} ${period}` : `${displayHour}:${mm.toString().padStart(2, "0")} ${period}`;
         } catch {
             return isoTime;
         }
@@ -352,11 +352,11 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
 
     const formatDate = (dateStr: string) => {
         try {
-            return new Date(dateStr).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric"
-            });
+            // Extract the date portion directly to avoid timezone shifts
+            const datePart = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+            const [year, month, day] = datePart.split("-").map(Number);
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return `${months[month - 1]} ${day}, ${year}`;
         } catch {
             return dateStr;
         }
@@ -374,7 +374,8 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                 ? `Monthly (Day ${schedule.dayOfMonth.join(", ")})`
                 : "Monthly";
         }
-        return formatDate(schedule.startDate);
+        if (schedule.recurrenceType === "once") return "Run Once";
+        return "Run Once";
     };
 
     const handleDeleteSchedule = (schedule: Schedule) => {
@@ -547,14 +548,16 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
                     <div className="flex items-center gap-2">
                         <Clock className="w-5 h-5 text-muted" />
                         <span className="font-medium">
-                            {getRecurrenceLabel()} • {formatTime(activeSchedule?.startTime || "")} – {formatTime(activeSchedule?.endTime || "")}
+                            {getRecurrenceLabel()} • {formatTime(activeSchedule?.startTime || "")}
+                            {activeSchedule?.recurrenceType !== "once" && activeSchedule?.endTime && ` – ${formatTime(activeSchedule.endTime)}`}
                         </span>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-muted" />
                         <span className="font-medium">
-                            {formatDate(activeSchedule?.startDate || "")} – {formatDate(activeSchedule?.endDate || "")}
+                            {formatDate(activeSchedule?.startDate || "")}
+                            {activeSchedule?.recurrenceType !== "once" && activeSchedule?.endDate && ` – ${formatDate(activeSchedule.endDate)}`}
                         </span>
                     </div>
                 </div>

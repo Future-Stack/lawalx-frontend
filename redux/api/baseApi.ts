@@ -12,7 +12,7 @@ const baseQuery = fetchBaseQuery({
   baseUrl: process.env.NEXT_PUBLIC_BASE_URL,
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as any).auth.token;
-    console.log('Auth token:', token ? 'present' : 'missing');
+    // console.log('Auth token:', token ? 'present' : 'missing');
     if (token) {
       headers.set("authorization", token);
     }

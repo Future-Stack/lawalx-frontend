@@ -500,8 +500,8 @@ export default function UploadFileModal({
         <Dialog open={isOpen} onOpenChange={() => { if (!isUploading) onClose(); }}>
             <DialogContent 
                 showCloseButton={false}
-                onPointerDownOutside={(e) => e.preventDefault()}
-                onInteractOutside={(e) => e.preventDefault()}
+                onPointerDownOutside={(e: { preventDefault: () => void }) => e.preventDefault()}
+                onInteractOutside={(e: { preventDefault: () => void }) => e.preventDefault()}
                 className="p-0 border-none bg-transparent shadow-none max-w-[560px] w-full outline-none z-[10000]"
             >
                 <DialogTitle className="sr-only">Upload File</DialogTitle>

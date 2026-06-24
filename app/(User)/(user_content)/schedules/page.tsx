@@ -8,14 +8,12 @@ import CalendarView from "./_components/CalendarView";
 import { useGetAllSchedulesDataQuery } from "@/redux/api/users/schedules/schedules.api";
 
 export default function SchedulesPage() {
-  const { data: schedulesData } = useGetAllSchedulesDataQuery(undefined);
+  const { data: schedulesData, isLoading } = useGetAllSchedulesDataQuery(undefined);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("Recent");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  console.log("all schedules", schedulesData);
 
   const sortOptions = [
     { label: "Recent", value: "Recent" },
@@ -24,7 +22,6 @@ export default function SchedulesPage() {
   ];
 
   const allSchedules = useMemo(() => schedulesData?.data || [], [schedulesData]);
-  console.log("all schedules", allSchedules);
 
   const filteredSchedules = useMemo(() => {
     const result = [...allSchedules].filter((s) =>
@@ -74,6 +71,7 @@ export default function SchedulesPage() {
           currentPage={currentPage}
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
+          isLoading={isLoading}
         />
       ) : (
         <CalendarView />

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ContentItem } from "@/types/content";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";

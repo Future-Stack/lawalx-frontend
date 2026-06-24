@@ -84,7 +84,8 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                         ? item.type === "image" || item.type === "video" || item.type === "folder"
                         : item.type === "audio" || item.type === "folder";
 
-            const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const itemName = item.name || item.title || "";
+            const matchesSearch = itemName.toLowerCase().includes(searchQuery.toLowerCase());
 
             return matchesType && matchesSearch;
         });
@@ -102,7 +103,8 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                         ? item.type === "image" || item.type === "video"
                         : item.type === "audio";
 
-            const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase());
+            const itemName = item.name || item.title || "";
+            const matchesSearch = itemName.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesType && matchesSearch;
         };
 
@@ -219,7 +221,7 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                                 <NextImage src={folderIcon} alt="folder" width={24} height={24} />
                             ) : (
                                 item.thumbnail ? (
-                                    <NextImage src={item.thumbnail} alt={item.name} width={40} height={40} className="w-full h-full object-cover" />
+                                    <NextImage src={item.thumbnail} alt={item.name || item.title || ""} width={40} height={40} className="w-full h-full object-cover" />
                                 ) : (
                                     <ImageIcon className="w-5 h-5 text-bgBlue" />
                                 )
@@ -230,7 +232,7 @@ const Step2ContentSelection: React.FC<Step2Props> = ({ data, onChange, onContent
                     {/* Content Info */}
                     <div className="flex-1 min-w-0">
                         <p className="font-medium text-headings group-hover:text-bgBlue transition-colors truncate text-sm md:text-base">
-                            {item.name}
+                            {item.name || item.title}
                         </p>
                         <p className="text-xs text-muted">
                             {item.type === "folder" ? `${item.fileCount || 0} items` : item.size}
