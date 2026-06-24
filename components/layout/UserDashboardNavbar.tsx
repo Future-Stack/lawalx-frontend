@@ -19,11 +19,12 @@ import {
   HelpCircleIcon,
   SettingsIcon,
   Headphones,
+  ChevronDown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useTheme } from "next-themes";
-import { useAppDispatch } from "@/redux/store/hook";
+import { useAppDispatch, useAppSelector } from "@/redux/store/hook";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
 import { useGetMySubscriptionQuery } from "@/redux/api/users/payment/payment.api";
 import { logout } from "@/redux/features/auth/authSlice";
@@ -46,6 +47,10 @@ import CreateFolderDialog from "@/components/content/CreateFolderDialog";
 import CreateScheduleDialog from "@/app/(User)/(user_content)/schedules/_components/CreateScheduleDialog";
 import LogoutConfirmModal from "@/components/common/LogoutConfirmModal";
 import { getUrl } from "@/lib/content-utils";
+import { useGetPreferencesQuery, useUpdatePreferencesMutation } from "@/redux/api/admin/navbarApi";
+import { setCurrency } from "@/redux/features/settings/settingsSlice";
+import { getCurrencySymbol } from "@/lib/currencyUtils";
+import { baseApi } from "@/redux/api/baseApi";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard" },
@@ -66,9 +71,32 @@ export default function UserDashboardNavbar() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [currencyOpen, setCurrencyOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const dispatch = useAppDispatch();
+
+  // Currency Handling
+  const { data: preferencesData } = useGetPreferencesQuery();
+  const [updatePreferences] = useUpdatePreferencesMutation();
+  const currentCurrency = useAppSelector((state) => state.settings.currency);
+
+  useEffect(() => {
+    if (preferencesData?.data?.currency) {
+      dispatch(setCurrency(preferencesData.data.currency as "USD" | "NGN"));
+    }
+  }, [preferencesData, dispatch]);
+
+  const handleCurrencyChange = async (currency: "USD" | "NGN") => {
+    try {
+      await updatePreferences({ currency }).unwrap();
+      dispatch(setCurrency(currency));
+      dispatch(baseApi.util.invalidateTags(["Subscription", "AdditionalPayment", "UserPlans", "Preferences"]));
+      setCurrencyOpen(false);
+    } catch (error) {
+      console.error("Failed to update currency", error);
+    }
+  };
 
   // User Profile
   const { data: userProfile } = useGetUserProfileQuery(undefined)
@@ -247,6 +275,7 @@ export default function UserDashboardNavbar() {
                   setHelpOpen(!helpOpen);
                   setProfileOpen(false);
                   setNotificationOpen(false);
+                  setCurrencyOpen(false);
                 }}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex items-center justify-center gap-1 cursor-pointer"
               >
@@ -298,6 +327,45 @@ export default function UserDashboardNavbar() {
             />
           </div>
 
+          {/* Currency Switcher */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                setCurrencyOpen(!currencyOpen);
+                setHelpOpen(false);
+                setProfileOpen(false);
+                setNotificationOpen(false);
+              }}
+              className="flex items-center gap-1.5 px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors cursor-pointer text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
+              <span className="w-4 h-4 flex items-center justify-center font-bold text-bgBlue dark:text-blue-400">
+                {getCurrencySymbol(currentCurrency)}
+              </span>
+              <span>{currentCurrency}</span>
+              <ChevronDown className={`w-3 h-3 transition-transform ${currencyOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {currencyOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setCurrencyOpen(false)} />
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg overflow-hidden z-40">
+                  <button
+                    onClick={() => handleCurrencyChange('USD')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${currentCurrency === 'USD' ? 'text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'}`}
+                  >
+                    USD ($)
+                  </button>
+                  <button
+                    onClick={() => handleCurrencyChange('NGN')}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${currentCurrency === 'NGN' ? 'text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'}`}
+                  >
+                    NGN (₦)
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+
           {/* Always Visible: Notifications */}
           <div className="relative">
             <button
@@ -305,6 +373,7 @@ export default function UserDashboardNavbar() {
                 setNotificationOpen(!notificationOpen);
                 setHelpOpen(false);
                 setProfileOpen(false);
+                setCurrencyOpen(false);
               }}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors relative cursor-pointer"
             >
@@ -397,6 +466,7 @@ export default function UserDashboardNavbar() {
                 setProfileOpen(!profileOpen);
                 setHelpOpen(false);
                 setNotificationOpen(false);
+                setCurrencyOpen(false);
               }}
               className="flex items-center justify-center h-10 w-10 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all cursor-pointer overflow-hidden border border-gray-200 dark:border-gray-700"
             >

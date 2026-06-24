@@ -324,7 +324,7 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
       </div>
 
       {/* Bottom Section: Content List */}
-      <div className="bg-navbarBg rounded-xl border border-border shadow-sm min-h-[500px]">
+      <div className="bg-navbarBg rounded-xl border border-border shadow-sm overflow-hidden">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-border p-4">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
