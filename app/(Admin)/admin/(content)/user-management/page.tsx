@@ -185,16 +185,15 @@ export default function UserManagementPage() {
       const startY = await addPdfHeader(doc, 'User Management Report', `Exported: ${new Date().toLocaleString()}`);
 
       // Define table columns
-      const tableColumn = ["Index", "User ID", "Name", "Email", "Plan", "Role", "Status"];
+      const tableColumn = ["Index", "Name", "Email", "Plan", "Role", "Status"];
       const tableRows: any[] = [];
 
       users.forEach((user: any, index: number) => {
         const userData = [
           index + 1,
-          user.id || 'N/A',
           user.full_name || user.username || 'N/A',
           user.account?.email || 'N/A',
-          (user.payments?.[0]?.plan?.name || "N/A").replace("_", " "),
+          user.plan || 'No Plan',
           user.role || 'N/A',
           user.status || 'N/A'
         ];
@@ -239,13 +238,12 @@ export default function UserManagementPage() {
       const users = exportData.data?.users?.users || [];
       const wb = XLSX.utils.book_new();
       const wsData: any[] = [
-        ["Index", "User ID", "Name", "Email", "Plan", "Role", "Status"],
+        ["Index", "Name", "Email", "Plan", "Role", "Status"],
         ...users.map((user: any, index: number) => [
           index + 1,
-          user.id || 'N/A',
           user.full_name || user.username || 'N/A',
           user.account?.email || 'N/A',
-          (user.payments?.[0]?.plan?.name || "N/A").replace("_", " "),
+          user.plan || 'No Plan',
           user.role || 'N/A',
           user.status || 'N/A'
         ])
@@ -603,8 +601,8 @@ export default function UserManagementPage() {
                   </td>
                 </tr>
               ) : users.map((user: any, index: number) => {
-                const isFirstRows = index < 2;
-                const isLastRows = index >= users.length - 2;
+                const isFirstRows = index < 3;
+                const isLastRows = index >= users.length - 3;
 
                 const plan = user.plan || "No Plan";
                 const deviceStr: string = user.device || "0/0";
@@ -671,13 +669,13 @@ export default function UserManagementPage() {
                     </td>
                     <td className="px-4 py-3 text-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white mb-1">{deviceStr}</div>
-                      <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                         <div className={`h-full ${deviceUsage >= 80 ? "bg-red-500" : deviceUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${deviceUsage}%` }} />
                       </div>
                     </td>
                     <td className="px-4 py-3 text-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white mb-1">{storageStr}</div>
-                      <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                      <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
                         <div className={`h-full ${storageUsage >= 80 ? "bg-red-500" : storageUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${storageUsage}%` }} />
                       </div>
                     </td>

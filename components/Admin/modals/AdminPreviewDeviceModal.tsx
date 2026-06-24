@@ -270,7 +270,7 @@ export default function AdminPreviewDeviceModal({ isOpen, onClose, device }: Pro
       }}
     >
       <div
-        className="relative w-full max-w-6xl bg-input rounded-[24px] shadow-2xl overflow-hidden max-h-[95vh] flex flex-col border border-border animate-in zoom-in-95 duration-200"
+        className="relative w-full max-w-6xl bg-navbarBg rounded-[24px] shadow-2xl overflow-hidden max-h-[95vh] flex flex-col border border-border animate-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
@@ -291,7 +291,7 @@ export default function AdminPreviewDeviceModal({ isOpen, onClose, device }: Pro
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-[#F9FAFB] dark:bg-gray-900/50 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50 dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-500/50">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50 dark:bg-gray-950/20 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-300/50 dark:[&::-webkit-scrollbar-thumb]:bg-gray-600/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-gray-400/50 dark:hover:[&::-webkit-scrollbar-thumb]:bg-gray-500/50">
           <div className="flex flex-col lg:flex-row p-6 gap-6">
             {/* Left Column - Media & Controls */}
             <div className="flex-1 flex flex-col gap-6">
@@ -382,7 +382,7 @@ export default function AdminPreviewDeviceModal({ isOpen, onClose, device }: Pro
               {/* Bottom Controls Area */}
               <div className="flex flex-col gap-4">
                 {/* Volume & Brightness Card */}
-                <div className="bg-white dark:bg-input rounded-[20px] p-6 shadow-sm border border-border flex flex-col sm:flex-row gap-6">
+                <div className="bg-navbarBg rounded-[20px] p-6 shadow-sm border border-border flex flex-col sm:flex-row gap-6">
                   {/* Volume Slider */}
                   <div className="flex-1 flex items-center gap-4">
                     <div className="flex items-center gap-2 min-w-[100px]">
@@ -399,7 +399,7 @@ export default function AdminPreviewDeviceModal({ isOpen, onClose, device }: Pro
                           onChange={(e) => setVolume(Number(e.target.value))}
                           className="w-full h-2 rounded-full appearance-none cursor-pointer bg-[#F5F5F5] dark:bg-gray-800"
                           style={{
-                            background: `linear-gradient(to right, #171717 ${volume}%, #F5F5F5 ${volume}%)`,
+                            background: `linear-gradient(to right, var(--primary-action) ${volume}%, var(--hover-background) ${volume}%)`,
                           }}
                         />
                       </div>
@@ -423,7 +423,7 @@ export default function AdminPreviewDeviceModal({ isOpen, onClose, device }: Pro
                           onChange={(e) => setBrightness(Number(e.target.value))}
                           className="w-full h-2 rounded-full appearance-none cursor-pointer bg-[#F5F5F5] dark:bg-gray-800"
                           style={{
-                            background: `linear-gradient(to right, #171717 ${brightness}%, #F5F5F5 ${brightness}%)`,
+                            background: `linear-gradient(to right, var(--primary-action) ${brightness}%, var(--hover-background) ${brightness}%)`,
                           }}
                         />
                       </div>
@@ -434,7 +434,7 @@ export default function AdminPreviewDeviceModal({ isOpen, onClose, device }: Pro
 
                 {/* Program Timeline */}
                 {timeline.length > 0 && (
-                  <div className="bg-white dark:bg-input rounded-[20px] p-6 shadow-sm border border-border flex flex-col gap-3">
+                  <div className="bg-navbarBg rounded-[20px] p-6 shadow-sm border border-border flex flex-col gap-3">
                     <div className="flex items-center gap-2">
                       <ListTree className="w-4 h-4 text-bgBlue" />
                       <span className="text-sm font-bold text-headings">Timeline Sequence</span>
