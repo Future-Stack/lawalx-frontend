@@ -503,7 +503,7 @@ export default function UserManagementPage() {
                   onClick={() => handleBulkAction("unsuspend")}
                   className="px-4 cursor-pointer py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
                 >
-                  Deactivate
+                  Unsuspend
                 </button>
                 <button
                   onClick={() => handleBulkAction("suspend")}
