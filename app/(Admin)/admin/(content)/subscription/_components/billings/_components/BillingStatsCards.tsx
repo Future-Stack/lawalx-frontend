@@ -8,8 +8,8 @@ export function BillingStatsCards() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-8 mb-6 border border-gray-100 dark:border-gray-800 rounded-xl bg-gray-50/50 dark:bg-gray-800/20">
-        <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+      <div className="mb-6 flex items-center justify-center rounded-xl border border-border bg-bgGray/70 py-8 dark:bg-gray-800/30">
+        <Loader2 className="w-6 h-6 animate-spin text-muted" />
       </div>
     );
   }
@@ -81,14 +81,14 @@ export function BillingStatsCards() {
         >
           <div className="flex justify-between items-start mb-3">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700">
+              <div className="rounded-lg border border-border bg-navbarBg p-1.5 shadow-sm">
                 {card.icon}
               </div>
-              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              <h3 className="text-sm font-medium text-body">
                 {card.title}
               </h3>
             </div>
-            <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${card.color} bg-white dark:bg-gray-800 shadow-sm border border-gray-100 dark:border-gray-700`}>
+            <span className={`rounded-full border border-border bg-navbarBg px-2.5 py-0.5 text-xs font-bold shadow-sm ${card.color}`}>
               {card.count}
             </span>
           </div>

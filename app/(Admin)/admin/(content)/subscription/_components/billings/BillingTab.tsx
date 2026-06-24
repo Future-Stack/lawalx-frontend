@@ -156,7 +156,7 @@ const BillingTab = () => {
         <button
           onClick={handleDownloadAll}
           disabled={isDownloadingAll || payments.length === 0}
-          className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer flex items-center gap-2 disabled:opacity-60"
+          className="flex cursor-pointer items-center gap-2 rounded-lg bg-navbarBg px-4 py-2 text-sm font-medium text-headings shadow-customShadow transition-colors hover:bg-bgGray dark:hover:bg-gray-800 disabled:opacity-60"
         >
           {isDownloadingAll && <Loader2 className="w-4 h-4 animate-spin" />}
           Download All
@@ -165,11 +165,11 @@ const BillingTab = () => {
       filters={
         <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
           <div className="relative w-full md:flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
             <input
               placeholder="Search by name, email, or invoice..."
               aria-label="Search payment history"
-              className="w-full bg-navbarBg border border-border rounded-lg pl-10 pr-4 py-2.5 placeholder:text-gray-400 focus-visible:ring-0 focus:outline-none text-gray-900 dark:text-white"
+              className="w-full rounded-lg border border-border bg-navbarBg py-2.5 pl-10 pr-4 text-headings placeholder:text-muted focus-visible:ring-0 focus:outline-none"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -220,7 +220,7 @@ const BillingTab = () => {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1 || isFetching}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="cursor-pointer rounded-lg bg-navbarBg px-3 py-1.5 text-xs font-medium text-headings shadow-customShadow transition-colors hover:bg-bgGray disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-800 sm:px-4 sm:py-2 sm:text-sm"
             >
               Previous
             </button>
@@ -230,7 +230,7 @@ const BillingTab = () => {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || isFetching}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="cursor-pointer rounded-lg bg-navbarBg px-3 py-1.5 text-xs font-medium text-headings shadow-customShadow transition-colors hover:bg-bgGray disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-gray-800 sm:px-4 sm:py-2 sm:text-sm"
             >
               Next
             </button>

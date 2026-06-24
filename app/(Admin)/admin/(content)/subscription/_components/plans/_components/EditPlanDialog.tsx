@@ -97,7 +97,7 @@ const EditPlanDialog = ({
   };
 
   const inputClass =
-    "w-full bg-white dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-lg px-3.5 py-2.5 text-[16px] text-headings placeholder:text-[#667085] focus:outline-none focus:ring-1 focus:ring-[#00A3FF] transition-all shadow-sm";
+    "w-full rounded-lg border border-border bg-bgGray px-3.5 py-2.5 text-[16px] text-headings placeholder:text-muted shadow-sm transition-all focus:outline-none focus:ring-1 focus:ring-bgBlue dark:bg-gray-800";
 
   return (
     <BaseDialog
@@ -110,7 +110,7 @@ const EditPlanDialog = ({
       hideScrollbar={false}
       className="p-0 [&>div:first-child]:hidden"
     >
-      <div className="flex flex-col h-full bg-white dark:bg-gray-950">
+      <div className="flex h-full flex-col bg-navbarBg">
         {/* Header with Icon */}
         <div className="p-6 pb-0">
           <div className="flex flex-col gap-4">
@@ -120,10 +120,10 @@ const EditPlanDialog = ({
               </div>
             </div>
             <div>
-              <h2 className="text-[20px] font-bold text-Heading leading-tight">
+              <h2 className="text-[20px] font-bold leading-tight text-headings">
                 Edit Plan
               </h2>
-              <p className="text-[#667085] text-[14px] mt-1">
+              <p className="mt-1 text-[14px] text-muted">
                 Configure the plan details, limits, and features.
               </p>
             </div>
@@ -137,7 +137,7 @@ const EditPlanDialog = ({
               <h4 className="text-[14px] font-bold text-headings">
                 Plan Status
               </h4>
-              <p className="text-[12px] text-[#667085]">
+              <p className="text-[12px] text-muted">
                 Determine if this plan is currently active.
               </p>
             </div>
@@ -146,8 +146,8 @@ const EditPlanDialog = ({
               role="switch"
               aria-checked={isActive}
               onClick={() => setIsActive(!isActive)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 cursor-pointer ${
-                isActive ? "bg-[#00A3FF]" : "bg-gray-300"
+              className={`relative inline-flex h-6 w-11 cursor-pointer items-center rounded-full transition-colors duration-200 ${
+                isActive ? "bg-bgBlue" : "bg-borderGray dark:bg-gray-700"
               }`}
             >
               <span
@@ -160,7 +160,7 @@ const EditPlanDialog = ({
 
           {/* Plan Name (Read Only as it's not in PATCH schema) */}
           <div className="space-y-1.5">
-            <Label htmlFor="plan-name" className="text-[14px] text-[#404040]">
+            <Label htmlFor="plan-name" className="text-[14px] text-body">
               Plan Name
             </Label>
             <input
@@ -168,7 +168,7 @@ const EditPlanDialog = ({
               title="Plan Name"
               value={planName}
               disabled
-              className={`${inputClass} bg-gray-50 cursor-not-allowed`}
+              className={`${inputClass} cursor-not-allowed opacity-80`}
             />
           </div>
 
@@ -177,12 +177,12 @@ const EditPlanDialog = ({
             <div className="space-y-1.5">
               <Label
                 htmlFor="plan-price"
-                className="text-[14px] text-[#404040]"
+                className="text-[14px] text-body"
               >
                 Price
               </Label>
               <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#667085] text-[16px] font-medium">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[16px] font-medium text-muted">
                   {currency === "NGN"
                     ? "₦"
                     : currency === "USD"
@@ -204,7 +204,7 @@ const EditPlanDialog = ({
             <div className="space-y-1.5">
               <Label
                 htmlFor="plan-devices"
-                className="text-[14px] text-[#404040]"
+                className="text-[14px] text-body"
               >
                 Device Limit
               </Label>
@@ -223,7 +223,7 @@ const EditPlanDialog = ({
           <div className="space-y-1.5">
             <Label
               htmlFor="plan-description"
-              className="text-[14px] text-[#404040]"
+              className="text-[14px] text-body"
             >
               Description
             </Label>
@@ -241,7 +241,7 @@ const EditPlanDialog = ({
             <div className="space-y-1.5">
               <Label
                 htmlFor="plan-storage"
-                className="text-[14px] text-[#404040]"
+                className="text-[14px] text-body"
               >
                 Storage (GB)
               </Label>
@@ -257,7 +257,7 @@ const EditPlanDialog = ({
             <div className="space-y-1.5">
               <Label
                 htmlFor="plan-templates"
-                className="text-[14px] text-[#404040]"
+                className="text-[14px] text-body"
               >
                 Template Limit
               </Label>
@@ -281,7 +281,7 @@ const EditPlanDialog = ({
               <div className="space-y-1.5">
                 <Label
                   htmlFor="limit-photo"
-                  className="text-[12px] text-[#667085]"
+                  className="text-[12px] text-muted"
                 >
                   Photo
                 </Label>
@@ -301,7 +301,7 @@ const EditPlanDialog = ({
               <div className="space-y-1.5">
                 <Label
                   htmlFor="limit-audio"
-                  className="text-[12px] text-[#667085]"
+                  className="text-[12px] text-muted"
                 >
                   Audio
                 </Label>
@@ -321,7 +321,7 @@ const EditPlanDialog = ({
               <div className="space-y-1.5">
                 <Label
                   htmlFor="limit-video"
-                  className="text-[12px] text-[#667085]"
+                  className="text-[12px] text-muted"
                 >
                   Video
                 </Label>
@@ -359,7 +359,7 @@ const EditPlanDialog = ({
               <button
                 type="button"
                 onClick={handleAddFeature}
-                className="p-2.5 bg-[#00A3FF] text-white rounded-lg hover:bg-[#00A3FF]/90 transition-all"
+                className="rounded-lg bg-bgBlue p-2.5 text-white transition-all hover:bg-blue-500"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -368,9 +368,9 @@ const EditPlanDialog = ({
               {features.map((feature, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 px-3 py-2 rounded-lg border border-[#F2F4F7] dark:border-gray-800"
+                className="flex items-center justify-between rounded-lg border border-border bg-bgGray px-3 py-2 dark:bg-gray-800"
                 >
-                  <span className="text-[14px] text-[#404040] dark:text-gray-300">
+                  <span className="text-[14px] text-body">
                     {feature}
                   </span>
                   <button
@@ -383,7 +383,7 @@ const EditPlanDialog = ({
                 </div>
               ))}
               {features.length === 0 && (
-                <p className="text-[12px] text-gray-400 text-center py-2">
+                <p className="py-2 text-center text-[12px] text-muted">
                   No features added yet.
                 </p>
               )}
@@ -392,11 +392,11 @@ const EditPlanDialog = ({
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-6 border-t border-[#F2F4F7] dark:border-gray-800 bg-[#FCFCFD] dark:bg-gray-900/20">
+        <div className="border-t border-border bg-bgGray p-6 dark:bg-gray-800/40">
           <div className="flex justify-between items-center gap-4">
             <button
               onClick={() => setOpen(false)}
-              className="px-6 py-2.5 min-w-[100px] rounded-lg border border-[#D0D5DD] dark:border-gray-700 font-bold text-[14px] text-headings hover:bg-gray-50 transition-all cursor-pointer shadow-sm bg-white dark:bg-gray-900"
+              className="min-w-[100px] cursor-pointer rounded-lg border border-border bg-navbarBg px-6 py-2.5 text-[14px] font-bold text-headings shadow-sm transition-all hover:bg-bgGray dark:hover:bg-gray-800"
               disabled={isUpdating}
             >
               Cancel
@@ -404,7 +404,7 @@ const EditPlanDialog = ({
             <button
               onClick={handleSave}
               disabled={isUpdating}
-              className="px-10 py-2.5 rounded-lg bg-[#00A3FF] text-white font-bold text-[14px] hover:bg-[#00A3FF]/90 transition-all cursor-pointer shadow-sm flex items-center gap-2"
+              className="flex cursor-pointer items-center gap-2 rounded-lg bg-bgBlue px-10 py-2.5 text-[14px] font-bold text-white shadow-sm transition-all hover:bg-blue-500"
             >
               {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
               Save Changes

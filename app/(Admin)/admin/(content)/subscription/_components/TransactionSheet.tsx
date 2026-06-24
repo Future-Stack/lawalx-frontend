@@ -95,7 +95,7 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
     if (statusUpper === "FAILED" || statusUpper === "REJECTED") {
       return "bg-red-100 text-red-700 border-red-200";
     }
-    return "bg-gray-100 text-gray-700 border-gray-200";
+    return "bg-bgGray text-body border-border dark:bg-gray-800";
   };
 
   const paymentMethodText = payment?.gateway
@@ -228,7 +228,7 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                     <div className="text-right">
                       <Badge
                         variant="default"
-                        className="bg-gray-100 text-gray-600"
+                        className="bg-bgGray text-body border border-border dark:bg-gray-800"
                       >
                         {payment?.plan || "N/A"}
                       </Badge>
@@ -241,13 +241,13 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                     Payment Details
                   </h4>
                   <div className="grid grid-cols-[1fr_auto] gap-y-4 gap-x-3 text-sm">
-                    <div className="text-gray-500">Payment Method</div>
+                    <div className="text-muted">Payment Method</div>
                     <div className="text-right font-medium flex items-center justify-end gap-2 text-body">
                       <CreditCard className="w-3.5 h-3.5 text-muted" />
                       <span>{paymentMethodText}</span>
                     </div>
 
-                    <div className="text-gray-500">Gateway Ref</div>
+                    <div className="text-muted">Gateway Ref</div>
                     <div className="text-right font-medium flex items-center justify-end gap-1 text-body text-xs break-all">
                       {payment?.transactionId || "N/A"}
                       <button
@@ -258,20 +258,20 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                         className="inline-flex items-center"
                         aria-label="Copy gateway reference"
                       >
-                        <Copy className="w-3 h-3 text-gray-400 cursor-pointer" />
+                        <Copy className="w-3 h-3 text-muted cursor-pointer" />
                       </button>
                     </div>
 
-                    <div className="text-gray-500">Gateway</div>
+                    <div className="text-muted">Gateway</div>
                     <div className="text-right font-medium flex items-center justify-end gap-1 text-body">
                       {payment?.gateway
                         ? payment.gateway.charAt(0).toUpperCase() +
                           payment.gateway.slice(1).toLowerCase()
                         : "N/A"}
-                      <ExternalLink className="w-3 h-3 text-gray-400" />
+                      <ExternalLink className="w-3 h-3 text-muted" />
                     </div>
 
-                    <div className="text-gray-500">Billing Cycle</div>
+                    <div className="text-muted">Billing Cycle</div>
                     <div className="text-right font-medium text-body">
                       {subscription?.billingCycle || "N/A"}
                     </div>
@@ -287,7 +287,7 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                       variant="default"
                       onClick={handleDownload}
                       disabled={isDownloading}
-                      className="w-full text-xs bg-[#101A3A] hover:bg-[#001C55] text-white h-10 shadow-customShadow hover:opacity-90 border border-transparent"
+                      className="h-10 w-full border border-transparent bg-bgBlue text-xs text-white shadow-customShadow transition-colors hover:bg-blue-500"
                     >
                       {isDownloading ? (
                         <Loader2 className="w-4 h-4 mr-1 animate-spin" />
@@ -304,7 +304,7 @@ const TransactionSheet = ({ open, setOpen, userId }: TransactionSheetProps) => {
                   </Button> */}
                     <Button
                       variant="destructive"
-                      className="w-full text-xs h-10 shadow-customShadow hover:text-gray-100 bg-red-500"
+                      className="h-10 w-full bg-red-500 text-xs text-white shadow-customShadow hover:bg-red-600"
                       onClick={() => setRefundOpen(true)}
                       disabled={
                         payment?.status?.toUpperCase() === "REFUNDED" ||

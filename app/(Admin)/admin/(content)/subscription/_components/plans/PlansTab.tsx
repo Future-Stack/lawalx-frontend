@@ -133,18 +133,18 @@ const PlansTab = () => {
       <div className="space-y-6 sm:space-y-8 px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-full lg:max-w-[580px]">
           {/* Screen Size Selector Card */}
-          <div className="w-full bg-white dark:bg-gray-900 border border-[#F2F4F7] dark:border-gray-800 rounded-2xl sm:rounded-[24px] p-4 sm:p-6">
+          <div className="w-full rounded-2xl border border-border bg-navbarBg p-4 sm:rounded-[24px] sm:p-6">
             <div className="space-y-4">
               <div>
                 <h3 className="text-[16px] font-bold text-headings">
                   Screen Size
                 </h3>
-                <p className="text-[#667085] text-[12px]">
+                <p className="text-[12px] text-muted">
                   Select the screen sizes you need.
                 </p>
               </div>
               {isLoadingScreens ? (
-                <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="flex items-center gap-2 text-sm text-muted">
                   <Loader2 className="w-4 h-4 animate-spin" /> Loading sizes...
                 </div>
               ) : (
@@ -166,13 +166,13 @@ const PlansTab = () => {
           </div>
 
           {/* Billing Selector Card */}
-          <div className="w-full bg-white dark:bg-gray-900 border border-[#F2F4F7] dark:border-gray-800 rounded-2xl sm:rounded-[24px] p-4 sm:p-6">
+          <div className="w-full rounded-2xl border border-border bg-navbarBg p-4 sm:rounded-[24px] sm:p-6">
             <div className="space-y-4">
               <div>
                 <h3 className="text-[16px] font-bold text-headings">
                   Billing Type
                 </h3>
-                <p className="text-[#667085] text-[12px]">
+                <p className="text-[12px] text-muted">
                   Filter plans by billing cycle.
                 </p>
               </div>
@@ -193,8 +193,8 @@ const PlansTab = () => {
         {/* Plans Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {isLoadingPlans ? (
-            <div className="col-span-full py-12 flex flex-col items-center justify-center text-gray-500 gap-4">
-              <Loader2 className="w-8 h-8 animate-spin text-[#00A3FF]" />
+            <div className="col-span-full flex flex-col items-center justify-center gap-4 py-12 text-muted">
+              <Loader2 className="w-8 h-8 animate-spin text-bgBlue" />
               <p>Fetching plans...</p>
             </div>
           ) : plans.length > 0 ? (
@@ -221,20 +221,20 @@ const PlansTab = () => {
               />
             ))
           ) : (
-            <div className="col-span-full py-10 sm:py-12 px-4 text-center text-gray-500 bg-gray-50 dark:bg-gray-900/20 rounded-2xl sm:rounded-[24px] border border-dashed">
+            <div className="col-span-full rounded-2xl border border-dashed border-border bg-bgGray px-4 py-10 text-center text-muted dark:bg-gray-800/40 sm:rounded-[24px] sm:py-12">
               No plans found for the selected filters.
             </div>
           )}
         </div>
 
         {/* Yearly Discount Configuration Card */}
-        <div className="bg-[#FFF9F5] dark:bg-gray-900/40 border border-[#F2F4F7] dark:border-gray-800 rounded-2xl sm:rounded-[24px] p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
+        <div className="rounded-2xl border border-border bg-cardBackground2 p-4 space-y-6 sm:rounded-[24px] sm:p-6 sm:space-y-8 md:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
             <div className="space-y-1 min-w-0 flex-1">
-              <h3 className="text-base sm:text-[18px] font-bold text-[#7A271A] dark:text-orange-400">
+              <h3 className="text-base font-bold text-headings sm:text-[18px]">
                 Yearly Discount
               </h3>
-              <p className="text-[#7A271A]/70 dark:text-orange-300/70 text-sm sm:text-[14px]">
+              <p className="text-sm text-muted sm:text-[14px]">
                 Offer a discount for yearly billing.
               </p>
             </div>
@@ -243,8 +243,8 @@ const PlansTab = () => {
               role="switch"
               aria-checked={yearlyDiscount ? "true" : "false"}
               onClick={handleToggleDiscount}
-              className={`relative inline-flex h-7 w-12 shrink-0 self-start sm:self-center items-center rounded-full transition-colors duration-200 cursor-pointer ${
-                yearlyDiscount ? "bg-[#00A3FF]" : "bg-gray-300"
+              className={`relative inline-flex h-7 w-12 shrink-0 self-start cursor-pointer items-center rounded-full transition-colors duration-200 sm:self-center ${
+                yearlyDiscount ? "bg-bgBlue" : "bg-borderGray dark:bg-gray-700"
               }`}
             >
               <span
@@ -258,7 +258,7 @@ const PlansTab = () => {
           <div className="space-y-3">
             <label
               htmlFor="discount-percentage"
-              className="text-[14px] font-bold text-[#7A271A] dark:text-orange-400"
+              className="text-[14px] font-bold text-headings"
             >
               Discount Percentage %
             </label>
@@ -270,7 +270,7 @@ const PlansTab = () => {
                   title="Discount Percentage"
                   value={discountPercentage}
                   onChange={(e) => setDiscountPercentage(e.target.value)}
-                  className="w-full bg-white dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-xl px-4 py-3.5 text-[16px] text-headings focus:outline-none focus:ring-1 focus:ring-[#00A3FF] transition-all"
+                  className="w-full rounded-xl border border-border bg-bgGray px-4 py-3.5 text-[16px] text-headings transition-all focus:outline-none focus:ring-1 focus:ring-bgBlue dark:bg-gray-800"
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
                   <button
@@ -280,7 +280,7 @@ const PlansTab = () => {
                         (parseInt(prev) + 1).toString(),
                       )
                     }
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-muted transition-colors hover:text-headings"
                   >
                     <svg
                       width="10"
@@ -305,7 +305,7 @@ const PlansTab = () => {
                         Math.max(0, parseInt(prev) - 1).toString(),
                       )
                     }
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-muted transition-colors hover:text-headings"
                   >
                     <svg
                       width="10"
@@ -328,7 +328,7 @@ const PlansTab = () => {
               <button
                 type="button"
                 onClick={handleSaveDiscount}
-                className="w-full sm:w-auto px-6 sm:px-8 py-3 bg-[#00A3FF] text-white rounded-xl font-bold hover:bg-[#00A3FF]/90 transition-all shadow-sm cursor-pointer"
+                className="w-full cursor-pointer rounded-xl bg-bgBlue px-6 py-3 font-bold text-white shadow-sm transition-all hover:bg-blue-500 sm:w-auto sm:px-8"
               >
                 Update
               </button>

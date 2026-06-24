@@ -81,7 +81,7 @@ const ManageScreenSizeTab = () => {
       actionButton={
         <Button
           onClick={handleAdd}
-          className="bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg px-4 py-2 h-auto text-sm font-medium shadow-customShadow flex items-center gap-2"
+          className="flex h-auto items-center gap-2 rounded-lg bg-navbarBg px-4 py-2 text-sm font-medium text-headings shadow-customShadow transition-colors hover:bg-bgGray dark:hover:bg-gray-800"
         >
           <Plus className="w-5 h-5" /> Add
         </Button>
@@ -89,11 +89,11 @@ const ManageScreenSizeTab = () => {
       filters={
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted" />
             <input
               placeholder="Search by size..."
               aria-label="Search screen sizes"
-              className="w-full bg-navbarBg border border-border rounded-lg pl-10 pr-4 py-2.5 placeholder:text-gray-400 focus-visible:ring-0 focus:outline-none text-gray-900 dark:text-white"
+              className="w-full rounded-lg border border-border bg-navbarBg py-2.5 pl-10 pr-4 text-headings placeholder:text-muted focus-visible:ring-0 focus:outline-none"
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -122,8 +122,8 @@ const ManageScreenSizeTab = () => {
     >
       <div className="relative min-h-[400px]">
         {isLoading ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 gap-4">
-            <Loader2 className="w-8 h-8 animate-spin text-[#00A3FF]" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-muted">
+            <Loader2 className="w-8 h-8 animate-spin text-bgBlue" />
             <p>Loading screen sizes...</p>
           </div>
         ) : (
