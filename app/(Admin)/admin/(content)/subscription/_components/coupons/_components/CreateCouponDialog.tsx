@@ -16,7 +16,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 
 const APPLICABLE_PLAN_OPTIONS = [
-  { label: "Free Trial", value: "FREE_TRIAL" },
   { label: "Basic", value: "BASIC" },
   { label: "Premium", value: "PREMIUM" },
   { label: "Business", value: "BUSINESS" },

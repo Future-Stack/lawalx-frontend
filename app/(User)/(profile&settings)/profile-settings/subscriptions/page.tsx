@@ -113,6 +113,17 @@ export default function Subscriptions() {
   const storageLimitGb = subscription?.storageLimitGb ?? 0;
   const hasSubscription = Boolean(subscription?.id);
 
+  const deviceUsage = subscription?.deviceUsage;
+  const storageUsage = subscription?.storageUsage;
+
+  const deviceUsed = deviceUsage?.used ?? 0;
+  const deviceTotal = deviceUsage?.total ?? deviceQuantity;
+  const devicePercentage = deviceTotal > 0 ? Math.min((deviceUsed / deviceTotal) * 100, 100) : 0;
+
+  const storageUsedGb = storageUsage?.usedGb ?? 0;
+  const storageTotalGb = storageUsage?.totalGb ?? storageLimitGb;
+  const storagePercentage = storageTotalGb > 0 ? Math.min((storageUsedGb / storageTotalGb) * 100, 100) : 0;
+
   React.useEffect(() => {
     if (!subscription) return;
     if (
@@ -134,13 +145,12 @@ export default function Subscriptions() {
         </div>
 
         <div className="border border-border rounded-xl p-6 space-y-6">
-          {isLoading && (
+          {isLoading ? (
             <div className="flex items-center gap-2 text-sm text-muted">
               <Loader2 className="w-4 h-4 animate-spin" />
               Loading subscription...
             </div>
-          )}
-          {!isLoading && !hasSubscription ? (
+          ) : !hasSubscription ? (
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <p className="text-lg font-bold text-headings">No Plan</p>
@@ -234,23 +244,23 @@ export default function Subscriptions() {
                   </label>
                   <div className="w-full bg-gray-100 rounded-full h-2 mb-1">
                     <div
-                      className="bg-bgBlue h-2 rounded-full"
-                      style={{ width: "0%" }}
+                      className="bg-bgBlue h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${devicePercentage}%` }}
                     ></div>
                   </div>
-                  <p className="text-xs text-muted">0 / {deviceQuantity}</p>
+                  <p className="text-xs text-muted">{deviceUsed} / {deviceTotal}</p>
                 </div>
                 <div>
                   <label className="flex items-center gap-2 text-sm font-semibold text-body mb-2">
                     <HardDrive className="w-4 h-4" /> Storage
                   </label>
-                  <div className="w-full bg-blue-50 rounded-full h-2 mb-1">
+                  <div className="w-full bg-gray-100 rounded-full h-2 mb-1">
                     <div
-                      className="bg-red-500 h-2 rounded-full"
-                      style={{ width: "0%" }}
+                      className="bg-bgBlue h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${storagePercentage}%` }}
                     ></div>
                   </div>
-                  <p className="text-xs text-muted">0 / {storageLimitGb} GB</p>
+                  <p className="text-xs text-muted">{storageUsedGb.toFixed(2)} / {storageTotalGb} GB</p>
                 </div>
               </div>
 

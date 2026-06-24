@@ -15,7 +15,7 @@ const PLAN_UI: Record<
   },
   BASIC: {
     buttonColor:
-      "bg-primary text-gray-500 hover:bg-gray-600 shadow-customShadow",
+      "bg-white border border-color text-headings hover:bg-gray-50 hover:text-black shadow-customShadow",
     borderColor: "border-color",
   },
   BUSINESS: {

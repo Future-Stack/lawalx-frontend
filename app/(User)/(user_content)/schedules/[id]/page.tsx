@@ -83,6 +83,27 @@ function buildScheduleTimeDisplay(
   return time;
 }
 
+// Helper: Format date for backend payload (ignores local timezone shift)
+function formatPayloadDate(dateStr: string | null | undefined, isEnd = false): string {
+  if (!dateStr) {
+    const defaultDate = dayjs().format("YYYY-MM-DD");
+    return isEnd ? `${defaultDate}T23:59:59Z` : `${defaultDate}T00:00:00Z`;
+  }
+  const dateOnly = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
+  return isEnd ? `${dateOnly}T23:59:59Z` : `${dateOnly}T00:00:00Z`;
+}
+
+// Helper: Format time for backend payload (dynamically sends today's date)
+function formatPayloadTime(timeStr: string | null | undefined): string {
+  const today = dayjs().format("YYYY-MM-DD");
+  if (!timeStr) return `${today}T00:00:00Z`;
+  const cleanTime = timeStr.includes("T") ? timeStr.split("T")[1]?.substring(0, 5) : timeStr;
+  const parts = cleanTime.split(":");
+  const hh = parts[0]?.padStart(2, "0") || "00";
+  const mm = parts[1]?.padStart(2, "0") || "00";
+  return `${today}T${hh}:${mm}:00Z`;
+}
+
 // Helper: Validate UUID format
 const isUUID = (id: any): id is string => {
   if (typeof id !== "string") return false;
@@ -320,17 +341,23 @@ export default function ScheduleDetailPage() {
     const validFileIds = fileIds.filter(isUUID);
     const validLowerThirdIds = lowerThirdIds.filter(isUUID);
 
+    const startD = pStartDate || dayjs().format("YYYY-MM-DD");
+    let endD = pEndDate;
+    if (pRepeat.toLowerCase() === "once") {
+      endD = startD;
+    } else if (!endD) {
+      endD = startD;
+    }
+
     return {
       name: pName,
       description: pDescription,
       contentType: apiContentType,
       recurrenceType: pRepeat.toLowerCase(),
-      startDate: pStartDate ? dayjs(pStartDate).startOf('day').toISOString() : dayjs().startOf('day').toISOString(),
-      endDate: pRepeat.toLowerCase() === "once"
-        ? (pStartDate ? dayjs(pStartDate).endOf('day').toISOString() : dayjs().endOf('day').toISOString())
-        : (pEndDate ? dayjs(pEndDate).endOf('day').toISOString() : (pStartDate ? dayjs(pStartDate).endOf('day').toISOString() : dayjs().endOf('day').toISOString())),
-      startTime: pStartTime.includes("T") ? pStartTime : `1970-01-01T${pStartTime}:00Z`,
-      endTime: pEndTime.includes("T") ? pEndTime : `1970-01-01T${pEndTime}:00Z`,
+      startDate: formatPayloadDate(startD),
+      endDate: formatPayloadDate(endD, true),
+      startTime: formatPayloadTime(pStartTime),
+      endTime: formatPayloadTime(pEndTime),
       daysOfWeek: pDaysOfWeek,
       dayOfMonth: pDayOfMonth,
       programIds: validProgramIds,
@@ -387,20 +414,11 @@ export default function ScheduleDetailPage() {
       return;
     }
 
-    const fileIds = localFiles
-      ? localFiles.map((f: any) => f.id)
-      : (schedule?.files ? schedule.files.filter(f => !removedFileIds.includes(f.id)).map(f => f.id) : []);
-    const lowerThirdIds = localLowerThirdIds ?? (schedule?.lowerThirdId ? [schedule.lowerThirdId] : []);
-    const validFileIds = fileIds.filter(isUUID);
-    const validLowerThirdIds = lowerThirdIds.filter(isUUID);
-
     try {
+      const payload = getPayload();
       await updateSchedule({
         id: id as string,
-        data: {
-          fileIds: validFileIds,
-          lowerThirdIds: validLowerThirdIds.length > 0 ? validLowerThirdIds : undefined,
-        },
+        data: payload,
       }).unwrap();
       toast.success("Schedule updated successfully");
       router.push("/schedules");

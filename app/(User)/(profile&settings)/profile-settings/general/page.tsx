@@ -36,8 +36,8 @@ export default function General() {
 
     const region = watch("region");
     const timeZone = watch("timeZone");
-    const theme = watchPref("theme");
-    const language = watchPref("language");
+    // const theme = watchPref("theme");
+    // const language = watchPref("language");
     const timeFormat = watchPref("timeFormat");
     const dateFormat = watchPref("dateFormat");
 
@@ -294,7 +294,7 @@ export default function General() {
 
                 <div className="space-y-6">
                     {/* Theme */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
+                    {/* <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
                         <label className="w-full md:w-1/3 text-sm font-semibold text-body">Theme</label>
                         <div className="flex-1">
                             <BaseSelect
@@ -309,10 +309,10 @@ export default function General() {
                                 className="w-full"
                             />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Language */}
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
+                    {/* <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">
                         <label className="w-full md:w-1/3 text-sm font-semibold text-body">Language</label>
                         <div className="flex-1">
                             <BaseSelect
@@ -328,7 +328,7 @@ export default function General() {
                                 className="w-full"
                             />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Time format */}
                     <div className="flex flex-col sm:flex-row sm:items-center gap-6 pb-6 border-b border-border">

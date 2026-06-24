@@ -76,7 +76,7 @@ const ContentSection: React.FC<ContentSectionProps> = ({
                         onClick={onAddTextSection}
                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-bgBlue hover:bg-blue-600 text-white rounded-lg font-medium transition-colors cursor-pointer shrink-0 shadow-customShadow"
                     >
-                        <span>Add Text Section</span>
+                        <span>Update Text Section</span>
                 </button>
                 </div>
             </div>

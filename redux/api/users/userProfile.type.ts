@@ -5,9 +5,18 @@ export type UserResponse = {
   data: User;
 };
 
+export type ProfilePlan = {
+  name: string;
+  price: string;
+  currency: string;
+  endDate: string;
+  status: string;
+};
+
 export type User = {
   id: string;
   username: string;
+  email?: string;
   full_name: string;
   company_name: string | null;
   image_url: string | null;
@@ -37,6 +46,7 @@ export type User = {
   dateformate: string | null;
   isOnline: boolean;
   lastOnlineAt: string | null;
+  plan?: ProfilePlan | null;
 };
 
 

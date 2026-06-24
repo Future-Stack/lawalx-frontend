@@ -23,6 +23,7 @@ import {
   RotateCcw,
   ArrowUpCircle,
   Mail,
+  CreditCard,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
@@ -31,6 +32,7 @@ import {
   PaymentHistoryItem,
 } from "@/redux/api/admin/payments/billings/billingsApi";
 import { downloadBillingInvoicePdf } from "../../_utils/downloadBillingInvoicePdf";
+import { CardIcon } from "./CardLogos";
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 const STATUS_STYLES: Record<PaymentStatus, string> = {
@@ -57,9 +59,37 @@ function StatusBadge({ status }: { status: PaymentStatus }) {
   );
 }
 
+
 // ── Payment method pill ───────────────────────────────────────────────────────
-function PaymentMethodBadge({ method }: { method: string }) {
+function PaymentMethodBadge({
+  method,
+  brand,
+  last4,
+}: {
+  method: string;
+  brand?: string | null;
+  last4?: string | null;
+}) {
   const isStripe = method.toLowerCase() === "stripe";
+
+  if (brand && last4) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-800 rounded shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <CardIcon brand={brand} />
+        </div>
+        <div className="flex flex-col text-left">
+          <span className="text-[13px] font-medium text-headings capitalize leading-none">
+            {brand}
+          </span>
+          <span className="text-[11px] text-muted tracking-widest leading-none mt-1">
+            **** {last4}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <span
       className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${
@@ -183,10 +213,16 @@ const BillingTable = ({
                   <div className="text-sm text-muted">{payment.user.email}</div>
                 </TableCell>
                 <TableCell>
-                  <PaymentMethodBadge method={payment.paymentMethod} />
+                  <PaymentMethodBadge
+                    method={payment.paymentMethod}
+                    brand={payment.brand}
+                    last4={payment.last4}
+                  />
                 </TableCell>
-                <TableCell className="font-semibold text-headings">
-                  {formatCurrency(payment.amount, currency)}
+                <TableCell>
+                  <div className="font-semibold text-headings">
+                    {formatCurrency(payment.amount, currency)}
+                  </div>
                 </TableCell>
                 <TableCell>
                   <StatusBadge status={payment.status} />
@@ -229,14 +265,14 @@ const BillingTable = ({
                         <Eye className="mr-2 h-4 w-4" />
                         View Details
                       </DropdownMenuItem> */}
-                      <DropdownMenuItem>
+                      {/* <DropdownMenuItem>
                         <ArrowUpCircle className="mr-2 h-4 w-4" />
                         change plan
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      </DropdownMenuItem> */}
+                      {/* <DropdownMenuItem>
                         <Mail className="mr-2 h-4 w-4" />
                         Resend Receipt
-                      </DropdownMenuItem>
+                      </DropdownMenuItem> */}
 
                       <DropdownMenuItem
                         onClick={() => handleViewInGateway(payment.paymentId)}
@@ -372,14 +408,20 @@ const BillingTable = ({
                 Payment Method:
               </span>
               <div className="flex-shrink-0">
-                <PaymentMethodBadge method={payment.paymentMethod} />
+                <PaymentMethodBadge
+                  method={payment.paymentMethod}
+                  brand={payment.brand}
+                  last4={payment.last4}
+                />
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
               <span className="text-muted whitespace-nowrap">Amount:</span>
-              <span className="font-semibold text-headings break-all">
-                {formatCurrency(payment.amount, currency)}
-              </span>
+              <div className="text-right">
+                <div className="font-semibold text-headings break-all">
+                  {formatCurrency(payment.amount, currency)}
+                </div>
+              </div>
             </div>
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
               <span className="text-muted whitespace-nowrap">Date:</span>

@@ -137,7 +137,7 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
                                             <Label className="font-bold text-headings cursor-pointer truncate text-sm sm:text-base">
                                                 {device.name}
                                             </Label>
-                                            {device.status === "ONLINE" && (
+                                            {(device.status === "ONLINE" || device.status === "PAIRED") && (
                                                 <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                                             )}
                                         </div>

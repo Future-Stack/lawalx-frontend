@@ -194,7 +194,7 @@ export default function UserManagementPage() {
           user.id || 'N/A',
           user.full_name || user.username || 'N/A',
           user.account?.email || 'N/A',
-          (user.payments?.[0]?.plan?.name || "Free Trial").replace("_", " "),
+          (user.payments?.[0]?.plan?.name || "N/A").replace("_", " "),
           user.role || 'N/A',
           user.status || 'N/A'
         ];
@@ -245,7 +245,7 @@ export default function UserManagementPage() {
           user.id || 'N/A',
           user.full_name || user.username || 'N/A',
           user.account?.email || 'N/A',
-          (user.payments?.[0]?.plan?.name || "Free Trial").replace("_", " "),
+          (user.payments?.[0]?.plan?.name || "N/A").replace("_", " "),
           user.role || 'N/A',
           user.status || 'N/A'
         ])
@@ -532,7 +532,7 @@ export default function UserManagementPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full xl:w-auto">
               <Dropdown
                 value={planFilter}
-                options={["All Plans", "Free Trial", "Basic", "Premium", "Business", "Enterprise"]}
+                options={["All Plans", "Basic", "Premium", "Business", "Enterprise"]}
                 onChange={setPlanFilter}
                 className="w-full"
               />

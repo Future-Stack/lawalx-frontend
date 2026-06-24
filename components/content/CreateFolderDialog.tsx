@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -23,7 +24,7 @@ interface CreateFolderDialogProps {
     onSuccess?: (folder: any) => void;
 }
 
-const CreateFolderDialog = ({ open, setOpen, parentId, onSuccess }: CreateFolderDialogProps) => {
+const CreateFolderDialog = ({ open, setOpen }: CreateFolderDialogProps) => {
     const [createFolder, { isLoading }] = useCreateFolderMutation();
     const [folderName, setFolderName] = useState("");
 

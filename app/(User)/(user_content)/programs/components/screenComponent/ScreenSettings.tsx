@@ -12,6 +12,8 @@ import { useDeleteProgramMutation } from "@/redux/api/users/programs/programs.ap
 import ResolvedLocation from "@/common/ResolvedLocation";
 import AssignExistingDeviceModal from "./AssignExistingDeviceModal";
 
+import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
+
 interface ScreenSettingsProps {
     program: Program;
     name: string;
@@ -103,27 +105,7 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-0.5">
                                         <span className="font-bold text-sm text-headings dark:text-white truncate">{device.name}</span>
-                                        {device.status === "ONLINE" ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-bold rounded-full border border-green-200 dark:border-green-800">
-                                                <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Online
-                                            </span>
-                                        ) : device.status === "OFFLINE" ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] font-bold rounded-full border border-red-200 dark:border-red-800">
-                                                <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span> Offline
-                                            </span>
-                                        ) : device.status === "PAIRED" ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-[10px] font-bold rounded-full border border-blue-200 dark:border-blue-800">
-                                                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span> Paired
-                                            </span>
-                                        ) : device.status === "WAITING" ? (
-                                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-[10px] font-bold rounded-full border border-orange-200 dark:border-orange-800">
-                                                <span className="w-1.5 h-1.5 bg-orange-500 rounded-full"></span> Waiting
-                                            </span>
-                                        ) : (
-                                            <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-[10px] font-bold rounded-full border border-gray-300 dark:border-gray-600">
-                                                {device.status}
-                                            </span>
-                                        )}
+                                        <DeviceStatusBadge status={device.status} />
                                     </div>
                                     <p className="text-xs sm:text-sm text-muted uppercase tracking-wider">
                                         {device.location ? (
