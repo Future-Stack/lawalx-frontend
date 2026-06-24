@@ -46,24 +46,24 @@ const SubscribersTable = ({
     <div className="overflow-x-auto scrollbar-hide">
       <div className="hidden lg:block">
         <Table>
-          <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+          <TableHeader className="border-b border-border bg-bgGray dark:bg-gray-800/40">
             <TableRow>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 User
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Plan
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Amount
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Payment Cycle
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Next Billing
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Status
               </TableHead>
               <TableHead className="w-[50px]"></TableHead>
@@ -73,7 +73,7 @@ const SubscribersTable = ({
             {subscribers.map((sub) => (
               <TableRow
                 key={sub.userId}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                className="hover:bg-bgGray dark:hover:bg-gray-800/50"
               >
                 <TableCell>
                   <div>
@@ -86,7 +86,7 @@ const SubscribersTable = ({
                 <TableCell>
                   <Badge
                     variant="default"
-                    className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-none font-normal"
+                    className="border-none bg-bgGray font-normal text-body hover:bg-bgGray dark:bg-gray-800"
                   >
                     {sub.plan}
                   </Badge>
@@ -108,7 +108,7 @@ const SubscribersTable = ({
                         ? "bg-green-100 text-green-700"
                         : sub.subscriptionStatus === "CANCELLED"
                           ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-700"
+                          : "bg-bgGray text-body dark:bg-gray-800"
                     }`}
                   >
                     {sub.subscriptionStatus}
@@ -120,7 +120,7 @@ const SubscribersTable = ({
                       <Button
                         size="icon"
                         aria-label="Subscriber options"
-                        className="h-8 w-8 text-muted hover:bg-gray-100 dark:hover:bg-gray-700"
+                        className="h-8 w-8 text-muted hover:bg-bgGray dark:hover:bg-gray-800"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
@@ -158,7 +158,7 @@ const SubscribersTable = ({
         {subscribers.map((sub) => (
           <div
             key={sub.userId}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
+            className="rounded-lg border border-border bg-navbarBg p-4 space-y-3 shadow-sm"
           >
             <div className="flex items-center justify-between gap-2">
               <div className="min-w-0">
@@ -173,7 +173,7 @@ const SubscribersTable = ({
                     <Button
                       size="icon"
                       aria-label="Subscriber options"
-                      className="h-8 w-8 text-muted hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="h-8 w-8 text-muted hover:bg-bgGray dark:hover:bg-gray-800"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
@@ -208,7 +208,7 @@ const SubscribersTable = ({
               <div className="flex-shrink-0">
                 <Badge
                   variant="default"
-                  className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-none font-normal"
+                  className="border-none bg-bgGray font-normal text-body hover:bg-bgGray dark:bg-gray-800"
                 >
                   {sub.plan}
                 </Badge>
@@ -246,7 +246,7 @@ const SubscribersTable = ({
                       ? "bg-green-100 text-green-700"
                       : sub.subscriptionStatus === "CANCELLED"
                         ? "bg-red-100 text-red-700"
-                        : "bg-gray-100 text-gray-700"
+                        : "bg-bgGray text-body dark:bg-gray-800"
                   }`}
                 >
                   {sub.subscriptionStatus}

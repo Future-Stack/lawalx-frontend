@@ -53,7 +53,7 @@ const DeleteScreenSizeDialog = ({
           <h2 className="text-[24px] font-bold text-headings leading-tight">
             Warning
           </h2>
-          <p className="text-[#667085] text-[16px] max-w-[280px]">
+          <p className="max-w-[280px] text-[16px] text-muted">
             Are you sure you want to delete screen size{" "}
             <span className="font-bold text-headings">{data?.size}</span>?
           </p>
@@ -64,14 +64,14 @@ const DeleteScreenSizeDialog = ({
           <button
             onClick={() => setOpen(false)}
             disabled={isLoading}
-            className="flex-1 py-2.5 bg-white border border-[#D0D5DD] dark:border-gray-700 dark:bg-transparent rounded-xl text-[16px] font-semibold text-[#344054] dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all cursor-pointer disabled:opacity-50 shadow-sm"
+            className="flex-1 cursor-pointer rounded-xl border border-border bg-navbarBg py-2.5 text-[16px] font-semibold text-headings shadow-sm transition-all hover:bg-bgGray dark:hover:bg-gray-800 disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleDelete}
             disabled={isLoading}
-            className="flex-1 py-2.5 bg-[#EF4444] rounded-xl text-[16px] font-semibold text-white hover:bg-[#DC2626] transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
+            className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-red-500 py-2.5 text-[16px] font-semibold text-white shadow-sm transition-all hover:bg-red-600 disabled:opacity-50"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Delete

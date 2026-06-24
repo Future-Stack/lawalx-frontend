@@ -31,18 +31,18 @@ const ScreenSizeTable = ({
     <div className="overflow-x-auto scrollbar-hide">
       <div className="hidden lg:block">
         <Table>
-          <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-            <TableRow className="hover:bg-transparent border-b border-gray-200 dark:border-gray-700">
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+          <TableHeader className="border-b border-border bg-bgGray dark:bg-gray-800/40">
+            <TableRow className="border-b border-border hover:bg-transparent">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Screen Size
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Price
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4 text-right">
+              <TableHead className="py-4 text-right text-xs font-medium uppercase tracking-wider text-muted">
                 Action
               </TableHead>
             </TableRow>
@@ -52,7 +52,7 @@ const ScreenSizeTable = ({
               screenSizes.map((item) => (
                 <TableRow
                   key={item.id}
-                  className="border-b border-gray-200 dark:border-gray-700 last:border-0 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  className="border-b border-border last:border-0 transition-colors hover:bg-bgGray dark:hover:bg-gray-800/50"
                 >
                   <TableCell className="py-5 text-[14px] font-medium text-headings">
                     {item.size}
@@ -82,7 +82,7 @@ const ScreenSizeTable = ({
                             ? "Disable screen size"
                             : "Enable screen size"
                         }
-                        className="p-1.5 rounded-md bg-[#E6F4F1] text-muted hover:bg-[#d9eee9] transition-all cursor-pointer disabled:opacity-50"
+                        className="cursor-pointer rounded-md bg-bgGray p-1.5 text-muted transition-all hover:bg-bgGray dark:bg-gray-800 disabled:opacity-50"
                       >
                         {isUpdatingStatus ? (
                           <Loader2 className="w-5 h-5 animate-spin text-muted" />
@@ -95,14 +95,14 @@ const ScreenSizeTable = ({
                       <button
                         onClick={() => handleEdit(item)}
                         aria-label="Edit screen size"
-                        className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
+                        className="cursor-pointer rounded-md border border-cyan-200 bg-cyan-50 p-1.5 text-cyan-600 transition-all hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400"
                       >
                         <PencilLine className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteClick(item)}
                         aria-label="Delete screen size"
-                        className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
+                        className="cursor-pointer rounded-md border border-red-200 bg-red-50 p-1.5 text-red-500 transition-all hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -114,7 +114,7 @@ const ScreenSizeTable = ({
               <TableRow>
                 <TableCell
                   colSpan={4}
-                  className="py-12 text-center text-gray-500"
+                  className="py-12 text-center text-muted"
                 >
                   No screen sizes found.
                 </TableCell>
@@ -128,7 +128,7 @@ const ScreenSizeTable = ({
           screenSizes.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
+              className="rounded-lg border border-border bg-navbarBg p-4 space-y-3 shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <div className="font-bold text-headings text-lg">
@@ -143,7 +143,7 @@ const ScreenSizeTable = ({
                         ? "Disable screen size"
                         : "Enable screen size"
                     }
-                    className="p-1.5 rounded-md bg-[#E6F4F1] text-muted hover:bg-[#d9eee9] transition-all cursor-pointer disabled:opacity-50"
+                    className="cursor-pointer rounded-md bg-bgGray p-1.5 text-muted transition-all hover:bg-bgGray dark:bg-gray-800 disabled:opacity-50"
                   >
                     {isUpdatingStatus ? (
                       <Loader2 className="w-5 h-5 animate-spin text-muted" />
@@ -156,14 +156,14 @@ const ScreenSizeTable = ({
                   <button
                     onClick={() => handleEdit(item)}
                     aria-label="Edit screen size"
-                    className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
+                    className="cursor-pointer rounded-md border border-cyan-200 bg-cyan-50 p-1.5 text-cyan-600 transition-all hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400"
                   >
                     <PencilLine className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(item)}
                     aria-label="Delete screen size"
-                    className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
+                    className="cursor-pointer rounded-md border border-red-200 bg-red-50 p-1.5 text-red-500 transition-all hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -191,7 +191,7 @@ const ScreenSizeTable = ({
             </div>
           ))
         ) : (
-          <div className="py-12 text-center text-gray-500">
+          <div className="py-12 text-center text-muted">
             No screen sizes found.
           </div>
         )}

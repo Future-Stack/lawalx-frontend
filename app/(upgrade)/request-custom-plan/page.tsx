@@ -142,23 +142,23 @@ export default function RequestCustomPlanPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white py-10">
+    <div className="min-h-screen bg-White py-10">
       <div className="mx-auto w-full">
         {/* Header */}
         <div className="border-b border-border pb-6 mb-10 px-4 md:px-8">
           <div className="relative flex items-center justify-center">
             <div className="text-center">
-              <h1 className="text-[32px] font-semibold text-Heading font-inter leading-normal">
+              <h1 className="text-[32px] font-semibold text-headings font-inter leading-normal">
                 Request Your Custom Enterprise Plan
               </h1>
-              <p className="text-[16px] font-normal text-[#404040] font-inter leading-[24px] mt-2">
+              <p className="text-[16px] font-normal text-body font-inter leading-[24px] mt-2">
                 Tell us about your needs and we&apos;ll create a tailored
                 solution for your organization
               </p>
             </div>
             <button
               onClick={() => router.back()}
-              className="group absolute right-0 top-0 p-2 text-gray-600 hover:text-red-600 hover:bg-red-100 transition-all cursor-pointer rounded-full"
+              className="group absolute right-0 top-0 rounded-full p-2 text-muted transition-all hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 cursor-pointer"
               aria-label="Close"
               title="Close"
             >
@@ -169,14 +169,14 @@ export default function RequestCustomPlanPage() {
 
         {isSubmitted ? (
           <div className="mx-auto max-w-[540px] px-4 md:px-0 mt-8 mb-20">
-            <div className="rounded-[16px] border border-[#D4D4D4] bg-white p-8 md:p-12 flex flex-col items-center text-center shadow-sm">
+            <div className="rounded-[16px] border border-border bg-navbarBg p-8 md:p-12 flex flex-col items-center text-center shadow-sm">
               <div className="flex h-[80px] w-[80px] items-center justify-center rounded-full border-[1.5px] border-[#22C55E]/40 bg-[#22C55E]/10 mb-6">
                 <Check className="h-8 w-8 text-[#22C55E]" strokeWidth={2.5} />
               </div>
-              <h3 className="text-[20px] sm:text-[24px] font-bold text-[#111827] font-inter mb-3">
+              <h3 className="text-[20px] sm:text-[24px] font-bold text-headings font-inter mb-3">
                 Request Submitted Successfully
               </h3>
-              <p className="text-[14px] sm:text-[15px] font-normal text-[#4B5563] font-inter mb-8 leading-relaxed max-w-[400px]">
+              <p className="text-[14px] sm:text-[15px] font-normal text-body font-inter mb-8 leading-relaxed max-w-[400px]">
                 Your request for enterprise plan has been submitted
                 successfully. Our Support team will contact you within 48 hours.
               </p>
@@ -185,14 +185,14 @@ export default function RequestCustomPlanPage() {
                 <button
                   type="button"
                   onClick={() => router.push("/dashboard")}
-                  className="w-full sm:w-[50%] flex items-center justify-center rounded-[10px] bg-[#20A4FF] px-4 py-3 text-white font-semibold text-[16px] shadow-customShadow transition hover:bg-[#20A4FF]/90 active:scale-[0.98] cursor-pointer"
+                  className="w-full sm:w-[50%] flex items-center justify-center rounded-[10px] bg-bgBlue px-4 py-3 text-white font-semibold text-[16px] shadow-customShadow transition hover:bg-blue-500 active:scale-[0.98] cursor-pointer"
                 >
                   Go to Dashboard
                 </button>
                 <button
                   type="button"
                   onClick={() => router.push("/support")}
-                  className="w-full sm:w-[50%] flex items-center justify-center rounded-[10px] border border-[#D4D4D4] bg-white px-4 py-3 text-[#111827] font-semibold text-[16px] transition hover:bg-gray-50 active:scale-[0.98] cursor-pointer"
+                  className="w-full sm:w-[50%] flex items-center justify-center rounded-[10px] border border-border bg-navbarBg px-4 py-3 text-headings font-semibold text-[16px] transition hover:bg-gray-50 dark:hover:bg-gray-800 active:scale-[0.98] cursor-pointer"
                 >
                   View Request
                 </button>
@@ -205,25 +205,25 @@ export default function RequestCustomPlanPage() {
             className="space-y-8 pb-20 max-w-3xl mx-auto px-4 lg:px-0"
           >
             {/* Company Information Section */}
-            <div className="rounded-[16px] border border-[#D4D4D4] bg-[#FAFAFA] p-6 space-y-6">
-              <h3 className="text-[24px] font-semibold text-Heading font-inter">
+            <div className="rounded-[16px] border border-border bg-navbarBg p-6 space-y-6">
+              <h3 className="text-[24px] font-semibold text-headings font-inter">
                 Company Information
               </h3>
 
               <div className="flex flex-col md:flex-row gap-4 w-full">
                 <div className="space-y-2 w-full">
-                  <Label className="text-[16px] font-semibold text-[#404040] font-inter">
+                  <Label className="text-[16px] font-semibold text-body font-inter">
                     Company Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     placeholder="Company Name"
-                    className="h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                    className="h-[48px] rounded-[10px] border-border px-3 font-inter text-[16px] placeholder:text-muted bg-bgGray dark:bg-gray-800"
                   />
                 </div>
                 <div className="space-y-2 w-full">
-                  <Label className="text-[16px] font-semibold text-[#404040] font-inter">
+                  <Label className="text-[16px] font-semibold text-body font-inter">
                     E-mail <span className="text-red-500">*</span>
                   </Label>
                   <Input
@@ -231,13 +231,13 @@ export default function RequestCustomPlanPage() {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     placeholder="jonsmith@gmail.com"
                     type="email"
-                    className="h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                    className="h-[48px] rounded-[10px] border-border px-3 font-inter text-[16px] placeholder:text-muted bg-bgGray dark:bg-gray-800"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+                <Label className="text-[16px] font-semibold text-body font-inter flex items-center gap-1">
                   Your Phone Number <span className="text-red-500">*</span>
                 </Label>
                 <div className="flex gap-2">
@@ -255,7 +255,7 @@ export default function RequestCustomPlanPage() {
                         }
                       }}
                     >
-                      <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-[#404040] bg-white">
+                      <SelectTrigger className="w-full h-[48px] rounded-[10px] border-border px-3 text-[16px] text-headings bg-bgGray dark:bg-gray-800">
                         <SelectValue placeholder="US" />
                       </SelectTrigger>
                       <SelectContent>
@@ -272,7 +272,7 @@ export default function RequestCustomPlanPage() {
                     onChange={handlePhoneNumberChange}
                     inputMode="tel"
                     placeholder="Enter phone number"
-                    className="flex-1 h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                    className="flex-1 h-[48px] rounded-[10px] border-border px-3 font-inter text-[16px] placeholder:text-muted bg-bgGray dark:bg-gray-800"
                   />
                 </div>
               </div>
@@ -280,7 +280,7 @@ export default function RequestCustomPlanPage() {
               <div className="flex flex-col md:flex-row gap-4 w-full items-start">
                 <div className="space-y-4 w-full">
                   <div className="space-y-2">
-                    <Label className="text-[16px] font-semibold text-[#404040] font-inter">
+                    <Label className="text-[16px] font-semibold text-body font-inter">
                       Industry Type <span className="text-red-500">*</span>
                     </Label>
                     <Select
@@ -289,7 +289,7 @@ export default function RequestCustomPlanPage() {
                         handleInputChange("industryType", val)
                       }
                     >
-                      <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-body bg-white">
+                      <SelectTrigger className="w-full h-[48px] rounded-[10px] border-border px-3 text-[16px] text-body bg-bgGray dark:bg-gray-800">
                         <SelectValue placeholder="Fintech" />
                       </SelectTrigger>
                       <SelectContent>
@@ -302,7 +302,7 @@ export default function RequestCustomPlanPage() {
                   </div>
                   {formData.industryType === "others" && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <Label className="text-[16px] font-semibold text-[#404040] font-inter">
+                      <Label className="text-[16px] font-semibold text-body font-inter">
                         Specify Industry Type{" "}
                         <span className="text-red-500">*</span>
                       </Label>
@@ -315,13 +315,13 @@ export default function RequestCustomPlanPage() {
                           )
                         }
                         placeholder="e.g. Education"
-                        className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                        className="w-full h-[48px] rounded-[10px] border-border px-3 font-inter text-[16px] placeholder:text-muted bg-bgGray dark:bg-gray-800"
                       />
                     </div>
                   )}
                 </div>
                 <div className="space-y-2 w-full">
-                  <Label className="text-[16px] font-semibold text-[#404040] font-inter">
+                  <Label className="text-[16px] font-semibold text-body font-inter">
                     Company Size <span className="text-red-500">*</span>
                   </Label>
                   <Select
@@ -330,7 +330,7 @@ export default function RequestCustomPlanPage() {
                       handleInputChange("companySize", val)
                     }
                   >
-                    <SelectTrigger className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 text-[16px] text-body bg-white">
+                    <SelectTrigger className="w-full h-[48px] rounded-[10px] border-border px-3 text-[16px] text-body bg-bgGray dark:bg-gray-800">
                       <SelectValue placeholder="0 - 50 Employee" />
                     </SelectTrigger>
                     <SelectContent>
@@ -347,7 +347,7 @@ export default function RequestCustomPlanPage() {
 
               <div className="flex flex-col md:flex-row gap-4 w-full">
                 <div className="space-y-2 w-full">
-                  <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+                  <Label className="text-[16px] font-semibold text-body font-inter flex items-center gap-1">
                     Location <span className="text-red-500">*</span>
                   </Label>
                   <div className="relative w-full">
@@ -358,12 +358,12 @@ export default function RequestCustomPlanPage() {
                         handleInputChange("location", e.target.value)
                       }
                       placeholder="Enter your location"
-                      className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] pl-10 pr-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                      className="w-full h-[48px] rounded-[10px] border-border pl-10 pr-3 font-inter text-[16px] placeholder:text-muted bg-bgGray dark:bg-gray-800"
                     />
                   </div>
                 </div>
                 <div className="space-y-2 w-full">
-                  <Label className="text-[16px] font-semibold text-[#404040] font-inter">
+                  <Label className="text-[16px] font-semibold text-body font-inter">
                     Website
                   </Label>
                   <div className="relative w-full">
@@ -374,7 +374,7 @@ export default function RequestCustomPlanPage() {
                         handleInputChange("website", e.target.value)
                       }
                       placeholder="https://tape.io"
-                      className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] pl-10 pr-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                      className="w-full h-[48px] rounded-[10px] border-border pl-10 pr-3 font-inter text-[16px] placeholder:text-muted bg-bgGray dark:bg-gray-800"
                     />
                   </div>
                 </div>
@@ -382,13 +382,13 @@ export default function RequestCustomPlanPage() {
             </div>
 
             {/* Find a Custom Enterprise Plan Section */}
-            <div className="rounded-[16px] border border-[#D4D4D4] bg-[#FAFAFA] p-6 space-y-6">
-              <h3 className="text-[24px] font-semibold text-Heading font-inter text-center md:text-left">
+            <div className="rounded-[16px] border border-border bg-navbarBg p-6 space-y-6">
+              <h3 className="text-[24px] font-semibold text-headings font-inter text-center md:text-left">
                 Find a Custom Enterprise Plan
               </h3>
 
               <div className="space-y-2">
-                <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+                <Label className="text-[16px] font-semibold text-body font-inter flex items-center gap-1">
                   Device Screen Size <span className="text-red-500">*</span>{" "}
                   <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
                 </Label>
@@ -398,7 +398,7 @@ export default function RequestCustomPlanPage() {
                     handleInputChange("deviceScreenSize", val)
                   }
                 >
-                  <SelectTrigger className="w-full rounded-[10px] border border-[#D4D4D4] bg-white px-3 py-3 h-auto text-[16px] text-body">
+                  <SelectTrigger className="w-full rounded-[10px] border border-border bg-bgGray dark:bg-gray-800 px-3 py-3 h-auto text-[16px] text-body">
                     <SelectValue placeholder='24"' />
                   </SelectTrigger>
                   <SelectContent>
@@ -411,7 +411,7 @@ export default function RequestCustomPlanPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2 w-full">
-                  <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+                  <Label className="text-[16px] font-semibold text-body font-inter flex items-center gap-1">
                     Estimated Number of Devices{" "}
                     <span className="text-red-500">*</span>{" "}
                     <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
@@ -423,11 +423,11 @@ export default function RequestCustomPlanPage() {
                     }
                     placeholder="e.g. 100"
                     type="number"
-                    className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-full h-[48px] rounded-[10px] border-border px-3 font-inter text-[16px] placeholder:text-muted bg-bgGray dark:bg-gray-800 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 <div className="space-y-2 w-full">
-                  <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+                  <Label className="text-[16px] font-semibold text-body font-inter flex items-center gap-1">
                     Storage Requirements <span className="text-red-500">*</span>{" "}
                     <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
                   </Label>
@@ -438,14 +438,14 @@ export default function RequestCustomPlanPage() {
                     }
                     placeholder="e.g. 500 GB"
                     type="text"
-                    className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                    className="w-full h-[48px] rounded-[10px] border-border px-3 font-inter text-[16px] placeholder:text-muted bg-bgGray dark:bg-gray-800"
                   />
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1">
+                  <Label className="text-[16px] font-semibold text-body font-inter flex items-center gap-1">
                     Implementation Timeline{" "}
                     <span className="text-red-500">*</span>{" "}
                     <HelpCircle className="h-4 w-4 text-[#94A3B8]" />
@@ -456,7 +456,7 @@ export default function RequestCustomPlanPage() {
                       handleInputChange("implementationTimeline", val)
                     }
                   >
-                    <SelectTrigger className="w-full rounded-[10px] border border-borderGray bg-white px-3 py-3 h-auto text-[16px] text-body">
+                    <SelectTrigger className="w-full rounded-[10px] border border-border bg-bgGray dark:bg-gray-800 px-3 py-3 h-auto text-[16px] text-body">
                       <SelectValue placeholder="Select timeline" />
                     </SelectTrigger>
                     <SelectContent>
@@ -471,7 +471,7 @@ export default function RequestCustomPlanPage() {
 
                 {formData.implementationTimeline === "others" && (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <Label className="text-[16px] font-semibold text-[#404040] font-inter">
+                    <Label className="text-[16px] font-semibold text-body font-inter">
                       Specify Timeline <span className="text-red-500">*</span>
                     </Label>
                     <Input
@@ -480,7 +480,7 @@ export default function RequestCustomPlanPage() {
                         handleInputChange("specifyTimeline", e.target.value)
                       }
                       placeholder="e.g. 6 Months"
-                      className="w-full h-[48px] rounded-[10px] border-[#D4D4D4] px-3 font-inter text-[16px] placeholder:text-[#737373] bg-white"
+                      className="w-full h-[48px] rounded-[10px] border-border px-3 font-inter text-[16px] placeholder:text-muted bg-bgGray dark:bg-gray-800"
                     />
                   </div>
                 )}
@@ -490,7 +490,7 @@ export default function RequestCustomPlanPage() {
               <div className="space-y-4 pt-2">
                 <Label
                   htmlFor="budget-range"
-                  className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1"
+                  className="text-[16px] font-semibold text-body font-inter flex items-center gap-1"
                 >
                   Estimated Budget / Price Range{" "}
                   <span className="text-red-500">*</span>{" "}
@@ -506,10 +506,10 @@ export default function RequestCustomPlanPage() {
                         }px)`,
                       }}
                     >
-                      <div className="bg-[#111827] text-white text-[13px] font-bold py-1 px-3 rounded-[6px] shadow-lg whitespace-nowrap">
+                      <div className="rounded-[6px] bg-gray-900 px-3 py-1 text-[13px] font-bold text-white shadow-lg whitespace-nowrap dark:bg-gray-800">
                         ${displayPrice.toLocaleString()}
                       </div>
-                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-[#111827]" />
+                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-gray-900 dark:border-t-gray-800" />
                     </div>
                     <input
                       id="budget-range"
@@ -556,19 +556,19 @@ export default function RequestCustomPlanPage() {
                   </div>
                 </div>
                 <div className="flex justify-between">
-                  <span className="inline-block bg-[#EFF6FF] text-Heading text-[14px] font-semibold px-2 py-1 rounded-md">
+                  <span className="inline-block rounded-md bg-bgGray px-2 py-1 text-[14px] font-semibold text-headings dark:bg-gray-800">
                     $0.0
                   </span>
-                  <span className="inline-block bg-[#EFF6FF] text-Heading text-[14px] font-semibold px-2 py-1 rounded-md">
+                  <span className="inline-block rounded-md bg-bgGray px-2 py-1 text-[14px] font-semibold text-headings dark:bg-gray-800">
                     $500
                   </span>
-                  <span className="inline-block bg-[#EFF6FF] text-Heading text-[14px] font-semibold px-2 py-1 rounded-md">
+                  <span className="inline-block rounded-md bg-bgGray px-2 py-1 text-[14px] font-semibold text-headings dark:bg-gray-800">
                     $1,000
                   </span>
-                  <span className="inline-block bg-[#EFF6FF] text-Heading text-[14px] font-semibold px-2 py-1 rounded-md">
+                  <span className="inline-block rounded-md bg-bgGray px-2 py-1 text-[14px] font-semibold text-headings dark:bg-gray-800">
                     $5,000
                   </span>
-                  <span className="inline-block bg-[#EFF6FF] text-Heading text-[14px] font-semibold px-2 py-1 rounded-md">
+                  <span className="inline-block rounded-md bg-bgGray px-2 py-1 text-[14px] font-semibold text-headings dark:bg-gray-800">
                     $10,000
                   </span>
                 </div>
@@ -577,7 +577,7 @@ export default function RequestCustomPlanPage() {
               <div className="space-y-2">
                 <Label
                   htmlFor="additional-requirements"
-                  className="text-[16px] font-semibold text-[#404040] font-inter flex items-center gap-1"
+                  className="text-[16px] font-semibold text-body font-inter flex items-center gap-1"
                 >
                   Additional Requirements & Comments{" "}
                   <span className="text-red-500">*</span>{" "}
@@ -590,14 +590,14 @@ export default function RequestCustomPlanPage() {
                   }
                   id="additional-requirements"
                   placeholder="Tell us about any specific requirements, integration needs, or questions you have."
-                  className="w-full min-h-[120px] rounded-[10px] border border-[#D4D4D4] p-3 text-[16px] placeholder:text-[#737373] bg-white resize-none"
+                  className="w-full min-h-[120px] rounded-[10px] border border-border bg-bgGray p-3 text-[16px] placeholder:text-muted dark:bg-gray-800 resize-none"
                 />
               </div>
               {/* Get My Quote Button - inside card */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex w-full flex-col items-center justify-center gap-[6px] rounded-[10px] bg-[#111827] px-4 py-3 text-white font-semibold text-[16px] shadow-customShadow transition hover:bg-slate-800 active:scale-[0.98] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                className="flex w-full flex-col items-center justify-center gap-[6px] rounded-[10px] bg-bgBlue px-4 py-3 text-white font-semibold text-[16px] shadow-customShadow transition hover:bg-blue-500 active:scale-[0.98] cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2">

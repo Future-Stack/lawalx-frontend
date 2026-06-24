@@ -45,10 +45,10 @@ export default function InvoiceViewModal({
       onClick={onClose}
     >
       <div
-        className="relative my-6 w-full max-w-[880px] rounded-xl bg-white shadow-lg"
+        className="relative my-6 w-full max-w-[880px] rounded-xl bg-navbarBg shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-end rounded-t-xl border-b border-gray-100 bg-white px-3 py-2 sm:px-4">
+        <div className="sticky top-0 z-10 flex items-center justify-end rounded-t-xl border-b border-border bg-navbarBg px-3 py-2 sm:px-4">
           <span id="invoice-modal-title" className="sr-only">
             Invoice {data.id}
           </span>
@@ -56,7 +56,7 @@ export default function InvoiceViewModal({
             type="button"
             onClick={onClose}
             aria-label="Close invoice"
-            className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+            className="rounded-lg p-2 text-muted transition-colors hover:bg-bgGray hover:text-headings dark:hover:bg-gray-800"
           >
             <X className="h-5 w-5" />
           </button>
