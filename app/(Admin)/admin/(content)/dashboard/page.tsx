@@ -574,10 +574,10 @@ const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (tic
         </Link>
       </div>
 
-      <div className="flex-grow flex flex-col gap-3">
+      <div className="flex-grow grid grid-rows-5 gap-3">
         {isLoading ? (
           [1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="flex-1 animate-pulse bg-gray-100 dark:bg-gray-800 rounded-md"></div>
+            <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 rounded-md"></div>
           ))
         ) : (
           <>
@@ -585,7 +585,7 @@ const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (tic
               <div
                 key={idx}
                 onClick={() => onTicketClick(ticket)}
-                className="flex-1 p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all group cursor-pointer flex flex-col justify-center"
+                className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all group cursor-pointer flex flex-col justify-center"
               >
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{ticket.ticketId}</span>
@@ -611,7 +611,7 @@ const RecentSupportTickets: React.FC<{ dateRange: DateRange; onTicketClick: (tic
               </div>
             ))}
             {tickets.length === 0 && (
-              <div className="flex-1 flex items-center justify-center text-xs text-gray-500">No support tickets found</div>
+              <div className="row-span-5 flex items-center justify-center text-xs text-gray-500">No support tickets found</div>
             )}
           </>
         )}

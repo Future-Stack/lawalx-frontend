@@ -38,24 +38,24 @@ const CouponsTable = ({
     <div className="overflow-x-auto scrollbar-hide">
       <div className="hidden lg:block">
         <Table>
-          <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+          <TableHeader className="border-b border-border bg-bgGray dark:bg-gray-800/40">
             <TableRow>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Name
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Code
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Discount
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Usage
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Expiry Date
               </TableHead>
               <TableHead className="w-[50px]"></TableHead>
@@ -65,7 +65,7 @@ const CouponsTable = ({
             {coupons.map((coupon) => (
               <TableRow
                 key={coupon.id}
-                className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                className="hover:bg-bgGray dark:hover:bg-gray-800/50"
               >
                 <TableCell className="font-medium text-headings">
                   {coupon.name}
@@ -80,7 +80,7 @@ const CouponsTable = ({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3 w-48">
-                    <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-bgGray dark:bg-gray-800">
                       <div
                         className="h-full bg-bgBlue rounded-full"
                         style={{
@@ -112,7 +112,7 @@ const CouponsTable = ({
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
-                        className="h-8 w-8 text-muted hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-bgGray dark:hover:bg-gray-800"
                         disabled={isUpdatingStatus}
                         aria-label="Coupon options"
                       >
@@ -148,7 +148,7 @@ const CouponsTable = ({
         {coupons.map((coupon) => (
           <div
             key={coupon.id}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
+            className="rounded-lg border border-border bg-navbarBg p-4 space-y-3 shadow-sm"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -162,7 +162,7 @@ const CouponsTable = ({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="h-8 w-8 text-muted hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-bgGray dark:hover:bg-gray-800"
                     disabled={isUpdatingStatus}
                     aria-label="Coupon options"
                   >
@@ -201,7 +201,7 @@ const CouponsTable = ({
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted">Usage:</span>
               <div className="flex items-center gap-3 w-32">
-                <div className="flex-1 h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
+                <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-bgGray dark:bg-gray-800">
                   <div
                     className="h-full bg-bgBlue rounded-full"
                     style={{

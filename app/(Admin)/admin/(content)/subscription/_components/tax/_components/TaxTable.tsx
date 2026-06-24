@@ -29,18 +29,18 @@ const TaxTable = ({
     <div className="overflow-x-auto scrollbar-hide">
       <div className="hidden lg:block">
         <Table>
-          <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-            <TableRow className="hover:bg-transparent border-b border-gray-200 dark:border-gray-700">
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+          <TableHeader className="border-b border-border bg-bgGray dark:bg-gray-800/40">
+            <TableRow className="border-b border-border hover:bg-transparent">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Tax
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Tax Rate
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4 text-right">
+              <TableHead className="py-4 text-right text-xs font-medium uppercase tracking-wider text-muted">
                 Action
               </TableHead>
             </TableRow>
@@ -50,7 +50,7 @@ const TaxTable = ({
               filteredTaxes.map((item) => (
                 <TableRow
                   key={item.id}
-                  className="border-b border-gray-200 dark:border-gray-700 last:border-0 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  className="border-b border-border last:border-0 transition-colors hover:bg-bgGray dark:hover:bg-gray-800/50"
                 >
                   <TableCell className="py-5 text-[14px] font-bold text-headings">
                     {item.region}
@@ -63,7 +63,7 @@ const TaxTable = ({
                       className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
                         item.status
                           ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                          : "bg-[#FEF3F2] text-[#B42318] border-[#FECDCA] dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                          : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
                       }`}
                     >
                       {item.status ? "Enable" : "Disabled"}
@@ -75,7 +75,7 @@ const TaxTable = ({
                         onClick={() => toggleStatus(item.id, item.status)}
                         disabled={isUpdatingStatus}
                         aria-label={item.status ? "Disable tax" : "Enable tax"}
-                        className="p-1.5 rounded-md bg-[#E6F4F1] text-muted hover:bg-[#d9eee9] transition-all cursor-pointer disabled:opacity-50"
+                        className="cursor-pointer rounded-md bg-bgGray p-1.5 text-muted transition-all hover:bg-bgGray dark:bg-gray-800 disabled:opacity-50"
                       >
                         {isUpdatingStatus ? (
                           <Loader2 className="w-5 h-5 animate-spin text-muted" />
@@ -88,14 +88,14 @@ const TaxTable = ({
                       <button
                         onClick={() => handleEdit(item)}
                         aria-label="Edit tax"
-                        className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
+                        className="cursor-pointer rounded-md border border-cyan-200 bg-cyan-50 p-1.5 text-cyan-600 transition-all hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400"
                       >
                         <PencilLine className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteClick(item)}
                         aria-label="Delete tax"
-                        className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
+                        className="cursor-pointer rounded-md border border-red-200 bg-red-50 p-1.5 text-red-500 transition-all hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -107,7 +107,7 @@ const TaxTable = ({
               <TableRow>
                 <TableCell
                   colSpan={4}
-                  className="py-12 text-center text-gray-500"
+                  className="py-12 text-center text-muted"
                 >
                   No tax regions found.
                 </TableCell>
@@ -121,7 +121,7 @@ const TaxTable = ({
           filteredTaxes.map((item) => (
             <div
               key={item.id}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
+              className="rounded-lg border border-border bg-navbarBg p-4 space-y-3 shadow-sm"
             >
               <div className="flex items-center justify-between">
                 <div className="font-bold text-headings text-lg">
@@ -132,7 +132,7 @@ const TaxTable = ({
                     onClick={() => toggleStatus(item.id, item.status)}
                     disabled={isUpdatingStatus}
                     aria-label={item.status ? "Disable tax" : "Enable tax"}
-                    className="p-1.5 rounded-md bg-[#E6F4F1] text-muted hover:bg-[#d9eee9] transition-all cursor-pointer disabled:opacity-50"
+                    className="cursor-pointer rounded-md bg-bgGray p-1.5 text-muted transition-all hover:bg-bgGray dark:bg-gray-800 disabled:opacity-50"
                   >
                     {isUpdatingStatus ? (
                       <Loader2 className="w-5 h-5 animate-spin text-muted" />
@@ -145,14 +145,14 @@ const TaxTable = ({
                   <button
                     onClick={() => handleEdit(item)}
                     aria-label="Edit tax"
-                    className="p-1.5 rounded-md border border-[#0EA5E933] bg-[#0EA5E90D] text-[#0EA5E9] hover:bg-[#0EA5E91A] transition-all cursor-pointer"
+                    className="cursor-pointer rounded-md border border-cyan-200 bg-cyan-50 p-1.5 text-cyan-600 transition-all hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400"
                   >
                     <PencilLine className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteClick(item)}
                     aria-label="Delete tax"
-                    className="p-1.5 rounded-md border border-[#F0443833] bg-[#F044380D] text-[#F04438] hover:bg-[#F044381A] transition-all cursor-pointer"
+                    className="cursor-pointer rounded-md border border-red-200 bg-red-50 p-1.5 text-red-500 transition-all hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -170,7 +170,7 @@ const TaxTable = ({
                   className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
                     item.status
                       ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
-                      : "bg-[#FEF3F2] text-[#B42318] border-[#FECDCA] dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+                      : "bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
                   }`}
                 >
                   {item.status ? "Enable" : "Disabled"}
@@ -179,7 +179,7 @@ const TaxTable = ({
             </div>
           ))
         ) : (
-          <div className="py-12 text-center text-gray-500">
+          <div className="py-12 text-center text-muted">
             No tax regions found.
           </div>
         )}

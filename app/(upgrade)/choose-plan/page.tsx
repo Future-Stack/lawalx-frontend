@@ -243,7 +243,7 @@ function ChoosePlanPageInner() {
     screenSize > 0 ? formatScreenSizeLabel(screenSize) : "";
 
   return (
-    <div className="min-h-screen px-4 py-10 sm:px-6 lg:px-10 bg-background text-foreground transition-colors duration-300">
+    <div className="min-h-screen px-4 py-10 sm:px-6 lg:px-10 bg-White text-foreground transition-colors duration-300">
       <div className="mx-auto w-full max-w-7xl">
         {!isCheckout ? (
           <>

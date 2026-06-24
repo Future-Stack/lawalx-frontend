@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Monitor,
   Cloud,
@@ -102,13 +102,6 @@ export default function PaymentGatewaySelection({
 
   const taxRegions = useMemo(() => taxRes?.data ?? [], [taxRes?.data]);
 
-  useEffect(() => {
-    if (country) return;
-    if (taxRegions.length > 0) {
-      setCountry(taxRegions[0].region);
-    }
-  }, [country, taxRegions]);
-
   const price = selectedPlan.price;
   const currency = selectedPlan.currency;
   const priceSuffix = isAnnual ? "/yr" : "/mo";
@@ -145,6 +138,13 @@ export default function PaymentGatewaySelection({
       const err = error as { data?: { message?: string } };
       toast.error(err?.data?.message || "Invalid coupon code");
     }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponApplied(false);
+    setVerifiedCouponData(null);
+    setCouponInput("");
+    toast.success("Coupon removed");
   };
 
   const handleComplete = () => {
@@ -192,7 +192,7 @@ export default function PaymentGatewaySelection({
                 }`}
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 flex items-center justify-center bg-White rounded-lg border border-color overflow-hidden">
+                  <div className="w-12 h-12 flex items-center justify-center rounded-lg border border-color bg-white dark:bg-white overflow-hidden">
                     <Image
                       src={gateway.logo}
                       alt={gateway.name}
@@ -270,12 +270,16 @@ export default function PaymentGatewaySelection({
 
             <hr className="border-color my-5" />
 
-            <Select value={country} onValueChange={setCountry}>
+            <div className="space-y-2">
+              <p className="text-[13px] font-semibold uppercase tracking-wide text-muted">
+                Select your region
+              </p>
+              <Select value={country} onValueChange={setCountry}>
               <SelectTrigger
                 className="h-12 w-full rounded-xl border border-color bg-navbarBg text-[14px] font-medium text-headings"
                 disabled={isTaxLoading || taxRegions.length === 0}
               >
-                <SelectValue placeholder="Country Any" />
+                <SelectValue placeholder="Select your region" />
               </SelectTrigger>
               <SelectContent>
                 {taxRegions.map((region) => (
@@ -284,7 +288,8 @@ export default function PaymentGatewaySelection({
                   </SelectItem>
                 ))}
               </SelectContent>
-            </Select>
+              </Select>
+            </div>
 
             <div className="mt-5 space-y-4">
               <div className="flex items-center gap-3">
@@ -400,23 +405,31 @@ export default function PaymentGatewaySelection({
                 className={`min-h-[48px] flex-1 rounded-xl px-4 py-3 text-[15px] outline-none transition-colors ${
                   couponApplied
                     ? "border border-violet-400 bg-violet-50 text-violet-900 placeholder:text-violet-600 dark:border-violet-500 dark:bg-violet-950/40 dark:text-violet-100"
-                    : "border border-color bg-input text-headings placeholder:text-muted"
+                    : "border border-color bg-bgGray text-headings placeholder:text-muted dark:bg-gray-800"
                 }`}
               />
-              <button
-                type="button"
-                onClick={handleApplyCoupon}
-                disabled={
-                  couponApplied || !couponInput.trim() || isVerifyingCoupon
-                }
-                className="min-h-[48px] shrink-0 rounded-xl bg-sky-100 px-8 py-3 text-[15px] font-bold text-headings shadow-sm transition-colors hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-slate-700 dark:text-white dark:hover:bg-slate-600"
-              >
-                {isVerifyingCoupon ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Apply"
-                )}
-              </button>
+              {couponApplied ? (
+                <button
+                  type="button"
+                  onClick={handleRemoveCoupon}
+                  className="min-h-[48px] shrink-0 rounded-xl border border-color bg-navbarBg px-6 py-3 text-[15px] font-bold text-headings shadow-sm transition-colors hover:bg-bgGray dark:hover:bg-gray-800"
+                >
+                  Remove
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  disabled={!couponInput.trim() || isVerifyingCoupon}
+                  className="min-h-[48px] shrink-0 rounded-xl bg-bgBlue px-8 py-3 text-[15px] font-bold text-white shadow-customShadow transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isVerifyingCoupon ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Apply"
+                  )}
+                </button>
+              )}
             </div>
             <p className="mt-3 text-[13px] text-muted">
               Discount will be applied instantly at checkout.

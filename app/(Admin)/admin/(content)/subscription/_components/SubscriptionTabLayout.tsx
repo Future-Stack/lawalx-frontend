@@ -30,12 +30,12 @@ const SubscriptionTabLayout = ({
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
                 {title && (
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-lg font-semibold text-headings">
                     {title}
                   </h2>
                 )}
                 {subtitle && (
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="mt-1 text-sm text-muted">
                     {subtitle}
                   </p>
                 )}
