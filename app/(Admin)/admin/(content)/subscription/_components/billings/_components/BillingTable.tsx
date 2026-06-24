@@ -152,24 +152,24 @@ const BillingTable = ({
     <div className="overflow-x-auto scrollbar-hide">
       <div className="hidden lg:block">
         <Table>
-          <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+          <TableHeader className="border-b border-border bg-bgGray dark:bg-gray-800/40">
             <TableRow>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Invoice
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 User
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Payment Method
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Amount
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+              <TableHead className="text-xs font-medium uppercase text-muted">
                 Date
               </TableHead>
               <TableHead className="w-[50px]"></TableHead>
@@ -184,7 +184,7 @@ const BillingTable = ({
                 <TableRow key={`skel-${i}`}>
                   {Array.from({ length: 8 }).map((__, j) => (
                     <TableCell key={j}>
-                      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+                      <div className="h-4 animate-pulse rounded bg-bgGray dark:bg-gray-800" />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -201,7 +201,7 @@ const BillingTable = ({
             {payments.map((payment) => (
               <TableRow
                 key={payment.paymentId}
-                className={`${isFetching ? "opacity-60 pointer-events-none" : ""} hover:bg-gray-50 dark:hover:bg-gray-700/50`}
+                className={`${isFetching ? "opacity-60 pointer-events-none" : ""} hover:bg-bgGray dark:hover:bg-gray-800/50`}
               >
                 <TableCell className="font-semibold text-headings">
                   {payment.invoice}
@@ -237,7 +237,7 @@ const BillingTable = ({
                     aria-label="Download invoice"
                     onClick={() => handleDownload(payment)}
                     disabled={downloadLoadingId === payment.paymentId}
-                    className="text-muted hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="text-muted hover:bg-bgGray dark:hover:bg-gray-800"
                   >
                     {downloadLoadingId === payment.paymentId ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -253,7 +253,7 @@ const BillingTable = ({
                         size="icon"
                         variant="ghost"
                         aria-label="Payment options"
-                        className="h-8 w-8 text-muted hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="h-8 w-8 text-muted hover:bg-bgGray dark:hover:bg-gray-800"
                       >
                         <MoreVertical className="h-4 w-4" />
                       </Button>
@@ -308,7 +308,7 @@ const BillingTable = ({
           Array.from({ length: 5 }).map((_, i) => (
             <div
               key={`skel-mob-${i}`}
-              className="h-32 bg-gray-100 dark:bg-gray-800 rounded-lg animate-pulse"
+              className="h-32 animate-pulse rounded-lg bg-bgGray dark:bg-gray-800"
             />
           ))}
 
@@ -321,7 +321,7 @@ const BillingTable = ({
         {payments.map((payment) => (
           <div
             key={payment.paymentId}
-            className={`${isFetching ? "opacity-60 pointer-events-none" : ""} bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm`}
+            className={`${isFetching ? "opacity-60 pointer-events-none" : ""} rounded-lg border border-border bg-navbarBg p-4 space-y-3 shadow-sm`}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
@@ -345,7 +345,7 @@ const BillingTable = ({
                   aria-label="Download invoice"
                   onClick={() => handleDownload(payment)}
                   disabled={downloadLoadingId === payment.paymentId}
-                  className="h-8 w-8 text-muted hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="h-8 w-8 text-muted hover:bg-bgGray dark:hover:bg-gray-800"
                 >
                   {downloadLoadingId === payment.paymentId ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -359,7 +359,7 @@ const BillingTable = ({
                       size="icon"
                       variant="ghost"
                       aria-label="Payment options"
-                      className="h-8 w-8 text-muted hover:bg-gray-100 dark:hover:bg-gray-700"
+                      className="h-8 w-8 text-muted hover:bg-bgGray dark:hover:bg-gray-800"
                     >
                       <MoreVertical className="h-4 w-4" />
                     </Button>

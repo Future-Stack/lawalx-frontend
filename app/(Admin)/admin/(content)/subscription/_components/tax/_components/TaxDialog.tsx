@@ -78,7 +78,7 @@ const TaxDialog = ({ open, setOpen, mode, data }: TaxDialogProps) => {
       maxWidth="xl"
       className="p-0 [&>div:first-child]:hidden"
     >
-      <div className="flex flex-col h-full">
+      <div className="flex h-full flex-col bg-navbarBg">
         {/* Header with Icon */}
         <div className="p-6 pb-0">
           <div className="flex flex-col gap-4">
@@ -91,7 +91,7 @@ const TaxDialog = ({ open, setOpen, mode, data }: TaxDialogProps) => {
               <h2 className="text-[20px] font-bold text-headings leading-tight">
                 {mode === "add" ? "Add New Tax" : "Edit Tax"}
               </h2>
-              <p className="text-[#667085] text-[14px] mt-1">
+              <p className="mt-1 text-[14px] text-muted">
                 Configure tax region and percentage details.
               </p>
             </div>
@@ -114,7 +114,7 @@ const TaxDialog = ({ open, setOpen, mode, data }: TaxDialogProps) => {
               value={region}
               onChange={(e) => setRegion(e.target.value)}
               disabled={isLoading}
-              className="w-full bg-white dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-lg px-3.5 py-2.5 text-[16px] text-headings placeholder:text-[#667085] focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all shadow-sm disabled:opacity-50"
+              className="w-full rounded-lg border border-border bg-bgGray px-3.5 py-2.5 text-[16px] text-headings placeholder:text-muted shadow-sm transition-all focus:outline-none focus:ring-1 focus:ring-bgBlue disabled:opacity-50 dark:bg-gray-800"
             />
           </div>
 
@@ -126,7 +126,7 @@ const TaxDialog = ({ open, setOpen, mode, data }: TaxDialogProps) => {
               Tax Rate
             </Label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#667085] text-[16px] font-medium">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[16px] font-medium text-muted">
                 %
               </span>
               <input
@@ -136,26 +136,26 @@ const TaxDialog = ({ open, setOpen, mode, data }: TaxDialogProps) => {
                 value={taxRate}
                 onChange={(e) => setTaxRate(e.target.value)}
                 disabled={isLoading}
-                className="w-full bg-white dark:bg-gray-950 border border-[#D0D5DD] dark:border-gray-800 rounded-lg pl-8 pr-3.5 py-2.5 text-[16px] text-headings placeholder:text-[#667085] focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all shadow-sm disabled:opacity-50"
+                className="w-full rounded-lg border border-border bg-bgGray py-2.5 pl-8 pr-3.5 text-[16px] text-headings placeholder:text-muted shadow-sm transition-all focus:outline-none focus:ring-1 focus:ring-bgBlue disabled:opacity-50 dark:bg-gray-800"
               />
             </div>
           </div>
         </div>
 
         {/* Footer Buttons */}
-        <div className="p-6 border-t border-[#F2F4F7] dark:border-gray-800 bg-[#FCFCFD] dark:bg-gray-900/20">
+        <div className="border-t border-border bg-bgGray p-6 dark:bg-gray-800/40">
           <div className="flex justify-between items-center gap-4">
             <button
               onClick={() => setOpen(false)}
               disabled={isLoading}
-              className="px-4 py-2.5 min-w-[100px] rounded-lg border border-[#D0D5DD] dark:border-gray-700 font-bold text-[14px] text-headings hover:bg-gray-50 transition-all cursor-pointer shadow-sm bg-white dark:bg-gray-900 disabled:opacity-50"
+              className="min-w-[100px] cursor-pointer rounded-lg border border-border bg-navbarBg px-4 py-2.5 text-[14px] font-bold text-headings shadow-sm transition-all hover:bg-bgGray dark:hover:bg-gray-800 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={isLoading}
-              className="px-8 py-2.5 rounded-lg bg-bgBlue text-white font-bold text-[14px] hover:bg-bgBlue/90 transition-all cursor-pointer shadow-sm flex items-center gap-2 disabled:opacity-50"
+              className="flex cursor-pointer items-center gap-2 rounded-lg bg-bgBlue px-8 py-2.5 text-[14px] font-bold text-white shadow-sm transition-all hover:bg-blue-500 disabled:opacity-50"
             >
               {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
               {mode === "add" ? "Add Tax" : "Update Tax"}

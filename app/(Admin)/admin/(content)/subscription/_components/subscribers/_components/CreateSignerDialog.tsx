@@ -83,7 +83,7 @@ const CreateSignerDialog = ({ open, setOpen }: CreateSignerDialogProps) => {
             placeholder="Name for the signature"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-4 py-3 text-[14px] text-headings shadow-sm focus:outline-none focus:ring-1 focus:ring-bgBlue transition-all"
+            className="w-full rounded-lg border border-border bg-bgGray px-4 py-3 text-[14px] text-headings shadow-sm transition-all focus:outline-none focus:ring-1 focus:ring-bgBlue dark:bg-gray-800"
           />
         </div>
 
@@ -95,8 +95,8 @@ const CreateSignerDialog = ({ open, setOpen }: CreateSignerDialogProps) => {
             className={`border-2 border-dashed rounded-xl p-6 transition-all flex flex-col items-center justify-center gap-3 relative
               ${
                 signaturePreview
-                  ? "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50"
-                  : "border-gray-300 dark:border-gray-700 hover:border-bgBlue dark:hover:border-bgBlue bg-white dark:bg-gray-950 cursor-pointer"
+                  ? "border-border bg-bgGray dark:bg-gray-800/50"
+                  : "cursor-pointer border-border bg-navbarBg hover:border-bgBlue dark:hover:border-bgBlue"
               }`}
             onClick={() => !signaturePreview && fileInputRef.current?.click()}
           >
@@ -110,7 +110,7 @@ const CreateSignerDialog = ({ open, setOpen }: CreateSignerDialogProps) => {
 
             {signaturePreview ? (
               <div className="w-full flex flex-col items-center">
-                <div className="relative w-full max-w-[240px] h-[100px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center overflow-hidden">
+                <div className="relative flex h-[100px] w-full max-w-[240px] items-center justify-center overflow-hidden rounded-lg border border-border bg-navbarBg p-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={signaturePreview}
@@ -128,7 +128,7 @@ const CreateSignerDialog = ({ open, setOpen }: CreateSignerDialogProps) => {
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-3 font-medium">
+                <p className="mt-3 text-xs font-medium text-muted">
                   {signatureFile?.name}
                 </p>
               </div>
@@ -138,10 +138,10 @@ const CreateSignerDialog = ({ open, setOpen }: CreateSignerDialogProps) => {
                   <FileSignature className="w-6 h-6 text-bgBlue" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <p className="text-sm font-medium text-body">
                     Click to upload signature
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="mt-1 text-xs text-muted">
                     SVG, PNG, JPG or GIF (max. 2MB)
                   </p>
                 </div>
@@ -154,7 +154,7 @@ const CreateSignerDialog = ({ open, setOpen }: CreateSignerDialogProps) => {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="w-full sm:w-auto px-6 py-2 border border-gray-200 dark:border-gray-800 text-headings text-[14px] font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-900 transition-all"
+            className="w-full rounded-xl border border-border px-6 py-2 text-[14px] font-semibold text-headings transition-all hover:bg-bgGray dark:hover:bg-gray-800 sm:w-auto"
           >
             Cancel
           </button>
@@ -162,7 +162,7 @@ const CreateSignerDialog = ({ open, setOpen }: CreateSignerDialogProps) => {
             type="button"
             onClick={handleSave}
             disabled={isLoading}
-            className="w-full sm:w-auto px-6 py-2 bg-bgBlue text-white text-[14px] font-bold rounded-xl hover:bg-bgBlue/90 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-bgBlue px-6 py-2 text-[14px] font-bold text-white transition-all hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             {isLoading ? "Uploading..." : "Upload"}

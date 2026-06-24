@@ -211,7 +211,7 @@ export default function Subscriptions() {
                   </p>
                 </div>
                 <button
-                  className="px-4 py-2 bg-white border border-border text-body text-sm font-medium rounded-lg hover:bg-gray-50 flex items-center gap-2 cursor-pointer shadow-customShadow"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-navbarBg px-4 py-2 text-sm font-medium text-headings shadow-customShadow transition-colors hover:bg-bgGray dark:hover:bg-gray-800 cursor-pointer"
                   onClick={() => setIsChangePlanOpen(true)}
                 >
                   <svg

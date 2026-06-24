@@ -40,24 +40,24 @@ const AdditionalPaymentTable = ({
     <div className="overflow-x-auto scrollbar-hide">
       <div className="hidden lg:block">
         <Table>
-          <TableHeader className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-            <TableRow className="hover:bg-transparent border-b border-gray-200 dark:border-gray-700">
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+          <TableHeader className="border-b border-border bg-bgGray dark:bg-gray-800/40">
+            <TableRow className="border-b border-border hover:bg-transparent">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Bill To
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Bill From
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Invoice
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Total Price
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4">
+              <TableHead className="py-4 text-xs font-medium uppercase tracking-wider text-muted">
                 Status
               </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider py-4 text-right">
+              <TableHead className="py-4 text-right text-xs font-medium uppercase tracking-wider text-muted">
                 Action
               </TableHead>
             </TableRow>
@@ -66,7 +66,7 @@ const AdditionalPaymentTable = ({
             {rows.map((item) => (
               <TableRow
                 key={item.id}
-                className="border-b border-gray-200 dark:border-gray-700 last:border-0 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                className="border-b border-border last:border-0 transition-colors hover:bg-bgGray dark:hover:bg-gray-800/50"
               >
                 <TableCell className="py-5 text-[14px] font-bold text-headings">
                   {item.billTo}
@@ -93,7 +93,7 @@ const AdditionalPaymentTable = ({
                       type="button"
                       onClick={() => onDownload(item)}
                       aria-label="Download invoice PDF"
-                      className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer disabled:opacity-50"
+                      className="cursor-pointer p-1 text-muted transition-all hover:text-bgBlue disabled:opacity-50"
                     >
                       <CloudDownload className="w-5 h-5 opacity-70" />
                     </button>
@@ -101,7 +101,7 @@ const AdditionalPaymentTable = ({
                       type="button"
                       onClick={() => onView(item)}
                       aria-label="View invoice"
-                      className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer"
+                      className="cursor-pointer p-1 text-muted transition-all hover:text-bgBlue"
                     >
                       <Eye className="w-5 h-5 opacity-70" />
                     </button>
@@ -116,7 +116,7 @@ const AdditionalPaymentTable = ({
         {rows.map((item) => (
           <div
             key={item.id}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
+            className="rounded-lg border border-border bg-navbarBg p-4 space-y-3 shadow-sm"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -130,7 +130,7 @@ const AdditionalPaymentTable = ({
                   type="button"
                   onClick={() => onDownload(item)}
                   aria-label="Download invoice PDF"
-                  className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer disabled:opacity-50"
+                  className="cursor-pointer p-1 text-muted transition-all hover:text-bgBlue disabled:opacity-50"
                 >
                   <CloudDownload className="w-5 h-5 opacity-70" />
                 </button>
@@ -138,7 +138,7 @@ const AdditionalPaymentTable = ({
                   type="button"
                   onClick={() => onView(item)}
                   aria-label="View invoice"
-                  className="p-1 text-[#667085] hover:text-bgBlue transition-all cursor-pointer"
+                  className="cursor-pointer p-1 text-muted transition-all hover:text-bgBlue"
                 >
                   <Eye className="w-5 h-5 opacity-70" />
                 </button>
