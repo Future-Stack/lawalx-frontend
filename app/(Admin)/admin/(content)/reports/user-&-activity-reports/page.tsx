@@ -771,7 +771,7 @@ const UserActivityReports = () => {
                         borderRadius: '0.5rem'
                       }}
                       wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
-                      formatter={(value: number | undefined) => [`${(value ?? 0).toFixed(1)} min`, 'Avg Session']}
+                      formatter={(value: any) => [`${Number(value || 0).toFixed(1)} min`, 'Avg Session']}
                     />
                     <Line type="monotone" dataKey="duration" stroke="#10b981" strokeWidth={2} dot={{ fill: '#10b981', r: 4 }} />
                   </LineChart>
