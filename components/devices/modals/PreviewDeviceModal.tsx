@@ -530,8 +530,10 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                           lat={currentDevice.location.lat ?? 0}
                           lng={currentDevice.location.lng ?? 0}
                         />
+                      ) : (currentDevice?.lat !== undefined && currentDevice?.lng !== undefined && currentDevice?.lat !== null && currentDevice?.lng !== null) ? (
+                        <DeviceLocation lat={currentDevice.lat} lng={currentDevice.lng} />
                       ) : (
-                        (typeof currentDevice?.location === 'string' ? currentDevice.location : null) || "Unknown Location"
+                        (!currentDevice?.location || currentDevice.location === '0.00, 0.00' || currentDevice.location === '0, 0' || currentDevice.location === 'Unknown Location') ? 'N/A' : currentDevice.location
                       )}
                     </span>
                   </div>

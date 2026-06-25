@@ -72,7 +72,7 @@ export default function DevicesPage() {
         resolution: device.program?.serene_size || "1920x1080",
         location: device.location ?
           (device.location.lat === 0 && device.location.lng === 0 ? "N/A" : `Location (${device.location.lat.toFixed(2)}, ${device.location.lng.toFixed(2)})`)
-          : "Unknown Location",
+          : "N/A",
         type: device.deviceType || "Unknown Type",
         programName: device.program?.name || "No program assigned",
         status: status,
@@ -184,6 +184,7 @@ export default function DevicesPage() {
             devices={paginatedDevices}
             onAction={handleAction}
             onSelectLocation={(device) => {
+              if (device.lat === 0 && device.lng === 0) return;
               setSelectedLocation({
                 lat: device.lat,
                 lng: device.lng,

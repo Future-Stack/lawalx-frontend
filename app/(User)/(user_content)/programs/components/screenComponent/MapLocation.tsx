@@ -16,7 +16,7 @@ const ReCenterMap: React.FC<{ devices: Device[] }> = ({ devices }) => {
   React.useEffect(() => {
     if (devices.length > 0) {
       const validLocations = devices
-        .filter((d) => d.location && typeof d.location.lat === "number" && typeof d.location.lng === "number")
+        .filter((d) => d.location && typeof d.location.lat === "number" && typeof d.location.lng === "number" && !(d.location.lat === 0 && d.location.lng === 0))
         .map((d) => [d.location!.lat, d.location!.lng] as [number, number]);
 
       if (validLocations.length === 1) {
@@ -201,7 +201,7 @@ const MapLocation: React.FC<MapLocationProps> = ({ devices = [] }) => {
             <ReCenterMap devices={devices} />
 
             {devices.map((device) =>
-              device.location ? (
+              device.location && !(device.location.lat === 0 && device.location.lng === 0) ? (
                 <Marker key={device.id} position={[device.location.lat, device.location.lng]} icon={customIcon}>
                   <Popup>
                     <div className="text-center p-3 min-w-[180px]">

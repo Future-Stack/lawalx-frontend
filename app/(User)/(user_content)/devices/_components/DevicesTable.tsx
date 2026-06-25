@@ -100,13 +100,20 @@ export default function DevicesTable({
                     </div>
                   </td>
                   <td className="px-6 py-5 text-sm">
-                    <div
-                      className="flex items-center gap-2 text-[#404040] dark:text-gray-300 font-medium cursor-pointer hover:text-bgBlue transition-colors group"
-                      onClick={() => onSelectLocation(device)}
-                    >
-                      <MapPin className="w-4 h-4 text-[#737373] group-hover:text-bgBlue" />
-                      <DeviceLocation lat={device.lat} lng={device.lng} />
-                    </div>
+                    {(() => {
+                      const isNA = device.lat === 0 && device.lng === 0;
+                      return (
+                        <div
+                          className={`flex items-center gap-2 text-[#404040] dark:text-gray-300 font-medium transition-colors ${
+                            isNA ? "" : "cursor-pointer hover:text-bgBlue group"
+                          }`}
+                          onClick={() => !isNA && onSelectLocation(device)}
+                        >
+                          <MapPin className={`w-4 h-4 text-[#737373] ${isNA ? "" : "group-hover:text-bgBlue"}`} />
+                          <DeviceLocation lat={device.lat} lng={device.lng} />
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-5">
                     <div className={`text-sm font-bold ${device.programName === "No program assigned" ? "text-[#A3A3A3] font-normal" : "text-[#171717] dark:text-white"}`}>

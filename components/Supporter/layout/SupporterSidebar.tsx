@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, LogOut, UserCog } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useAppDispatch } from '@/redux/store/hook';
 import { logout } from '@/redux/features/auth/authSlice';
@@ -95,7 +94,7 @@ export default function SupporterSidebar({ isCollapsed }: SupporterSidebarProps)
           <button
             onClick={handleLogout}
             className={cn(
-              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all',
+              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-all cursor-pointer',
               isCollapsed && 'justify-center'
             )}
             title={isCollapsed ? 'Logout' : undefined}

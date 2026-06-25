@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from "react";
-import { Search, Monitor, CircleCheckBigIcon, Loader2 } from "lucide-react";
+import { Search, Monitor, CheckCircle2, Loader2 } from "lucide-react";
 import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 import BaseDialog from "@/common/BaseDialog";
 import { useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { Device } from "@/redux/api/users/devices/devices.type";
 import Dropdown from "@/common/Dropdown";
+import { Label } from "@/components/ui/label";
+import DeviceLocation from "@/components/common/DeviceLocation";
 
 interface AddScreenDialogProps {
     isOpen: boolean;
@@ -99,43 +101,46 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
                                 <div
                                     key={device.id}
                                     onClick={() => toggleSelection(device.id)}
-                                    className={`flex items-center gap-4 p-2 md:p-4 rounded-lg border transition-all cursor-pointer group ${isSelected
-                                        ? "border-bgBlue bg-blue-50/50 dark:bg-blue-950/20"
-                                        : "border-border hover:border-bgBlue hover:bg-bgGray/30"
+                                    className={`flex items-center gap-3 p-4 rounded-lg border transition-all cursor-pointer group ${isSelected
+                                        ? "border-bgBlue bg-blue-50 dark:bg-blue-950/20"
+                                        : "border-border bg-input hover:border-bgBlue"
                                         }`}
                                 >
-                                    {/* Selection Checkbox */}
-                                    <div className="flex-shrink-0">
-                                        <div
-                                            className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${isSelected
-                                                ? "bg-bgBlue border-bgBlue text-white"
-                                                : "border-gray-300 dark:border-gray-600 group-hover:border-bgBlue"
-                                                }`}
-                                        >
-                                            {isSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
-                                        </div>
-                                    </div>
-
-                                    {/* Device Icon */}
-                                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-gray-50 dark:bg-gray-800 border border-border flex items-center justify-center">
-                                        <Monitor className={`w-6 h-6 ${device.status === 'ONLINE' ? 'text-green-500' : 'text-gray-400'}`} />
+                                    {/* Circular Avatar */}
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${isSelected ? "bg-bgBlue text-white" : "bg-gray-100 dark:bg-gray-800 text-muted"}`}>
+                                        <Monitor className="w-5 h-5" />
                                     </div>
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0">
-                                        <div className="font-semibold text-headings truncate text-base">
-                                            {device.name}
+                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
+                                            <Label htmlFor={device.id} className="font-semibold text-headings cursor-pointer truncate max-w-[150px] md:max-w-none">
+                                                {device.name}
+                                            </Label>
+                                            <DeviceStatusBadge status={device.status} />
                                         </div>
-                                        <div className="flex items-center gap-2 mt-0.5">
-                                            <span className="text-xs text-muted font-medium tracking-wider">
-                                                ID: {device.deviceSerial}
+                                        <p className="text-sm text-muted truncate">
+                                            {device.location ? (
+                                                typeof device.location === "object"
+                                                    ? <DeviceLocation lat={device.location.lat} lng={device.location.lng} />
+                                                    : ((device.location === '0.00, 0.00' || device.location === '0, 0' || device.location === 'Unknown Location') ? 'N/A' : device.location)
+                                            ) : (
+                                                "N/A"
+                                            )}
+                                        </p>
+                                        {device.deviceType && (
+                                            <span className="text-[10px] bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-gray-500 uppercase tracking-widest mt-1 inline-block">
+                                                {device.deviceType}
                                             </span>
-                                            <span className="w-1 h-1 rounded-full bg-gray-300" />
-                                            <div className="flex items-center">
-                                                <DeviceStatusBadge status={device.status} />
-                                            </div>
-                                        </div>
+                                        )}
                                     </div>
+
+                                    {/* Check circle */}
+                                    {isSelected ? (
+                                        <CheckCircle2 className="w-5 h-5 text-bgBlue" />
+                                    ) : (
+                                        <div className="w-5 h-5 rounded-full border border-borderGray group-hover:border-bgBlue" />
+                                    )}
                                 </div>
                             );
                         })

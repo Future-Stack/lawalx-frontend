@@ -100,10 +100,12 @@ const Step3ScreenSelection: React.FC<Step3Props> = ({ data, onChange }) => {
                                     <DeviceStatusBadge status={device.status} />
                                 </div>
                                 <p className="text-sm text-muted truncate">
-                                    {device.location && (
+                                    {device.location ? (
                                         typeof device.location === "object"
                                             ? <DeviceLocation lat={device.location.lat} lng={device.location.lng} />
-                                            : device.location
+                                            : ((device.location === '0.00, 0.00' || device.location === '0, 0' || device.location === 'Unknown Location') ? 'N/A' : device.location)
+                                    ) : (
+                                        "N/A"
                                     )}
                                 </p>
                                 {device.deviceType && (
