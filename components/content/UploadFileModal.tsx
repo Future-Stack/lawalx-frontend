@@ -795,6 +795,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useGetUserProfileQuery } from "@/redux/api/users/userProfileApi";
+import { UploadLimitModal } from "./UploadLimitModal";
 import { useGetAllFilesQuery } from "@/redux/api/users/content/content.api";
 
 type UploadStatus =
@@ -1624,26 +1625,7 @@ export default function UploadFileModal({
     </Dialog>
 
     {/* Upload Limit Reached Modal */}
-    <Dialog open={isLimitModalOpen} onOpenChange={setIsLimitModalOpen}>
-      <DialogContent className="max-w-[400px] w-full p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 z-[11000] shadow-2xl flex flex-col gap-4">
-        <div className="flex flex-col gap-2">
-          <DialogTitle className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            Upload Limit Reached
-          </DialogTitle>
-          <DialogDescription className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Your current Free Plan allows up to 2 images, 2 videos, and 2 audio files only. Please upgrade your plan to upload more content.
-          </DialogDescription>
-        </div>
-        <div className="flex justify-end mt-2">
-          <button
-            onClick={() => setIsLimitModalOpen(false)}
-            className="px-5 py-2.5 bg-bgBlue text-white font-semibold rounded-xl hover:bg-blue-600 shadow-customShadow transition-all cursor-pointer text-sm"
-          >
-            Got it
-          </button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <UploadLimitModal isOpen={isLimitModalOpen} onClose={() => setIsLimitModalOpen(false)} />
   </>
   );
 }
