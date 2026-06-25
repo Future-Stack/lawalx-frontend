@@ -137,9 +137,8 @@ const GoLiveBanner = ({ banner }: GoLiveBannerProps) => {
                 {(showPrimaryButton || showSecondaryButton) && (
                     <div className="flex flex-wrap items-center gap-3 mt-6">
                         {showPrimaryButton && (
-                            <a
+                            <Link
                                 href={banner?.primaryButtonUrl || "/choose-plan"}
-                                onClick={(e) => { if (!banner?.primaryButtonUrl) e.preventDefault(); }}
                                 className={
                                     banner
                                         ? "inline-flex relative z-10 pointer-events-auto px-6 py-2.5 bg-white text-blue-900 rounded-lg font-semibold hover:bg-blue-50 transition-colors items-center justify-center gap-2 shadow-customShadow cursor-pointer"
@@ -148,18 +147,17 @@ const GoLiveBanner = ({ banner }: GoLiveBannerProps) => {
                                 style={{ fontFamily: "Inter, sans-serif" }}
                             >
                                 {banner?.primaryButtonLabel || "Upgrade"} {PrimaryIcon && <PrimaryIcon className="w-5 h-5" />}
-                            </a>
+                            </Link>
                         )}
 
                         {showSecondaryButton && (
-                            <a
-                                href={banner?.secondaryButtonUrl || "#"}
-                                onClick={(e) => { if (!banner?.secondaryButtonUrl) e.preventDefault(); }}
+                            <Link
+                                href={banner?.secondaryButtonUrl || "/choose-plan"}
                                 className="inline-flex relative z-10 pointer-events-auto px-6 py-2.5 bg-blue-800/30 text-white border border-blue-400/30 rounded-lg font-medium hover:bg-blue-800/50 transition-colors backdrop-blur-sm items-center justify-center gap-2 shadow-customShadow cursor-pointer"
                                 style={{ fontFamily: "Inter, sans-serif" }}
                             >
                                 {banner?.secondaryButtonLabel} {SecondaryIcon && <SecondaryIcon className="w-5 h-5" />}
-                            </a>
+                            </Link>
                         )}
                     </div>
                 )}
