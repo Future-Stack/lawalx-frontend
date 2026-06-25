@@ -40,7 +40,10 @@ import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 
 export default function Dashboard() {
   const { data: statsData } = useGetAllStatsQuery(undefined);
-  const { data: devicesData } = useGetMyAllDevicesDataQuery();
+  const {
+    data: devicesData,
+    isError: isDevicesError,
+  } = useGetMyAllDevicesDataQuery();
   console.log("Recent Devices Data:", devicesData);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -75,7 +78,10 @@ export default function Dashboard() {
     setIsAddDeviceModalOpen(false);
   };
 
-  const { data: activityData } = useGetAllActivitiesQuery();
+  const {
+    data: activityData,
+    isError: isActivitiesError,
+  } = useGetAllActivitiesQuery();
   const activities = activityData?.data?.slice(0, 4) || [];
 
   const devices = devicesData?.data || [];
@@ -230,7 +236,11 @@ export default function Dashboard() {
           </div>
 
           <div className="p-6 space-y-4">
-            {devices.length === 0 ? (
+            {!devicesData && !isDevicesError ? (
+              <div className="flex justify-center items-center py-8">
+                <CommonLoader size={32} text="Loading devices..." />
+              </div>
+            ) : devices.length === 0 ? (
               <div className="text-center text-gray-500 py-4">No recent devices</div>
             ) : (
               devices.slice(0, 3).map((device, index) => (
@@ -252,7 +262,7 @@ export default function Dashboard() {
                       {device.location && typeof device.location === 'object' && (device.location as any).lat !== undefined ? (
                         <DeviceLocation lat={(device.location as any).lat} lng={(device.location as any).lng} />
                       ) : (
-                        (device.location as any) || "LA, USA"
+                        (device.location as any) || "N/A"
                       )}
                     </div>
                   </div>
@@ -302,7 +312,11 @@ export default function Dashboard() {
           </div>
 
           <div className="p-6 space-y-4">
-            {activities.length === 0 ? (
+            {!activityData && !isActivitiesError ? (
+              <div className="flex justify-center items-center py-8">
+                <CommonLoader size={32} text="Loading activities..." />
+              </div>
+            ) : activities.length === 0 ? (
               <div className="text-center text-gray-500 py-4">No recent activities</div>
             ) : (
               activities.map((activity: any, index: number) => (

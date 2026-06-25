@@ -101,6 +101,7 @@ export default function UserDashboardNavbar() {
   // User Profile
   const { data: userProfile } = useGetUserProfileQuery(undefined)
   const userInfo = userProfile?.data;
+  console.log("user data", userInfo);
   
   // Subscription
   const { data: mySubscriptionRes } = useGetMySubscriptionQuery(undefined, { skip: userInfo?.role === "ADMIN" });
@@ -153,6 +154,7 @@ export default function UserDashboardNavbar() {
     const savedStep = localStorage.getItem("onboarding_step") as OnboardingStep;
 
     if (isNewUser && userInfo?.firstTimeLogin === false) {
+    // if (isNewUser || userInfo?.firstTimeLogin === false) {
       if (savedStep && !onboardingStep) {
         // Resume onboarding from saved step
         setOnboardingStep(savedStep);

@@ -21,18 +21,23 @@ interface SchedulesTableProps {
   isLoading?: boolean;
 }
 
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
+
 /**
  * Format an epoch-based ISO time string (e.g. "1970-01-01T08:00:00.000Z")
- * into a human-readable "HH:MM AM/PM" format.
+ * or a time string (e.g. "09:00") into a human-readable "h:mm AM/PM" format using dayjs.
  */
 const formatTime = (isoTime: string): string => {
+  if (!isoTime) return "";
   try {
-    const date = new Date(isoTime);
-    const hours = date.getUTCHours();
-    const minutes = date.getUTCMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${String(minutes).padStart(2, "0")} ${ampm}`;
+    if (isoTime.includes(":") && !isoTime.includes("T")) {
+      const todayStr = dayjs().format("YYYY-MM-DD");
+      return dayjs(`${todayStr}T${isoTime}`).format("h:mm A");
+    }
+    return dayjs.utc(isoTime).format("h:mm A");
   } catch {
     return isoTime;
   }

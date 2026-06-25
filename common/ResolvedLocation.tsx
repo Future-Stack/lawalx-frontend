@@ -10,9 +10,14 @@ interface ResolvedLocationProps {
 }
 
 const ResolvedLocation: React.FC<ResolvedLocationProps> = ({ lat, lng, fallback, className }) => {
-  const [address, setAddress] = React.useState<string>("Loading location...");
+  const isNA = !lat || !lng || (lat === 0 && lng === 0);
+  const [address, setAddress] = React.useState<string>(isNA ? "N/A" : "Loading location...");
 
   React.useEffect(() => {
+    if (isNA) {
+      setAddress("N/A");
+      return;
+    }
     const fetchAddress = async () => {
       try {
         const res = await fetch(
@@ -27,12 +32,12 @@ const ResolvedLocation: React.FC<ResolvedLocationProps> = ({ lat, lng, fallback,
         } else {
           setAddress(fallback || `${lat.toFixed(2)}, ${lng.toFixed(2)}`);
         }
-      } catch (e) {
+      } catch {
         setAddress(fallback || `${lat.toFixed(2)}, ${lng.toFixed(2)}`);
       }
     };
     fetchAddress();
-  }, [lat, lng, fallback]);
+  }, [lat, lng, fallback, isNA]);
 
   return <span className={className}>{address}</span>;
 };

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -669,9 +670,9 @@ export default function GlobalDevices() {
                       </div>
 
                       {/* Location */}
-                      {device.location && device.location !== 'N/A' && (
-                        <div className="text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">Location:</span>
+                      <div className="text-sm">
+                        <span className="text-gray-500 dark:text-gray-400">Location:</span>
+                        {device.location && device.location !== 'N/A' ? (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -682,8 +683,10 @@ export default function GlobalDevices() {
                           >
                             <DeviceLocation lat={device.lat} lng={device.lng} />
                           </button>
-                        </div>
-                      )}
+                        ) : (
+                          <span className="ml-2 text-gray-900 dark:text-white">N/A</span>
+                        )}
+                      </div>
 
                       {/* Storage and Last Sync */}
                       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">

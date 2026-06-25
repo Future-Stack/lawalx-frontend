@@ -13,6 +13,10 @@ import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
 import Marquee from "react-fast-marquee";
 import { cn } from "@/lib/utils";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 
 interface SchedulePreviewDialogProps {
     open: boolean;
@@ -337,26 +341,22 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
     if (!schedule) return null;
 
     const formatTime = (isoTime: string): string => {
+        if (!isoTime) return "";
         try {
-            // Parse the time from the ISO string directly to avoid timezone shifts
-            const timePart = isoTime.includes("T") ? isoTime.split("T")[1]?.substring(0, 5) : isoTime;
-            if (!timePart) return isoTime;
-            const [hh, mm] = timePart.split(":").map(Number);
-            const period = hh >= 12 ? "PM" : "AM";
-            const displayHour = hh % 12 || 12;
-            return mm === 0 ? `${displayHour} ${period}` : `${displayHour}:${mm.toString().padStart(2, "0")} ${period}`;
+            if (isoTime.includes(":") && !isoTime.includes("T")) {
+                const todayStr = dayjs().format("YYYY-MM-DD");
+                return dayjs(`${todayStr}T${isoTime}`).format("h:mm A");
+            }
+            return dayjs.utc(isoTime).format("h:mm A");
         } catch {
             return isoTime;
         }
     };
 
     const formatDate = (dateStr: string) => {
+        if (!dateStr) return "";
         try {
-            // Extract the date portion directly to avoid timezone shifts
-            const datePart = dateStr.includes("T") ? dateStr.split("T")[0] : dateStr;
-            const [year, month, day] = datePart.split("-").map(Number);
-            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            return `${months[month - 1]} ${day}, ${year}`;
+            return dayjs.utc(dateStr).format("DD MMM YYYY");
         } catch {
             return dateStr;
         }

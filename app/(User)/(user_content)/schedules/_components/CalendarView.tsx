@@ -2,6 +2,10 @@
 import React, { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 import { useGetAllSchedulesDataQuery } from "@/redux/api/users/schedules/schedules.api";
 import { Schedule } from "@/redux/api/users/schedules/schedules.type";
 import { useRouter } from "next/navigation";
@@ -60,13 +64,17 @@ const CalendarView: React.FC = () => {
 
     const formatTimeRange = (startStr: string, endStr: string, recurrenceType?: string) => {
         const format = (dateStr: string) => {
-            const date = new Date(dateStr);
-            return date.toLocaleTimeString("en-US", {
-                hour: "numeric",
-                minute: date.getUTCMinutes() === 0 ? undefined : "2-digit",
-                hour12: true,
-                timeZone: "UTC",
-            }).toLowerCase();
+            if (!dateStr) return "";
+            try {
+                if (dateStr.includes(":") && !dateStr.includes("T")) {
+                    const todayStr = dayjs().format("YYYY-MM-DD");
+                    return dayjs(`${todayStr}T${dateStr}`).format("h:mm A").toLowerCase();
+                }
+                const d = dayjs.utc(dateStr);
+                return d.format(d.minute() === 0 ? "h A" : "h:mm A").toLowerCase();
+            } catch {
+                return dateStr;
+            }
         };
         if (recurrenceType === "once" || !endStr) {
             return format(startStr);
@@ -101,7 +109,7 @@ const CalendarView: React.FC = () => {
 
     const getHeaderLabel = () => {
         if (viewType === "Month") {
-            return activeDate.toLocaleString("default", { month: "long", year: "numeric" });
+            return dayjs(activeDate).format("MMMM YYYY");
         } else if (viewType === "Week") {
             const start = new Date(activeDate);
             start.setDate(activeDate.getDate() - activeDate.getDay());
@@ -109,12 +117,12 @@ const CalendarView: React.FC = () => {
             end.setDate(start.getDate() + 6);
             
             if (start.getMonth() === end.getMonth()) {
-                return `${start.toLocaleString("default", { month: "short" })} ${start.getDate()} – ${end.getDate()}, ${start.getFullYear()}`;
+                return `${dayjs(start).format("D")} – ${dayjs(end).format("D")} ${dayjs(start).format("MMM")}, ${dayjs(start).format("YYYY")}`;
             }
-            return `${start.toLocaleString("default", { month: "short", day: "numeric" })} – ${end.toLocaleString("default", { month: "short", day: "numeric" })}, ${end.getFullYear()}`;
+            return `${dayjs(start).format("D MMM")} – ${dayjs(end).format("D MMM")}, ${dayjs(end).format("YYYY")}`;
         } else {
-            // Day view format: Apr 5, 2026
-            return activeDate.toLocaleString("default", { month: "short", day: "numeric", year: "numeric" });
+            // Day view format: 5 Apr, 2026
+            return dayjs(activeDate).format("D MMM, YYYY");
         }
     };
 

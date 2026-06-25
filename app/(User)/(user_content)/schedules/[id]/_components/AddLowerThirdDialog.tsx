@@ -38,7 +38,7 @@ const AddLowerThirdDialog: React.FC<AddLowerThirdDialogProps> = ({
             fontFamily: "Inter",
             loop: true,
             message: "",
-            duration: 10,
+            duration: 0,
         },
     });
 
@@ -61,7 +61,7 @@ const AddLowerThirdDialog: React.FC<AddLowerThirdDialogProps> = ({
                     fontFamily: existingLowerThird?.font || "Inter",
                     loop: existingLowerThird?.loop ?? true,
                     message: existingLowerThird?.text || "",
-                    duration: existingLowerThird?.duration || 10,
+                    duration: existingLowerThird?.duration || 0,
                 },
             });
         }
