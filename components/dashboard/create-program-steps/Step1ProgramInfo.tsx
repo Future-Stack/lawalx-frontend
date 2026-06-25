@@ -33,7 +33,7 @@ export default function Step1ProgramInfo({
           type="text"
           value={programData.name}
           onChange={(e) => setProgramData({ ...programData, name: e.target.value })}
-          placeholder="Store A - NYC"
+          placeholder="Enter program name"
           className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
         />
       </div>
@@ -48,7 +48,7 @@ export default function Step1ProgramInfo({
         />
       </div>
       <div>
-        <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Screen Size</label>
+        <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Select serene size</label>
         <Select
           value={programData.serene_size}
           onValueChange={(val: string) => setProgramData({ ...programData, serene_size: val })}

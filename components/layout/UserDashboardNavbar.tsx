@@ -60,11 +60,11 @@ const navItems = [
   { href: "/schedules", label: "Schedules" },
 ];
 
-const formatPlanName = (name?: string) => {
-  if (!name) return "";
-  const formatted = name.replace(/_/g, " ").toLowerCase();
-  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
-};
+// const formatPlanName = (name?: string) => {
+//   if (!name) return "";
+//   const formatted = name.replace(/_/g, " ").toLowerCase();
+//   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+// };
 
 export default function UserDashboardNavbar() {
   const pathname = usePathname();
@@ -100,11 +100,8 @@ export default function UserDashboardNavbar() {
 
   // User Profile
   const { data: userProfile } = useGetUserProfileQuery(undefined)
-  
   const userInfo = userProfile?.data;
-  console.log("user data", userInfo);
   
-
   // Subscription
   const { data: mySubscriptionRes } = useGetMySubscriptionQuery(undefined, { skip: userInfo?.role === "ADMIN" });
   const subscription = mySubscriptionRes?.data;

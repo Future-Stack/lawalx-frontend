@@ -11,8 +11,8 @@ import CreateScreenModal from "@/components/dashboard/CreateScreenModal";
 import { useGetAllProgramsDataQuery } from "@/redux/api/users/programs/programs.api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { Loader2 } from "lucide-react";
 import { useMemo } from "react";
+import CommonLoader from "@/common/CommonLoader";
 
 dayjs.extend(relativeTime);
 
@@ -78,7 +78,7 @@ const MyScreensPage: React.FC = () => {
                   placeholder="Search programs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-1.5 md:py-3 bg-bgGray dark:bg-gray-800 border border-border rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-1.5 md:py-3 bg-bgGray dark:bg-gray-800 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue focus:border-transparent text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                 />
               </div>
 
@@ -100,9 +100,8 @@ const MyScreensPage: React.FC = () => {
 
           {/* Content Area */}
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center p-20 text-gray-400">
-              <Loader2 className="w-12 h-12 animate-spin mb-4" />
-              <p>Loading programs...</p>
+            <div className="flex justify-center items-center h-64">
+              <CommonLoader size={48} text="Loading programs..." />
             </div>
           ) : filteredPrograms.length === 0 ? (
             <div className="bg-white dark:bg-gray-900 border border-borderGray dark:border-gray-700 rounded-xl p-16 flex justify-center shadow-sm">

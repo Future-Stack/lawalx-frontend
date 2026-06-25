@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Loader2 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useRef } from "react";
 import ContentTimeline from "../components/screenComponent/ContentTimeline";
 import ScreenSettings from "../components/screenComponent/ScreenSettings";
@@ -26,6 +26,7 @@ dayjs.extend(relativeTime);
 
 const ScreenCardDetails = () => {
   const { id } = useParams();
+  const router = useRouter();
   const { data: programResponse, isLoading } = useGetSingleProgramDataQuery({ id: String(id) });
   const [updateProgram, { isLoading: isUpdating }] = useUpdateSingleProgramMutation();
   const program = programResponse?.data;
@@ -268,11 +269,11 @@ const ScreenCardDetails = () => {
         },
       }).unwrap();
       toast.success(res.message || "Program updated successfully");
+      router.push("/programs");
     } catch (error: any) {
       toast.error(error?.data?.message || "Failed to save changes");
     }
   };
-
 
   const handlePowerClick = (e: React.MouseEvent) => {
     e.preventDefault();

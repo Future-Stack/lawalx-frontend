@@ -58,15 +58,19 @@ const CalendarView: React.FC = () => {
         return allSchedules.filter(s => isScheduleActiveOnDate(s, date));
     };
 
-    const formatTimeRange = (startStr: string, endStr: string) => {
+    const formatTimeRange = (startStr: string, endStr: string, recurrenceType?: string) => {
         const format = (dateStr: string) => {
             const date = new Date(dateStr);
             return date.toLocaleTimeString("en-US", {
                 hour: "numeric",
-                minute: date.getMinutes() === 0 ? undefined : "2-digit",
+                minute: date.getUTCMinutes() === 0 ? undefined : "2-digit",
                 hour12: true,
+                timeZone: "UTC",
             }).toLowerCase();
         };
+        if (recurrenceType === "once" || !endStr) {
+            return format(startStr);
+        }
         return `${format(startStr)} – ${format(endStr)}`;
     };
 
@@ -170,7 +174,7 @@ const CalendarView: React.FC = () => {
                                             <div className="flex flex-col">
                                                 <span className="truncate">{schedule.name}</span>
                                                 <span className="text-[9px] opacity-70">
-                                                    {formatTimeRange(schedule.startTime, schedule.endTime)}
+                                                    {formatTimeRange(schedule.startTime, schedule.endTime, schedule.recurrenceType)}
                                                 </span>
                                             </div>
                                         </button>
@@ -219,7 +223,7 @@ const CalendarView: React.FC = () => {
                                             <div className="flex flex-col gap-0.5">
                                                 <span className="truncate">{schedule.name}</span>
                                                 <span className="text-[10px] opacity-70 shrink-0">
-                                                    {formatTimeRange(schedule.startTime, schedule.endTime)}
+                                                    {formatTimeRange(schedule.startTime, schedule.endTime, schedule.recurrenceType)}
                                                 </span>
                                             </div>
                                         </button>
@@ -268,7 +272,7 @@ const CalendarView: React.FC = () => {
                                             <div className="flex flex-col gap-1">
                                                 <span className="font-bold">{schedule.name}</span>
                                                 <span className="text-[10px] opacity-70">
-                                                    {formatTimeRange(schedule.startTime, schedule.endTime)}
+                                                    {formatTimeRange(schedule.startTime, schedule.endTime, schedule.recurrenceType)}
                                                 </span>
                                             </div>
                                         </button>

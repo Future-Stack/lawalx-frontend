@@ -123,7 +123,7 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
             )}
 
             {/* Play Times */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={cn("grid gap-4", data.repeat === "run-once" ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2")}>
                 <div className="space-y-2">
                     <Label className="text-sm font-medium text-headings">
                         Start Time <span className="text-red-500">*</span>
@@ -140,25 +140,27 @@ const Step4ScheduleSettings: React.FC<Step4Props> = ({ data, onChange }) => {
                     </div>
                 </div>
 
-                <div className="space-y-2">
-                    <Label className="text-sm font-medium text-headings">
-                        End Time <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative cursor-pointer" onClick={() => handleIconClick(endTimeRef)}>
-                        <Input
-                            ref={endTimeRef}
-                            type="time"
-                            value={(data as any).endTime}
-                            onChange={(e) => onChange({ ...data, endTime: e.target.value })}
-                            className="bg-input border-borderGray text-headings cursor-pointer pr-10"
-                        />
-                        <Clock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                {data.repeat !== "run-once" && (
+                    <div className="space-y-2">
+                        <Label className="text-sm font-medium text-headings">
+                            End Time <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="relative cursor-pointer" onClick={() => handleIconClick(endTimeRef)}>
+                            <Input
+                                ref={endTimeRef}
+                                type="time"
+                                value={(data as any).endTime}
+                                onChange={(e) => onChange({ ...data, endTime: e.target.value })}
+                                className="bg-input border-borderGray text-headings cursor-pointer pr-10"
+                            />
+                            <Clock className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" />
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Start Date Fields */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={cn("grid gap-4", data.repeat === "run-once" ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2")}>
                 <div className="space-y-2">
                     <Label className="text-sm font-medium text-headings">
                         {data.repeat === "run-once" ? "Select Date" : "Start Date"} <span className="text-red-500">*</span>
