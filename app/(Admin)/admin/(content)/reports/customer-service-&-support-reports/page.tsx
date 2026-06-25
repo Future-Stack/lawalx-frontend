@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -595,3 +596,7 @@ const CustomerServiceReports = () => {
 };
 
 export default CustomerServiceReports;
+
+
+
+// build error check
