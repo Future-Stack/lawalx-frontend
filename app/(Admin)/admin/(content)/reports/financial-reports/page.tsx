@@ -666,7 +666,7 @@ const FinancialReport = () => {
                       borderRadius: '0.5rem'
                     }}
                     cursor={{ fill: 'transparent' }}
-                    formatter={(value: number | undefined) => value !== undefined ? [`${currencySymbol}${Math.abs(value).toLocaleString()}`, undefined] : ['', undefined]}
+                    formatter={((value: any) => value !== undefined && value !== null ? [`${currencySymbol}${Math.abs(Number(value)).toLocaleString()}`, undefined] : ['', undefined]) as any}
                     wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb]"
                   />
                   <Legend
