@@ -15,9 +15,17 @@ const SocialLoginHandler = () => {
     useEffect(() => {
         const accessToken = searchParams.get("accessToken");
         const refreshToken = searchParams.get("refreshToken");
+        const firstTimeLogin = searchParams.get("firstTimeLogin");
 
         if (accessToken && refreshToken) {
             try {
+                // If firstTimeLogin is "false", it means this is a new user (onboarding required)
+                if (firstTimeLogin === "false") {
+                    localStorage.setItem("is_new_user", "true");
+                } else {
+                    localStorage.removeItem("is_new_user");
+                }
+
                 dispatch(setUser({
                     token: accessToken,
                     refreshToken: refreshToken

@@ -20,12 +20,19 @@ import { LowerThirdPayload } from "@/redux/api/users/schedules/schedules.type";
 
 interface ContentPreviewProps {
   items: ContentItem[];
-  scheduleTime: string;
+  scheduleTime?: string;
   playingIndex: number;
   setPlayingIndex: (index: number) => void;
   lowerThird?: LowerThirdPayload;
   localActive?: boolean;
   isUpdating?: boolean;
+  repeat?: string;
+  daysOfWeek?: string[];
+  dayOfMonth?: number[];
+  startTime?: string;
+  endTime?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 function formatTime(time: number): string {
@@ -37,11 +44,15 @@ function formatTime(time: number): string {
 
 const ContentPreview: React.FC<ContentPreviewProps> = ({
   items,
-  scheduleTime,
   playingIndex,
   setPlayingIndex,
   lowerThird,
   localActive = false,
+  repeat = "once",
+  daysOfWeek = [],
+  dayOfMonth = [],
+  startTime = "09:00",
+  endTime = "10:00",
 }) => {
   const [isFading, setIsFading] = useState(false);
   const [isMediaReady, setIsMediaReady] = useState(false);
@@ -54,6 +65,43 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
   const [audioVolume, setAudioVolume] = useState(1);
   const [audioCurrentTime, setAudioCurrentTime] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
+
+  const getRecurrenceLabel = () => {
+    if (repeat === "daily") return "Daily";
+    if (repeat === "weekly") {
+      return daysOfWeek && daysOfWeek.length > 0
+        ? daysOfWeek.join(", ")
+        : "Weekly";
+    }
+    if (repeat === "monthly") {
+      return dayOfMonth && dayOfMonth.length > 0
+        ? `Monthly (Day ${dayOfMonth.join(", ")})`
+        : "Monthly";
+    }
+    return "Run Once";
+  };
+
+  const formatTimeStr = (timeStr: string): string => {
+    if (!timeStr) return "";
+    if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr;
+    const parts = timeStr.split(":");
+    const hour = parseInt(parts[0], 10);
+    const suffix = hour >= 12 ? "PM" : "AM";
+    const displayHour = hour % 12 || 12;
+    return `${String(displayHour).padStart(2, "0")}:${parts[1] || "00"} ${suffix}`;
+  };
+
+  // const formatDateStr = (dateStr: string) => {
+  //   try {
+  //     return new Date(dateStr).toLocaleDateString("en-US", {
+  //       month: "short",
+  //       day: "numeric",
+  //       year: "numeric"
+  //     });
+  //   } catch {
+  //     return dateStr;
+  //   }
+  // };
 
   // Spinner delay logic: Only show spinner if media takes > 600ms to load
   useEffect(() => {
@@ -451,8 +499,11 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
 
         <p className="flex justify-between items-center text-sm sm:text-base text-muted">
           <span className="flex items-center gap-2">
-            <Clock className="w-4 h-4 flex-shrink-0" />
-            {scheduleTime || "Mon, Tue, Wed, Thu, Fri • 09:00 AM"}
+            <Clock className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+            <span>
+              {getRecurrenceLabel()} • {formatTimeStr(startTime)}
+              {repeat !== "once" && repeat !== "run-once" && endTime && ` – ${formatTimeStr(endTime)}`}
+            </span>
           </span>
 
           {/* Play/Pause Button — purely frontend preview control */}

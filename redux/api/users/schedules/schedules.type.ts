@@ -21,10 +21,10 @@ export interface StoreMorningPromo {
   recurrenceType: RecurrenceType;
 
   startDate: string;
-  endDate: string;
+  endDate?: string;
 
   startTime: string;
-  endTime: string;
+  endTime?: string;
 
   daysOfWeek?: DayOfWeek[];
   dayOfMonth?: number[];
