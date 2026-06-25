@@ -474,7 +474,7 @@ export default function UserManagementPage() {
           <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Overdue, Offline, Errors
           </div>
-        </div> */}
+        </div> */} 
       </div>
 
       {/* Table Section */}
