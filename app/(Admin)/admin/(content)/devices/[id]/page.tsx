@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState } from "react";
@@ -33,6 +34,7 @@ import { useGetGlobalDeviceDetailsQuery, useDeleteDeviceMutation, useSyncDeviceM
 import { toast } from 'sonner';
 import AdminLeafletMap from "@/components/Admin/map/AdminLeafletMap";
 import AdminPreviewDeviceModal from "@/components/Admin/modals/AdminPreviewDeviceModal";
+import DeviceLocation from "@/components/common/DeviceLocation";
 
 const getStatusBadgeStyle = (status: string) => {
   const styles: Record<string, string> = {
@@ -121,6 +123,9 @@ export default function DeviceDetailsPage() {
   }
 
   const device = response?.data;
+  const lat = typeof device?.location === 'object' ? (device.location?.lat ?? 0) : 0;
+  const lng = typeof device?.location === 'object' ? (device.location?.lng ?? 0) : 0;
+  const isNA = lat === 0 && lng === 0;
 
   const handleClearData = async () => {
     try {
@@ -231,18 +236,31 @@ export default function DeviceDetailsPage() {
               <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
                 <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400 font-semibold">
                   <MapPin className="w-4 h-4 text-gray-300" />
-                  <span>{typeof device?.location === 'string' ? device.location : "Active Coordinates"}</span>
+                  <span>
+                    {device?.location && typeof device.location === 'object' ? (
+                      <DeviceLocation lat={device.location.lat ?? 0} lng={device.location.lng ?? 0} />
+                    ) : (
+                      (typeof device?.location === 'string' ? device.location : null) || "N/A"
+                    )}
+                  </span>
                 </div>
                 <div className="text-[11px] font-bold text-gray-400">
                   Time Zone: <span className="text-gray-900 dark:text-white">{device?.user?.timeZone || "N/A"}</span>
                 </div>
               </div>
 
-              <AdminLeafletMap
-                lat={typeof device?.location === 'object' ? (device.location?.lat ?? 0) : 0}
-                lng={typeof device?.location === 'object' ? (device.location?.lng ?? 0) : 0}
-                onMarkerClick={() => setIsMarkerModalOpen(true)}
-              />
+              {isNA ? (
+                <div className="w-full h-[450px] rounded-3xl overflow-hidden bg-gray-50 dark:bg-gray-800/50 flex flex-col items-center justify-center border border-dashed border-border gap-2 text-muted-foreground p-4">
+                  <MapPin className="w-8 h-8 text-gray-300" />
+                  <span className="text-sm font-semibold text-gray-500">Location not set (N/A)</span>
+                </div>
+              ) : (
+                <AdminLeafletMap
+                  lat={lat}
+                  lng={lng}
+                  onMarkerClick={() => setIsMarkerModalOpen(true)}
+                />
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10 px-2 pb-4">
                 <InfoItem label="Network Type" value="WiFi" />
@@ -449,14 +467,18 @@ export default function DeviceDetailsPage() {
             </div>
           </div>
 
-          <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-2xl border border-borderGray flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4 text-gray-300" />
               <span className="text-xs font-semibold text-gray-600 dark:text-gray-400 truncate max-w-[200px]">
-                {typeof device?.location === 'string' ? device.location : "Active Coordinates"}
+                {device?.location && typeof device.location === 'object' ? (
+                  <DeviceLocation lat={device.location.lat ?? 0} lng={device.location.lng ?? 0} />
+                ) : (
+                  (typeof device?.location === 'string' ? device.location : null) || "N/A"
+                )}
               </span>
             </div>
-            {device?.location && typeof device.location === 'object' && (
+            {!isNA && device?.location && typeof device.location === 'object' && (
               <Link
                 href={`https://www.google.com/maps/search/?api=1&query=${device.location.lat},${device.location.lng}`}
                 target="_blank"

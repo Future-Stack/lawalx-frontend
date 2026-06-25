@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { GalleryThumbnails } from "lucide-react";
 import NextImage from "next/image";
 import BaseSelect from "@/common/BaseSelect";
@@ -62,9 +62,9 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
     loadingLabel = "Creating...",
 }) => {
     const [createLowerThird, { isLoading }] = useCreateLowerThirdMutation();
-    const [isAdded, setIsAdded] = React.useState(false);
+    const [isAdded, setIsAdded] = useState(false);
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (isAlreadyCreated) {
             setIsAdded(true);
         }
@@ -129,7 +129,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
             textColor: lowerThirdConfig.textColor,
             font: lowerThirdConfig.fontFamily,
             fontSize: mapFontSize(lowerThirdConfig.fontSize),
-            duration: lowerThirdConfig.duration || 10,
+            duration: typeof lowerThirdConfig.duration === "number" ? lowerThirdConfig.duration : 0,
             backgroundColor: lowerThirdConfig.backgroundColor,
             backgroundOpacity: String(lowerThirdConfig.backgroundOpacity),
             animation: mapAnimation(lowerThirdConfig.animationDirection, lowerThirdConfig.enableAnimation),
@@ -185,9 +185,9 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
     const fontOptions = [
         { label: "Inter", value: "Inter" },
         { label: "Roboto", value: "Roboto" },
-        { label: "Open Sans", value: "Open Sans" },
-        { label: "Lato", value: "Lato" },
-        { label: "Montserrat", value: "Montserrat" },
+        // { label: "Open Sans", value: "Open Sans" },
+        // { label: "Lato", value: "Lato" },
+        // { label: "Montserrat", value: "Montserrat" },
     ];
 
     // const contentTypeOptions = [
@@ -351,12 +351,14 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                 Duration (s)
                             </Label>
                             <Input
-                                type="number"
+                                type="text"
                                 placeholder="10"
-                                value={data.lowerThirdConfig.duration}
-                                onChange={(e) =>
-                                    updateConfig("duration", Number(e.target.value))
-                                }
+                                value={data.lowerThirdConfig.duration === 0 ? "00" : (data.lowerThirdConfig.duration ?? "")}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    const parsed = parseInt(val, 10);
+                                    updateConfig("duration", isNaN(parsed) ? 0 : parsed);
+                                }}
                                 className={`bg-input border-borderGray text-headings ${FIELD_SIZE}`}
                             />
                         </div>
@@ -393,6 +395,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                 options={fontOptions}
                                 value={data.lowerThirdConfig.fontFamily}
                                 onChange={(v) => updateConfig("fontFamily", v)}
+                                className="[&>button]:cursor-pointer"
                             />
                         </div>
 
@@ -402,6 +405,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                 options={fontSizeOptions}
                                 value={data.lowerThirdConfig.fontSize}
                                 onChange={(v) => updateConfig("fontSize", v)}
+                                className="[&>button]:cursor-pointer"
                             />
                         </div>
                     </div>
@@ -420,6 +424,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                 onCheckedChange={(c) =>
                                     updateConfig("backgroundOpacity", c ? 80 : 0)
                                 }
+                                className="data-[state=checked]:bg-bgBlue data-[state=checked]:border-bgBlue cursor-pointer"
                             />
                         </div>
 
@@ -460,6 +465,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                             Number(e.target.value)
                                         )
                                     }
+                                    className="cursor-pointer"
                                 />
                             </div>
                         )}
@@ -476,6 +482,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                 onCheckedChange={(c) =>
                                     updateConfig("enableAnimation", c)
                                 }
+                                className="data-[state=checked]:bg-bgBlue data-[state=checked]:border-bgBlue cursor-pointer"
                             />
                         </div>
 
@@ -487,12 +494,14 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                                     onChange={(v) =>
                                         updateConfig("animationDirection", v)
                                     }
+                                    className="[&>button]:cursor-pointer"
                                 />
                                 <BaseSelect
                                     label="Speed"
                                     options={speedOptions}
                                     value={data.lowerThirdConfig.speed}
                                     onChange={(v) => updateConfig("speed", v)}
+                                    className="[&>button]:cursor-pointer"
                                 />
                             </div>
                         )}
@@ -504,6 +513,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                             <Switch
                                 checked={data.lowerThirdConfig.loop}
                                 onCheckedChange={(c) => updateConfig("loop", c)}
+                                className="cursor-pointer"
                             />
                         </div>
                     </div>
@@ -513,6 +523,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                         options={positionOptions}
                         value={data.lowerThirdConfig.position}
                         onChange={(v) => updateConfig("position", v)}
+                        className="[&>button]:cursor-pointer"
                     />
 
                     <div className="mt-4">

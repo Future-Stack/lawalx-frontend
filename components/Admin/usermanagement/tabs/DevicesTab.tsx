@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useMemo } from 'react';
@@ -5,6 +6,7 @@ import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVerti
 import PreviewDeviceModal from '@/components/devices/modals/PreviewDeviceModal';
 import Dropdown from '@/components/shared/Dropdown';
 import TablePagination from '@/components/shared/TablePagination';
+import DeviceLocation from '@/components/common/DeviceLocation';
 
 // --- Types & Helpers ---
 
@@ -238,7 +240,7 @@ export default function DevicesTab({ devices: devicesProp }: { devices?: any[] }
             <input
               type="text"
               placeholder="Location"
-              defaultValue={modalContent.device.location}
+              defaultValue={typeof modalContent.device.location === 'object' ? 'N/A' : modalContent.device.location}
               className="w-full px-4 py-2 border border-border rounded-lg bg-navbarBg text-gray-900 dark:text-white outline-none"
             />
             <div className="flex gap-2">
@@ -361,7 +363,13 @@ export default function DevicesTab({ devices: devicesProp }: { devices?: any[] }
                         <div className="text-xs text-gray-500 dark:text-gray-400">{device.model}</div>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.customer}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{device.location}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        {device.location && typeof device.location === 'object' ? (
+                          <DeviceLocation lat={(device.location as any).lat} lng={(device.location as any).lng} />
+                        ) : (
+                          (!device.location || device.location === '0.00, 0.00' || device.location === '0, 0' || device.location === 'Unknown Location' || device.location === 'N/A') ? 'N/A' : device.location
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.type}</td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(device.status)}`}>

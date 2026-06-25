@@ -12,7 +12,7 @@ interface DeviceLocationProps {
 }
 
 const DeviceLocation: React.FC<DeviceLocationProps> = ({ lat, lng, fallbackLabel }) => {
-    const isNA = lat === 0 && lng === 0;
+    const isNA = !lat || !lng || (lat === 0 && lng === 0);
     const [address, setAddress] = useState<string>(isNA ? "N/A" : (fallbackLabel || `Lat: ${lat.toFixed(2)}, Lng: ${lng.toFixed(2)}`));
 
     useEffect(() => {

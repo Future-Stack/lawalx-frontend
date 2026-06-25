@@ -144,7 +144,7 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
                                         <p className="text-xs text-muted truncate">
                                             {device.location ? (
                                                 <DeviceLocation lat={device.location.lat} lng={device.location.lng} />
-                                            ) : "Unknown Location"}
+                                            ) : "N/A"}
                                         </p>
                                     </div>
 

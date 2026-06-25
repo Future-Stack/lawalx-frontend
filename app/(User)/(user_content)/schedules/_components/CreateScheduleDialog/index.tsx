@@ -78,7 +78,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
       fontFamily: "Inter",
       loop: true,
       message: "This is a demo text",
-      duration: 10,
+      duration: 0,
     },
   });
 
@@ -100,6 +100,20 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
       setShowLowerThird(true);
     }
   }, [currentStep, step2Data.contentType]);
+
+  // Set playTime, endTime, and startDate to present time/date when dialog opens
+  useEffect(() => {
+    if (open) {
+      const presentTime = new Date().toTimeString().slice(0, 5);
+      const todayDate = dayjs().format("YYYY-MM-DD");
+      setStep4Data((prev) => ({
+        ...prev,
+        playTime: prev.playTime || presentTime,
+        endTime: prev.endTime || presentTime,
+        startDate: prev.startDate || todayDate,
+      }));
+    }
+  }, [open]);
 
   const handleContentSelect = (content: ContentItem) => {
     const isSelected = step2Data.selectedContent.some(
@@ -156,8 +170,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
       repeat: "run-once",
       selectedDays: [],
       selectedDates: [],
-      playTime: "03:00",
-      endTime: "05:00",
+      playTime: "",
+      endTime: "",
       startDate: "",
       endDate: "",
     });
@@ -234,7 +248,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
     };
 
     console.log("=== SUBMITTING SCHEDULE PAYLOAD ===");
-    console.log(payload);
+    console.log("this is create schedule data",payload);
 
     try {
       const res = await createSchedule(payload).unwrap();

@@ -17,6 +17,7 @@ import Image from "next/image";
 import { useState, useEffect, useCallback, useRef } from "react";
 import Marquee from "react-fast-marquee";
 import { LowerThirdPayload } from "@/redux/api/users/schedules/schedules.type";
+import dayjs from "dayjs";
 
 interface ContentPreviewProps {
   items: ContentItem[];
@@ -83,12 +84,16 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
 
   const formatTimeStr = (timeStr: string): string => {
     if (!timeStr) return "";
-    if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr;
-    const parts = timeStr.split(":");
-    const hour = parseInt(parts[0], 10);
-    const suffix = hour >= 12 ? "PM" : "AM";
-    const displayHour = hour % 12 || 12;
-    return `${String(displayHour).padStart(2, "0")}:${parts[1] || "00"} ${suffix}`;
+    try {
+      if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr;
+      if (timeStr.includes(":") && !timeStr.includes("T")) {
+        const todayStr = dayjs().format("YYYY-MM-DD");
+        return dayjs(`${todayStr}T${timeStr}`).format("hh:mm A");
+      }
+      return dayjs(timeStr).format("hh:mm A");
+    } catch {
+      return timeStr;
+    }
   };
 
   // const formatDateStr = (dateStr: string) => {

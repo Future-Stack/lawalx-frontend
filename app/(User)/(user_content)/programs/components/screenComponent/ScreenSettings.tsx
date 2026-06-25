@@ -110,7 +110,7 @@ const ScreenSettings: FC<ScreenSettingsProps> = ({
                                     <p className="text-xs sm:text-sm text-muted uppercase tracking-wider">
                                         {device.location ? (
                                             <ResolvedLocation lat={device.location.lat} lng={device.location.lng} fallback={`${device.location.lat.toFixed(4)}, ${device.location.lng.toFixed(4)}`} />
-                                        ) : "No location"}
+                                        ) : "N/A"}
                                     </p>
                                 </div>
                                 <button

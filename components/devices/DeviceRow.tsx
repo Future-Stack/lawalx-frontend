@@ -52,10 +52,10 @@ export default function DeviceRow({
       <td className="px-4 py-4 text-sm text-gray-600 dark:text-gray-400">
         <div className="flex items-center gap-1">
           <MapPin className="w-4 h-4" />
-          {device.lat && device.lng ? (
+          {device.lat !== undefined && device.lat !== null && device.lng !== undefined && device.lng !== null ? (
             <DeviceLocation lat={device.lat} lng={device.lng} fallbackLabel={device.location} />
           ) : (
-            device.location
+            (!device.location || device.location === '0.00, 0.00' || device.location === '0, 0' || device.location === 'Unknown Location') ? 'N/A' : device.location
           )}
         </div>
       </td>

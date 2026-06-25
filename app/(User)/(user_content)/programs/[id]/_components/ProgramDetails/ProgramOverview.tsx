@@ -77,15 +77,17 @@ const ProgramOverview = ({
                       <Monitor className="w-5 h-5 text-bgBlue shrink-0" />
                       <span className="truncate font-medium text-headings text-base tracking-tight">{device.name || "Unnamed Device"}</span>
                     </div>
-                    {device.location && (
-                      <div className="flex items-center gap-1.5 pl-7 text-[12px] text-muted font-medium">
+                    <div className="flex items-center gap-1.5 pl-7 text-[12px] text-muted font-medium">
+                      {device.location ? (
                         <ResolvedLocation
                           lat={device.location.lat}
                           lng={device.location.lng}
                           className="truncate"
                         />
-                      </div>
-                    )}
+                      ) : (
+                        "N/A"
+                      )}
+                    </div>
                   </div>
 
                   {/* Actionable Status Badge */}
