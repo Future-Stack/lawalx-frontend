@@ -548,7 +548,7 @@ const CustomerServiceReports = () => {
                       borderRadius: '0.5rem'
                     }}
                     wrapperClassName="dark:[--tooltip-bg:#1f2937] dark:[--tooltip-border:#374151] [--tooltip-bg:#ffffff] [--tooltip-border:#e5e7eb] z-50"
-                    formatter={(value: number | undefined) => value !== undefined ? [`${value.toFixed(1)} min`, 'Avg Response (min)'] : ['', '']}
+                    formatter={(value: any) => value !== undefined && value !== null ? [`${Number(value).toFixed(1)} min`, 'Avg Response (min)'] : ['', '']}
                   />
                   <Line
                     type="monotone"
