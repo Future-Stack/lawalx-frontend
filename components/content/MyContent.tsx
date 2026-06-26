@@ -142,27 +142,27 @@ const MyContent = () => {
     <div className="space-y-6 md:space-y-8">
 
       {/* Header */}
-      <div className="flex flex-wrap md:flex-nowrap items-center justify-between gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <DashboardHeading title="My Content" />
           <p className="text-sm text-textGray mt-1">Upload, create and manage your content</p>
         </div>
 
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           {/* UPLOAD BUTTON */}
           {contentItems.length > 0 && (
             <button
               onClick={() => setIsUploadModalOpen(true)}
-              className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center justify-center gap-2 text-sm md:text-base font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow min-w-40"
+              className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center justify-center gap-2 text-sm md:text-base font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow w-full sm:w-auto"
             >
               <CloudUpload className="w-5 h-5" />
-              <span className="truncate">Upload Content</span>
+              <span>Upload Content</span>
             </button>
           )}
 
           <button
             onClick={() => setOpen(true)}
-            className="border border-bgBlue text-bgBlue px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center gap-2 text-sm md:text-base font-semibold cursor-pointer hover:bg-bgBlue hover:text-white transition-all duration-300 ease-in-out shadow-customShadow"
+            className="border border-bgBlue text-bgBlue px-4 py-2 md:px-6 md:py-3 rounded-lg flex items-center justify-center gap-2 text-sm md:text-base font-semibold cursor-pointer hover:bg-bgBlue hover:text-white transition-all duration-300 ease-in-out shadow-customShadow w-full sm:w-auto"
           >
             <Folder className="w-5 h-5" /> Create Folder
           </button>
@@ -171,7 +171,7 @@ const MyContent = () => {
 
       {/* Search + Filters */}
       <div className="bg-navbarBg border border-border rounded-xl p-4 w-full">
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
           {/* Search */}
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
@@ -185,7 +185,7 @@ const MyContent = () => {
           </div>
 
           {/* Sorting & Filters */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
             <div className="w-full sm:w-[170px]">
               <BaseSelect
                 value={sortOption}
@@ -208,7 +208,7 @@ const MyContent = () => {
             </div>
 
             {/* GRID / LIST */}
-            <div className="w-[100px] flex gap-2 items-center bg-bgGray dark:bg-gray-800 p-1.5 rounded-lg">
+            <div className="w-full sm:w-[100px] flex gap-2 items-center bg-bgGray dark:bg-gray-800 p-1.5 rounded-lg">
               <button
                 onClick={() => setViewMode("grid")}
                 className={`flex-1 flex items-center justify-center p-2 rounded-md transition shadow-customShadow cursor-pointer ${viewMode === "grid" ? "bg-white dark:bg-gray-700" : ""}`}

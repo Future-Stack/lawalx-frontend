@@ -12,7 +12,7 @@ interface UploadLimitModalProps {
 export function UploadLimitModal({ isOpen, onClose }: UploadLimitModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-[340px] w-full p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 z-[11000] shadow-2xl flex flex-col items-center text-center gap-2">
+      <DialogContent className="max-w-[240px] w-full p-6 bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 z-[11000] shadow-2xl flex flex-col items-center text-center gap-2">
         <div className="flex items-center justify-center w-14 h-14 rounded-full bg-red-50 dark:bg-red-950/20 text-red-500 border border-red-100 dark:border-red-900/30 mb-2 shadow-sm">
           <AlertCircle className="w-8 h-8" />
         </div>

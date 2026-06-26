@@ -259,7 +259,7 @@ const CalendarView: React.FC = () => {
 
                     return (
                         <div key={hour} className="flex min-h-[60px] hover:bg-bgGray/20 transition-colors">
-                            <div className="w-16 p-4 text-right text-[10px] font-bold text-muted border-r border-border cursor-pointer">
+                            <div className="w-16 sm:w-20 px-2 sm:px-4 py-4 text-right text-[10px] sm:text-xs font-bold text-muted border-r border-border cursor-pointer">
                                 {hour === 0 ? "12 AM" : hour < 12 ? `${hour} AM` : hour === 12 ? "12 PM" : `${hour - 12} PM`}
                             </div>
                             <div className="flex-1 p-2 relative flex flex-col gap-2">
@@ -296,37 +296,37 @@ const CalendarView: React.FC = () => {
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 py-2">
-                <div className="flex items-center gap-4">
-                    <h2 className="text-lg font-bold text-headings dark:text-white">Schedule Calendar</h2>
-                    <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 py-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 w-full md:w-auto">
+                    <h2 className="text-lg font-bold text-headings dark:text-white shrink-0">Schedule Calendar</h2>
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                         <button 
                             onClick={setToday} 
-                            className="px-6 py-2 text-sm font-medium border border-border rounded-full hover:bg-gray-50 transition shadow-customShadow cursor-pointer dark:bg-gray-800 dark:hover:bg-gray-700"
+                            className="px-4 sm:px-6 py-1.5 sm:py-2 text-xs sm:text-sm font-medium border border-border rounded-full hover:bg-gray-50 transition shadow-customShadow cursor-pointer dark:bg-gray-800 dark:hover:bg-gray-700"
                         >
                             Today
                         </button>
-                        <div className="flex items-center gap-2">
-                            <button onClick={navigatePrev} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded-full transition-colors">
-                                <ChevronLeft className="w-5 h-5 text-headings dark:text-white" />
+                        <div className="flex items-center gap-1 sm:gap-2">
+                            <button onClick={navigatePrev} className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded-full transition-colors">
+                                <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-headings dark:text-white" />
                             </button>
-                            <span className="text-lg font-medium text-headings dark:text-white min-w-[120px] text-center">
+                            <span className="text-sm sm:text-lg font-medium text-headings dark:text-white min-w-[100px] sm:min-w-[120px] text-center truncate">
                                 {getHeaderLabel()}
                             </span>
-                            <button onClick={navigateNext} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded-full transition-colors">
-                                <ChevronRight className="w-5 h-5 text-headings dark:text-white" />
+                            <button onClick={navigateNext} className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer rounded-full transition-colors">
+                                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-headings dark:text-white" />
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-bgGray dark:bg-gray-800">
+                <div className="flex items-center gap-1 border border-border rounded-lg p-1 bg-bgGray dark:bg-gray-800 self-start md:self-auto shrink-0">
                     {["Day", "Week", "Month"].map((type) => (
                         <button
                             key={type}
                             onClick={() => setViewType(type as any)}
                             className={cn(
-                                "px-4 py-1.5 text-sm font-medium rounded-md transition-all cursor-pointer",
+                                "px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all cursor-pointer",
                                 viewType === type ? "bg-white dark:bg-gray-700 text-bgBlue shadow-customShadow" : "text-gray-500"
                             )}
                         >
@@ -336,36 +336,39 @@ const CalendarView: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-navbarBg border border-border rounded-xl shadow-sm overflow-hidden overflow-y-auto max-h-[calc(100vh-300px)] scrollbar-hide">
-                {viewType === "Day" ? (
-                    <div className="flex border-b border-border bg-bgGray/30 dark:bg-gray-800/30 items-center">
-                        <div className="w-16 px-4 py-4 text-center text-[10px] font-bold text-muted uppercase tracking-wider border-r border-border">Time</div>
-                        <div className="flex-1 px-6 py-4 flex items-center justify-center gap-2">
-                            <span className="text-sm font-semibold text-muted uppercase tracking-widest">
-                                {daysOfWeek[activeDate.getDay()]}
-                            </span>
-                            <span className={cn(
-                                "w-9 h-9 flex items-center justify-center rounded-full text-lg font-bold transition-all",
-                                activeDate.toDateString() === new Date().toDateString()
-                                    ? "bg-bgBlue text-white shadow-md"
-                                    : "text-headings dark:text-white"
-                            )}>
-                                {activeDate.getDate()}
-                            </span>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-7 border-b border-border bg-bgGray/30 dark:bg-gray-800/30">
-                        {daysOfWeek.map((day) => (
-                            <div key={day} className="px-4 py-3 text-center text-sm font-semibold text-muted border-r border-border last:border-r-0 cursor-pointer">
-                                {day}
+            <div className="bg-navbarBg border border-border rounded-xl shadow-sm overflow-x-auto overflow-y-auto max-h-[calc(100vh-300px)] scrollbar-hide">
+                <div className={cn(viewType !== "Day" && "min-w-[750px] md:min-w-0")}>
+                    {viewType === "Day" ? (
+                        <div className="flex border-b border-border bg-bgGray/30 dark:bg-gray-800/30 items-center">
+                            <div className="w-16 sm:w-20 px-2 sm:px-4 py-4 text-center text-[10px] sm:text-xs font-bold text-muted uppercase tracking-wider border-r border-border">Time</div>
+                            <div className="flex-1 px-6 py-4 flex items-center justify-center gap-2">
+                                <span className="text-sm font-semibold text-muted uppercase tracking-widest">
+                                    {daysOfWeek[activeDate.getDay()]}
+                                </span>
+                                <span className={cn(
+                                    "w-9 h-9 flex items-center justify-center rounded-full text-lg font-bold transition-all",
+                                    activeDate.toDateString() === new Date().toDateString()
+                                        ? "bg-bgBlue text-white shadow-md"
+                                        : "text-headings dark:text-white"
+                                )}>
+                                    {activeDate.getDate()}
+                                </span>
                             </div>
-                        ))}
-                    </div>
-                )}
-                {viewType === "Month" && renderMonth()}
-                {viewType === "Week" && renderWeek()}
-                {viewType === "Day" && renderDay()}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-7 border-b border-border bg-bgGray/30 dark:bg-gray-800/30">
+                            {daysOfWeek.map((day, index) => (
+                                <div key={day} className="px-1 sm:px-4 py-3 text-center text-xs sm:text-sm font-semibold text-muted border-r border-border last:border-r-0 cursor-pointer truncate">
+                                    <span className="hidden md:inline">{day}</span>
+                                    <span className="inline md:hidden">{shortDays[index]}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {viewType === "Month" && renderMonth()}
+                    {viewType === "Week" && renderWeek()}
+                    {viewType === "Day" && renderDay()}
+                </div>
             </div>
 
             <SchedulePreviewDialog

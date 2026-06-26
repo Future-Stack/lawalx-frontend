@@ -103,7 +103,7 @@ const MyContentCard = ({
           )}
           {item.type === "image" && (
             <button onClick={(e) => { e.stopPropagation(); setOpenImage(true); }} className="absolute inset-0 flex items-center justify-center bg-black/10 hover:bg-black/20 transition-colors">
-              <Eye className="w-5 h-5 text-white fill-white" />
+              {/* <Eye className="w-5 h-5 text-white fill-white" /> */}
             </button>
           )}
         </div>
@@ -259,7 +259,7 @@ const MyContentCard = ({
       {viewMode === "list" ? (
         <>
           <div className="bg-navbarBg w-full border-b last:border-b-0 border-border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-            <div className="flex flex-col md:flex-row justify-between w-full p-4 items-center gap-4 md:gap-0">
+            <div className="flex flex-col md:flex-row justify-between w-full p-4 items-stretch md:items-center gap-4 md:gap-0">
               <div className="flex items-center w-full md:w-[30%]">
                 <div className="flex items-center gap-2 shrink-0">
                   {/* <Checkbox
@@ -361,7 +361,7 @@ const MyContentCard = ({
           </div>
 
           {expanded && item.children?.length ? (
-            <div className="border-l ml-6 md:ml-12 border-border">
+            <div className="border-l ml-4 md:ml-12 border-border">
               {item.children.map((child) => (
                 <MyContentCard
                   key={child.id}

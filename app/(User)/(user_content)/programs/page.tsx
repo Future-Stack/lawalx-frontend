@@ -58,11 +58,11 @@ const MyScreensPage: React.FC = () => {
       <div className="flex flex-col items-center justify-start w-full mt-4 md:mt-0">
         <div className="w-full mx-auto">
           {/* Header */}
-          <div className="flex flex-wrap items-center justify-between md:flex-nowrap mb-6 gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <DashboardHeading title="My Programs" />
             <button
               onClick={() => setIsModalOpen(true)}
-              className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg text-sm md:text-base font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow flex items-center gap-2"
+              className="bg-bgBlue hover:bg-blue-500 text-white px-4 py-2 md:px-6 md:py-3 rounded-lg text-sm md:text-base font-semibold cursor-pointer transition-all duration-300 ease-in-out shadow-customShadow flex items-center justify-center gap-2 w-full sm:w-auto"
             >
               <ScreenShare className="w-5 h-5" /> Create New Program
             </button>
@@ -123,7 +123,7 @@ const MyScreensPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPrograms.map((program) => (
                 <ScreenCard key={program.id} program={program} />
               ))}

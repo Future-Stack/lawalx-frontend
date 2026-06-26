@@ -329,9 +329,9 @@ const ScreenCardDetails = () => {
         />
 
         {/* Main layout */}
-        <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-10 items-start">
           {/* Left side - Sticky */}
-          <div className="flex-1 w-full md:sticky md:top-6 md:max-h-[calc(100vh-80px)] md:overflow-y-auto scrollbar-hide">
+          <div className="col-span-1 md:col-span-6 md:row-span-3 order-2 md:order-1 md:sticky md:top-6 md:max-h-[calc(100vh-80px)] md:overflow-y-auto scrollbar-hide w-full">
             {activeTab === "timeline" && (
               <ContentTimeline
                 timeline={localTimeline}
@@ -370,8 +370,8 @@ const ScreenCardDetails = () => {
             )}
           </div>
 
-          {/* Right side */}
-          <div className="w-full md:w-[55%] space-y-6">
+          {/* Program Preview */}
+          <div className="col-span-1 md:col-span-6 md:col-start-7 order-1 md:order-2 w-full">
             <ProgramPreview
               selectedContent={localTimeline[playingIndex]}
               previewUrl={previewUrl}
@@ -398,7 +398,10 @@ const ScreenCardDetails = () => {
               isUpdating={isUpdating}
               playbackVersion={playbackVersion}
             />
+          </div>
 
+          {/* Program Overview */}
+          <div className="col-span-1 md:col-span-6 md:col-start-7 order-3 md:order-3 w-full">
             <ProgramOverview
               assignedContent={assignedContent}
               isDevicesExpanded={isDevicesExpanded}
@@ -406,11 +409,11 @@ const ScreenCardDetails = () => {
               program={program}
               lastUpdated={lastUpdated}
             />
+          </div>
 
-            {/* Map Section */}
-            <div className="rounded-xl border border-border p-4 sm:p-6 bg-navbarBg">
-              <MapLocation devices={program.devices} />
-            </div>
+          {/* Map Section */}
+          <div className="col-span-1 md:col-span-6 md:col-start-7 order-4 md:order-4 rounded-xl border border-border p-4 sm:p-6 bg-navbarBg w-full">
+            <MapLocation devices={program.devices} />
           </div>
         </div>
       </div>
