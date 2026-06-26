@@ -60,7 +60,13 @@ const ContentDetailsPage = ({ params }: ContentDetailsPageProps) => {
     return foundItem;
   }, [allContentData, folderContentData, id, isMounted]);
 
-  if ((isAllLoading || isFolderLoading) && !content) return <CommonLoader />;
+  if (isAllLoading || (isFolderLoading && content?.type === "folder")) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] w-full">
+        <CommonLoader size={48} text="Loading content..." />
+      </div>
+    );
+  }
 
   if (!content) {
     return (

@@ -974,9 +974,6 @@ export default function UploadFileModal({
   // User Profile
   const { data: userProfile } = useGetUserProfileQuery(undefined);
   const userInfo = userProfile?.data;
-
-  console.log("user data in modal", userInfo);
-
   const { data: allFilesRes } = useGetAllFilesQuery(undefined, { skip: !isOpen });
 
   const [files, setFiles] = useState<FileEntry[]>([]);
