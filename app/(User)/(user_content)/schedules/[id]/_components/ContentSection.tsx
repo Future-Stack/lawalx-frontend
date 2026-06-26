@@ -60,24 +60,24 @@ const ContentSection: React.FC<ContentSectionProps> = ({
 
     return (
         <section className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 sm:p-6 shadow-sm">
-            <div className="flex items-center justify-between gap-6 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
                 <h2 className="text-lg font-bold text-body">Content</h2>
-                <div className="flex items-center gap-6">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
                     <button
                         type="button"
                         onClick={onAddContent}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-bgBlue hover:bg-blue-600 text-white rounded-lg font-medium transition-colors cursor-pointer shrink-0 shadow-customShadow"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-bgBlue hover:bg-blue-600 text-white rounded-lg font-medium transition-colors cursor-pointer shrink-0 shadow-customShadow text-sm sm:text-base"
                     >
                         <Plus className="w-5 h-5" />
                         <span>Upload Content</span>
-                </button>
-                 <button
+                    </button>
+                    <button
                         type="button"
                         onClick={onAddTextSection}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-bgBlue hover:bg-blue-600 text-white rounded-lg font-medium transition-colors cursor-pointer shrink-0 shadow-customShadow"
+                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-bgBlue hover:bg-blue-600 text-white rounded-lg font-medium transition-colors cursor-pointer shrink-0 shadow-customShadow text-sm sm:text-base"
                     >
                         <span>Update Text Section</span>
-                </button>
+                    </button>
                 </div>
             </div>
 

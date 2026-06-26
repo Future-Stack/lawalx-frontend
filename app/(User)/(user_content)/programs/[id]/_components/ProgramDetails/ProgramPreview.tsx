@@ -150,7 +150,7 @@ const ProgramPreview = ({
                   {formatTime(audioDuration)}
                 </span>
 
-                <div className="flex-shrink-0 flex items-center gap-2.5 w-28 border-l border-white/10 pl-3.5 ml-1">
+                <div className="hidden sm:flex flex-shrink-0 items-center gap-2.5 w-28 border-l border-white/10 pl-3.5 ml-1">
                   <button
                     onClick={() => setAudioVolume(audioVolume === 0 ? 1 : 0)}
                     className="text-white/60 hover:text-white transition-colors"
@@ -166,7 +166,7 @@ const ProgramPreview = ({
                     onChange={(e) => setAudioVolume(parseFloat(e.target.value))}
                     className="w-full h-1 rounded-lg appearance-none cursor-pointer accent-bgBlue hover:accent-blue-400 transition-all duration-300"
                     style={{
-                      background: `linear-gradient(to right, #006AFF ${audioVolume * 100}%, rgba(255, 255, 255, 0.2) ${audioVolume * 100}%)`
+                      background: `linear-gradient(to right, #006AFF #006AFF)`
                     }}
                     title="Volume Control"
                   />
@@ -227,7 +227,7 @@ const ProgramPreview = ({
           onClick={handlePowerClick}
           aria-label={localActive ? "Turn Off Program" : "Turn On Program"}
           className={`shadow-customShadow rounded-full transition-all flex items-center justify-center text-white
-                      py-3 sm:py-3.5 px-3 sm:px-3.5 cursor-pointer
+                      w-10 h-10 sm:w-12 sm:h-12 shrink-0 cursor-pointer
                       ${localActive
               ? "bg-bgBlue hover:bg-blue-500"
               : "bg-bgRed hover:bg-red-600"

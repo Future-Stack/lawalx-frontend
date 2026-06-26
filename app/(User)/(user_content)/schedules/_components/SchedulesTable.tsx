@@ -141,7 +141,7 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
                   className="hover:bg-bgGray/30 dark:hover:bg-gray-800/30 transition-colors"
                 >
                   <td className="px-6 py-5">
-                    <div className="font-bold text-headings dark:text-white">
+                    <div className="text-sm sm:text-base font-medium sm:font-bold text-headings dark:text-white">
                       {schedule.name}
                     </div>
                   </td>
@@ -210,22 +210,22 @@ const SchedulesTable: React.FC<SchedulesTableProps> = ({
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between p-4 md:p-6 border-t border-border">
-        <div className="text-sm text-muted">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 md:p-6 border-t border-border">
+        <div className="text-sm text-muted text-center sm:text-left cursor-default">
           Showing {schedules.length} of {totalFiltered} schedules
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 w-full sm:w-auto">
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-bgBlue transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-bgBlue transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage >= totalPages}
-            className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-bgBlue transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 border border-border rounded-lg font-medium shadow-customShadow cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-bgBlue transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>

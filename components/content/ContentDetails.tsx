@@ -5,8 +5,6 @@
 import {
   ArrowLeft,
   Trash2,
-  AudioLines,
-  Image as ImageIcon,
   PencilLine,
   Search,
   Grid2X2,
@@ -17,17 +15,16 @@ import {
   Loader2,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import AudioPlayer from "react-h5-audio-player";
-import "react-h5-audio-player/lib/styles.css";
-import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import BaseSelect from "@/common/BaseSelect";
 import ContentGrid from "./ContentGrid";
 import RenameDialog from "./RenameDialog";
 import AssignToDialog from "./AssignToDialog";
 import AddExistingContentDialog from "./AddExistingContentDialog";
 import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
+import FilePreview from "./FilePreview";
+import FileOverview from "./FileOverview";
+import CommonLoader from "@/common/CommonLoader";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +34,14 @@ import {
 import { toast } from "sonner";
 import { ContentItem } from "@/types/content";
 import { sortByName, allContent } from "./MyContent";
-import { useUploadFileMutation, useGetSingleContentFolderDataQuery, useUpdateFolderNameMutation, useUpdateFileNameMutation, useDeleteFileMutation, useDeleteFolderMutation } from "@/redux/api/users/content/content.api";
+import {
+  useUploadFileMutation,
+  useGetSingleContentFolderDataQuery,
+  useUpdateFolderNameMutation,
+  useUpdateFileNameMutation,
+  useDeleteFileMutation,
+  useDeleteFolderMutation,
+} from "@/redux/api/users/content/content.api";
 import { transformFile, transformFolder } from "@/lib/content-utils";
 
 const getUploadErrorMessage = (error: any) => {
@@ -77,9 +81,12 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
   const isFolder = initialContent.type === "folder";
 
   // Fetch folder contents only if it's a folder
-  const { data: folderData } = useGetSingleContentFolderDataQuery(initialContent.id, {
-    skip: !isFolder,
-  });
+  const { data: folderData } = useGetSingleContentFolderDataQuery(
+    initialContent.id,
+    {
+      skip: !isFolder,
+    },
+  );
 
   const content = useMemo(() => {
     if (!isFolder) return initialContent;
@@ -88,8 +95,10 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
         ...initialContent,
         children: Array.isArray(folderData.data)
           ? folderData.data.map((f: any) =>
-            f.type === "FOLDER" ? transformFolder(f, isMounted) : transformFile(f, isMounted)
-          )
+              f.type === "FOLDER"
+                ? transformFolder(f, isMounted)
+                : transformFile(f, isMounted),
+            )
           : [],
       };
     }
@@ -99,11 +108,14 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
   // Filter children if it's a folder
   const filteredChildren = (content.children || [])
     .filter((item) => {
-      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = item.title
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
       let matchesType = true;
 
       if (contentFilter === "folders") matchesType = item.type === "folder";
-      else if (contentFilter === "playlists") matchesType = item.type === "playlist";
+      else if (contentFilter === "playlists")
+        matchesType = item.type === "playlist";
       else if (contentFilter === "files")
         matchesType = item.type === "video" || item.type === "image";
 
@@ -138,7 +150,9 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -169,7 +183,8 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
   const handleRename = async (newName: string) => {
     if (!content.id) return;
     try {
-      const mutation = content.type === "folder" ? updateFolderName : updateFileName;
+      const mutation =
+        content.type === "folder" ? updateFolderName : updateFileName;
       const res = await mutation({ id: content.id, name: newName }).unwrap();
       toast.success(res?.message || "Renamed successfully");
     } catch (err: any) {
@@ -198,7 +213,13 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
   return (
     <div className="">
       {/* Hidden file input for Upload */}
-      <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple />
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        multiple
+      />
 
       {openRename && (
         <RenameDialog
@@ -259,18 +280,21 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
         </div>
 
         {isFolder && (
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <button
               onClick={() => setOpenRename(true)}
-              className="group flex items-center gap-2 px-6 py-2.5 border border-[#3CA9F3] text-[#3CA9F3] rounded-lg text-base font-semibold transition-all hover:bg-[#3CA9F3] hover:text-white shadow-customShadow bg-White cursor-pointer outline-none w-full"
+              className="group flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 border border-[#3CA9F3] text-[#3CA9F3] rounded-lg text-sm sm:text-base font-semibold transition-all hover:bg-[#3CA9F3] hover:text-white shadow-customShadow bg-White cursor-pointer outline-none flex-1 sm:flex-initial"
             >
-              <PencilLine className="w-5 h-5 transition-colors group-hover:text-white text-bgBlue" /> Rename
+              <PencilLine className="w-5 h-5 transition-colors group-hover:text-white text-bgBlue" />{" "}
+              Rename
             </button>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="group flex items-center gap-2 px-6 py-2.5 border border-border text-headings rounded-lg text-base font-semibold transition-all hover:bg-bgBlue hover:text-white shadow-customShadow bg-White cursor-pointer outline-none active:scale-95">
-                  <Plus className="w-5 h-5 text-bgBlue group-hover:text-white transition-colors" /> Add <ChevronDown className="w-4 h-4 ml-1 transition-all group-hover:text-white text-muted" />
+                <button className="group flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 border border-border text-headings rounded-lg text-sm sm:text-base font-semibold transition-all hover:bg-bgBlue hover:text-white shadow-customShadow bg-White cursor-pointer outline-none active:scale-95 flex-1 sm:flex-initial">
+                  <Plus className="w-5 h-5 text-bgBlue group-hover:text-white transition-colors" />{" "}
+                  Add{" "}
+                  <ChevronDown className="w-4 h-4 ml-1 transition-all group-hover:text-white text-muted" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -290,8 +314,11 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
                 <DropdownMenuItem
                   onClick={handleUploadClick}
                   disabled={isUploading}
-                  className={`group flex items-center gap-3 p-2 text-sm font-semibold text-headings transition-all cursor-pointer rounded-lg focus:bg-bgBlue focus:text-white outline-none active:scale-95 ${isUploading ? "opacity-60 pointer-events-none" : "hover:bg-bgBlue hover:text-white"
-                    }`}
+                  className={`group flex items-center gap-3 p-2 text-sm font-semibold text-headings transition-all cursor-pointer rounded-lg focus:bg-bgBlue focus:text-white outline-none active:scale-95 ${
+                    isUploading
+                      ? "opacity-60 pointer-events-none"
+                      : "hover:bg-bgBlue hover:text-white"
+                  }`}
                 >
                   <div className="w-8 h-8 rounded-full bg-blue-50 group-hover:bg-white/20 flex items-center justify-center transition-colors">
                     {isUploading ? (
@@ -300,14 +327,16 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
                       <CloudUpload className="w-5 h-5 text-bgBlue group-hover:text-white transition-colors" />
                     )}
                   </div>
-                  <span>{isUploading ? "Uploading..." : "Upload New Content"}</span>
+                  <span>
+                    {isUploading ? "Uploading..." : "Upload New Content"}
+                  </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
             <button
               onClick={() => setOpenDeleteDialog(true)}
-              className="flex items-center gap-2 px-6 py-2.5 bg-[#F94D4D] text-white rounded-lg text-base font-semibold transition-all hover:bg-[#e04444] shadow-customShadow cursor-pointer"
+              className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 bg-[#F94D4D] text-white rounded-lg text-sm sm:text-base font-semibold transition-all hover:bg-[#e04444] shadow-customShadow cursor-pointer w-full sm:w-auto"
             >
               <Trash2 className="w-5 h-5" /> Remove
             </button>
@@ -322,7 +351,8 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
             }}
             className="flex items-center gap-2 px-4 py-2 sm:py-3 border border-border rounded-lg text-sm sm:text-base font-medium text-headings cursor-pointer shadow-customShadow hover:text-bgBlue transition-colors"
           >
-            <Plus className="w-5 h-5 text-headings hover:text-bgBlue transition-colors" /> Assign To
+            <Plus className="w-5 h-5 text-headings hover:text-bgBlue transition-colors" />{" "}
+            Assign To
           </button>
         )}
       </div>
@@ -332,7 +362,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
         <div className="space-y-6">
           {/* Filters Bar */}
           <div className="bg-navbarBg border border-border rounded-xl p-4 w-full">
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
               {/* Search */}
               <div className="relative flex-1 w-full">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
@@ -346,7 +376,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
               </div>
 
               {/* Sorting & Filters */}
-              <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
                 <div className="w-full sm:w-[155px]">
                   <BaseSelect
                     value={sortOption}
@@ -369,7 +399,7 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
                 </div>
 
                 {/* GRID / LIST */}
-                <div className="w-[100px] flex gap-2 items-center bg-bgGray dark:bg-gray-800 p-1.5 rounded-lg">
+                <div className="w-full sm:w-[100px] flex gap-2 items-center bg-bgGray dark:bg-gray-800 p-1.5 rounded-lg">
                   <button
                     onClick={() => setViewMode("grid")}
                     className={`flex-1 flex items-center justify-center p-2 rounded-md transition shadow-customShadow cursor-pointer ${viewMode === "grid" ? "bg-White dark:bg-gray-700" : ""}`}
@@ -393,29 +423,55 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
           </div>
 
           {/* Folder Contents */}
-          <div className={viewMode === "list" ? "bg-navbarBg rounded-xl border border-border overflow-hidden" : ""}>
+          <div
+            className={
+              viewMode === "list"
+                ? "bg-navbarBg rounded-xl border border-border overflow-hidden"
+                : ""
+            }
+          >
             {viewMode === "list" && (
               <div className="hidden md:flex items-center justify-between px-4 py-4 border-b border-border bg-[#F9FAFB] dark:bg-gray-800/50 md:gap-12">
-                <div className="w-[30%] text-xs font-bold text-textGray uppercase tracking-widest">File Name</div>
-                <div className="w-[15%] text-xs font-bold text-textGray uppercase tracking-widest">File Type</div>
-                <div className="w-[25%] text-xs font-bold text-textGray uppercase tracking-widest">Assigned To</div>
-                <div className="w-[20%] text-xs font-bold text-textGray uppercase tracking-widest">Uploaded</div>
-                <div className="w-[10%] text-xs font-bold text-textGray uppercase tracking-widest text-right">Actions</div>
+                <div className="w-[30%] text-xs font-bold text-textGray uppercase tracking-widest">
+                  File Name
+                </div>
+                <div className="w-[15%] text-xs font-bold text-textGray uppercase tracking-widest">
+                  File Type
+                </div>
+                <div className="w-[25%] text-xs font-bold text-textGray uppercase tracking-widest">
+                  Assigned To
+                </div>
+                <div className="w-[20%] text-xs font-bold text-textGray uppercase tracking-widest">
+                  Uploaded
+                </div>
+                <div className="w-[10%] text-xs font-bold text-textGray uppercase tracking-widest text-right">
+                  Actions
+                </div>
               </div>
             )}
             <ContentGrid
-              items={filteredChildren.map(child => ({ ...child, size: child.size || "" })) as any}
+              items={
+                filteredChildren.map((child) => ({
+                  ...child,
+                  size: child.size || "",
+                })) as any
+              }
               viewMode={viewMode}
               onItemSelect={(id: string) => router.push(`/content/${id}`)}
               onItemMenuClick={(id: string, action: string) => {
                 if (action.startsWith("rename:")) {
                   const newName = action.split(":")[1];
                   if (newName) {
-                    const child = filteredChildren.find(c => c.id === id);
-                    const mutation = child?.type === "folder" ? updateFolderName : updateFileName;
+                    const child = filteredChildren.find((c) => c.id === id);
+                    const mutation =
+                      child?.type === "folder"
+                        ? updateFolderName
+                        : updateFileName;
                     mutation({ id, name: newName })
                       .unwrap()
-                      .then((res: any) => toast.success(res?.message || "Renamed successfully"))
+                      .then((res: any) =>
+                        toast.success(res?.message || "Renamed successfully"),
+                      )
                       .catch((err: any) => {
                         console.error("Rename failed:", err);
                         toast.error(err?.data?.message || "Rename failed");
@@ -434,148 +490,16 @@ const ContentDetails = ({ content: initialContent }: ContentDetailsProps) => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Side: Preview */}
-          <div className="bg-navbarBg rounded-xl md:rounded-[12px] h-full border border-border p-4 md:p-6 flex flex-col">
-            <h2 className="text-lg md:text-2xl font-semibold text-headings mb-4">Preview</h2>
+          <FilePreview content={content} />
+          <FileOverview content={content} fileTypeDisplay={getFileTypeDisplay()} />
+        </div>
+      )}
 
-            <div className="flex-1 flex items-center justify-center w-full">
-              {content.type === "video" && content.video ? (
-                <div className="w-full relative rounded-lg overflow-hidden">
-                  <BaseVideoPlayer
-                    src={content.video || ""}
-                    poster={content.thumbnail}
-                    autoPlay={false}
-                    rounded=""
-                  />
-                </div>
-              ) : content.type === "playlist" && content.audio ? (
-                <div className="bg-linear-to-br from-blue-50 to-purple-50 p-6 rounded-xl w-full">
-                  <div className="flex flex-col items-center justify-center mb-6 bg-navbarBg p-4 rounded-xl">
-                    <AudioLines className="w-24 h-24 text-headings mb-4" />
-                    <h3 className="text-lg font-semibold text-headings mb-2 text-center">
-                      {content.title}
-                    </h3>
-                    <p className="text-sm text-muted">
-                      {content.size}
-                      {content.duration && ` • ${content.duration}`}
-                    </p>
-                  </div>
-                  <div className="bg-navbarBg rounded-lg p-4 shadow-sm w-full">
-                    <AudioPlayer
-                      src={content.audio}
-                      autoPlay={false}
-                      showJumpControls={false}
-                      customAdditionalControls={[]}
-                      layout="stacked"
-                    />
-                  </div>
-                </div>
-              ) : content.type === "image" && content.thumbnail ? (
-                <div className="rounded-lg overflow-hidden w-full h-full flex items-center justify-center">
-                  <Image
-                    src={content.thumbnail}
-                    alt={content.title}
-                    width={600}
-                    height={400}
-                    unoptimized
-                    className="rounded-lg object-contain w-full h-full max-h-[500px]"
-                  />
-                </div>
-              ) : (
-                <div className="aspect-video w-full flex items-center justify-center bg-gray-200 rounded-lg">
-                  <span className="text-gray-500">No Preview Available</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Side: Overview */}
-          <div className="bg-navbarBg rounded-xl border h-full border-border p-4 sm:p-6">
-            <h2 className="text-lg md:text-2xl font-semibold text-headings">Overview</h2>
-
-            <div className="space-y-0">
-              {/* File Type */}
-              <div className="flex items-center justify-between py-4 border-b border-border">
-                <span className="text-sm md:text-base text-textGray">File Type:</span>
-                <span className="px-3 py-1 text-body text-xs md:text-sm rounded shadow-customShadow">
-                  {getFileTypeDisplay()}
-                </span>
-              </div>
-
-              {/* File Size */}
-              <div className="flex items-center justify-between py-4 border-b border-border">
-                <span className="text-sm md:text-base text-muted">File Size:</span>
-                <span className="text-muted text-xs md:text-sm">{content.size}</span>
-              </div>
-
-              {/* Duration */}
-              {content.duration && (
-                <div className="flex items-center justify-between py-4 border-b border-border">
-                  <span className="text-sm md:text-base text-muted">Duration:</span>
-                  <span className="text-muted text-xs md:text-sm">{content.duration}</span>
-                </div>
-              )}
-
-              {/* Uploaded Date */}
-              {content.uploadedDate && (
-                <div className="flex items-center justify-between py-4 border-b border-border">
-                  <span className="text-sm md:text-base text-muted">{content.type === "folder" ? "Created:" : "Uploaded:"}</span>
-                  <span className="text-muted text-xs md:text-sm">{content.uploadedDate}</span>
-                </div>
-              )}
-
-              {/* Total Assigned Devices */}
-              <div className="py-4 border-b border-border">
-                <div className="flex flex-col sm:flex-row items-start justify-between">
-                  <div className="flex flex-row sm:flex-col sm:space-y-2 mb-3 sm:mb-0 gap-2 sm:gap-0 items-center sm:items-start">
-                    <span className="text-sm md:text-base text-headings">Total Assigned Devices:</span>
-                    <span className="text-Heading text-base md:text-lg font-medium">{content.assignedDevices?.length || 0}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {(content.assignedDevices || []).map((device, index) => (
-                      <div key={index} className="text-muted text-xs md:text-sm">
-                        <span className="font-medium">{index + 1}.</span> {device}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Assigned Playlists */}
-              <div className="py-4 border-b border-border">
-                <div className="flex flex-col sm:flex-row items-start justify-between">
-                  <div className="flex flex-row sm:flex-col sm:space-y-2 mb-3 sm:mb-0 gap-2 sm:gap-0 items-center sm:items-start">
-                    <span className="text-sm md:text-base text-headings">Total Assigned Playlists:</span>
-                    <span className="text-Heading text-base md:text-lg font-medium">{content.assignedPlaylists?.length || 0}</span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {(content.assignedPlaylists || []).map((playlist, index) => (
-                      <div key={index} className="text-muted text-xs md:text-sm">
-                        <span className="font-medium">{index + 1}.</span> {playlist}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Schedules */}
-              <div className="pt-4">
-                <div className="flex flex-col sm:flex-row items-start justify-between">
-                  <div className="flex flex-row sm:flex-col sm:space-y-2 mb-3 sm:mb-0 gap-2 sm:gap-0 items-center sm:items-start">
-                    <span className="text-sm md:text-base text-headings">Schedules:</span>
-                    <span className="text-Heading text-base md:text-lg font-medium">{content.schedules?.length || 0}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {(content.schedules || []).map((schedule, index) => (
-                      <div key={index} className="text-muted text-xs md:text-sm">
-                        <span className="">{index + 1}.</span> {schedule}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+      {isUploading && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/50 backdrop-blur-[2px]">
+          <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-gray-200 dark:border-gray-700">
+            <CommonLoader size={56} text="Uploading files..." />
+            <p className="text-sm text-gray-500 dark:text-gray-400 font-medium animate-pulse">Please do not close this page</p>
           </div>
         </div>
       )}
