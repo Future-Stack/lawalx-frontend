@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import EditUserModal from "@/components/Admin/modals/EditUserModal";
@@ -8,28 +8,6 @@ import ResetPasswordModal from "@/components/Admin/modals/ResetPasswordModal";
 import SuspendUserModal from "@/components/Admin/modals/SuspendUserModal";
 import DeleteUserModal from "@/components/Admin/modals/DeleteUserModal";
 import AddUserModal from "@/components/Admin/usermanagement/AddUserModal";
-import {
-  Users,
-  UserCheck,
-  Clock,
-  AlertTriangle,
-  Search,
-  MoreVertical,
-  Eye,
-  Edit,
-  LogIn,
-  RotateCcw,
-  UserX,
-  Trash2,
-  Home,
-  ChevronRight,
-  UserRoundPlus,
-  CloudDownload,
-  FileSpreadsheet,
-} from "lucide-react";
-import Dropdown from "@/components/shared/Dropdown";
-import SliderDropdown from "@/components/shared/SliderDropdown";
-import Link from "next/link";
 import {
   useGetUsersQuery,
   useGetUserStatsQuery,
@@ -40,71 +18,15 @@ import {
   useUnsuspendUserMutation,
   useLazyGetExportDataQuery,
 } from "@/redux/api/admin/usermanagementApi";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
-import { addPdfHeader } from "@/lib/pdfUtils";
-import * as XLSX from "xlsx";
-
-interface UserPayment {
-  id: string;
-  amount: number;
-  transactionId: string;
-  cardNumber: string | null;
-  durationDays: number | null;
-  email: string;
-  subscription: boolean;
-  userId: string;
-  planName: string;
-  billingCycle: string;
-  deviceLimit: number;
-  storageGB: number;
-  uploadFileLimit: number | null;
-  createdAt: string;
-  updatedAt: string;
-  imageLimit: number;
-  imageMaxSizeMb: number;
-  imageAllowedFormats: string[];
-  videoLimit: number;
-  videoMaxSizeMb: number;
-  videoAllowedFormats: string[];
-  audioLimit: number;
-  audioMaxSizeMb: number;
-  audioAllowedFormats: string[];
-  enableCustomBranding: boolean;
-  status: string;
-}
-
-interface UserAccount {
-  email: string;
-  is_verified: boolean;
-  created_at: string;
-}
-
-interface User {
-  id: string;
-  username: string;
-  full_name: string | null;
-  company_name: string | null;
-  image_url: string | null;
-  role: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  designation: string | null;
-  location: string | null;
-  phoneCountry: string | null;
-  phoneNumber: string | null;
-  officialName: string | null;
-  industryType: string | null;
-  totalEmployees: string | null;
-  website: string | null;
-  cityCountry: string | null;
-  companyLogoUrl: string | null;
-  advanceCustomizationEnabled: boolean;
-  account: UserAccount;
-  payments: UserPayment[];
-  issues: string[];
-}
+// Import refactored subcomponents
+import UserManagementHeader from "@/components/Admin/usermanagement/UserManagementHeader";
+import UserStatsCards from "@/components/Admin/usermanagement/UserStatsCards";
+import UserFilterSection from "@/components/Admin/usermanagement/UserFilterSection";
+import UserTable from "@/components/Admin/usermanagement/UserTable";
+import UserMobileList from "@/components/Admin/usermanagement/UserMobileList";
+import UserPagination from "@/components/Admin/usermanagement/UserPagination";
+import { handleExportPDF as handleExportPDFUtil, handleExportExcel as handleExportExcelUtil } from "@/components/Admin/usermanagement/exportUtils";
+import { type User, type UserPayment } from "@/types/admin/usermanagement";
 
 export default function UserManagementPage() {
   const router = useRouter();
@@ -165,99 +87,23 @@ export default function UserManagementPage() {
   const [triggerExport] = useLazyGetExportDataQuery();
 
   const handleExportPDF = async () => {
-    try {
-      const { data: exportData, isError } = await triggerExport({
-        search: searchTerm,
-        status: statusFilter,
-        plan: planFilter,
-        storageUsage: storageFilter,
-      });
-
-      if (isError || !exportData?.success) {
-        toast.error("Failed to fetch export data");
-        return;
-      }
-
-      const users = exportData.data?.users?.users || [];
-      const doc = new jsPDF();
-
-      // Branded header with logo
-      const startY = await addPdfHeader(doc, 'User Management Report', `Exported: ${new Date().toLocaleString()}`);
-
-      // Define table columns
-      const tableColumn = ["Index", "Name", "Email", "Plan", "Role", "Status"];
-      const tableRows: any[] = [];
-
-      users.forEach((user: any, index: number) => {
-        const userData = [
-          index + 1,
-          user.full_name || user.username || 'N/A',
-          user.account?.email || 'N/A',
-          user.plan || 'No Plan',
-          user.role || 'N/A',
-          user.status || 'N/A'
-        ];
-        tableRows.push(userData);
-      });
-
-      // Generate Table
-      autoTable(doc, {
-        head: [tableColumn],
-        body: tableRows,
-        startY,
-        theme: 'striped',
-        headStyles: { fillColor: [59, 130, 246] },
-        styles: { fontSize: 8 }
-      });
-
-      // Save PDF
-      doc.save(`user-report-${new Date().toISOString().split('T')[0]}.pdf`);
-      toast.success("User report exported successfully");
-    } catch (error) {
-      console.error("Export error:", error);
-      toast.error("An error occurred while exporting the report");
-    } finally {
-      setShowExportMenu(false);
-    }
+    await handleExportPDFUtil({
+      triggerExport,
+      searchTerm,
+      statusFilter,
+      planFilter,
+      storageFilter,
+    });
   };
 
   const handleExportExcel = async () => {
-    try {
-      const { data: exportData, isError } = await triggerExport({
-        search: searchTerm,
-        status: statusFilter,
-        plan: planFilter,
-        storageUsage: storageFilter,
-      });
-
-      if (isError || !exportData?.success) {
-        toast.error("Failed to fetch export data");
-        return;
-      }
-
-      const users = exportData.data?.users?.users || [];
-      const wb = XLSX.utils.book_new();
-      const wsData: any[] = [
-        ["Index", "Name", "Email", "Plan", "Role", "Status"],
-        ...users.map((user: any, index: number) => [
-          index + 1,
-          user.full_name || user.username || 'N/A',
-          user.account?.email || 'N/A',
-          user.plan || 'No Plan',
-          user.role || 'N/A',
-          user.status || 'N/A'
-        ])
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      XLSX.utils.book_append_sheet(wb, ws, 'Users');
-      XLSX.writeFile(wb, `user-report-${new Date().toISOString().split('T')[0]}.xlsx`);
-      toast.success("User report exported successfully");
-    } catch (error) {
-      console.error("Excel export error:", error);
-      toast.error("An error occurred while exporting the report");
-    } finally {
-      setShowExportMenu(false);
-    }
+    await handleExportExcelUtil({
+      triggerExport,
+      searchTerm,
+      statusFilter,
+      planFilter,
+      storageFilter,
+    });
   };
 
   const toggleSelectUser = (id: string) => {
@@ -332,794 +178,99 @@ export default function UserManagementPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-          <Link href="/admin/dashboard">
-            <Home className="w-4 h-4 cursor-pointer hover:text-bgBlue" />
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-blue-500 dark:text-blue-400">
-            User Management
-          </span>
-        </div>
-        <div className="flex justify-between items-start">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
-              User Management
-            </h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              Manage user accounts, subscriptions, and permissions
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <div className="relative">
-              <button
-                onClick={() => setShowExportMenu(prev => !prev)}
-                className="px-4 py-2 shadow-customShadow cursor-pointer bg-white dark:bg-gray-800 text-nowrap rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-              >
-                <CloudDownload className="w-4 h-4" />
-                <span className="hidden lg:block">Export Report</span>
-              </button>
-              {showExportMenu && (
-                <>
-                  <div
-                    className="fixed inset-0 z-10"
-                    onClick={() => setShowExportMenu(false)}
-                  />
-                  <div className="absolute right-0 mt-2 bg-navbarBg border border-border rounded-lg shadow-xl z-20 min-w-[170px] overflow-hidden animate-in fade-in zoom-in duration-200">
-                    <button
-                      onClick={() => { handleExportPDF(); setShowExportMenu(false); }}
-                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer border-b border-border group"
-                    >
-                      <span className="text-red-500 text-lg group-hover:scale-110 transition-transform">📄</span>
-                      <span className="font-medium">Export as PDF</span>
-                    </button>
-                    <button
-                      onClick={() => { handleExportExcel(); setShowExportMenu(false); }}
-                      className="w-full text-left px-3 py-2.5 text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2.5 cursor-pointer group"
-                    >
-                      <span className="text-green-500 text-lg group-hover:scale-110 transition-transform">📊</span>
-                      <span className="font-medium">Export as Excel</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-4 py-2 shadow-customShadow cursor-pointer bg-blue-500 hover:bg-blue-600 text-nowrap text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
-            >
-              <UserRoundPlus className="w-4 h-4" />
-              <span className="hidden lg:block">Add New User</span>
-            </button>
-          </div>
-        </div>
-      </div>
+      <UserManagementHeader
+        onExportPDF={handleExportPDF}
+        onExportExcel={handleExportExcel}
+        onAddUserClick={() => setIsModalOpen(true)}
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div className="bg-navbarBg p-4 rounded-lg border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-              <Users className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Total Users
-            </span>
-          </div>
-          <div className="text-3xl font-semibold text-gray-900 dark:text-white">
-            {stats.totalUsers?.count || 0}
-          </div>
-          <div className={`text-sm ${(stats.totalUsers?.change || 0) < 0 ? 'text-red-500' : 'text-green-500'} flex items-center gap-1 mt-1`}>
-            <span>{(stats.totalUsers?.change || 0) < 0 ? '↓' : '↑'} {Math.abs(stats.totalUsers?.change || 0)} %</span>
-            <span className="text-gray-500 dark:text-gray-400">
-              From Last Month
-            </span>
-          </div>
-        </div>
+      <UserStatsCards stats={stats} />
 
-        <div className="bg-navbarBg p-4 rounded-lg border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <UserCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
-            </div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Active Users
-            </span>
-          </div>
-          <div className="text-3xl font-semibold text-gray-900 dark:text-white">
-            {stats.activeUsers?.count || 0}
-          </div>
-          <div className={`text-sm ${(stats.activeUsers?.change || 0) < 0 ? 'text-red-500' : 'text-green-500'} flex items-center gap-1 mt-1`}>
-            <span>{(stats.activeUsers?.change || 0) < 0 ? '↓' : '↑'} {Math.abs(stats.activeUsers?.change || 0)} %</span>
-            <span className="text-gray-500 dark:text-gray-400">
-              From Last Month
-            </span>
-          </div>
-        </div>
-
-        {/* <div className="bg-navbarBg p-4 rounded-lg border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-              <Clock className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Trial Users
-            </span>
-          </div>
-          <div className="text-3xl font-semibold text-gray-900 dark:text-white">
-            {stats.trialUsers?.count || 0}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-1">
-            <span>{stats.trialUsers?.conversionRate || 0} %</span>
-            <span className="text-gray-500 dark:text-gray-400">
-              Conversion rate
-            </span>
-          </div>
-        </div> */}
-
-        {/* <div className="bg-navbarBg p-4 rounded-lg border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
-            </div>
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Need Attention
-            </span>
-          </div>
-          <div className="text-3xl font-semibold text-gray-900 dark:text-white">
-            {stats.needAttention?.count || 0}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Overdue, Offline, Errors
-          </div>
-        </div> */} 
-      </div>
-
-      {/* Table Section */}
       <div className="bg-navbarBg rounded-lg border border-border">
-        {/* Table Header */}
-        <div className="p-4 border-b border-border">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3">
-              <div className="lg:hidden">
-                <input
-                  type="checkbox"
-                  checked={selectedUsers.size === users.length && users.length > 0}
-                  onChange={toggleSelectAll}
-                  className="rounded border-gray-300 dark:border-gray-600 w-5 h-5 cursor-pointer"
-                />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {selectedUsers.size > 0
-                  ? `Selected (${selectedUsers.size})`
-                  : `All Users (${meta.total || 0})`}
-              </h2>
-            </div>
-            {selectedUsers.size > 0 && (
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleBulkAction("unsuspend")}
-                  className="px-4 cursor-pointer py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600"
-                >
-                  Unsuspend
-                </button>
-                <button
-                  onClick={() => handleBulkAction("suspend")}
-                  className="px-4 cursor-pointer py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium"
-                >
-                  Suspend
-                </button>
-              </div>
-            )}
-          </div>
+        <UserFilterSection
+          selectedUsersCount={selectedUsers.size}
+          totalUsersCount={meta.total || 0}
+          usersLength={users.length}
+          toggleSelectAll={toggleSelectAll}
+          handleBulkAction={handleBulkAction}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          planFilter={planFilter}
+          setPlanFilter={setPlanFilter}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          storageFilter={storageFilter}
+          setStorageFilter={setStorageFilter}
+        />
 
-          {/* Search and Filters */}
-          <div className="flex flex-col xl:flex-row gap-4">
-            <div className="flex-1 relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-              <input
-                type="text"
-                placeholder="Search by name, email, or user ID..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-border bg-navbarBg rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white transition-all"
-              />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 w-full xl:w-auto">
-              <Dropdown
-                value={planFilter}
-                options={["All Plans", "Basic", "Premium", "Business", "Enterprise"]}
-                onChange={setPlanFilter}
-                className="w-full"
-              />
-              <Dropdown
-                value={statusFilter}
-                options={["All Status", "Active", "Suspended"]}
-                onChange={setStatusFilter}
-                className="w-full"
-              />
-              <SliderDropdown
-                label="Storage"
-                value={storageFilter}
-                onChange={setStorageFilter}
-                className="w-full sm:col-span-2 md:col-span-1"
-              />
-            </div>
-          </div>
-        </div>
+        <UserTable
+          users={users}
+          isLoading={isUsersLoading}
+          selectedUsers={selectedUsers}
+          toggleSelectAll={toggleSelectAll}
+          toggleSelectUser={toggleSelectUser}
+          openActionMenu={openActionMenu}
+          setOpenActionMenu={setOpenActionMenu}
+          onEditUser={(user) => {
+            setSelectedUser(user);
+            setIsEditModalOpen(true);
+          }}
+          onImpersonateUser={handleLoginAsUser}
+          onUnsuspendUser={async (userId) => {
+            try {
+              await unsuspendUser(userId).unwrap();
+              toast.success("User unsuspended successfully");
+            } catch (err: any) {
+              toast.error(err?.data?.message || "Failed to unsuspend user");
+            }
+          }}
+          onSuspendUser={(user) => {
+            setSelectedUser(user);
+            setIsSuspendModalOpen(true);
+          }}
+          onDeleteUser={(user) => {
+            setSelectedUser(user);
+            setIsDeleteModalOpen(true);
+          }}
+        />
 
-        {/* Table */}
-        {/* Table/Card View */}
-        <div className="overflow-x-auto hidden lg:block">
-          <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-              <tr>
-                <th className="px-4 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={users.length > 0 && selectedUsers.size === users.length}
-                    onChange={toggleSelectAll}
-                    className="rounded border-gray-300 dark:border-gray-600"
-                  />
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  User
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Plan
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Device
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Storage (GB)
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Issues
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {isUsersLoading ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
-                    Loading users...
-                  </td>
-                </tr>
-              ) : users.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-gray-500 dark:text-gray-400">
-                    No users found
-                  </td>
-                </tr>
-              ) : users.map((user: any, index: number) => {
-                const isFirstRows = index < 3;
-                const isLastRows = index >= users.length - 3;
+        <UserMobileList
+          users={users}
+          isLoading={isUsersLoading}
+          selectedUsers={selectedUsers}
+          toggleSelectUser={toggleSelectUser}
+          openActionMenu={openActionMenu}
+          setOpenActionMenu={setOpenActionMenu}
+          onEditUser={(user) => {
+            setSelectedUser(user);
+            setIsEditModalOpen(true);
+          }}
+          onImpersonateUser={handleLoginAsUser}
+          onUnsuspendUser={async (userId) => {
+            try {
+              await unsuspendUser(userId).unwrap();
+              toast.success("User unsuspended successfully");
+            } catch (err: any) {
+              toast.error(err?.data?.message || "Failed to unsuspend user");
+            }
+          }}
+          onSuspendUser={(user) => {
+            setSelectedUser(user);
+            setIsSuspendModalOpen(true);
+          }}
+          onDeleteUser={(user) => {
+            setSelectedUser(user);
+            setIsDeleteModalOpen(true);
+          }}
+        />
 
-                const plan = user.plan || "No Plan";
-                const deviceStr: string = user.device || "0/0";
-                const storageStr: string = user.storage || "0GB/0GB";
-
-                const [deviceUsed, deviceLimit] = deviceStr.split("/").map((v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0);
-                const [storageUsed, storageTotal] = storageStr.split("/").map((v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0);
-
-                const deviceUsage = deviceLimit > 0 ? Math.min(100, Math.round((deviceUsed / deviceLimit) * 100)) : 0;
-                const storageUsage = storageTotal > 0 ? Math.min(100, Math.round((storageUsed / storageTotal) * 100)) : 0;
-                const statusStr = user.status.charAt(0) + user.status.slice(1).toLowerCase();
-
-                return (
-                  <tr
-                    key={user.id}
-                    onClick={() => {
-                      const q = new URLSearchParams({
-                        name: user.full_name || user.username,
-                        email: user.account?.email || "",
-                        plan,
-                        status: user.status,
-                        device: String(deviceLimit),
-                        storage: String(storageTotal),
-                        deviceUsage: String(deviceUsage),
-                        storageUsage: String(storageUsage),
-                        phone: user.phoneNumber || "",
-                        location: user.location || "",
-                        joinDate: user.account?.created_at || "",
-                      }).toString();
-                      router.push(`/admin/user-management/${user.id}?${q}`);
-                    }}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
-                  >
-                    <td className="px-4 py-3 text-nowrap">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.has(user.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={() => toggleSelectUser(user.id)}
-                        className="rounded border-gray-300 dark:border-gray-600"
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-nowrap">
-                      <div>
-                        <div className="font-medium text-gray-900 dark:text-white">
-                          {user.full_name || user.username}
-                        </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400">
-                          {user.account?.email || "N/A"}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-nowrap">
-                      {(() => {
-                        const p = plan.toLowerCase();
-                        const cls = p.includes("premium") ? "bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400"
-                          : p.includes("enterprise") ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400"
-                          : p.includes("business") ? "bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400"
-                          : p.includes("basic") ? "bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400"
-                          : p.includes("free") || p.includes("trial") ? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
-                          : "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400";
-                        return <span className={`px-3 py-1 rounded-full text-xs font-medium ${cls}`}>{plan}</span>;
-                      })()}
-                    </td>
-                    <td className="px-4 py-3 text-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white mb-1">{deviceStr}</div>
-                      <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                        <div className={`h-full ${deviceUsage >= 80 ? "bg-red-500" : deviceUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${deviceUsage}%` }} />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-nowrap">
-                      <div className="text-sm text-gray-900 dark:text-white mb-1">{storageStr}</div>
-                      <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                        <div className={`h-full ${storageUsage >= 80 ? "bg-red-500" : storageUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${storageUsage}%` }} />
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-nowrap">
-                      <span
-                        className={`flex items-center gap-1 w-fit px-3 py-1 rounded-full text-xs font-medium border ${user.status === "ACTIVE"
-                          ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
-                          : user.status === "SUSPENDED"
-                            ? "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
-                          }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${user.status === "ACTIVE"
-                            ? "bg-green-500"
-                            : user.status === "SUSPENDED"
-                              ? "bg-red-500"
-                              : "bg-gray-500"
-                            }`}
-                        />
-                        {statusStr}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {user.issues && user.issues.length > 0 && user.issues[0] !== "No issues" ? (
-                        <div className="flex flex-wrap gap-1.5">
-                          {user.issues.map((issue: string, idx: number) => (
-                            <span
-                              key={idx}
-                              className="px-2 py-1 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-xs whitespace-nowrap"
-                            >
-                              {issue}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          No issues
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-nowrap">
-                      <div className="relative">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenActionMenu(
-                              openActionMenu === user.id ? null : user.id
-                            );
-                          }}
-                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer"
-                        >
-                          <MoreVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-                        </button>
-                        {openActionMenu === user.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOpenActionMenu(null);
-                              }}
-                            />
-                            <div
-                              className={`absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 ${isFirstRows
-                                ? "mt-2"
-                                : isLastRows
-                                  ? "bottom-full mb-2"
-                                  : "mt-2"
-                                }`}
-                            >
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const q = new URLSearchParams({
-                                    name: user.full_name || user.username,
-                                    email: user.account?.email || "",
-                                    plan,
-                                    status: user.status,
-                                    device: String(deviceLimit),
-                                    storage: String(storageTotal),
-                                    deviceUsage: String(deviceUsage),
-                                    storageUsage: String(storageUsage),
-                                    phone: user.phoneNumber || "",
-                                    location: user.location || "",
-                                    joinDate: user.account?.created_at || "",
-                                  }).toString();
-                                  router.push(`/admin/user-management/${user.id}?${q}`);
-                                }}
-                                className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                              >
-                                <Eye className="w-4 h-4" />
-                                View Profile
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedUser(user);
-                                  setIsEditModalOpen(true);
-                                  setOpenActionMenu(null);
-                                }}
-                                className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                              >
-                                <Edit className="w-4 h-4" />
-                                Edit User
-                              </button>
-
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleLoginAsUser(user.id);
-                                  setOpenActionMenu(null);
-                                }}
-                                className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                              >
-                                <LogIn className="w-4 h-4" />
-                                Impersonate User
-                              </button>
-
-                              {/* <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedUser(user);
-                                  setIsResetPasswordOpen(true);
-                                  setOpenActionMenu(null);
-                                }}
-                                className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                              >
-                                <RotateCcw className="w-4 h-4" />
-                                Reset Password
-                              </button> */}
-
-                              {user.status === "SUSPENDED" ? (
-                                <button
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    try {
-                                      await unsuspendUser(user.id).unwrap();
-                                      toast.success("User unsuspended successfully");
-                                    } catch (err: any) {
-                                      toast.error(err?.data?.message || "Failed to unsuspend user");
-                                    }
-                                    setOpenActionMenu(null);
-                                  }}
-                                  className="w-full cursor-pointer px-4 py-2 text-left text-sm text-green-600 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                                >
-                                  <UserCheck className="w-4 h-4" />
-                                  Unsuspend User
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedUser(user);
-                                    setIsSuspendModalOpen(true);
-                                    setOpenActionMenu(null);
-                                  }}
-                                  className="w-full cursor-pointer px-4 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                                >
-                                  <UserX className="w-4 h-4" />
-                                  Suspend User
-                                </button>
-                              )}
-
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedUser(user);
-                                  setIsDeleteModalOpen(true);
-                                  setOpenActionMenu(null);
-                                }}
-                                className="w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Delete User
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile/Tablet Card View */}
-        <div className="lg:hidden p-4 space-y-4">
-          {isUsersLoading ? (
-            <div className="px-4 py-10 text-center text-gray-500 dark:text-gray-400 bg-navbarBg rounded-lg border border-border">
-              Loading users...
-            </div>
-          ) : users.length === 0 ? (
-            <div className="px-4 py-10 text-center text-gray-500 dark:text-gray-400 bg-navbarBg rounded-lg border border-border">
-              No users found
-            </div>
-          ) : users.map((user: any, index: number) => {
-            const isLastRows = index >= users.length - 2;
-
-            const plan = user.plan || "No Plan";
-            const deviceStr: string = user.device || "0/0";
-            const storageStr: string = user.storage || "0GB/0GB";
-
-            const [deviceUsed, deviceLimit] = deviceStr.split("/").map((v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0);
-            const [storageUsed, storageTotal] = storageStr.split("/").map((v: string) => Number(v.replace(/[^0-9.]/g, "")) || 0);
-
-            const deviceUsage = deviceLimit > 0 ? Math.min(100, Math.round((deviceUsed / deviceLimit) * 100)) : 0;
-            const storageUsage = storageTotal > 0 ? Math.min(100, Math.round((storageUsed / storageTotal) * 100)) : 0;
-            const statusStr = user.status.charAt(0) + user.status.slice(1).toLowerCase();
-
-            const query = new URLSearchParams({
-              name: user.full_name || user.username,
-              email: user.account?.email || "",
-              plan,
-              status: user.status,
-              device: String(deviceLimit),
-              storage: String(storageTotal),
-              deviceUsage: String(deviceUsage),
-              storageUsage: String(storageUsage),
-              phone: user.phoneNumber || "",
-              location: user.location || "",
-              joinDate: user.account?.created_at || "",
-            }).toString();
-
-            return (
-              <div
-                key={user.id}
-                onClick={() => router.push(`/admin/user-management/${user.id}?${query}`)}
-                className="bg-navbarBg rounded-xl border border-border p-4 space-y-4 cursor-pointer hover:shadow-md transition-all"
-              >
-                {/* Card Header */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex gap-3 items-start flex-1 min-w-0">
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.has(user.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      onChange={() => toggleSelectUser(user.id)}
-                      className="rounded border-gray-300 dark:border-gray-600 mt-1 shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <div className="font-bold text-gray-900 dark:text-white truncate">
-                        {user.full_name || user.username}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {user.account?.email || "N/A"}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span
-                      className={`px-2 py-1 rounded-full text-[10px] font-bold border ${user.status === "ACTIVE"
-                        ? "bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
-                        : user.status === "SUSPENDED"
-                          ? "bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
-                        }`}
-                    >
-                      {statusStr}
-                    </span>
-                    <div className="relative">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setOpenActionMenu(
-                            openActionMenu === user.id ? null : user.id
-                          );
-                        }}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-border"
-                      >
-                        <MoreVertical className="w-4 h-4 text-gray-400" />
-                      </button>
-                      {openActionMenu === user.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-[60]"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenActionMenu(null);
-                            }}
-                          />
-                          <div
-                            className={`absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl z-[70] ${isLastRows ? "bottom-full mb-2" : "mt-2"}`}
-                          >
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                router.push(`/admin/user-management/${user.id}?${query}`);
-                              }}
-                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
-                            >
-                              <Eye className="w-4 h-4" />
-                              View Profile
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedUser(user);
-                                setIsEditModalOpen(true);
-                                setOpenActionMenu(null);
-                              }}
-                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
-                            >
-                              <Edit className="w-4 h-4" />
-                              Edit User
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleLoginAsUser(user.id);
-                                setOpenActionMenu(null);
-                              }}
-                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
-                            >
-                              <LogIn className="w-4 h-4" />
-                              Impersonate User
-                            </button>
-                            {user.status === "SUSPENDED" ? (
-                              <button
-                                onClick={async (e) => {
-                                  e.stopPropagation();
-                                  try {
-                                    await unsuspendUser(user.id).unwrap();
-                                    toast.success("User unsuspended successfully");
-                                  } catch (err: any) {
-                                    toast.error(err?.data?.message || "Failed to unsuspend user");
-                                  }
-                                  setOpenActionMenu(null);
-                                }}
-                                className="w-full cursor-pointer px-4 py-2 text-left text-sm text-green-600 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
-                              >
-                                <UserCheck className="w-4 h-4" />
-                                Unsuspend User
-                              </button>
-                            ) : (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedUser(user);
-                                  setIsSuspendModalOpen(true);
-                                  setOpenActionMenu(null);
-                                }}
-                                className="w-full cursor-pointer px-4 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
-                              >
-                                <UserX className="w-4 h-4" />
-                                Suspend User
-                              </button>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedUser(user);
-                                setIsDeleteModalOpen(true);
-                                setOpenActionMenu(null);
-                              }}
-                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              Delete User
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Info Rows */}
-                <div className="flex items-center justify-between text-xs py-2 border-y border-border/50">
-                  <div>
-                    <span className="text-gray-500 dark:text-gray-400 font-medium">Current Plan:</span>
-                    {(() => {
-                      const p = plan.toLowerCase();
-                      const cls = p.includes("premium") ? "text-purple-600 dark:text-purple-400"
-                        : p.includes("enterprise") ? "text-indigo-600 dark:text-indigo-400"
-                        : p.includes("business") ? "text-orange-600 dark:text-orange-400"
-                        : p.includes("basic") ? "text-teal-600 dark:text-teal-400"
-                        : p.includes("free") || p.includes("trial") ? "text-gray-500 dark:text-gray-400"
-                        : "text-blue-600 dark:text-blue-400";
-                      return <span className={`ml-2 font-bold ${cls}`}>{plan}</span>;
-                    })()}
-                  </div>
-                  {user.issues && user.issues.length > 0 && user.issues[0] !== "No issues" && (
-                    <div className="flex gap-1">
-                      {user.issues.slice(0, 1).map((issue: string, idx: number) => (
-                        <span key={idx} className="px-2 py-0.5 bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded text-[10px] font-bold border border-orange-100">
-                          {issue}
-                        </span>
-                      ))}
-                      {user.issues.length > 1 && <span className="text-[10px] text-muted">+{user.issues.length - 1} more</span>}
-                    </div>
-                  )}
-                </div>
-
-                {/* Usage Bars */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight text-gray-500">
-                      <span>Device Used</span>
-                      <span>{deviceStr}</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden border border-border/30">
-                      <div className={`h-full transition-all duration-500 ${deviceUsage >= 80 ? "bg-red-500" : deviceUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${deviceUsage}%` }} />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold uppercase tracking-tight text-gray-500">
-                      <span>Storage Used</span>
-                      <span>{storageStr}</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden border border-border/30">
-                      <div className={`h-full transition-all duration-500 ${storageUsage >= 80 ? "bg-red-500" : storageUsage >= 50 ? "bg-orange-500" : "bg-blue-500"}`} style={{ width: `${storageUsage}%` }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Pagination */}
-        <div className="p-4 border-t border-border flex justify-between items-center bg-navbarBg rounded-b-lg">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            Showing {users.length} of {meta.total || 0} users
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage(prev => Math.max(1, prev - 1))}
-              disabled={page === 1}
-              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 cursor-pointer"
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => setPage(prev => (meta.totalPages && prev < meta.totalPages) ? prev + 1 : prev)}
-              disabled={page === (meta.totalPages || 1)}
-              className="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 cursor-pointer"
-            >
-              Next
-            </button>
-          </div>
-        </div>
+        <UserPagination
+          usersLength={users.length}
+          totalCount={meta.total || 0}
+          page={page}
+          totalPages={meta.totalPages || 1}
+          setPage={setPage}
+        />
       </div>
 
       {/* Add User Modal */}
