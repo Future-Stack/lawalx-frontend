@@ -3,10 +3,11 @@
 
 import { useState, useEffect, useMemo } from "react";
 import BaseDialog from "@/common/BaseDialog";
-import { WifiOff, MonitorSmartphone, Loader2, CircleCheckBigIcon, Search } from "lucide-react";
+import { WifiOff, MonitorSmartphone, Loader2, CircleCheckBigIcon, Search, MapPin } from "lucide-react";
 import { useDeviceSyncMutation } from "@/redux/api/users/devices/devices.api";
 import { toast } from "sonner";
 import { Device } from "@/redux/api/users/programs/programs.type";
+import DeviceLocation from "@/components/common/DeviceLocation";
 
 interface SyncProgramDialogProps {
   open: boolean;
@@ -188,7 +189,15 @@ const SyncProgramDialog = ({ open, setOpen, programName, devices }: SyncProgramD
                           </span>
                         </div>
                         <div className="text-[11px] sm:text-xs text-textGray mt-0.5 font-mono">
-                          Serial: {device.deviceSerial} {device.ip && `• IP: ${device.ip}`}
+                          Serial: {device.deviceSerial}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-xs text-[#737373] dark:text-gray-400 font-medium mt-1">
+                          <MapPin className="w-3.5 h-3.5 text-[#737373]" />
+                          {device.location ? (
+                            <DeviceLocation lat={device.location.lat} lng={device.location.lng} />
+                          ) : (
+                            "N/A"
+                          )}
                         </div>
                       </div>
                     </div>
