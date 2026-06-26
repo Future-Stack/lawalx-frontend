@@ -7,7 +7,7 @@ import Dropdown from '@/components/shared/Dropdown';
 
 import { useTheme } from 'next-themes';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   useGetSubscriptionBillingStatsQuery,
   useGetSubscriptionBillingTrendQuery,
@@ -162,6 +162,7 @@ const generateBillingData = (range: number) => {
 
 const BillingDashboard = () => {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('transactions');
   const { theme: currentTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -174,6 +175,13 @@ const BillingDashboard = () => {
       setActiveTab(tab);
     }
   }, [searchParams]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tabId);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   const isDark = mounted && (resolvedTheme === 'dark' || currentTheme === 'dark');
 
@@ -738,7 +746,6 @@ const BillingDashboard = () => {
   }, [timeRange, newStatsData, newTrendData, newRecentTxData, newSummaryData, failedTrendsData, failedReasonsData, taxStatsData, taxBreakdownData, taxRegionApiData, refundsStatsData, refundsDetailsData, refundsReasonsData, refundsChargebackHealthData, refundsImpactData]);
 
   const timeRanges = [
-    { value: '', label: '--' },
     { value: 'last 1 day', label: 'last 1 day' },
     { value: 'last 7 days', label: 'last 7 days' },
     { value: 'last 30 days', label: 'last 30 days' },
@@ -1695,7 +1702,7 @@ const BillingDashboard = () => {
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`px-4 py-2 text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${activeTab === tab.id
                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 ring-1 ring-blue-100 dark:ring-blue-800 shadow-customShadow'
                 : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
