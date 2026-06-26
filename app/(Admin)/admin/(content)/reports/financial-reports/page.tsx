@@ -6,7 +6,7 @@ import { useTheme } from 'next-themes';
 import { Users, DollarSign, Percent, TrendingUp, TrendingDown, UserPlus, ChevronDown, Download, Target, Zap, Home, TargetIcon, ChevronRight, HomeIcon, FileSpreadsheet } from 'lucide-react';
 import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   useGetFinancialStatsQuery,
   useGetMrrStatsQuery,
@@ -38,6 +38,7 @@ import { getCurrencySymbol } from '@/lib/currencyUtils';
 const FinancialReport = () => {
   const { theme, resolvedTheme } = useTheme();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('mrr');
   const [mounted, setMounted] = useState(false);
 
@@ -48,6 +49,13 @@ const FinancialReport = () => {
       setActiveTab(tab);
     }
   }, [searchParams]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', tabId);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
 
   const isDark = mounted && (resolvedTheme === 'dark' || theme === 'dark');
   const currency = useSelector((state: RootState) => state.settings.currency);
@@ -571,7 +579,7 @@ const FinancialReport = () => {
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
               className={`px-4 py-2 text-sm rounded-full font-medium whitespace-nowrap transition-all duration-200 cursor-pointer flex-shrink-0 ${activeTab === tab.id
                 ? 'text-blue-600 dark:text-blue-400 ring-1 ring-blue-100 dark:ring-blue-800 shadow-customShadow'
                 : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200'
