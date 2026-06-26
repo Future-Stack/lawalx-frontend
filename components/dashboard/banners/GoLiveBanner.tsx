@@ -97,18 +97,22 @@ const GoLiveBanner = ({ banner }: GoLiveBannerProps) => {
     };
 
     const imageStyles = banner ? {
-        height: banner.mediaHeight ? Math.min(banner.mediaHeight, 165) : 165,
-        width: banner.mediaWidth ? Math.min(banner.mediaWidth, 165) : 165,
+        height: banner.mediaHeight || 165,
+        width: banner.mediaWidth || 165,
         transform: "scale(1.25)",
         clipPath: getClipPath(banner.mediaShape),
     } : {
         transform: "scale(1.25)",
     };
 
+    const containerMinHeight = banner?.mediaHeight 
+        ? `${Math.max(250, (banner.mediaHeight * 1.25) + 48)}px` 
+        : '250px';
+
     // Replicate flex layouts depending on Left/Right positioning
     const isLeftPosition = banner?.mediaPosition === 'LEFT';
     const flexContainerClass = banner 
-        ? `flex items-center justify-between mb-6 p-6 rounded-xl shadow-lg relative overflow-hidden min-h-[250px] ${isLeftPosition ? 'flex-row-reverse' : 'flex-row'}`
+        ? `flex items-center justify-between mb-6 p-6 rounded-xl shadow-lg relative overflow-hidden min-h-[250px] md:min-h-[var(--banner-min-height)] ${isLeftPosition ? 'flex-row-reverse' : 'flex-row'}`
         : "flex items-center justify-center md:justify-between mb-6 dashboard-header-bg p-6 rounded-xl relative overflow-hidden min-h-[250px]";
 
     const textMarginClass = banner
@@ -118,7 +122,10 @@ const GoLiveBanner = ({ banner }: GoLiveBannerProps) => {
     return (
         <div 
             className={flexContainerClass}
-            style={backgroundStyle ? { background: backgroundStyle, minHeight: '250px' } : { minHeight: '250px' }}
+            style={{
+                background: backgroundStyle,
+                '--banner-min-height': containerMinHeight
+            } as React.CSSProperties}
         >
             <div className={`space-y-2 z-10 ${textMarginClass}`}>
                 <h1

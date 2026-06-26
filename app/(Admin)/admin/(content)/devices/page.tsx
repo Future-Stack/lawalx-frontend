@@ -2,173 +2,19 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import { Monitor, Wifi, WifiOff, Clock, Search, Download, ChevronDown, MoreVertical, X, Trash2, Edit, UserCheck, ChevronRight, HomeIcon, ArrowUpRight, Eye, FileText } from 'lucide-react';
 import AdminLeafletMapModal from '@/components/Admin/modals/AdminLeafletMapModal';
-import { useDeleteDeviceMutation, useGetGlobalDeviceDetailsQuery, useGetGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
-import Link from 'next/link';
+import { useDeleteDeviceMutation, useGetGlobalDevicesQuery } from '@/redux/api/admin/globalDevicesApi';
 import { useRouter } from 'next/navigation';
-import DeviceLocation from "@/components/common/DeviceLocation";
-import { Progress } from '@/components/ui/progress';
 
-// Reusable Dropdown Component
-type DropdownProps = {
-  value: string;
-  options: string[];
-  onChange: (value: string) => void;
-  icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-};
-
-const Dropdown = ({ value, options, onChange, icon: Icon }: DropdownProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="cursor-pointer flex items-center gap-2 px-4 py-2 text-black dark:text-white bg-navbarBg border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
-      >
-        {Icon && <Icon className="w-4 h-4" />}
-        {value}
-        <ChevronDown className="w-4 h-4" />
-      </button>
-      {isOpen && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 mt-2 w-48 bg-navbarBg border border-border rounded-lg shadow-lg z-20">
-            {options.map((option) => (
-              <button
-                key={option}
-                onClick={() => {
-                  onChange(option);
-                  setIsOpen(false);
-                }}
-                className="w-full cursor-pointer text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg text-gray-900 dark:text-white"
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
-
-// Reusable Modal Component
-type ModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children?: React.ReactNode;
-};
-
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full mx-4 p-6 z-10">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-};
-
-// Stat Card Component
-type StatCardProps = {
-  title: string;
-  value: React.ReactNode;
-  subtitle?: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  trend?: string;
-};
-
-const StatCard: React.FC<StatCardProps> = ({ title, value, subtitle, icon: Icon, trend }) => (
-  <div className="bg-navbarBg p-6 rounded-xl border border-border">
-    <div className="flex items-center justify-between mb-2">
-      <span className="text-sm text-gray-500 dark:text-gray-400">{title}</span>
-      <Icon className="w-5 h-5 text-gray-400" />
-    </div>
-    <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{value}</div>
-    <div className="text-xs text-gray-500 dark:text-gray-400">{subtitle}</div>
-  </div>
-);
-
-// Action Menu Component
-type Device = {
-  id: string;
-  device: string;
-  model: string;
-  customer: string;
-  location: string;
-  type: string;
-  status: 'Online' | 'Offline' | 'Syncing' | string;
-  storage: string;
-  // New storage metrics
-  storageUsed: number;
-  storageTotal: number;
-  storagePercent: number;
-  storageDisplay: string;
-  uptime: string;
-  daysAgo: number;
-  lastSyncDate?: Date;
-  lastSync?: string;
-  last_Sync?: string | null;
-  lat: number;
-  lng: number;
-};
-
-type ActionMenuProps = {
-  device: Device;
-  onAction: (action: string, device: Device) => void;
-};
-
-const ActionMenu: React.FC<ActionMenuProps> = ({ device, onAction }) => {
-  return (
-    <div className="flex items-center gap-3">
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onAction('View Details', device);
-        }}
-        className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors cursor-pointer"
-        title="View Details"
-      >
-        <Eye className="w-5 h-5" />
-      </button>
-      {/* <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onAction('Edit Device', device);
-        }}
-        className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors cursor-pointer"
-        title="Edit"
-      >
-        <Edit className="w-5 h-5" />
-      </button> */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onAction('Delete Client', device);
-        }}
-        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors cursor-pointer"
-        title="Delete Device"
-      >
-        <Trash2 className="w-5 h-5" />
-      </button>
-    </div>
-  );
-};
+// Import refactored subcomponents
+import { Device } from '@/components/Admin/devices/types';
+import Modal from '@/components/Admin/devices/Modal';
+import DeviceHeader from '@/components/Admin/devices/DeviceHeader';
+import DeviceStatsGrid from '@/components/Admin/devices/DeviceStatsGrid';
+import DeviceFilterSection from '@/components/Admin/devices/DeviceFilterSection';
+import DeviceTable from '@/components/Admin/devices/DeviceTable';
+import DeviceMobileList from '@/components/Admin/devices/DeviceMobileList';
+import { DevicePagination } from '@/components/Admin/devices/DevicePagination';
 
 export default function GlobalDevices() {
   const router = useRouter();
@@ -190,12 +36,9 @@ export default function GlobalDevices() {
     'Last 1 year': '1year',
   };
 
-
   const [deleteDevice] = useDeleteDeviceMutation();
 
-  // Removed useGetGlobalDeviceDetailsQuery from here as we navigate to a new page
-
-  const { data, isLoading, isError, refetch } = useGetGlobalDevicesQuery({
+  const { data, refetch } = useGetGlobalDevicesQuery({
     page: currentPage,
     limit: itemsPerPage,
     search: searchQuery || undefined,
@@ -206,7 +49,7 @@ export default function GlobalDevices() {
 
   const allDevices: Device[] = useMemo(() => {
     const apiDevices = data?.data?.devices ?? [];
-    return apiDevices.map((device: any, index: number) => {
+    return apiDevices.map((device: any) => {
       const daysAgo = device.lastSeen ? Math.max(0, Math.round((Date.now() - new Date(device.lastSeen).getTime()) / (1000 * 60 * 60 * 24))) : 365;
       const uptime = data?.data?.stats?.avgUptime ?? 'N/A';
 
@@ -375,7 +218,6 @@ export default function GlobalDevices() {
     if (!modalContent.device) return null;
 
     switch (modalContent.action) {
-
       case 'Edit Device':
         return (
           <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setModalOpen(false); }}>
@@ -446,7 +288,6 @@ export default function GlobalDevices() {
                       setModalOpen(false);
                     } catch (error) {
                       console.error('Failed to delete device:', error);
-                      // Optionally show an error message
                     }
                   }
                 }}
@@ -463,281 +304,51 @@ export default function GlobalDevices() {
     }
   };
 
+  const handleSelectLocation = (device: Device) => {
+    setSelectedLocation({ lat: device.lat, lng: device.lng, label: device.location, device });
+    setMapModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen">
       <div className="space-y-6">
-        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-          <Link href="/admin/dashboard">
-            <HomeIcon className="w-4 h-4 cursor-pointer hover:text-bgBlue" />
-          </Link>
-          <ChevronRight className="w-4 h-4" />
-          <span className="text-blue-500 dark:text-blue-400">
-            Devices
-          </span>
-        </div>
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Device Management</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">Monitor and manage all connected devices across customers</p>
-          </div>
-          <div className="flex flex-nowrap gap-2">
-            {/* <Dropdown
-              value={timeRange}
-              options={['Last 1 day', 'Last 7 days', 'Last 30 days', 'Last 1 year']}
-              onChange={setTimeRange}
-            /> */}
-            <button
-              onClick={() => router.push('/admin/reports/device-report')}
-              className="text-nowrap px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-navbarBg border border-border shadow-customShadow rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-2 transition-colors cursor-pointer"
-            >
-              <FileText className="w-4 h-4" />
-              View Reports
-            </button>
-          </div>
-        </div>
+        <DeviceHeader />
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <StatCard
-            title="Total Devices"
-            value={stats.total.toLocaleString()}
-            subtitle={stats.trendText}
-            icon={Monitor}
-          />
-          <StatCard
-            title="Online Devices"
-            value={stats.online.toLocaleString()}
-            subtitle={`${((stats.online / stats.total) * 100).toFixed(1)}% Online`}
-            icon={Wifi}
-          />
-          <StatCard
-            title="Offline Devices"
-            value={stats.offline}
-            subtitle="Requires attention"
-            icon={WifiOff}
-          />
-          <StatCard
-            title="Paired Devices"
-            value={stats.paired ?? 0}
-            // Prefer API subText if provided, otherwise show percentage
-            subtitle={stats.pairedSubText || (stats.paired ? `${((stats.paired / stats.total) * 100).toFixed(1)}% Paired` : 'No paired devices')}
-            icon={UserCheck}
-          />
-        </div>
+        <DeviceStatsGrid stats={stats} />
 
-        {/* Device Management */}
         <div className="bg-navbarBg rounded-xl border border-border">
-          <div className="p-6 border-b border-border rounded-t-xl">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Device Management</h2>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search devices..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-navbarBg text-gray-900 dark:text-white placeholder-gray-400"
-                />
-              </div>
-              <Dropdown
-                value={statusFilter}
-                options={['All Status', 'ONLINE', 'OFFLINE', 'PAIRED']}
-                onChange={setStatusFilter}
-              />
-              {/* <Dropdown
-                value={typeFilter}
-                options={['All Types', 'Android TV', 'Fire TV', 'Samsung Tizen', 'LG webOS']}
-                onChange={setTypeFilter}
-              /> */}
-            </div>
-          </div>
+          <DeviceFilterSection
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+          />
 
-          {/* Responsive Table/Card View */}
           <div className="overflow-x-auto scrollbar-hide">
-            {/* Desktop Table View */}
-            <div className="hidden lg:block">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Device</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Customer</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Location</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Type</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Storage</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Last Sync</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {paginatedDevices.length > 0 ? (
-                    paginatedDevices.map((device, index) => {
-                      const isLastRows = index >= paginatedDevices.length - 2;
-                      const isFirstRows = index < 2;
-                      return (
-                        <tr
-                          key={device.id}
-                          onClick={() => router.push(`/admin/devices/${device.id}`)}
-                          className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
-                        >
-                          <td className="px-6 py-4">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">{device.device}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">{device.model}</div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.customer}</td>
-                          <td className="px-6 py-4 text-sm">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedLocation({ lat: device.lat, lng: device.lng, label: device.location, device: device });
-                                setMapModalOpen(true);
-                              }}
-                              className="text-bgBlue hover:underline cursor-pointer transition-all"
-                            >
-                              <DeviceLocation lat={device.lat} lng={device.lng} />
-                            </button>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.type}</td>
-                          <td className="px-6 py-4">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(device.status)}`}>
-                              {device.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm">
-                            <div className="flex flex-col space-y-1">
-                              <span className="text-gray-900 dark:text-white">{device.storage}</span>
-                              <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                <div className={`h-full ${device.storagePercent >= 80 ? 'bg-red-500' : device.storagePercent >= 50 ? 'bg-orange-500' : 'bg-blue-500'}`} style={{ width: `${device.storagePercent}%` }} />
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{device.lastSync}</td>
-                          <td className="px-6 py-4">
-                            <ActionMenu device={device} onAction={handleAction} />
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td colSpan={8} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                        No devices found for the selected time range and filters.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            <DeviceTable
+              paginatedDevices={paginatedDevices}
+              onSelectLocation={handleSelectLocation}
+              getStatusBadge={getStatusBadge}
+              handleAction={handleAction}
+            />
 
-            {/* Mobile Card View */}
-            <div className="lg:hidden space-y-4 p-4">
-              {paginatedDevices.length > 0 ? (
-                paginatedDevices.map((device, index) => {
-                  const isLastRows = index >= paginatedDevices.length - 2;
-                  const isFirstRows = index < 2;
-                  return (
-                    <div
-                      key={device.id}
-                      onClick={() => router.push(`/admin/devices/${device.id}`)}
-                      className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 cursor-pointer hover:shadow-md transition-shadow"
-                    >
-                      {/* Header */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{device.device}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{device.model}</div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap ${getStatusBadge(device.status)}`}>
-                            {device.status}
-                          </span>
-                          <ActionMenu device={device} onAction={handleAction} />
-                        </div>
-                      </div>
-
-                      {/* Customer Info */}
-                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
-                        <div className="min-w-0">
-                          <span className="text-gray-500 dark:text-gray-400">Customer:</span>
-                          <span className="ml-2 text-gray-900 dark:text-white break-words">{device.customer}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-gray-500 dark:text-gray-400">Type:</span>
-                          <span className="ml-2 text-gray-900 dark:text-white break-all">{device.type}</span>
-                        </div>
-                      </div>
-
-                      {/* Location */}
-                      <div className="text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Location:</span>
-                        {device.location && device.location !== 'N/A' ? (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedLocation({ lat: device.lat, lng: device.lng, label: device.location, device: device });
-                              setMapModalOpen(true);
-                            }}
-                            className="ml-2 text-bgBlue hover:underline cursor-pointer transition-all"
-                          >
-                            <DeviceLocation lat={device.lat} lng={device.lng} />
-                          </button>
-                        ) : (
-                          <span className="ml-2 text-gray-900 dark:text-white">N/A</span>
-                        )}
-                      </div>
-
-                      {/* Storage and Last Sync */}
-                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-sm">
-                        <div className="min-w-0">
-                          <span className="text-gray-500 dark:text-gray-400">Storage:</span>
-                          <span className="ml-2 text-gray-900 dark:text-white break-words">{device.storage}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-gray-500 dark:text-gray-400">Last Sync:</span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400 break-words">{device.lastSync}</span>
-                        </div>
-                      </div>
-
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  No devices found for the selected time range and filters.
-                </div>
-              )}
-            </div>
+            <DeviceMobileList
+              paginatedDevices={paginatedDevices}
+              onSelectLocation={handleSelectLocation}
+              getStatusBadge={getStatusBadge}
+              handleAction={handleAction}
+            />
           </div>
 
-          {/* Pagination */}
-          <div className="p-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 bg-navbarBg rounded-b-xl">
-            <div className="text-xs sm:text-sm text-center sm:text-left text-gray-500 dark:text-gray-400">
-              Showing {filteredDevices.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1}-
-              {Math.min(currentPage * itemsPerPage, filteredDevices.length)} of {filteredDevices.length} devices
-            </div>
-            <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredDevices.length / itemsPerPage)))}
-                disabled={currentPage >= Math.ceil(filteredDevices.length / itemsPerPage)}
-                className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                Next
-              </button>
-            </div>
-          </div>
+          <DevicePagination
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalItems={filteredDevices.length}
+            setCurrentPage={setCurrentPage}
+          />
         </div>
       </div>
 
-      {/* Modal */}
       <Modal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
@@ -754,6 +365,6 @@ export default function GlobalDevices() {
         label={selectedLocation.label}
         device={selectedLocation.device}
       />
-    </div >
+    </div>
   );
 }
