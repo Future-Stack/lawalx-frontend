@@ -341,8 +341,8 @@ const FinancialReport = () => {
             planName: item.planName,
             name: item.planName,
             subscribers: item.subscribers || 0,
-            revenue: item.revenue || 0,
-            avgUser: item.avgUser || 0,
+            revenue: item.totalRevenue || item.revenue || 0,
+            avgUser: item.avgPerUser || item.avgUser || 0,
             churnRate: item.churnRate || 0,
             growth: item.growth || 0,
           })),
@@ -414,10 +414,10 @@ const FinancialReport = () => {
         conversionByPlan: sortByPlanNameField(
           (trialConvertData?.data?.plans || []).map((item: any) => ({
             planName: item.planName,
-            plan: item.planName,
-            trials: item.trialCount,
-            converted: item.convertedCount,
-            rate: item.conversionRate,
+            plan: (item.planName || '').toLowerCase().includes('plan') ? item.planName : `${item.planName} Plan`,
+            trials: item.trials ?? item.trialCount ?? 0,
+            converted: item.converted ?? item.convertedCount ?? 0,
+            rate: item.conversionRate ?? item.rate ?? 0,
           })),
         ),
         topFeature: 'N/A',
@@ -833,20 +833,20 @@ const FinancialReport = () => {
               <h2 className="text-lg font-semibold mb-2">Plan Performance Overview</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">Comparative analysis of subscription tiers</p>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+              <div className="grid grid-cols-1 md:grid-cols-3 2xl:grid-cols-5 gap-6 mb-10">
                 {data.plans.allPlans.length > 0 ? (
                   data.plans.allPlans.map((plan: any, idx: number) => (
                     <div
                       key={idx}
                       className={`rounded-2xl p-6 border transition-all duration-300 hover:shadow-lg ${plan.name?.toLowerCase().includes('starter') ? 'border-orange-400' :
-                          plan.name?.toLowerCase().includes('business') ? 'border-cyan-400' :
-                            'border-purple-400'
+                        plan.name?.toLowerCase().includes('business') ? 'border-cyan-400' :
+                          'border-purple-400'
                         }`}
                     >
                       <div className="flex flex-col gap-1 mb-4">
                         <div className={`text-sm font-semibold ${plan.name?.toLowerCase().includes('starter') ? 'text-orange-500' :
-                            plan.name?.toLowerCase().includes('business') ? 'text-cyan-500' :
-                              'text-purple-500'
+                          plan.name?.toLowerCase().includes('business') ? 'text-cyan-500' :
+                            'text-purple-500'
                           }`}>{plan.name}</div>
                         <div className="text-4xl font-bold text-gray-900 dark:text-gray-100">{plan.subscribers}</div>
                         <div className="text-xs text-gray-400">subscribers</div>
@@ -984,7 +984,7 @@ const FinancialReport = () => {
                 </button> */}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6 gap-6 mb-10">
                 <div className="rounded-2xl p-6 border border-purple-100 dark:border-purple-800/30 bg-[#f5f3ff] dark:bg-purple-900/10">
                   <div className="text-xs text-purple-600 dark:text-purple-400 mb-2 font-medium">Overall ARPU</div>
                   <div className="text-4xl font-bold text-purple-700 dark:text-purple-300 mb-1">{currencySymbol}{data.arpu.overall}</div>
@@ -1106,16 +1106,16 @@ const FinancialReport = () => {
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{plan.plan}</span>
                         <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">{plan.rate}% conversion</span>
                       </div>
-                      <div className="flex items-center gap-1 rounded-full h-8 overflow-hidden bg-transparent">
+                      <div className="flex items-center gap-2 h-9 bg-transparent">
                         <div
-                          className="bg-[#9810FA] flex items-center justify-center text-white text-[10px] font-medium h-full transition-all duration-500 rounded-l-md"
-                          style={{ flex: plan.trials, minWidth: '100px' }}
+                          className="bg-[#a855f7] flex items-center justify-center text-white text-xs font-medium h-full transition-all duration-500 rounded-lg"
+                          style={{ flex: plan.trials || 1, minWidth: '100px' }}
                         >
                           {plan.trials} trials
                         </div>
                         <div
-                          className="bg-[#0092B8] flex items-center justify-center text-white text-[10px] font-medium h-full transition-all duration-500 rounded-r-md"
-                          style={{ flex: plan.converted, minWidth: '100px' }}
+                          className="bg-[#06b6d4] flex items-center justify-center text-white text-xs font-medium h-full transition-all duration-500 rounded-lg"
+                          style={{ flex: plan.converted || 1, minWidth: '100px' }}
                         >
                           {plan.converted} converted
                         </div>

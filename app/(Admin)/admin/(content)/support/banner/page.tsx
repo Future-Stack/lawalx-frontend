@@ -43,9 +43,6 @@ export default function BannerPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      {/* <BannerStats /> */}
-
       {/* Banner Table */}
       <BannerTable />
     </div>
