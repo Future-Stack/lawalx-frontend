@@ -137,6 +137,9 @@ const MyContentCard = ({
               src={item.video}
               className="w-full h-full object-cover"
               muted
+              playsInline
+              preload="auto"
+              autoPlay={false}
               onError={(e: any) => {
                 e.currentTarget.style.display = 'none';
                 if (e.currentTarget.parentElement) {
@@ -412,8 +415,18 @@ const MyContentCard = ({
                   muted
                   loop
                   playsInline
-                  onMouseEnter={(e) => e.currentTarget.play()}
-                  onMouseLeave={(e) => { e.currentTarget.pause(); e.currentTarget.currentTime = 0; }}
+                  preload="auto"
+                  autoPlay={false}
+                  onMouseEnter={(e) => {
+                    const playPromise = e.currentTarget.play();
+                    if (playPromise !== undefined) {
+                      playPromise.catch(() => {});
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.pause();
+                    e.currentTarget.currentTime = 0;
+                  }}
                   onError={(e: any) => {
                     e.currentTarget.style.display = 'none';
                     if (e.currentTarget.parentElement) {

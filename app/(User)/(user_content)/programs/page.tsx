@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import AddButton from "@/common/AddButton";
@@ -22,6 +23,7 @@ const MyScreensPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  console.log("programsData", programsData)
 
   const filteredPrograms = useMemo(() => {
     if (!programsData?.data) return [];
@@ -125,7 +127,7 @@ const MyScreensPage: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredPrograms.map((program) => (
-                <ScreenCard key={program.id} program={program} />
+                <ScreenCard key={program.id || (program as any)._id} program={program} />
               ))}
             </div>
           )}

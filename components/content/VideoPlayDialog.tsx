@@ -4,6 +4,7 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 import BaseVideoPlayer from "@/common/BaseVideoPlayer";
 import { ContentItem } from "@/types/content";
 import { X } from "lucide-react";
+import { getUrl } from "@/lib/content-utils";
 
 interface VideoPlayDialogProps {
   item: ContentItem;
@@ -29,16 +30,14 @@ const modalVariants: Variants = {
 const VideoPlayDialog = ({ item, open, setOpen }: VideoPlayDialogProps) => {
   // Extract video filename from URL
   const getVideoFileName = (url: string) => {
-    try {
-      if (!url) return "Video";
-      const urlObj = new URL(url);
-      const pathname = urlObj.pathname;
-      const fileName = pathname.split('/').pop() || url;
-      return decodeURIComponent(fileName);
-    } catch {
-      return url || "Video";
-    }
+    if (!url) return "Video";
+    const cleanUrl = url.split("?")[0]; // remove query string if present
+    const fileName = cleanUrl.split('/').pop() || url;
+    return decodeURIComponent(fileName);
   };
+
+  const resolvedVideoSrc = getUrl(item.video ?? "") || "";
+  const resolvedPosterSrc = item.thumbnail ? getUrl(item.thumbnail) : undefined;
 
   return (
     <AnimatePresence>
@@ -77,8 +76,8 @@ const VideoPlayDialog = ({ item, open, setOpen }: VideoPlayDialogProps) => {
             {/* Modal content */}
             <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-900/50">
               <BaseVideoPlayer
-                src={item.video ?? ""}
-                poster={item.thumbnail}
+                src={resolvedVideoSrc}
+                poster={resolvedPosterSrc}
                 autoPlay={open}
                 rounded="rounded-xl"
               />

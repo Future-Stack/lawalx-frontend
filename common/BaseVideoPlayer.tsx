@@ -70,10 +70,10 @@ const BaseVideoPlayer = ({
   const isSeekingRef = useRef(false);
   const pauseTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Spinner delay logic: Only show spinner if media takes > 600ms to load/buffer
+  // Spinner delay logic: Only show spinner if media takes > 300ms to load/buffer
   useEffect(() => {
     if (!ready || !isMounted || isBuffering) {
-      const timer = setTimeout(() => setShowSpinner(true), 600);
+      const timer = setTimeout(() => setShowSpinner(true), 300);
       return () => clearTimeout(timer);
     } else {
       setShowSpinner(false);
@@ -110,12 +110,11 @@ const BaseVideoPlayer = ({
     const attach = (): (() => void) | undefined => {
       const player = playerRef.current?.plyr as any;
       if (!player || typeof player.on !== "function") {
-        retryTimer = setTimeout(attach, 100);
+        retryTimer = setTimeout(attach, 50);
         return;
       }
 
       const handleReady = () => {
-        setReady(true);
         onReadyRef.current?.();
         const vol = volumeRef.current !== undefined ? volumeRef.current : getSavedVolume();
         if (vol === null) return;
@@ -172,7 +171,7 @@ const BaseVideoPlayer = ({
         }, 200); // 200ms delay to verify if pause was triggered by seek
       };
       const handleWaiting = () => {
-        if (autoPlayRef.current) setIsBuffering(true);
+        setIsBuffering(true);
       };
       const handleEnded   = () => {
         setIsPlaying(false);
@@ -300,6 +299,10 @@ const BaseVideoPlayer = ({
     muted: muted,
     controls: ["play", "progress", "current-time", "duration", "mute", "volume", "settings", "fullscreen"],
     storage: { enabled: false },
+    html5: {
+      preload: "auto",
+      playsinline: true,
+    }
   }), [muted]);
 
   return (
@@ -340,8 +343,8 @@ const BaseVideoPlayer = ({
             </span> */}
           </div>
         )}
-        <div className={`absolute inset-0 transition-all duration-700 ease-out ${
-          ready ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-105 blur-lg"
+        <div className={`absolute inset-0 transition-all duration-300 ease-out ${
+          ready ? "opacity-100 scale-100" : "opacity-0 scale-[1.02]"
         }`}>
           {isMounted ? (
             <Plyr ref={playerRef} source={source} options={plyrOptions} />

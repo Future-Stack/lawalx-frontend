@@ -36,14 +36,15 @@ export const getUrl = (url: string | null) => {
 
   if (cleanUrl.startsWith("http")) return cleanUrl;
 
-  // Consistency with ScreenCard.tsx: strip /api/v1 from baseUrl if it exists
-  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "").replace(
-    /\/api\/v1\/?$/,
-    "",
-  );
+  // Resolve directly to backend origin for media files to avoid Next.js proxy overhead.
+  // This eliminates the double-hop (Browser → Next.js → Backend) that slows video streaming.
+  const mediaBaseUrl =
+    process.env.NEXT_PUBLIC_MEDIA_BASE_URL ||
+    process.env.NEXT_PUBLIC_SOCKET_URL ||
+    (process.env.NEXT_PUBLIC_BASE_URL || "").replace(/\/api\/v1\/?$/, "");
 
   const path = cleanUrl.startsWith("/") ? cleanUrl.slice(1) : cleanUrl;
-  return `${baseUrl}/${path}`;
+  return `${mediaBaseUrl}/${path}`;
 };
 
 export const transformFile = (file: any, isMounted: boolean): ContentItem => ({

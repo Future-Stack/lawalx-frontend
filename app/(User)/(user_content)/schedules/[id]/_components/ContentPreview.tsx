@@ -96,22 +96,11 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
     }
   };
 
-  // const formatDateStr = (dateStr: string) => {
-  //   try {
-  //     return new Date(dateStr).toLocaleDateString("en-US", {
-  //       month: "short",
-  //       day: "numeric",
-  //       year: "numeric"
-  //     });
-  //   } catch {
-  //     return dateStr;
-  //   }
-  // };
 
-  // Spinner delay logic: Only show spinner if media takes > 600ms to load
+  // Spinner delay logic: Only show spinner if media takes > 300ms to load
   useEffect(() => {
     if (!isMediaReady) {
-      const timer = setTimeout(() => setShowSpinner(true), 600);
+      const timer = setTimeout(() => setShowSpinner(true), 300);
       return () => clearTimeout(timer);
     } else {
       setShowSpinner(false);
@@ -140,6 +129,11 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
       : lowerThird?.fontSize === "Medium"
         ? "16px"
         : "20px";
+
+  // Preload next item — browser starts fetching the next video/image before we switch
+  const nextIndex = items.length > 1 ? (playingIndex + 1) % items.length : -1;
+  const nextItem = nextIndex >= 0 ? items[nextIndex] : null;
+  const nextSrc = nextItem?.video || nextItem?.thumbnail;
 
   useEffect(() => {
     if (playingIndex >= items.length && items.length > 0) {
@@ -215,16 +209,35 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
 
   const advance = useCallback(() => {
     if (!items || items.length < 1) return;
+
+    const isOnce = repeat?.toLowerCase() === "once";
+    const isLastItem = playingIndex === items.length - 1;
+
+    if (isOnce && isLastItem) {
+      setIsFading(true);
+      setTimeout(() => {
+        setIsPaused(true);
+        setPlayingIndex(0);
+        setPlaybackVersion((prev) => prev + 1);
+        setIsFading(false);
+      }, 1500);
+      return;
+    }
+
     setIsFading(true);
     setTimeout(() => {
       setPlayingIndex((playingIndex + 1) % items.length);
       setPlaybackVersion((prev) => prev + 1);
       setIsFading(false);
     }, 1500);
-  }, [items, playingIndex, setPlayingIndex]);
+  }, [items, playingIndex, setPlayingIndex, repeat]);
 
   useEffect(() => {
-    if (!items || items.length <= 1 || isPaused) return;
+    if (!items || items.length < 1 || isPaused) return;
+
+    const isOnce = repeat?.toLowerCase() === "once";
+    if (items.length === 1 && !isOnce) return;
+
     const currentItem = items[playingIndex];
     if (currentItem?.type === "video" || currentItem?.type === "audio") return;
     const displayDuration = parseInt(currentItem?.duration || "7");
@@ -233,10 +246,20 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
       Math.max(0, displayDuration * 1000 - 1500),
     );
     return () => clearTimeout(timer);
-  }, [playingIndex, items, isPaused, advance]);
+  }, [playingIndex, items, isPaused, advance, repeat]);
 
   return (
-    <div className="lg:col-span-6 space-y-6 order-1 lg:order-2">
+    <div className="flex-1 w-full space-y-6 order-1 lg:order-2">
+      {/* Preload next media item for faster transitions */}
+      {nextSrc && (
+        <link
+          rel="preload"
+          href={nextSrc}
+          as={nextItem?.type === "video" ? "video" : "image"}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          {...({ fetchPriority: "low" } as any)}
+        />
+      )}
       {/* <h2 className="text-xl font-bold text-headings dark:text-white lg:mt-0">Preview</h2> */}
 
       <div className="border border-border p-4 sm:p-6 rounded-xl bg-navbarBg space-y-4 sm:space-y-6 shadow-lg transition-shadow hover:shadow-xl overflow-hidden">

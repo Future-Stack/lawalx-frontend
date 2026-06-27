@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Device, Timeline, WorkoutStatus } from "@/redux/api/users/programs/programs.type";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { getUrl } from "@/lib/content-utils";
 
 // New Component Imports
 import ProgramHeader from "./_components/ProgramDetails/ProgramHeader";
@@ -226,16 +227,14 @@ const ScreenCardDetails = () => {
   const images = localTimeline.filter((t) => t.file?.type === "IMAGE" || t.file?.type === "CONTENT")?.length || 0;
   const audios = localTimeline.filter((t) => t.file?.type === "AUDIO")?.length || 0;
 
-  const getFileUrl = (url: string) => {
-    if (!url) return undefined;
-    if (url.startsWith("http")) return url;
-    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "").replace(/\/api\/v1\/?$/, "");
-    return `${baseUrl}/${url.startsWith("/") ? url.slice(1) : url}`;
-  };
-
   const selectedContent = localTimeline?.[playingIndex];
-  const previewUrl = getFileUrl(selectedContent?.file?.url || "");
+  const previewUrl = getUrl(selectedContent?.file?.url || "");
   const lastUpdated = dayjs(program.updated_at).fromNow();
+
+  // Preload next timeline item for faster transitions
+  const nextIdx = localTimeline.length > 1 ? (playingIndex + 1) % localTimeline.length : -1;
+  const nextContent = nextIdx >= 0 ? localTimeline[nextIdx] : null;
+  const nextPreviewUrl = nextContent?.file?.url ? getUrl(nextContent.file.url) : null;
 
   const contentParts = [];
   if (videos > 0) contentParts.push(`${videos} video${videos !== 1 ? 's' : ''}`);
@@ -372,6 +371,15 @@ const ScreenCardDetails = () => {
 
           {/* Program Preview */}
           <div className="col-span-1 md:col-span-6 md:col-start-7 order-1 md:order-2 w-full">
+            {/* Preload next timeline item for faster transitions */}
+            {nextPreviewUrl && (
+              <link
+                rel="preload"
+                href={nextPreviewUrl}
+                as={nextContent?.file?.type === "VIDEO" ? "video" : nextContent?.file?.type === "AUDIO" ? "fetch" : "image"}
+                {...({ fetchPriority: "low" } as any)}
+              />
+            )}
             <ProgramPreview
               selectedContent={localTimeline[playingIndex]}
               previewUrl={previewUrl}

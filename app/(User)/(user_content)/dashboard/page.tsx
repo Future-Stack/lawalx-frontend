@@ -44,7 +44,6 @@ export default function Dashboard() {
     data: devicesData,
     isError: isDevicesError,
   } = useGetMyAllDevicesDataQuery();
-  console.log("Recent Devices Data:", devicesData);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);

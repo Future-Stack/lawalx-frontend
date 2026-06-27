@@ -17,7 +17,7 @@ const programsAPI = baseApi.injectEndpoints({
         url: "/program/my-programs",
         method: "GET",
       }),
-      providesTags: ["Programs", "Content"],
+      providesTags: ["Programs", "Content", "Devices"],
     }),
     getSingleProgramData: build.query<GetProgramByIdResponse, { id: string }>({
       query: ({ id }) => ({
