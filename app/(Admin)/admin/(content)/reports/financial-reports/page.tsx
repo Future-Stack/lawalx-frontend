@@ -103,6 +103,7 @@ const FinancialReport = () => {
 
       if (format === 'pdf') {
         const doc = new jsPDF();
+        const pdfCurrencySymbol = currencySymbol === '₦' ? 'NGN ' : currencySymbol;
 
         // Branded header with logo
         let currentY = await addPdfHeader(
@@ -118,10 +119,10 @@ const FinancialReport = () => {
 
         const summaryStats = [
           ['Metric', 'Value', 'Growth %', 'Status'],
-          ['MRR', `${currencySymbol}${(reportData.stats?.mrr?.value || 0).toLocaleString()}`, `${reportData.stats?.mrr?.growth || 0}%`, (reportData.stats?.mrr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
-          ['ARR', `${currencySymbol}${(reportData.stats?.arr?.value || 0).toLocaleString()}`, `${reportData.stats?.arr?.growth || 0}%`, (reportData.stats?.arr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
+          ['MRR', `${pdfCurrencySymbol}${(reportData.stats?.mrr?.value || 0).toLocaleString()}`, `${reportData.stats?.mrr?.growth || 0}%`, (reportData.stats?.mrr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
+          ['ARR', `${pdfCurrencySymbol}${(reportData.stats?.arr?.value || 0).toLocaleString()}`, `${reportData.stats?.arr?.growth || 0}%`, (reportData.stats?.arr?.growth || 0) >= 0 ? 'GROWING' : 'ATTENTION'],
           ['Churn Rate', `${reportData.stats?.churnRate?.value || 0}%`, `${reportData.stats?.churnRate?.growth || 0}%`, (reportData.stats?.churnRate?.growth || 0) <= 0 ? 'HEALTHY' : 'STRESS'],
-          ['ARPU', `${currencySymbol}${(reportData.stats?.arpu?.value || 0).toLocaleString()}`, `${reportData.stats?.arpu?.growth || 0}%`, 'STABLE'],
+          ['ARPU', `${pdfCurrencySymbol}${(reportData.stats?.arpu?.value || 0).toLocaleString()}`, `${reportData.stats?.arpu?.growth || 0}%`, 'STABLE'],
           ['New Subs', (reportData.stats?.newSubscriptions?.value || 0).toString(), `${reportData.stats?.newSubscriptions?.growth || 0}%`, 'N/A'],
         ];
 
@@ -140,12 +141,12 @@ const FinancialReport = () => {
         doc.text('2. MRR Movement Breakdown', 14, currentY);
         const mrrMovement = [
           ['Component', 'Value'],
-          ['New Sales', `${currencySymbol}${reportData.mrr.summary.newSales.toLocaleString()}`],
-          ['Upgrades', `${currencySymbol}${reportData.mrr.summary.upgrades.toLocaleString()}`],
-          ['Downgrades', `-${currencySymbol}${Math.abs(reportData.mrr.summary.downgrades).toLocaleString()}`],
-          ['Churned', `-${currencySymbol}${Math.abs(reportData.mrr.summary.churned).toLocaleString()}`],
-          ['Net New MRR', `${currencySymbol}${reportData.mrr.summary.netNewMrr.toLocaleString()}`],
-          ['Annual RR', `${currencySymbol}${reportData.mrr.footer.annualRecurringRevenue.toLocaleString()}`],
+          ['New Sales', `${pdfCurrencySymbol}${reportData.mrr.summary.newSales.toLocaleString()}`],
+          ['Upgrades', `${pdfCurrencySymbol}${reportData.mrr.summary.upgrades.toLocaleString()}`],
+          ['Downgrades', `-${pdfCurrencySymbol}${Math.abs(reportData.mrr.summary.downgrades).toLocaleString()}`],
+          ['Churned', `-${pdfCurrencySymbol}${Math.abs(reportData.mrr.summary.churned).toLocaleString()}`],
+          ['Net New MRR', `${pdfCurrencySymbol}${reportData.mrr.summary.netNewMrr.toLocaleString()}`],
+          ['Annual RR', `${pdfCurrencySymbol}${reportData.mrr.footer.annualRecurringRevenue.toLocaleString()}`],
         ];
         autoTable(doc, {
           startY: currentY + 5,
@@ -187,8 +188,8 @@ const FinancialReport = () => {
         const planRows = reportData.plans.map((p: any) => [
           p.planName || 'N/A',
           (p.subscribers || 0).toLocaleString(),
-          `${currencySymbol}${(p.totalRevenue || 0).toLocaleString()}`,
-          `${currencySymbol}${(p.avgPerUser || 0).toLocaleString()}`,
+          `${pdfCurrencySymbol}${(p.totalRevenue || 0).toLocaleString()}`,
+          `${pdfCurrencySymbol}${(p.avgPerUser || 0).toLocaleString()}`,
           `${p.churnRate || 0}%`,
           `+${p.growth || 0}%`
         ]);
@@ -206,7 +207,7 @@ const FinancialReport = () => {
         if (currentY > 230) { doc.addPage(); currentY = 20; }
         doc.setFontSize(14);
         doc.text('5. ARPU by Plan', 14, currentY);
-        const arpuRows = reportData.arpu.byPlan.map((p: any) => [p.planName, `${currencySymbol}${p.arpu}`, `+${p.growth}% growth`]);
+        const arpuRows = reportData.arpu.byPlan.map((p: any) => [p.planName, `${pdfCurrencySymbol}${p.arpu}`, `+${p.growth}% growth`]);
         autoTable(doc, {
           startY: currentY + 5,
           head: [['Plan', 'ARPU', 'Growth']],
