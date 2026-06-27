@@ -39,7 +39,7 @@ export const RecentSupportTickets: React.FC<RecentSupportTicketsProps> = ({
               <div
                 key={idx}
                 onClick={() => onTicketClick(ticket)}
-                className="p-4 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all group cursor-pointer flex flex-col justify-center"
+                className="p-4 bg-navbarBg rounded-xl border border-border hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-sm transition-all group cursor-pointer flex flex-col justify-center"
               >
                 <div className="flex flex-col gap-1.5">
                   <span className="text-[10px] font-mono font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wider">{ticket.ticketId}</span>

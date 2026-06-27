@@ -32,7 +32,7 @@ export const RecentCriticalActivity: React.FC<RecentCriticalActivityProps> = ({ 
         ) : (
           <>
             {activities.map((activity: any, idx: number) => (
-              <div key={idx} className="flex-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700 flex flex-col justify-center">
+              <div key={idx} className="flex-1 p-3 bg-navbarBg rounded-md border border-border flex flex-col justify-center">
                 <div className="flex items-center justify-start gap-4">
                   <span className="text-base font-bold text-gray-900 dark:text-white">{activity.user?.name || 'Unknown'}</span>
                   <span className={`px-1.5 py-0.5 rounded-xl text-[9px] bg-gray-200 dark:bg-gray-50/30 text-gray-800 dark:text-gray-200 uppercase tracking-tight`}>
