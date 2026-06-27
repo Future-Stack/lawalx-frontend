@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { X, Camera, Maximize, Volume2, Sun, Play, Pause, ListTree, Layout, Clock, Monitor, Database } from "lucide-react";

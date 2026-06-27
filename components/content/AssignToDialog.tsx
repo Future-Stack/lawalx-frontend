@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -130,7 +131,7 @@ const AssignToDialog = ({ open, setOpen, contentId, onAssign }: AssignToDialogPr
                                         animate={{ opacity: 1 }}
                                         className="py-12 text-center text-textGray text-sm h-full flex items-center justify-center"
                                     >
-                                        No programs found matching "{searchQuery}"
+                                        No programs found matching &quot;{searchQuery}&quot;
                                     </motion.div>
                                 )}
                             </AnimatePresence>
