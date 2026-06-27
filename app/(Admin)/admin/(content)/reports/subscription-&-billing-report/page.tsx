@@ -233,7 +233,8 @@ const BillingDashboard = () => {
 
       toast.dismiss();
 
-      const doc = new jsPDF();
+      const doc = new jsPDF({ orientation: "landscape" });
+      const pdfCurrencySymbol = currencySymbol === '₦' ? 'NGN ' : currencySymbol;
       const timeRangeLabel = timeRanges.find(t => t.value === timeRange)?.label || timeRange || 'All Time';
 
       // Branded header with logo
@@ -253,9 +254,9 @@ const BillingDashboard = () => {
         ['Metric', 'Value', 'Trend'],
         ['Success Rate', `${overview.successRate?.value || 0}%`, overview.successRate?.trend || 'Stable'],
         ['Failed Payments Count', (overview.failedPayments?.count || 0).toLocaleString(), ''],
-        ['Failed Payments Amount', `${currencySymbol}${(overview.failedPayments?.amount || 0).toLocaleString()}`, ''],
+        ['Failed Payments Amount', `${pdfCurrencySymbol}${(overview.failedPayments?.amount || 0).toLocaleString()}`, ''],
         ['Overdue Invoices Count', (overview.overdueInvoices?.count || 0).toLocaleString(), ''],
-        ['Overdue Invoices Amount', `${currencySymbol}${(overview.overdueInvoices?.amount || 0).toLocaleString()}`, ''],
+        ['Overdue Invoices Amount', `${pdfCurrencySymbol}${(overview.overdueInvoices?.amount || 0).toLocaleString()}`, ''],
         ['Recovery Rate', `${overview.recoveryRate?.value || 0}%`, ''],
         // ['Avg DSO', `${overview.avgDSO?.value || 0} days`, overview.avgDSO?.status || ''],
       ];
@@ -272,7 +273,7 @@ const BillingDashboard = () => {
       currentY = (doc as any).lastAutoTable.finalY + 15;
 
       // Section 2: Recent Transactions
-      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      if (currentY > 150) { doc.addPage(); currentY = 20; }
       doc.setFontSize(14);
       doc.text('2. Recent Transactions', 14, currentY);
 
@@ -281,7 +282,7 @@ const BillingDashboard = () => {
         tx.id || tx.transactionId || '-',
         tx.date || '-',
         tx.customer || '-',
-        `${currencySymbol}${tx.amount || 0}`,
+        `${pdfCurrencySymbol}${tx.amount || 0}`,
         tx.status || '-',
         tx.method || '-',
         tx.invoice || '-'
@@ -292,20 +293,20 @@ const BillingDashboard = () => {
         body: txRows,
         startY: currentY + 5,
         theme: 'grid',
-        styles: { fontSize: 7 },
+        styles: { fontSize: 7, overflow: 'visible' },
         headStyles: { fillColor: [139, 92, 246] } // Purple-500
       });
 
       currentY = (doc as any).lastAutoTable.finalY + 15;
 
       // Section 3: Invoice Aging Summary
-      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      if (currentY > 150) { doc.addPage(); currentY = 20; }
       doc.setFontSize(14);
       doc.text('3. Invoice Aging Summary', 14, currentY);
       const agingRows = (rawData.agingReport?.summary || []).map((item: any) => [
         item.range,
         item.invoices || 0,
-        `${currencySymbol}${(item.amount || 0).toLocaleString()}`
+        `${pdfCurrencySymbol}${(item.amount || 0).toLocaleString()}`
       ]);
       autoTable(doc, {
         head: [['Range', 'Invoice Count', 'Amount']],
@@ -318,7 +319,7 @@ const BillingDashboard = () => {
       currentY = (doc as any).lastAutoTable.finalY + 15;
 
       // Section 4: Failed Payments Analysis
-      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      if (currentY > 150) { doc.addPage(); currentY = 20; }
       doc.setFontSize(14);
       doc.text('4. Failed Payments Analysis', 14, currentY);
       const failedRows = (rawData.failedPaymentsAnalysis?.commonFailureReasons || []).map((item: any) => [
@@ -336,12 +337,12 @@ const BillingDashboard = () => {
       currentY = (doc as any).lastAutoTable.finalY + 15;
 
       // Section 5: Delinquent Accounts
-      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      if (currentY > 150) { doc.addPage(); currentY = 20; }
       doc.setFontSize(14);
       doc.text('5. Delinquent Accounts', 14, currentY);
       const delRows = (rawData.delinquencyReport?.details || []).map((item: any) => [
         item.customer,
-        `${currencySymbol}${item.balance}`,
+        `${pdfCurrencySymbol}${item.balance}`,
         `${item.daysOverdue || item.daysPastDue} days`,
         item.status
       ]);
@@ -356,12 +357,12 @@ const BillingDashboard = () => {
       currentY = (doc as any).lastAutoTable.finalY + 15;
 
       // Section 6: Refund & Tax Summary
-      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      if (currentY > 150) { doc.addPage(); currentY = 20; }
       doc.setFontSize(14);
       doc.text('6. Refund & Tax Summary', 14, currentY);
       const refundTaxRows = [
-        ['Total Refunds', rawData.refundReport?.summary?.totalRefunds || 0, 'Tax Collected', `${currencySymbol}${(rawData.taxReport?.summary?.taxCollected || 0).toLocaleString()}`],
-        ['Refund Amount', `${currencySymbol}${(rawData.refundReport?.summary?.refundAmount || 0).toLocaleString()}`, 'Taxable Revenue', `${currencySymbol}${(rawData.taxReport?.summary?.taxableRevenue || 0).toLocaleString()}`],
+        ['Total Refunds', rawData.refundReport?.summary?.totalRefunds || 0, 'Tax Collected', `${pdfCurrencySymbol}${(rawData.taxReport?.summary?.taxCollected || 0).toLocaleString()}`],
+        ['Refund Amount', `${pdfCurrencySymbol}${(rawData.refundReport?.summary?.refundAmount || 0).toLocaleString()}`, 'Taxable Revenue', `${pdfCurrencySymbol}${(rawData.taxReport?.summary?.taxableRevenue || 0).toLocaleString()}`],
         ['Chargebacks', rawData.refundReport?.summary?.chargebacks || 0, 'Avg Tax Rate', rawData.taxReport?.summary?.avgTaxRate || '0%'],
       ];
       autoTable(doc, {
