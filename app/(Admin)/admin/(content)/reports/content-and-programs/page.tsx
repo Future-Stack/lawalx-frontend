@@ -67,7 +67,7 @@ const ContentAndProgramsReport = () => {
         ? new Date(exportData.data.exportedAt).toLocaleString()
         : new Date().toLocaleString();
 
-      const doc = new jsPDF();
+      const doc = new jsPDF({ orientation: "landscape" });
       const timeRangeLabel = selectedRange.label;
 
       // Branded header with logo
@@ -96,7 +96,7 @@ const ContentAndProgramsReport = () => {
       currentY = (doc as any).lastAutoTable.finalY + 15;
 
       // Section 2: Content File Inventory
-      if (currentY > 230) { doc.addPage(); currentY = 20; }
+      if (currentY > 150) { doc.addPage(); currentY = 20; }
       doc.setFontSize(14);
       doc.text('2. Content File Inventory', 14, currentY);
 
@@ -118,7 +118,7 @@ const ContentAndProgramsReport = () => {
         startY: currentY + 5,
         theme: 'striped',
         headStyles: { fillColor: [16, 185, 129] },
-        styles: { fontSize: 7 },
+        styles: { fontSize: 7, overflow: 'visible' },
       });
 
       doc.save(`Content_Report_${new Date().toISOString().split('T')[0]}.pdf`);
