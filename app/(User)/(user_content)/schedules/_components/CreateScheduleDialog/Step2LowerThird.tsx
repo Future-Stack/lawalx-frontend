@@ -366,14 +366,14 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
               <Label className="text-sm font-medium text-headings">
                 Message
               </Label>
-              <Input
+              <textarea
                 placeholder="This is a demo text"
                 value={data.lowerThirdConfig.message}
                 onChange={(e) => updateConfig("message", e.target.value)}
-                className={`bg-input border-borderGray text-headings ${FIELD_SIZE}`}
+                className="w-full h-24 px-4 py-2 text-sm rounded-md bg-input border border-borderGray text-headings resize-none"
               />
             </div>
-            <div className="space-y-2 w-32">
+            {/* <div className="space-y-2 w-32">
               <Label className="text-sm font-medium text-headings">
                 Duration (s)
               </Label>
@@ -392,7 +392,7 @@ const Step2LowerThird: React.FC<Step2LowerThirdProps> = ({
                 }}
                 className={`bg-input border-borderGray text-headings ${FIELD_SIZE}`}
               />
-            </div>
+            </div> */}
           </div>
 
           {/* TEXT STYLE */}
