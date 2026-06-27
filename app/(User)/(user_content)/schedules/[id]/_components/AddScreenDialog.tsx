@@ -11,13 +11,14 @@ import DeviceLocation from "@/components/common/DeviceLocation";
 interface AddScreenDialogProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (devices: Device[]) => void;
+    onAdd: (devices: Device[]) => Promise<void> | void;
 }
 
 const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAdd }) => {
     const [search, setSearch] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("all");
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isAdding, setIsAdding] = useState(false);
 
     const { data: allDevicesData, isLoading } = useGetMyAllDevicesDataQuery(undefined);
     const allDevices = useMemo(() => allDevicesData?.data || [], [allDevicesData?.data]);
@@ -37,14 +38,22 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
         );
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         const selectedDevices = allDevices.filter(d => selectedIds.includes(d.id));
-        onAdd(selectedDevices);
-        setSelectedIds([]);
-        onClose();
+        setIsAdding(true);
+        try {
+            await onAdd(selectedDevices);
+            setSelectedIds([]);
+            onClose();
+        } catch (error) {
+            console.error("Failed to add devices to schedule", error);
+        } finally {
+            setIsAdding(false);
+        }
     };
 
     const handleClose = () => {
+        if (isAdding) return;
         setSelectedIds([]);
         setSearch("");
         setSelectedStatus("all");
@@ -54,7 +63,7 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
     return (
         <BaseDialog
             open={isOpen}
-            setOpen={handleClose}
+            setOpen={isAdding ? () => {} : handleClose}
             title="Add Device"
             description="Select devices to assign to this schedule"
             className="max-w-3xl"
@@ -157,16 +166,26 @@ const AddScreenDialog: React.FC<AddScreenDialogProps> = ({ isOpen, onClose, onAd
                 <div className="flex gap-3 justify-end pt-4 border-t border-border">
                     <button
                         onClick={handleClose}
-                        className="px-6 py-2.5 text-muted hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition cursor-pointer shadow-customShadow"
+                        disabled={isAdding}
+                        className="px-6 py-2.5 text-muted hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition cursor-pointer shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Cancel
                     </button>
                     <button
                         onClick={handleConfirm}
-                        disabled={selectedIds.length === 0}
-                        className="px-8 py-2.5 bg-bgBlue text-white rounded-lg font-semibold hover:bg-blue-500 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow"
+                        disabled={selectedIds.length === 0 || isAdding}
+                        className="px-8 py-2.5 bg-bgBlue text-white rounded-lg font-semibold hover:bg-blue-500 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow flex items-center justify-center gap-2"
                     >
-                        Add {selectedIds.length > 0 ? `${selectedIds.length} ` : ""}Device{selectedIds.length !== 1 ? "s" : ""}
+                        {isAdding ? (
+                            <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Adding...</span>
+                            </>
+                        ) : (
+                            <>
+                                Add {selectedIds.length > 0 ? `${selectedIds.length} ` : ""}Device{selectedIds.length !== 1 ? "s" : ""}
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

@@ -7,12 +7,14 @@ import Step2LowerThird from "../../_components/CreateScheduleDialog/Step2LowerTh
 import { useUpdateLowerThirdMutation } from "@/redux/api/users/schedules/schedules.api";
 import { LowerThirdPayload } from "@/redux/api/users/schedules/schedules.type";
 import { toast } from "sonner";
+import { getUrl } from "@/lib/content-utils";
 
 interface AddLowerThirdDialogProps {
     isOpen: boolean;
     onClose: () => void;
     onLowerThirdCreated: (id: string, config?: any) => void;
     existingLowerThird?: any;
+    scheduleContent?: any[];
 }
 
 const AddLowerThirdDialog: React.FC<AddLowerThirdDialogProps> = ({
@@ -20,11 +22,24 @@ const AddLowerThirdDialog: React.FC<AddLowerThirdDialogProps> = ({
     onClose,
     onLowerThirdCreated,
     existingLowerThird,
+    scheduleContent,
 }) => {
     const [updateLowerThird, { isLoading: isUpdatingLowerThird }] = useUpdateLowerThirdMutation();
 
+    const firstContentItem = React.useMemo(() => {
+        if (!scheduleContent || scheduleContent.length === 0) return null;
+        const first = scheduleContent[0];
+        return {
+            id: first.id,
+            title: first.originalName || first.title || "",
+            type: first.type === "VIDEO" || first.type === "video" ? "video" : "image",
+            thumbnail: first.type === "IMAGE" || first.type === "image" ? getUrl(first.url || first.thumbnail) : getUrl(first.url || first.thumbnail || ""),
+            video: first.type === "VIDEO" || first.type === "video" ? getUrl(first.url || first.video || "") : undefined,
+        };
+    }, [scheduleContent]);
+
     const [data, setData] = useState({
-        selectedContent: null as any,
+        selectedContent: firstContentItem,
         lowerThirdConfig: {
             backgroundColor: "#3D3D3D",
             backgroundOpacity: 80,
@@ -38,7 +53,7 @@ const AddLowerThirdDialog: React.FC<AddLowerThirdDialogProps> = ({
             fontFamily: "Inter",
             loop: true,
             message: "",
-            duration: 0,
+            duration: "" as any,
         },
     });
 
@@ -47,7 +62,7 @@ const AddLowerThirdDialog: React.FC<AddLowerThirdDialogProps> = ({
     useEffect(() => {
         if (isOpen) {
             setData({
-                selectedContent: null as any,
+                selectedContent: firstContentItem,
                 lowerThirdConfig: {
                     backgroundColor: existingLowerThird?.backgroundColor || "#3D3D3D",
                     backgroundOpacity: existingLowerThird ? parseInt(existingLowerThird.backgroundOpacity || "80") : 80,
@@ -61,11 +76,11 @@ const AddLowerThirdDialog: React.FC<AddLowerThirdDialogProps> = ({
                     fontFamily: existingLowerThird?.font || "Inter",
                     loop: existingLowerThird?.loop ?? true,
                     message: existingLowerThird?.text || "",
-                    duration: existingLowerThird?.duration || 0,
+                    duration: existingLowerThird?.duration || "",
                 },
             });
         }
-    }, [isOpen, existingLowerThird]);
+    }, [isOpen, existingLowerThird, firstContentItem]);
 
     const handleUpdateLowerThird = async (payload: LowerThirdPayload) => {
         if (!existingLowerThirdId) return;

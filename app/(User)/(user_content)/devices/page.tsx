@@ -53,7 +53,6 @@ const calculateTimeAgo = (dateString: string | null) => {
 export default function DevicesPage() {
   const { data: devicesData, isLoading } = useGetMyAllDevicesDataQuery(undefined);
   const [deleteDevice, { isLoading: isDeleting }] = useDeleteDeviceMutation();
-  console.log("devicesData", devicesData);
 
   const allDevices: DeviceView[] = useMemo(() => {
     if (!devicesData?.data) return [];

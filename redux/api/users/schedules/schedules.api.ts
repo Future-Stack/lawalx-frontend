@@ -50,7 +50,7 @@ const schedulesAPI = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["Schedules"],
+      invalidatesTags: ["Schedules", "Content", "Devices"],
     }),
     deleteSchedule: build.mutation<SuccessResponse, string>({
       query: (id) => ({
@@ -67,6 +67,16 @@ const schedulesAPI = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Schedules", "Content"],
     }),
+
+    deleteScheduleSingleDevice: build.mutation<SuccessResponse, { id: string; deviceId: string }
+    >({
+      query: ({ id, deviceId }) => ({
+        url: `/schedule/${id}/device/${deviceId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Schedules", "Devices"],
+    }),
+
   }),
 });
 
@@ -79,4 +89,5 @@ export const {
   useUpdateScheduleMutation,
   useDeleteScheduleMutation,
   useDeleteScheduleSingleContentMutation,
+  useDeleteScheduleSingleDeviceMutation,
 } = schedulesAPI;

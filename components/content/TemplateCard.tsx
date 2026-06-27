@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -7,7 +8,6 @@ import {
     Pencil,
     Trash2,
     ScreenShare,
-    CalendarClock,
     Eye,
 } from "lucide-react";
 import Image from "next/image";
@@ -15,7 +15,7 @@ import MenuDropdown from "@/common/MenuDropdown";
 import VideoPlayDialog from "./VideoPlayDialog";
 import RenameDialog from "./RenameDialog";
 import DeleteConfirmationModal from "@/components/Admin/modals/DeleteConfirmationModal";
-import { useUpdateFileNameMutation, useDeleteFileMutation } from "@/redux/api/users/content/content.api";
+import { useDeleteFileMutation } from "@/redux/api/users/content/content.api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -149,7 +149,14 @@ const TemplateCard = ({ item, onAssignClick, onMenuClick }: TemplateCardProps) =
                                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                                 muted
                                 playsInline
-                                onMouseOver={(e) => e.currentTarget.play()}
+                                preload="auto"
+                                autoPlay={false}
+                                onMouseOver={(e) => {
+                                    const playPromise = e.currentTarget.play();
+                                    if (playPromise !== undefined) {
+                                        playPromise.catch(() => {});
+                                    }
+                                }}
                                 onMouseOut={(e) => {
                                     e.currentTarget.pause();
                                     e.currentTarget.currentTime = 0;

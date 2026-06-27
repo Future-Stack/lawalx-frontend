@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
-// Version: 1.0.2 - Shadcn/ui Dropdowns for better layering
 
 import { Plus, GripVertical, Trash2, ChevronDown, FilePlay, CloudUpload, Minus, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
@@ -43,8 +42,6 @@ const ContentTimeline: React.FC<ContentTimelineProps> = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [errorId, setErrorId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  console.log("items", items);
-
 
   useEffect(() => {
     if (timeline) {

@@ -25,7 +25,14 @@ export function UploadLimitModal({ isOpen, onClose }: UploadLimitModalProps) {
           Your current Free Plan allows up to 2 images, 2 videos, and 2 audio files only. Please upgrade your plan to upload more content.
         </DialogDescription>
         
-        <div className="w-full mt-4">
+        <div className="w-full mt-4 flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full inline-flex items-center justify-center py-2.5 px-4 bg-transparent hover:bg-gray-50 dark:hover:bg-gray-800/50 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 font-semibold rounded-xl border border-gray-200 dark:border-gray-800 transition-all cursor-pointer text-sm"
+          >
+            Cancel
+          </button>
           <Link
             href="/choose-plan"
             onClick={onClose}
