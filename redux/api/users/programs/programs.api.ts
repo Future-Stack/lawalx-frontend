@@ -60,12 +60,13 @@ const programsAPI = baseApi.injectEndpoints({
     }),
 
     // Program sync api
-    createProgramSync: build.mutation<SuccessResponse, { programId: string }>({
-      query: ({ programId }) => ({
+    createProgramSync: build.mutation<SuccessResponse, { programId: string; deviceIds: string[] }>({
+      query: ({ programId, deviceIds }) => ({
         url: `/program/${programId}/sync`,
         method: "POST",
+        body: { deviceIds },
       }),
-      invalidatesTags: ["Devices"],
+      invalidatesTags: ["Devices", "Programs"],
     }),
     // ----------------------
 

@@ -509,7 +509,6 @@ const SchedulePreviewDialog: React.FC<SchedulePreviewDialogProps> = ({
             rel="preload"
             href={nextMediaUrl}
             as={((nextItem as any)?.type === "VIDEO" || (nextItem as any)?.isProgram) ? "video" : "image"}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             {...({ fetchPriority: "low" } as any)}
           />
         )}

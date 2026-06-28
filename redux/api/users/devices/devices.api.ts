@@ -71,7 +71,7 @@ const devicesAPI = baseApi.injectEndpoints({
         url: `/device/${deviceId}/sync`,
         method: "PATCH",
       }),
-      invalidatesTags: ["Devices"],
+      invalidatesTags: ["Devices", "Programs"],
     }),
 
   }),
