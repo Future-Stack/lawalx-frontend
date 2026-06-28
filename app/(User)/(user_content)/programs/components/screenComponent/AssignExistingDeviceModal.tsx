@@ -2,12 +2,13 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { Search, Monitor, Loader2, CheckCircle2 } from "lucide-react";
+import { Search, Monitor, Loader2, CheckCircle2, CircleCheckBigIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { DeviceListResponse, Device } from "@/redux/api/users/devices/devices.type";
 import DeviceLocation from "@/components/common/DeviceLocation";
+import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 import { useUpdateSingleProgramMutation } from "@/redux/api/users/programs/programs.api";
 import { toast } from "sonner";
 import BaseDialog from "@/common/BaseDialog";
@@ -44,10 +45,17 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
         return (devices || []).filter(d => !existingDeviceIds.includes(d.id));
     }, [devices, existingDeviceIds]);
 
-    const filteredDevices = availableDevices.filter((device: Device) =>
-        device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        device.deviceSerial.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredDevices = useMemo(() => {
+        return availableDevices.filter((device: Device) =>
+            device.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            device.deviceSerial.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [availableDevices, searchQuery]);
+
+    const allFilteredSelected = useMemo(() => {
+        if (filteredDevices.length === 0) return false;
+        return filteredDevices.every((device) => selectedDeviceIds.includes(device.id));
+    }, [filteredDevices, selectedDeviceIds]);
 
     const toggleDevice = (deviceId: string) => {
         setSelectedDeviceIds(prev =>
@@ -55,6 +63,20 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
                 ? prev.filter(id => id !== deviceId)
                 : [...prev, deviceId]
         );
+    };
+
+    const handleSelectAll = () => {
+        const filteredIds = filteredDevices.map((d) => d.id);
+        if (filteredIds.length === 0) return;
+
+        if (allFilteredSelected) {
+            setSelectedDeviceIds((prev) => prev.filter((id) => !filteredIds.includes(id)));
+        } else {
+            setSelectedDeviceIds((prev) => {
+                const next = new Set([...prev, ...filteredIds]);
+                return Array.from(next);
+            });
+        }
     };
 
     const handleAssign = async () => {
@@ -88,12 +110,10 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
                         <label className="block text-sm font-semibold text-headings">
                             Select Devices to Add
                         </label>
-                        {selectedDeviceIds.length > 0 && (
-                            <div className="flex items-center gap-2 text-xs md:text-sm text-bgBlue font-semibold bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full border border-blue-100">
-                                <CheckCircle2 className="w-3.5 h-3.5" />
-                                <span>{selectedDeviceIds.length} selected</span>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-2 text-xs md:text-sm text-bgBlue font-semibold bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full border border-blue-100">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>{selectedDeviceIds.length} selected</span>
+                        </div>
                     </div>
 
                     <div className="relative">
@@ -106,6 +126,27 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
                             className="pl-10 bg-input border-borderGray text-headings"
                         />
                     </div>
+
+                    {filteredDevices.length > 0 && (
+                        <div className="flex items-center justify-between px-1 py-1">
+                            <button
+                                type="button"
+                                onClick={handleSelectAll}
+                                className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-bgBlue dark:hover:text-bgBlue transition-colors cursor-pointer select-none"
+                            >
+                                <div
+                                    className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                                        allFilteredSelected
+                                            ? "bg-bgBlue border-bgBlue text-white"
+                                            : "border-gray-300 dark:border-gray-600 hover:border-bgBlue"
+                                    }`}
+                                >
+                                    {allFilteredSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
+                                </div>
+                                <span>Select All ({filteredDevices.length})</span>
+                            </button>
+                        </div>
+                    )}
 
                     <div className="space-y-2 custom-scrollbar">
                         {isLoadingDevices ? (
@@ -133,13 +174,11 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
                                     </div>
 
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-0.5">
+                                        <div className="flex items-center gap-4 md:gap-6 mb-0.5">
                                             <Label className="font-bold text-headings cursor-pointer truncate text-sm sm:text-base">
                                                 {device.name}
                                             </Label>
-                                            {(device.status === "ONLINE" || device.status === "PAIRED") && (
-                                                <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                                            )}
+                                            <DeviceStatusBadge status={device.status} />
                                         </div>
                                         <p className="text-xs text-muted truncate">
                                             {device.location ? (
@@ -148,11 +187,14 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
                                         </p>
                                     </div>
 
-                                    {selectedDeviceIds.includes(device.id) ? (
-                                        <CheckCircle2 className="w-5 h-5 text-bgBlue" />
-                                    ) : (
-                                        <div className="w-5 h-5 rounded-full border-2 border-borderGray group-hover:border-bgBlue transition-colors" />
-                                    )}
+                                    <div
+                                        className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${selectedDeviceIds.includes(device.id)
+                                            ? "bg-bgBlue border-bgBlue text-white"
+                                            : "border-gray-300 dark:border-gray-600 group-hover:border-bgBlue"
+                                        }`}
+                                    >
+                                        {selectedDeviceIds.includes(device.id) && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
+                                    </div>
                                 </div>
                             ))
                         )}
@@ -169,7 +211,7 @@ const AssignExistingDeviceModal: React.FC<AssignExistingDeviceModalProps> = ({
                     <button
                         onClick={handleAssign}
                         disabled={isUpdating || selectedDeviceIds.length === 0}
-                        className="flex-1 py-3 text-sm font-bold text-white bg-bgBlue rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow shadow-bgBlue/20 cursor-pointer flex items-center justify-center gap-2"
+                        className="flex-1 py-3 text-sm font-bold text-white bg-bgBlue rounded-xl hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow cursor-pointer flex items-center justify-center gap-2"
                     >
                         {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
                         Assign {selectedDeviceIds.length > 0 ? `${selectedDeviceIds.length} ` : ""}Device{selectedDeviceIds.length > 1 ? "s" : ""}

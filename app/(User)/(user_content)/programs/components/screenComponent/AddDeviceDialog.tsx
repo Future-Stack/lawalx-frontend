@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import BaseDialog from "@/common/BaseDialog";
-import { QrCode, WifiOff } from "lucide-react";
+import { QrCode, WifiOff, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface Device {
@@ -25,6 +25,7 @@ const AddDeviceDialog = ({ open, setOpen }: AddDeviceDialogProps) => {
 
   const [selectedDevices, setSelectedDevices] = useState<number[]>([]);
   const [newDevicePin, setNewDevicePin] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleDeviceSelection = (id: number) => {
     setSelectedDevices((prev) =>
@@ -32,8 +33,13 @@ const AddDeviceDialog = ({ open, setOpen }: AddDeviceDialogProps) => {
     );
   };
 
-  const handleConfirm = () => {
-    console.log("Selected devices:", selectedDevices);
+  const handleConfirm = async () => {
+    if (selectedDevices.length === 0) return;
+    setIsLoading(true);
+    // console.log("Selected devices:", selectedDevices);
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    setIsLoading(false);
     setOpen(false);
   };
 
@@ -150,9 +156,10 @@ const AddDeviceDialog = ({ open, setOpen }: AddDeviceDialogProps) => {
 
           <button
             onClick={handleConfirm}
-            disabled={selectedDevices.length === 0}
-            className="w-full sm:w-auto px-5 py-3 bg-bgBlue text-headings rounded-lg disabled:opacity-50 font-semibold"
+            disabled={selectedDevices.length === 0 || isLoading}
+            className="w-full sm:w-auto px-5 py-3 bg-bgBlue text-headings rounded-lg disabled:opacity-50 font-semibold flex items-center justify-center gap-2 cursor-pointer"
           >
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
             Add Device
           </button>
         </div>

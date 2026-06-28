@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { ScreenShare, LocateFixed } from "lucide-react";
+import { ScreenShare, LocateFixed, Loader2 } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const QrScanner = dynamic(() => import("@/components/common/QrScanner"), {
@@ -45,7 +45,7 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
   const [deviceLocation, setDeviceLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [deviceLocationLabel, setDeviceLocationLabel] = useState("");
 
-  const [addDevice] = useAddDeviceMutation();
+  const [addDevice, { isLoading: isAdding }] = useAddDeviceMutation();
   const { data: programsData, isLoading: isLoadingPrograms } = useGetAllProgramsDataQuery();
 
   const cleanedPin = useMemo(() => pin.replace("-", ""), [pin]);
@@ -276,14 +276,16 @@ function AddDeviceModal({ isOpen, onClose, programId, onSuccess, forceShowProgra
         <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-100 dark:border-gray-800">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl font-medium text-gray-600 dark:text-gray-400 transition-colors shadow-customShadow cursor-pointer"
+            className="px-6 py-2.5 border border-border hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg font-medium text-gray-600 dark:text-gray-400 transition-colors shadow-customShadow cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={() => handleAddDevice({ pin, name: deviceName, programId: programId || selectedScreen })}
-            className="px-6 py-2.5 bg-bgBlue text-white rounded-xl font-semibold hover:bg-blue-600 transition-all shadow-customShadow active:scale-[0.98] cursor-pointer"
+            disabled={isAdding}
+            className="px-6 py-2.5 bg-bgBlue text-white rounded-lg font-semibold hover:bg-blue-600 transition-all shadow-customShadow active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
+            {isAdding && <Loader2 className="w-4 h-4 animate-spin" />}
             Add Device
           </button>
         </div>

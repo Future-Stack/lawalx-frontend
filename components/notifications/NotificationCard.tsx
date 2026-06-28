@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { CheckCircle, Trash2 } from "lucide-react";
+import { CheckCircle, Trash2, CircleCheckBigIcon } from "lucide-react";
 import {
   getNotificationIcon,
   getNotificationStyleClasses,
@@ -15,6 +15,8 @@ interface NotificationCardProps {
   onDelete?: (id: string, e: React.MouseEvent) => void;
   /** Admin page uses slightly larger styling */
   variant?: "user" | "admin";
+  isSelected?: boolean;
+  onToggleSelect?: (id: string, e: React.MouseEvent) => void;
 }
 
 /**
@@ -26,6 +28,8 @@ export default function NotificationCard({
   onMarkRead,
   onDelete,
   variant = "user",
+  isSelected = false,
+  onToggleSelect,
 }: NotificationCardProps) {
   const Icon = getNotificationIcon(item);
   const style = getNotificationStyleClasses(item.notification?.type);
@@ -34,25 +38,45 @@ export default function NotificationCard({
   return (
     <div
       onClick={() => onClick(item)}
-      className={`flex gap-4 transition-all duration-200 cursor-pointer group border ${
+      className={`flex items-center gap-4 transition-all duration-200 cursor-pointer group border hover:border-bgBlue ${
         isAdmin
           ? "p-5 rounded-2xl gap-5"
-          : "p-4 rounded-xl gap-4 hover:shadow-md hover:scale-[1.005]"
+          : "p-4 rounded-xl gap-4"
       } ${
         !item.isRead
           ? `${style.unreadBg} ${isAdmin ? "border-blue-100 dark:border-blue-900/30" : "border-blue-100/50 dark:border-blue-900/20"}`
           : isAdmin
-            ? "bg-transparent border-transparent hover:border-border hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
+            ? "bg-transparent border-transparent hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
             : "border-border hover:bg-white dark:hover:bg-gray-700/40"
       }`}
     >
-      <div
-        className={`flex items-center justify-center rounded-full border flex-shrink-0 transition-transform group-hover:scale-110 ${
-          isAdmin ? "h-12 w-12 shadow-sm" : "h-10 w-10"
-        } ${!item.isRead ? `${style.iconBorder} ${style.icon} bg-white dark:bg-gray-800` : "border-gray-200 dark:border-gray-700 text-muted bg-navbarBg"}`}
-      >
-        <Icon className={isAdmin ? "w-6 h-6" : "w-5 h-5"} />
-      </div>
+      {onToggleSelect ? (
+        <div 
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleSelect(item.notificationId, e);
+          }}
+          className="h-10 w-10 flex items-center justify-center flex-shrink-0 cursor-pointer group/chk"
+        >
+          <div
+            className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+              isSelected
+                ? "bg-bgBlue border-bgBlue text-white"
+                : "border-gray-300 dark:border-gray-600 group-hover/chk:border-bgBlue"
+            }`}
+          >
+            {isSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
+          </div>
+        </div>
+      ) : (
+        <div
+          className={`flex items-center justify-center rounded-full border flex-shrink-0 transition-transform group-hover:scale-110 ${
+            isAdmin ? "h-12 w-12 shadow-sm" : "h-10 w-10"
+          } ${!item.isRead ? `${style.iconBorder} ${style.icon} bg-white dark:bg-gray-800` : "border-gray-200 dark:border-gray-700 text-muted bg-navbarBg"}`}
+        >
+          <Icon className={isAdmin ? "w-6 h-6" : "w-5 h-5"} />
+        </div>
+      )}
 
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-4">
@@ -90,7 +114,7 @@ export default function NotificationCard({
 
           {(onMarkRead || onDelete) && (
             <div
-              className={`flex items-center gap-2 ${item.isRead ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity`}
+              className="flex items-center gap-2 opacity-100 transition-opacity"
             >
               {!item.isRead && onMarkRead && (
                 <button
@@ -104,15 +128,15 @@ export default function NotificationCard({
                   <CheckCircle className="w-4 h-4" />
                 </button>
               )}
-              {onDelete && (
+              {/* {onDelete && (
                 <button
                   onClick={(e) => onDelete(item.notificationId, e)}
-                  className="p-1.5 text-gray-500 hover:text-red-600 dark:hover:text-red-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                  className="p-1.5 text-gray-500 hover:bg-red-500 hover:text-white rounded-md transition-colors cursor-pointer"
                   title="Delete"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-              )}
+              )} */}
             </div>
           )}
         </div>
