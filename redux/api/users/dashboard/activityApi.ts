@@ -4,12 +4,17 @@ import { DashboardStatsResponse, RecentDevicesResponse } from "./dashboard.type"
 
 export const activityApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getAllActivities: build.query<any, void>({
-      query: () => ({
-        url: "/activity/all",
-        method: "GET",
-      }),
-      providesTags: ["Activity", "Devices"],
+    getAllActivities: build.query<any, { page?: number; limit?: number } | void>({
+      query: (params) => {
+        const url = params
+          ? `/activity/all?page=${params.page || 1}&limit=${params.limit || 10}`
+          : "/activity/all";
+        return {
+          url,
+          method: "GET",
+        };
+      },
+      providesTags: ["Activity", "Devices", "Programs", "Content", "Schedules", "UserPlans", "Subscription", "Banner", "User"],
     }),
     getAllDevices: build.query<RecentDevicesResponse, void>({
       query: () => ({
@@ -32,7 +37,17 @@ export const activityApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Activity", "Devices"],
     }),
+
+    deleteAllActivityBulkSystem: build.mutation<any, { ids: string[] }>({
+      query: (ids) => ({
+        url: "/activity/bulk",
+        method: "DELETE",
+        body: ids
+      }),
+      invalidatesTags: ["Activity"]
+    }),
+
   }),
 });
 
-export const { useGetAllActivitiesQuery, useGetAllStatsQuery, useDeleteActivityMutation, useGetAllDevicesQuery } = activityApi;
+export const { useGetAllActivitiesQuery, useGetAllStatsQuery, useDeleteActivityMutation, useGetAllDevicesQuery, useDeleteAllActivityBulkSystemMutation } = activityApi;

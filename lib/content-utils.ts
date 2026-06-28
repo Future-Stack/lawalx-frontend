@@ -48,7 +48,7 @@ export const getUrl = (url: string | null) => {
 };
 
 export const transformFile = (file: any, isMounted: boolean): ContentItem => ({
-  id: file.id,
+  id: file.id || file._id,
   title: file.originalName,
   type:
     file.type === "IMAGE"
@@ -76,7 +76,7 @@ export const transformFolder = (
   folder: any,
   isMounted: boolean,
 ): ContentItem => ({
-  id: folder.id,
+  id: folder.id || folder._id,
   title: folder.name,
   type: "folder",
   size: formatBytes(

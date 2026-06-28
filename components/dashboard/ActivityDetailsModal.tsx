@@ -1,7 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogHeader,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { formatDistanceToNow, format } from "date-fns";
 import { Activity, Clock, Hash, Info, FileText } from "lucide-react";
 
@@ -11,7 +17,11 @@ interface ActivityDetailsModalProps {
   activity: any;
 }
 
-export default function ActivityDetailsModal({ isOpen, onClose, activity }: ActivityDetailsModalProps) {
+export default function ActivityDetailsModal({
+  isOpen,
+  onClose,
+  activity,
+}: ActivityDetailsModalProps) {
   if (!activity) return null;
 
   const formatDate = (dateStr: string) => {
@@ -32,7 +42,12 @@ export default function ActivityDetailsModal({ isOpen, onClose, activity }: Acti
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <DialogContent className="max-w-md w-full p-6 bg-navbarBg rounded-2xl border border-border shadow-2xl flex flex-col gap-6">
         <DialogHeader className="border-b border-border pb-4 flex flex-row items-center gap-3">
           <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 shrink-0">

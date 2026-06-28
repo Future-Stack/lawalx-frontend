@@ -47,7 +47,10 @@ import CreateFolderDialog from "@/components/content/CreateFolderDialog";
 import CreateScheduleDialog from "@/app/(User)/(user_content)/schedules/_components/CreateScheduleDialog";
 import LogoutConfirmModal from "@/components/common/LogoutConfirmModal";
 import { getUrl } from "@/lib/content-utils";
-import { useGetPreferencesQuery, useUpdatePreferencesMutation } from "@/redux/api/admin/navbarApi";
+import {
+  useGetPreferencesQuery,
+  useUpdatePreferencesMutation,
+} from "@/redux/api/admin/navbarApi";
 import { setCurrency } from "@/redux/features/settings/settingsSlice";
 import { getCurrencySymbol } from "@/lib/currencyUtils";
 import { baseApi } from "@/redux/api/baseApi";
@@ -91,7 +94,14 @@ export default function UserDashboardNavbar() {
     try {
       await updatePreferences({ currency }).unwrap();
       dispatch(setCurrency(currency));
-      dispatch(baseApi.util.invalidateTags(["Subscription", "AdditionalPayment", "UserPlans", "Preferences"]));
+      dispatch(
+        baseApi.util.invalidateTags([
+          "Subscription",
+          "AdditionalPayment",
+          "UserPlans",
+          "Preferences",
+        ]),
+      );
       setCurrencyOpen(false);
     } catch (error) {
       console.error("Failed to update currency", error);
@@ -99,18 +109,25 @@ export default function UserDashboardNavbar() {
   };
 
   // User Profile
-  const { data: userProfile } = useGetUserProfileQuery(undefined)
+  const { data: userProfile } = useGetUserProfileQuery(undefined);
   const userInfo = userProfile?.data;
-  
+
   // Subscription
-  const { data: mySubscriptionRes } = useGetMySubscriptionQuery(undefined, { skip: userInfo?.role === "ADMIN" });
+  const { data: mySubscriptionRes } = useGetMySubscriptionQuery(undefined, {
+    skip: userInfo?.role === "ADMIN",
+  });
   const subscription = mySubscriptionRes?.data;
   const storageUsage = subscription?.storageUsage;
   const storageUsedGb = storageUsage?.usedGb ?? 0;
-  const storageTotalGb = storageUsage?.totalGb ?? (subscription?.storageLimitGb ?? 0);
-  const storagePercentage = storageTotalGb > 0 ? Math.min((storageUsedGb / storageTotalGb) * 100, 100) : 0;
+  const storageTotalGb =
+    storageUsage?.totalGb ?? subscription?.storageLimitGb ?? 0;
+  const storagePercentage =
+    storageTotalGb > 0
+      ? Math.min((storageUsedGb / storageTotalGb) * 100, 100)
+      : 0;
   const planName = subscription?.plan?.name
-    ? subscription.plan.name.charAt(0) + subscription.plan.name.slice(1).toLowerCase()
+    ? subscription.plan.name.charAt(0) +
+      subscription.plan.name.slice(1).toLowerCase()
     : "Free";
 
   const {
@@ -153,7 +170,7 @@ export default function UserDashboardNavbar() {
     const savedStep = localStorage.getItem("onboarding_step") as OnboardingStep;
 
     if (isNewUser && userInfo?.firstTimeLogin === false) {
-    // if (isNewUser || userInfo?.firstTimeLogin === false) {
+      // if (isNewUser || userInfo?.firstTimeLogin === false) {
       if (savedStep && !onboardingStep) {
         // Resume onboarding from saved step
         setOnboardingStep(savedStep);
@@ -207,8 +224,6 @@ export default function UserDashboardNavbar() {
     }
     return a.isRead ? 1 : -1;
   });
-
-  const unreadCount = allNotifications.filter((n: any) => !n.isRead).length;
 
   const handleReadAll = async () => {
     try {
@@ -340,22 +355,27 @@ export default function UserDashboardNavbar() {
                 {getCurrencySymbol(currentCurrency)}
               </span>
               <span>{currentCurrency}</span>
-              <ChevronDown className={`w-3 h-3 transition-transform ${currencyOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-3 h-3 transition-transform ${currencyOpen ? "rotate-180" : ""}`}
+              />
             </button>
 
             {currencyOpen && (
               <>
-                <div className="fixed inset-0 z-30" onClick={() => setCurrencyOpen(false)} />
+                <div
+                  className="fixed inset-0 z-30"
+                  onClick={() => setCurrencyOpen(false)}
+                />
                 <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-lg overflow-hidden z-40">
                   <button
-                    onClick={() => handleCurrencyChange('USD')}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${currentCurrency === 'USD' ? 'text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'}`}
+                    onClick={() => handleCurrencyChange("USD")}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${currentCurrency === "USD" ? "text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10" : "text-gray-700 dark:text-gray-300"}`}
                   >
                     USD ($)
                   </button>
                   <button
-                    onClick={() => handleCurrencyChange('NGN')}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${currentCurrency === 'NGN' ? 'text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10' : 'text-gray-700 dark:text-gray-300'}`}
+                    onClick={() => handleCurrencyChange("NGN")}
+                    className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer ${currentCurrency === "NGN" ? "text-bgBlue font-bold bg-blue-50/50 dark:bg-blue-900/10" : "text-gray-700 dark:text-gray-300"}`}
                   >
                     NGN (₦)
                   </button>
@@ -376,8 +396,10 @@ export default function UserDashboardNavbar() {
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors relative cursor-pointer"
             >
               <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              {allNotifications.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center border border-white dark:border-gray-900">
+                  {allNotifications.length}
+                </span>
               )}
             </button>
 
@@ -529,7 +551,8 @@ export default function UserDashboardNavbar() {
                           />
                         </div>
                         <p className="text-[10px] text-gray-400">
-                          {storageUsedGb.toFixed(2)} GB of {storageTotalGb} GB used
+                          {storageUsedGb.toFixed(2)} GB of {storageTotalGb} GB
+                          used
                         </p>
                       </div>
                     )}

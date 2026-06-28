@@ -288,6 +288,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
         open={isSyncOpen}
         setOpen={setIsSyncOpen}
         programName={program.name}
+        programId={programId}
         devices={program.devices || []}
       />
     </div>

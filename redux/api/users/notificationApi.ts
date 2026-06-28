@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../baseApi";
 
 export const notificationApi = baseApi.injectEndpoints({
@@ -37,6 +38,14 @@ export const notificationApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Notification"],
     }),
+    deleteNotificationBulkSystem: builder.mutation<any, { ids: string[] }>({
+      query: (ids) => ({
+        url: "/notification/bulk",
+        method: "DELETE",
+        body: ids
+      }),
+      invalidatesTags: ["Notification"],
+    }),
   }),
 });
 
@@ -46,4 +55,5 @@ export const {
   useReadNotificationMutation,
   useSoftDeleteNotificationMutation,
   useHardDeleteNotificationMutation,
+  useDeleteNotificationBulkSystemMutation,
 } = notificationApi;
