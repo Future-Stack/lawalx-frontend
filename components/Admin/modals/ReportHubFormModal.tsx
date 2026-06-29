@@ -230,7 +230,7 @@ export default function ReportHubFormModal({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-2xl p-0 bg-white dark:bg-gray-900 border-none rounded-xl overflow-hidden focus:outline-none">
+            <DialogContent className="max-w-2xl p-0 bg-white dark:bg-gray-900 border-none rounded-xl overflow-hidden focus:outline-none text-gray-900 dark:text-white">
                 <div className="p-8">
                     <DialogHeader className="flex flex-row items-start justify-between space-y-0 pb-6">
                         <div className="flex gap-4">
@@ -613,7 +613,7 @@ export default function ReportHubFormModal({
                                             <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Columns</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {selectedColumns.map(col => (
-                                                    <span key={col.id} className="px-2 py-1 bg-white dark:bg-gray-800 text-[10px] text-gray-600 rounded-full border border-gray-100">{col.label}</span>
+                                                    <span key={col.id} className="px-2 py-1 bg-white dark:bg-gray-800 text-[10px] text-gray-600 dark:text-gray-300 rounded-full border border-gray-100">{col.label}</span>
                                                 ))}
                                             </div>
                                         </div>

@@ -75,6 +75,7 @@ const devicesAPI = baseApi.injectEndpoints({
     }),
 
   }),
+  overrideExisting: true,
 });
 
 export const { useAddDeviceMutation, useGetMyAllDevicesDataQuery, useGetSingleDeviceDataQuery, useDeleteDeviceMutation, useAssignDeviceToProgramMutation, useRenameDeviceMutation, useGetDevicePinWiseDataQuery, useDeviceSyncMutation } = devicesAPI;
