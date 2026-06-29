@@ -213,6 +213,9 @@ export default function UserDashboardNavbar() {
   });
 
   const allNotifications = notificationData?.data || [];
+  const unreadNotificationsCount = allNotifications.filter(
+    (item: any) => !item.isRead
+  ).length;
 
   // Sort: Unread first, then by date (assuming API returns recent first or we sort by createdAt)
   const sortedNotifications = [...allNotifications].sort((a: any, b: any) => {
@@ -396,9 +399,9 @@ export default function UserDashboardNavbar() {
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors relative cursor-pointer"
             >
               <Bell className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              {allNotifications.length > 0 && (
+              {unreadNotificationsCount > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center border border-white dark:border-gray-900">
-                  {allNotifications.length}
+                  {unreadNotificationsCount}
                 </span>
               )}
             </button>

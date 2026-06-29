@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
     useGetMyNotificationsQuery,
     useReadAllNotificationsMutation,
@@ -18,6 +18,9 @@ import type { NotificationHistoryItem } from "@/types/notification";
 import Wrapper from "@/components/layout/Wrapper";
 
 export default function NotificationsPage() {
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
+
     const { data: notificationData, isLoading } = useGetMyNotificationsQuery();
     const [readAllNotifications] = useReadAllNotificationsMutation();
     const [readNotification] = useReadNotificationMutation();
@@ -29,13 +32,45 @@ export default function NotificationsPage() {
 
     const allNotifications: NotificationHistoryItem[] = notificationData?.data || [];
 
+    const totalPages = Math.ceil(allNotifications.length / itemsPerPage) || 1;
+
+    // Adjust page if items are deleted and current page is out of bounds
+    useEffect(() => {
+        if (currentPage > 1 && currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [totalPages, currentPage]);
+
+    const paginatedNotifications = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        return allNotifications.slice(start, end);
+    }, [allNotifications, currentPage, itemsPerPage]);
+
+    const getPageNumbers = () => {
+        const pages = [];
+        const maxVisible = 5;
+        if (totalPages <= maxVisible) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            if (currentPage <= 3) {
+                pages.push(1, 2, 3, 4, '...', totalPages);
+            } else if (currentPage >= totalPages - 2) {
+                pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+            } else {
+                pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+            }
+        }
+        return pages;
+    };
+
     const allPageSelected = useMemo(() => {
-        if (allNotifications.length === 0) return false;
-        return allNotifications.every((item) => selectedNotificationIds.includes(item.notificationId));
-    }, [allNotifications, selectedNotificationIds]);
+        if (paginatedNotifications.length === 0) return false;
+        return paginatedNotifications.every((item) => selectedNotificationIds.includes(item.notificationId));
+    }, [paginatedNotifications, selectedNotificationIds]);
 
     const handleSelectAll = () => {
-        const itemIds = allNotifications.map((item) => item.notificationId);
+        const itemIds = paginatedNotifications.map((item) => item.notificationId);
         if (itemIds.length === 0) return;
 
         if (allPageSelected) {
@@ -98,7 +133,7 @@ export default function NotificationsPage() {
             <UserDashboardNavbar />
             <Wrapper>
                 <div className="">
-                <div className="bg-navbarBg rounded-xl shadow-sm border border-border">
+                <div className="bg-navbarBg rounded-xl shadow-sm border border-border overflow-hidden">
                     <div className="px-6 py-5 border-b border-border flex items-center justify-between">
                         <h1 className="text-xl font-bold text-gray-900 dark:text-white">All Notifications</h1>
                         <div className="flex items-center gap-4">
@@ -154,7 +189,7 @@ export default function NotificationsPage() {
                                 <p>No notifications yet</p>
                             </div>
                         ) : (
-                            allNotifications.map((item) => (
+                            paginatedNotifications.map((item) => (
                                 <NotificationCard
                                     key={item.notificationId}
                                     item={item}
@@ -163,11 +198,59 @@ export default function NotificationsPage() {
                                     onDelete={handleDelete}
                                     variant="user"
                                     isSelected={selectedNotificationIds.includes(item.notificationId)}
-                                    onToggleSelect={(id, e) => toggleNotificationSelection(id)}
+                                    onToggleSelect={(id) => toggleNotificationSelection(id)}
                                 />
                             ))
                         )}
                     </div>
+                    {/* Pagination Controls */}
+                    {allNotifications.length > 0 && (
+                        <div className="px-6 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-navbarBg">
+                            <button
+                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-body bg-navbarBg border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow transition-colors cursor-pointer"
+                            >
+                                Previous
+                            </button>
+
+                            <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                                {getPageNumbers().map((page, index) => {
+                                    if (page === '...') {
+                                        return (
+                                            <span
+                                                key={`ellipsis-${index}`}
+                                                className="w-9 h-9 flex items-center justify-center text-muted select-none cursor-default"
+                                            >
+                                                ...
+                                            </span>
+                                        );
+                                    }
+                                    return (
+                                        <button
+                                            key={page}
+                                            onClick={() => setCurrentPage(Number(page))}
+                                            className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors cursor-pointer shadow-customShadow ${
+                                                currentPage === page
+                                                    ? "bg-bgBlue text-white border border-bgBlue"
+                                                    : "bg-navbarBg text-body border border-border hover:bg-gray-50 dark:hover:bg-gray-800"
+                                            }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            <button
+                                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-body bg-navbarBg border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow transition-colors cursor-pointer"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
             </Wrapper>
