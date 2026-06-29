@@ -15,6 +15,7 @@ import NotificationCard from "@/components/notifications/NotificationCard";
 import CommonLoader from "@/common/CommonLoader";
 import { useNotificationClick } from "@/hooks/useNotificationClick";
 import type { NotificationHistoryItem } from "@/types/notification";
+import Wrapper from "@/components/layout/Wrapper";
 
 export default function NotificationsPage() {
     const { data: notificationData, isLoading } = useGetMyNotificationsQuery();
@@ -95,7 +96,8 @@ export default function NotificationsPage() {
     return (
         <div className="min-h-screen bg-White">
             <UserDashboardNavbar />
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <Wrapper>
+                <div className="">
                 <div className="bg-navbarBg rounded-xl shadow-sm border border-border">
                     <div className="px-6 py-5 border-b border-border flex items-center justify-between">
                         <h1 className="text-xl font-bold text-gray-900 dark:text-white">All Notifications</h1>
@@ -168,6 +170,7 @@ export default function NotificationsPage() {
                     </div>
                 </div>
             </div>
+            </Wrapper>
         </div>
     );
 }
