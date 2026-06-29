@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState } from "react";
@@ -68,6 +69,7 @@ const SignInForm = () => {
                 email={email}
                 onLogin={handleLogin}
                 onSwitchToCode={() => setStep("CODE")}
+                isLoading={isLoading}
             />
         ),
         CODE: (

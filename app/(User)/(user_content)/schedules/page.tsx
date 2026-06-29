@@ -8,7 +8,8 @@ import CalendarView from "./_components/CalendarView";
 import { useGetAllSchedulesDataQuery } from "@/redux/api/users/schedules/schedules.api";
 
 export default function SchedulesPage() {
-  const { data: schedulesData, isLoading } = useGetAllSchedulesDataQuery(undefined);
+  const { data: schedulesData, isLoading } =
+    useGetAllSchedulesDataQuery(undefined);
   const [view, setView] = useState<"list" | "calendar">("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("Recent");
@@ -21,12 +22,17 @@ export default function SchedulesPage() {
     { label: "Name Z-A", value: "Z-A" },
   ];
 
-  const allSchedules = useMemo(() => schedulesData?.data || [], [schedulesData]);
+  const allSchedules = useMemo(
+    () => schedulesData?.data || [],
+    [schedulesData],
+  );
 
   const filteredSchedules = useMemo(() => {
-    const result = [...allSchedules].filter((s) =>
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (s.description && s.description.toLowerCase().includes(searchQuery.toLowerCase()))
+    const result = [...allSchedules].filter(
+      (s) =>
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (s.description &&
+          s.description.toLowerCase().includes(searchQuery.toLowerCase())),
     );
 
     if (sortOption === "A-Z") {
@@ -34,7 +40,10 @@ export default function SchedulesPage() {
     } else if (sortOption === "Z-A") {
       result.sort((a, b) => b.name.localeCompare(a.name));
     } else {
-      result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      result.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      );
     }
 
     return result;
