@@ -309,13 +309,15 @@ export default function Subscriptions() {
                 {/* <button className="px-4 py-2 bg-white border border-border text-body text-sm font-medium rounded-lg hover:bg-gray-50 cursor-pointer shadow-customShadow">
                             Stop Plan
                         </button> */}
-                <button 
-                  type="button"
-                  onClick={() => setIsCancelModalOpen(true)}
-                  className="px-4 py-2 bg-[#F43F5E] text-white text-sm font-medium rounded-lg hover:bg-red-600 cursor-pointer shadow-customShadow"
-                >
-                  Cancel Plan
-                </button>
+                {planStatus !== "CANCELLATION_SCHEDULED" && (
+                  <button 
+                    type="button"
+                    onClick={() => setIsCancelModalOpen(true)}
+                    className="px-4 py-2 bg-[#F43F5E] text-white text-sm font-medium rounded-lg hover:bg-red-600 cursor-pointer shadow-customShadow"
+                  >
+                    Cancel Plan
+                  </button>
+                )}
               </div>
             </>
           )}
