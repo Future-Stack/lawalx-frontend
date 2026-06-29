@@ -41,7 +41,7 @@ const DetailHeader: React.FC<DetailHeaderProps> = ({ isNew, name, onSave, isSavi
                             <span>Saving...</span>
                         </>
                     ) : (
-                        "Save"
+                        "Save Changes"
                     )}
                 </button>
             </div>

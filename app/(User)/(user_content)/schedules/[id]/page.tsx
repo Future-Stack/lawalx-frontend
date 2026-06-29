@@ -98,9 +98,9 @@ export default function ScheduleDetailPage() {
         isSaving={isUpdating}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="flex flex-col lg:flex-row gap-8">
         {/* Left Column */}
-        <div className="lg:col-span-6 space-y-6 order-2 lg:order-1">
+        <div className="flex-1 w-full space-y-6 order-2 lg:order-1">
           <BasicInfoForm
             name={name}
             setName={(val) => setLocalName(val)}
@@ -254,6 +254,7 @@ export default function ScheduleDetailPage() {
             ? schedule.lowerThirds[0]
             : undefined)
         }
+        scheduleContent={localFiles ?? schedule?.files}
       />
 
       <DeleteConfirmationModal

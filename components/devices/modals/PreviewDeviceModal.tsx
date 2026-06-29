@@ -5,18 +5,7 @@ import { X, Volume2, Play, ListTree, Layout, Clock, Monitor, Database, Music, Pl
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { useGetSingleDeviceDataQuery } from "@/redux/api/users/devices/devices.api";
 import DeviceLocation from "@/components/common/DeviceLocation";
-
-const getBaseUrl = () => {
-  const fullUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
-  return fullUrl.split("/api/v1")[0];
-};
-
-const getFileUrl = (url: string) => {
-  if (!url) return undefined;
-  if (url.startsWith("http")) return url;
-  const baseUrl = getBaseUrl();
-  return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
-};
+import { getUrl } from "@/lib/content-utils";
 
 import { TimelineItem } from "@/redux/api/users/devices/devices.type";
 import Image from "next/image";
@@ -74,14 +63,21 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
 
   const mediaUrl = useMemo(() => {
     if (currentItem?.file?.url) {
-      return getFileUrl(currentItem.file.url);
+      return getUrl(currentItem.file.url);
     }
     if (currentDevice?.program?.videoUrl) {
-      return getFileUrl(currentDevice.program.videoUrl);
+      return getUrl(currentDevice.program.videoUrl);
     }
   }, [currentItem, currentDevice]);
 
   const nextIndex = (currentTimelineIndex + 1) % (timeline.length || 1);
+
+  // Preload next timeline item for faster transitions
+  const nextTimelineItem = timeline.length > 1 ? timeline[nextIndex] : null;
+  const nextMediaUrl = useMemo(() => {
+    if (nextTimelineItem?.file?.url) return getUrl(nextTimelineItem.file.url);
+    return null;
+  }, [nextTimelineItem]);
 
   const handleNext = useCallback(() => {
     if (timeline.length > 0) {
@@ -249,6 +245,15 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
         </div>
 
         <div className="flex-1 overflow-y-auto bg-[#F9FAFB] dark:bg-gray-900/50">
+          {/* Preload next timeline item for faster transitions */}
+          {nextMediaUrl && (
+            <link
+              rel="preload"
+              href={nextMediaUrl}
+              as={nextTimelineItem?.file?.type === "VIDEO" ? "video" : nextTimelineItem?.file?.type === "AUDIO" ? "fetch" : "image"}
+              {...({ fetchPriority: "low" } as any)}
+            />
+          )}
           <div className="flex flex-col lg:flex-row p-6 gap-6">
             {/* Left Column - Media & Controls */}
             <div className="flex-1 flex flex-col gap-6">
@@ -385,73 +390,7 @@ export default function PreviewDeviceModal({ isOpen, onClose, device }: Props) {
                   </div>
                 )}
 
-                {/* Top Overlay Badge */}
-                {/* <div className="absolute top-4 left-4 flex flex-col gap-2">
-                  <div className="bg-white/95 dark:bg-gray-900/90 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-semibold text-[#171717] dark:text-white shadow-sm border border-white/20 w-fit">
-                    {currentDevice.program?.name || "Main Lobby Display"}
-                  </div>
-                  {currentItem && (
-                    <div className="bg-bgBlue/90 backdrop-blur-md px-2 py-1 rounded-md text-[10px] font-bold text-white shadow-sm w-fit uppercase">
-                      {currentItem.file?.type} | {currentTimelineIndex + 1}/{timeline.length}
-                    </div>
-                  )}
-                </div> */}
-
               </div>
-
-              {/* Bottom Controls Area */}
-              {/* Volume & Brightness Card commented out per request */}
-              {/* 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1 bg-white dark:bg-input rounded-[20px] p-6 shadow-sm border border-border flex flex-col gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 min-w-[100px]">
-                      <Volume2 className="h-5 w-5 text-[#737373]" />
-                      <span className="text-sm font-medium text-[#737373] dark:text-gray-400">Volume</span>
-                    </div>
-                    <div className="flex-1 flex items-center gap-3">
-                      <div className="relative flex-1 h-2 flex items-center">
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={volume}
-                          onChange={(e) => setVolume(Number(e.target.value))}
-                          className="w-full h-2 rounded-full appearance-none cursor-pointer bg-[#F5F5F5] dark:bg-gray-800"
-                          style={{
-                            background: `linear-gradient(to right, #171717 ${volume}%, #F5F5F5 ${volume}%)`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-bold text-[#171717] dark:text-white w-10 text-right">{volume}%</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 min-w-[100px]">
-                      <Sun className="h-5 w-5 text-[#737373]" />
-                      <span className="text-sm font-medium text-headings">Brightness</span>
-                    </div>
-                    <div className="flex-1 flex items-center gap-3">
-                      <div className="relative flex-1 h-2 flex items-center">
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          value={brightness}
-                          onChange={(e) => setBrightness(Number(e.target.value))}
-                          className="w-full h-2 rounded-full appearance-none cursor-pointer bg-[#F5F5F5] dark:bg-gray-800"
-                          style={{
-                            background: `linear-gradient(to right, #171717 ${brightness}%, #F5F5F5 ${brightness}%)`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-bold text-[#171717] dark:text-white w-10 text-right">{brightness}%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              */}
 
               {/* Play/Pause & Active Program Section */}
               <div className="bg-white dark:bg-input rounded-[20px] p-6 shadow-sm border border-border flex flex-row items-center justify-between gap-4">

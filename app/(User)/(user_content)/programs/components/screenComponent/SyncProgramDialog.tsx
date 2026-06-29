@@ -3,23 +3,25 @@
 
 import { useState, useEffect, useMemo } from "react";
 import BaseDialog from "@/common/BaseDialog";
-import { WifiOff, MonitorSmartphone, Loader2, CircleCheckBigIcon, Search, MapPin } from "lucide-react";
-import { useDeviceSyncMutation } from "@/redux/api/users/devices/devices.api";
+import { MonitorSmartphone, Loader2, CircleCheckBigIcon, Search, MapPin } from "lucide-react";
+import { useCreateProgramSyncMutation } from "@/redux/api/users/programs/programs.api";
 import { toast } from "sonner";
 import { Device } from "@/redux/api/users/programs/programs.type";
 import DeviceLocation from "@/components/common/DeviceLocation";
+import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 
 interface SyncProgramDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   programName: string;
+  programId: string;
   devices: Device[];
 }
 
-const SyncProgramDialog = ({ open, setOpen, programName, devices }: SyncProgramDialogProps) => {
+const SyncProgramDialog = ({ open, setOpen, programName, programId, devices }: SyncProgramDialogProps) => {
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [deviceSync, { isLoading: isSyncing }] = useDeviceSyncMutation();
+  const [deviceSync, { isLoading: isSyncing }] = useCreateProgramSyncMutation();
 
   // Reset selection when opening dialog
   useEffect(() => {
@@ -30,7 +32,18 @@ const SyncProgramDialog = ({ open, setOpen, programName, devices }: SyncProgramD
     }
   }, [open]);
 
+  const isDeviceOnline = (status: string) => {
+    const norm = status?.toUpperCase();
+    return norm === "ONLINE" || norm === "PAIRED";
+  };
+
   const toggleSelectDevice = (id: string) => {
+    const device = devices.find((d) => d.id === id);
+    const isOnline = device ? isDeviceOnline(device.status) : false;
+    if (!isOnline) {
+      toast.error("Offline devices cannot be synced. Only online devices can be synced.");
+      return;
+    }
     setSelectedDeviceIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
@@ -45,20 +58,50 @@ const SyncProgramDialog = ({ open, setOpen, programName, devices }: SyncProgramD
     });
   }, [devices, searchQuery]);
 
+  const filteredOnlineDevices = useMemo(() => {
+    return filteredDevices.filter((device) => isDeviceOnline(device.status));
+  }, [filteredDevices]);
+
   const allFilteredSelected = useMemo(() => {
     if (filteredDevices.length === 0) return false;
     return filteredDevices.every((device) => selectedDeviceIds.includes(device.id));
   }, [filteredDevices, selectedDeviceIds]);
 
+  const allFilteredOnlineSelected = useMemo(() => {
+    if (filteredOnlineDevices.length === 0) return false;
+    return filteredOnlineDevices.every((device) => selectedDeviceIds.includes(device.id));
+  }, [filteredOnlineDevices, selectedDeviceIds]);
+
   const handleSelectAll = () => {
-    const filteredIds = filteredDevices.map((d) => d.id);
-    if (filteredIds.length === 0) return;
+    if (filteredDevices.length === 0) return;
 
     if (allFilteredSelected) {
+      const filteredIds = filteredDevices.map((d) => d.id);
       setSelectedDeviceIds((prev) => prev.filter((id) => !filteredIds.includes(id)));
     } else {
+      const hasOffline = filteredDevices.some((d) => !isDeviceOnline(d.status));
+      if (hasOffline) {
+        toast.error("Offline devices cannot be synced. Only online devices can be synced.");
+      }
+      const onlineFilteredIds = filteredDevices
+        .filter((d) => isDeviceOnline(d.status))
+        .map((d) => d.id);
       setSelectedDeviceIds((prev) => {
-        const next = new Set([...prev, ...filteredIds]);
+        const next = new Set([...prev, ...onlineFilteredIds]);
+        return Array.from(next);
+      });
+    }
+  };
+
+  const handleSelectOnlineOnly = () => {
+    const onlineIds = filteredOnlineDevices.map((d) => d.id);
+    if (onlineIds.length === 0) return;
+
+    if (allFilteredOnlineSelected) {
+      setSelectedDeviceIds((prev) => prev.filter((id) => !onlineIds.includes(id)));
+    } else {
+      setSelectedDeviceIds((prev) => {
+        const next = new Set([...prev, ...onlineIds]);
         return Array.from(next);
       });
     }
@@ -67,7 +110,7 @@ const SyncProgramDialog = ({ open, setOpen, programName, devices }: SyncProgramD
   const handleSyncSubmit = async () => {
     if (selectedDeviceIds.length === 0) return;
     try {
-      const res = await deviceSync({ deviceId: selectedDeviceIds[0] }).unwrap();
+      const res = await deviceSync({ programId, deviceIds: selectedDeviceIds }).unwrap();
       toast.success(res?.message || "Devices synced successfully");
       setOpen(false);
     } catch (err: any) {
@@ -112,22 +155,41 @@ const SyncProgramDialog = ({ open, setOpen, programName, devices }: SyncProgramD
             {/* Select All and Info layout following Step 2 */}
             {filteredDevices.length > 0 && (
               <div className="flex items-center justify-between px-1 py-1">
-                <button
-                  type="button"
-                  onClick={handleSelectAll}
-                  className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-bgBlue dark:hover:text-bgBlue transition-colors cursor-pointer select-none"
-                >
-                  <div
-                    className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
-                      allFilteredSelected
-                        ? "bg-bgBlue border-bgBlue text-white"
-                        : "border-gray-300 dark:border-gray-600 hover:border-bgBlue"
-                    }`}
+                <div className="flex flex-wrap items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={handleSelectAll}
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-bgBlue dark:hover:text-bgBlue transition-colors cursor-pointer select-none"
                   >
-                    {allFilteredSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
-                  </div>
-                  <span>Select All ({filteredDevices.length})</span>
-                </button>
+                    <div
+                      className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                        allFilteredSelected
+                          ? "bg-bgBlue border-bgBlue text-white"
+                          : "border-gray-300 dark:border-gray-600 hover:border-bgBlue"
+                      }`}
+                    >
+                      {allFilteredSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
+                    </div>
+                    <span>Select All ({filteredDevices.length})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSelectOnlineOnly}
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-bgBlue dark:hover:text-bgBlue transition-colors cursor-pointer select-none"
+                  >
+                    <div
+                      className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                        allFilteredOnlineSelected
+                          ? "bg-bgBlue border-bgBlue text-white"
+                          : "border-gray-300 dark:border-gray-600 hover:border-bgBlue"
+                      }`}
+                    >
+                      {allFilteredOnlineSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
+                    </div>
+                    <span>Select All Online ({filteredOnlineDevices.length})</span>
+                  </button>
+                </div>
                 <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                   Selected: {selectedDeviceIds.length}
                 </span>
@@ -143,7 +205,6 @@ const SyncProgramDialog = ({ open, setOpen, programName, devices }: SyncProgramD
               ) : (
                 filteredDevices.map((device) => {
                   const isSelected = selectedDeviceIds.includes(device.id);
-                  const isOnline = device.status?.toUpperCase() === "ONLINE";
 
                   return (
                     <div
@@ -173,20 +234,7 @@ const SyncProgramDialog = ({ open, setOpen, programName, devices }: SyncProgramD
                             {device.name}
                           </span>
 
-                          <span
-                            className={`text-xs px-2 py-0.5 border rounded-md flex items-center gap-1 shrink-0 ${
-                              isOnline
-                                ? "bg-green-50 text-green-700 border-green-200"
-                                : "bg-red-50 text-red-700 border-red-200"
-                            }`}
-                          >
-                            {isOnline ? (
-                              <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                            ) : (
-                              <WifiOff className="w-3 h-3" />
-                            )}
-                            {isOnline ? "Online" : "Offline"}
-                          </span>
+                          <DeviceStatusBadge status={device.status} />
                         </div>
                         <div className="text-[11px] sm:text-xs text-textGray mt-0.5 font-mono">
                           Serial: {device.deviceSerial}

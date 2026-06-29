@@ -13,16 +13,18 @@ import {
   CircleCheckBigIcon,
   ChevronLeft,
   ChevronRight,
-  Calendar,
 } from "lucide-react";
-import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
-import Dropdown from "@/components/shared/Dropdown";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useCreateLowerThirdMutation } from "@/redux/api/users/schedules/schedules.api";
-import Image from "next/image";
+
+// Step components (subfolder)
+import ScheduleInfoStep from "./create-steps/ScheduleInfoStep";
+import ContentSelectionStep from "./create-steps/ContentSelectionStep";
+import LowerThirdStep from "./create-steps/LowerThirdStep";
+import ScreenSelectionStep from "./create-steps/ScreenSelectionStep";
+import TimingStep from "./create-steps/TimingStep";
 
 // Import the exact same ContentItem type used in SchedulesPage
-interface ContentItem {
+export interface ContentItem {
   id: string;
   type: "video" | "image" | "html" | "other";
   src?: string;
@@ -31,7 +33,7 @@ interface ContentItem {
 }
 
 // Use the exact same Schedule shape as in SchedulesPage
-interface Schedule {
+export interface Schedule {
   id: string;
   name: string;
   description: string;
@@ -123,8 +125,6 @@ export default function ScheduleModal({
 }: ScheduleModalProps) {
   const [step, setStep] = useState(1);
   const [localContent, setLocalContent] = useState<LocalContentItem[]>([]);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("All");
 
   // Form state – matches Schedule but without id/active
   const [form, setForm] = useState<Omit<Schedule, "id" | "active">>({
@@ -224,17 +224,7 @@ export default function ScheduleModal({
     setStep(1);
   }, [editingSchedule, isOpen]);
 
-  const filteredContent = localContent.filter(item => {
-    const searchMatch = item.name.toLowerCase().includes(search.toLowerCase());
-    const filterMatch = filter === "All" || item.type === filter;
-    return searchMatch && filterMatch;
-  });
 
-  const screens = [
-    { name: "Main Lobby Display", status: "online" },
-    { name: "Store Entrance TV", status: "online" },
-    { name: "Conference Room", status: "offline" },
-  ];
 
   const [createLowerThird, { isLoading: isCreatingLowerThird }] = useCreateLowerThirdMutation();
 
@@ -351,446 +341,32 @@ export default function ScheduleModal({
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-6">
-          {/* Step 1 */}
           {step === 1 && (
-            <div className="space-y-5">
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Name</label>
-                <input
-                  type="text"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  placeholder="e.g. Morning Welcome"
-                  className="w-full px-4 py-3 border border-border bg-white dark:bg-gray-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-bgBlue text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">Description</label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  placeholder="Enter schedule description"
-                  rows={6}
-                  className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue resize-none text-gray-900 dark:text-white"
-                />
-              </div>
-            </div>
+            <ScheduleInfoStep form={form} setForm={setForm} />
           )}
 
-          {/* Step 2 – Content Selection */}
           {step === 2 && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-                <input
-                  type="text"
-                  placeholder="Search Content"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-white"
-                />
-                <Dropdown
-                  value={filter}
-                  options={["All", "Video", "Image", "Playlist"]}
-                  onChange={setFilter}
-                  className="w-full sm:w-48"
-                />
-              </div>
-
-              <div className="border border-borderGray dark:border-gray-700 rounded-lg max-h-96 overflow-y-auto">
-                {filteredContent.map((item) => (
-                  <label
-                    key={item.id}
-                    className="flex items-center gap-4 p-4 border-b border-borderGray dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer last:border-b-0"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={form.content.some(c => c.id === item.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          // Convert local item to real ContentItem (you can adjust mapping as needed)
-                          const newItem: ContentItem = {
-                            id: item.id,
-                            type: item.type === "Video" ? "video" : item.type === "Image" ? "image" : "other",
-                          };
-                          setForm({ ...form, content: [...form.content, newItem] });
-                        } else {
-                          setForm({ ...form, content: form.content.filter(c => c.id !== item.id) });
-                        }
-                      }}
-                      className="w-5 h-5 rounded border-gray-300 text-bgBlue focus:ring-bgBlue"
-                    />
-                    <div className="relative w-20 h-14 bg-gray-200 dark:bg-gray-700 rounded-lg border overflow-hidden flex items-center justify-center">
-                      {item.type === "Video" && <video src={item.thumbnail} className="w-full h-full object-cover" />}
-                      {item.type === "Image" && <Image src={item.thumbnail} fill className="object-cover" alt={item.name} />}
-                      {item.type === "Playlist" && <div className="text-xs font-semibold text-gray-700 dark:text-gray-400">{item.items.length} items</div>}
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-medium text-gray-900 dark:text-white">{item.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {item.type === "Video" && `${item.size} • ${item.duration}`}
-                        {item.type === "Image" && item.size}
-                        {item.type === "Playlist" && `${item.items.length} items`}
-                      </div>
-                    </div>
-                  </label>
-                ))}
-              </div>
-            </div>
+            <ContentSelectionStep
+              form={form}
+              setForm={setForm}
+              localContent={localContent}
+            />
           )}
 
-          {/* Step 3 – Lower Third */}
           {step === 3 && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              {/* Configuration Inputs */}
-              <div className="space-y-6">
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-border">
-                  <div className="flex items-center gap-2 mb-4 text-bgBlue italic">
-                    <span className="font-bold">Text Configuration</span>
-                  </div>
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Overlay Text</label>
-                      <input
-                        type="text"
-                        value={form.lowerThird?.text}
-                        onChange={(e) => setForm({ 
-                          ...form, 
-                          lowerThird: { ...form.lowerThird!, text: e.target.value } 
-                        })}
-                        placeholder="Enter text to display..."
-                        className="w-full px-4 py-2 border border-border bg-white dark:bg-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue text-headings dark:text-white"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Text Color</label>
-                        <input
-                          type="color"
-                          value={form.lowerThird?.textColor}
-                          onChange={(e) => setForm({ 
-                            ...form, 
-                            lowerThird: { ...form.lowerThird!, textColor: e.target.value } 
-                          })}
-                          className="w-full h-10 p-1 bg-white dark:bg-gray-900 border border-border rounded-lg cursor-pointer"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">BG Color</label>
-                        <input
-                          type="color"
-                          value={form.lowerThird?.backgroundColor}
-                          onChange={(e) => setForm({ 
-                            ...form, 
-                            lowerThird: { ...form.lowerThird!, backgroundColor: e.target.value } 
-                          })}
-                          className="w-full h-10 p-1 bg-white dark:bg-gray-900 border border-border rounded-lg cursor-pointer"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 dark:bg-gray-800/50 p-6 rounded-xl border border-border">
-                  <div className="flex items-center gap-2 mb-4 text-bgBlue font-bold italic">
-                    <span>Animation & Layout</span>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Animation</label>
-                        <Dropdown
-                          value={form.lowerThird?.animation || "Fade"}
-                          options={["Fade", "Left_to_Light", "Right_to_Left", "None"]}
-                          onChange={(val) => setForm({ 
-                            ...form, 
-                            lowerThird: { ...form.lowerThird!, animation: val as any } 
-                          })}
-                          className="w-full"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Position</label>
-                        <Dropdown
-                          value={form.lowerThird?.position || "Bottom"}
-                          options={["Top", "Middle", "Bottom"]}
-                          onChange={(val) => setForm({ 
-                            ...form, 
-                            lowerThird: { ...form.lowerThird!, position: val as any } 
-                          })}
-                          className="w-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Enhanced Preview Side */}
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-2 mb-1 text-headings dark:text-white font-bold">
-                  <h3>Actual Media Preview</h3>
-                </div>
-                <div className="relative aspect-video bg-black rounded-2xl overflow-hidden border border-border group shadow-2xl">
-                  {selectedMedia ? (
-                    <div className="w-full h-full">
-                       {selectedMedia.type === "Video" ? (
-                         <video 
-                           src={selectedMedia.thumbnail} 
-                           autoPlay 
-                           muted 
-                           loop 
-                           className="w-full h-full object-cover" 
-                         />
-                       ) : selectedMedia.type === "Image" ? (
-                         <Image
-                           src={selectedMedia.thumbnail} 
-                           fill
-                           className="object-cover" 
-                           alt={selectedMedia.name || "Selection Preview"}
-                         />
-                       ) : (
-                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900 text-gray-400">
-                          <span className="font-bold text-lg mb-1 italic">Playlist Selected</span>
-                          <span className="text-xs">{(selectedMedia as any).items?.length} items in sequence</span>
-                        </div>
-                       )}
-                       
-                       <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-                       <span className="absolute top-4 left-4 text-[10px] text-white/70 uppercase tracking-widest font-bold bg-black/40 px-2 py-1 rounded">
-                         Live Selection
-                       </span>
-                    </div>
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-500 italic text-sm">
-                      No media selected for preview
-                    </div>
-                  )}
-
-                  {/* The Lower Third Overlay */}
-                  {form.lowerThird?.text && (
-                    <div 
-                      className={`absolute left-0 right-0 p-4 transition-all duration-500 flex items-center`}
-                      style={{
-                        backgroundColor: `${form.lowerThird.backgroundColor}${form.lowerThird.backgroundOpacity}`,
-                        color: form.lowerThird.textColor,
-                        [form.lowerThird.position.toLowerCase()]: '10%',
-                        justifyContent: 'center',
-                        textAlign: 'center',
-                      }}
-                    >
-                      <div className={`
-                        ${form.lowerThird.fontSize === 'Small' ? 'text-lg' : form.lowerThird.fontSize === 'Large' ? 'text-4xl' : 'text-2xl'}
-                        font-bold tracking-tight
-                      `}>
-                        {form.lowerThird.text}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl">
-                  <p className="text-xs text-blue-700 dark:text-blue-400 leading-relaxed">
-                    <strong>Note:</strong> Showing preview for: <span className="underline">{selectedMedia?.name || 'None'}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
+            <LowerThirdStep
+              form={form}
+              setForm={setForm}
+              selectedMedia={selectedMedia}
+            />
           )}
 
-          {/* Step 4 – Screens */}
           {step === 4 && (
-            <div className="space-y-5">
-              <input
-                type="text"
-                placeholder="Search Screens"
-                className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue text-gray-900 dark:text-white"
-              />
-              <div className="border border-borderGray dark:border-gray-700 rounded-lg divide-y divide-borderGray dark:divide-gray-700 max-h-64 overflow-y-auto">
-                {screens.map((screen) => (
-                  <label
-                    key={screen.name}
-                    className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Checkbox
-                        checked={form.devices.includes(screen.name)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setForm({ ...form, devices: [...form.devices, screen.name] });
-                          } else {
-                            setForm({ ...form, devices: form.devices.filter(d => d !== screen.name) });
-                          }
-                        }}
-                        className="w-5 h-5 border-gray-300 data-[state=checked]:bg-bgBlue data-[state=checked]:border-bgBlue"
-                      />
-                      <span className="font-medium text-gray-900 dark:text-white">{screen.name}</span>
-                    </div>
-
-                    <DeviceStatusBadge status={screen.status} />
-                  </label>
-                ))}
-              </div>
-            </div>
+            <ScreenSelectionStep form={form} setForm={setForm} />
           )}
 
-          {/* Step 4 – Timing (unchanged, just formatting) */}
-          {step === 4 && (
-            <div className="space-y-8">
-              {/* Repeat */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">Repeat</label>
-                <Dropdown
-                  value={form.repeat}
-                  options={["once", "daily", "weekly", "monthly"]}
-                  onChange={(val) => setForm({ ...form, repeat: val as any })}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Weekly Days */}
-              {form.repeat === "weekly" && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-4">Select Days</label>
-                  <div className="grid grid-cols-7 gap-3">
-                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => {
-                          const days = form.days ?? [];
-                          const updated = days.includes(day)
-                            ? days.filter(d => d !== day)
-                            : [...days, day];
-                          setForm({ ...form, days: updated });
-                        }}
-                        className={`py-3 rounded-lg font-medium text-sm transition-all ${(form.days ?? []).includes(day)
-                          ? "bg-bgBlue text-white"
-                          : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                          }`}
-                      >
-                        {day}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Monthly Days */}
-              {form.repeat === "monthly" && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-4">Select Days</label>
-                  <div className="grid grid-cols-7 md:grid-cols-8 lg:grid-cols-10 gap-3">
-                    {Array.from({ length: 31 }, (_, i) => i + 1).map((num) => {
-                      const day = num.toString();
-                      const current = form.monthlyDays ?? [];
-                      const selected = current.includes(day);
-                      return (
-                        <button
-                          key={num}
-                          type="button"
-                          onClick={() => {
-                            const updated = selected
-                              ? current.filter(d => d !== day)
-                              : [...current, day];
-                            setForm({ ...form, monthlyDays: updated });
-                          }}
-                          className={`w-10 h-10 rounded-lg text-sm font-medium transition-all ${selected
-                            ? "bg-bgBlue text-white"
-                            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700"
-                            }`}
-                        >
-                          {num}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Play Time */}
-              {(form.repeat === "daily" || form.repeat === "weekly" || form.repeat === "monthly") && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">Play Time</label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={form.playTime}
-                      onChange={(e) => setForm({ ...form, playTime: e.target.value })}
-                      placeholder="09:00 AM"
-                      className="w-full pl-4 pr-12 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue text-gray-900 dark:text-white"
-                    />
-                    <Clock className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 pointer-events-none" />
-                  </div>
-                </div>
-              )}
-
-              {/* Run Once */}
-              {form.repeat === "once" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">Select Date</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={form.startDate}
-                        onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                        placeholder="MM/DD/YYYY"
-                        className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue text-gray-900 dark:text-white"
-                      />
-                      <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">Play Time</label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={form.playTime}
-                        onChange={(e) => setForm({ ...form, playTime: e.target.value })}
-                        placeholder="09:00 AM"
-                        className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue text-gray-900 dark:text-white"
-                      />
-                      <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Recurring Range */}
-              {form.repeat !== "once" && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-4">Select Range</label>
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="text-xs text-gray-600 dark:text-gray-400">Start Date</label>
-                      <div className="relative mt-2">
-                        <input
-                          type="text"
-                          value={form.startDate}
-                          onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                          placeholder="MM/DD/YYYY"
-                          className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue text-gray-900 dark:text-white"
-                        />
-                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs text-gray-600 dark:text-gray-400">End Date</label>
-                      <div className="relative mt-2">
-                        <input
-                          type="text"
-                          value={form.endDate}
-                          onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                          placeholder="MM/DD/YYYY"
-                          className="w-full px-4 py-3 border border-borderGray dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-bgBlue text-gray-900 dark:text-white"
-                        />
-                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+          {step === 5 && (
+            <TimingStep form={form} setForm={setForm} />
           )}
         </div>
 

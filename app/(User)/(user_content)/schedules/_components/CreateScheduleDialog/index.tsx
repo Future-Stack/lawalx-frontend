@@ -78,7 +78,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
       fontFamily: "Inter",
       loop: true,
       message: "This is a demo text",
-      duration: 0,
+      duration: "" as any,
     },
   });
 

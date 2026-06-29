@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
 
@@ -21,6 +22,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { useEffect } from "react";
 import Image from "next/image";
 import SyncProgramDialog from "./SyncProgramDialog";
+import { getUrl } from "@/lib/content-utils";
 dayjs.extend(relativeTime);
 
 interface ScreenCardProps {
@@ -56,13 +58,6 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   if (images > 0) contentParts.push(`${images} image${images !== 1 ? 's' : ''}`);
   const assignedLabel = contentParts.length > 0 ? contentParts.join(", ") : "No media assigned";
 
-  const getFileUrl = (url: string) => {
-    if (!url) return undefined;
-    if (url.startsWith("http")) return url;
-    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "").replace(/\/api\/v1\/?$/, "");
-    return `${baseUrl}/${url.startsWith("/") ? url.slice(1) : url}`;
-  };
-
   const advance = useCallback(() => {
     if (!program.timeline || program.timeline.length <= 1) return;
     setIsFading(true);
@@ -96,11 +91,18 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
   }, [localActive, currentIndex]);
 
   const currentItem = program.timeline?.[currentIndex];
-  const previewData = getFileUrl(currentItem?.file?.url || "");
+  const previewData = getUrl(currentItem?.file?.url || "");
+
+  // Preload next item for faster transitions
+  const nextIdx = program.timeline && program.timeline.length > 1 ? (currentIndex + 1) % program.timeline.length : -1;
+  const nextItem = nextIdx >= 0 ? program.timeline![nextIdx] : null;
+  const nextPreviewData = nextItem?.file?.url ? getUrl(nextItem.file.url) : null;
+
+  const programId = program.id || (program as any)._id;
 
   const handleOnClick = () => {
     setLoading(true);
-    navigate.push(`/programs/${program.id}`);
+    navigate.push(`/programs/${programId}`);
   };
 
   const handlePowerClick = (e: React.MouseEvent) => {
@@ -119,7 +121,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
 
     // Update server state
     updateProgram({
-      id: program.id,
+      id: programId,
       data: { status: targetStatus }
     }).unwrap()
       .then(() => {
@@ -139,6 +141,15 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
 
   return (
     <div className="group bg-navbarBg border border-border rounded-xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-full flex flex-col">
+      {/* Preload next timeline item for faster transitions */}
+      {nextPreviewData && (
+        <link
+          rel="preload"
+          href={nextPreviewData}
+          as={nextItem?.file?.type === "VIDEO" ? "video" : nextItem?.file?.type === "AUDIO" ? "fetch" : "image"}
+          {...({ fetchPriority: "low" } as any)}
+        />
+      )}
       {/* Video Section (ONLY this has p-3) */}
       <div className="p-3">
         <div className="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 aspect-video">
@@ -166,6 +177,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 muted
                 playsInline
+                preload="auto"
                 autoPlay={localActive}
                 loop={program.timeline?.length === 1}
                 onEnded={advance}
@@ -276,6 +288,7 @@ const ScreenCard: React.FC<ScreenCardProps> = ({ program }) => {
         open={isSyncOpen}
         setOpen={setIsSyncOpen}
         programName={program.name}
+        programId={programId}
         devices={program.devices || []}
       />
     </div>

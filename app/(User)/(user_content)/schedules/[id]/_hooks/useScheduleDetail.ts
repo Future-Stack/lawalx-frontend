@@ -5,10 +5,10 @@ import {
   useGetSingleScheduleDataQuery,
   useUpdateScheduleMutation,
   useDeleteScheduleMutation,
+  useDeleteScheduleSingleDeviceMutation,
 } from "@/redux/api/users/schedules/schedules.api";
 import { ScheduleTarget } from "@/redux/api/users/schedules/schedules.type";
 import {
-  useDeleteDeviceMutation,
   useGetMyAllDevicesDataQuery,
 } from "@/redux/api/users/devices/devices.api";
 import { Device } from "@/redux/api/users/devices/devices.type";
@@ -120,7 +120,7 @@ export function useScheduleDetail() {
   const [updateSchedule, { isLoading: isUpdating }] =
     useUpdateScheduleMutation();
   const [deleteSchedule] = useDeleteScheduleMutation();
-  const [deleteDevice] = useDeleteDeviceMutation();
+  const [deleteScheduleSingleDevice] = useDeleteScheduleSingleDeviceMutation();
 
   const { data: allDevicesData } = useGetMyAllDevicesDataQuery(undefined);
   const allDevices = allDevicesData?.data || [];
@@ -454,7 +454,7 @@ export function useScheduleDetail() {
 
     if (!isNew) {
       try {
-        const response = await deleteDevice({ id: deviceId }).unwrap();
+        const response = await deleteScheduleSingleDevice({ id: id as string, deviceId }).unwrap();
         toast.success(response?.message || "Device removed successfully");
       } catch (err: any) {
         toast.error(
