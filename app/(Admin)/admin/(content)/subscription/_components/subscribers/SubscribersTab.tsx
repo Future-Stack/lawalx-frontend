@@ -40,7 +40,8 @@ const SubscribersTab = () => {
   const [selectedSubscriber, setSelectedSubscriber] =
     useState<Subscriber | null>(null);
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
-  const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
+  const [cancelSubscription, { isLoading: isCanceling }] =
+    useCancelSubscriptionMutation();
 
   const currency = useSelector((state: RootState) => state.settings.currency);
 
@@ -61,8 +62,14 @@ const SubscribersTab = () => {
     const action = searchParams.get("action");
     const urlUserId = searchParams.get("userId");
 
-    if (action === "additional_payment" && urlUserId && subscribers.length > 0) {
-      const matchedSubscriber = subscribers.find((s: Subscriber) => s.userId === urlUserId);
+    if (
+      action === "additional_payment" &&
+      urlUserId &&
+      subscribers.length > 0
+    ) {
+      const matchedSubscriber = subscribers.find(
+        (s: Subscriber) => s.userId === urlUserId,
+      );
       if (matchedSubscriber) {
         setSelectedSubscriber(matchedSubscriber);
         setAdditionalPaymentOpen(true);
