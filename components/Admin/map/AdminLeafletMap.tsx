@@ -13,10 +13,14 @@ export default function AdminLeafletMap({ lat, lng, onMarkerClick }: Props) {
   const mapInstanceRef = useRef<any>(null);
 
   useEffect(() => {
+    let isCancelled = false;
     if (!mapRef.current || mapInstanceRef.current) return;
 
     // Dynamically import leaflet to avoid SSR issues
     import("leaflet").then((L) => {
+      if (isCancelled) return;
+      if (!mapRef.current || mapInstanceRef.current) return;
+
       // Fix default marker icons
       // @ts-ignore
       delete L.Icon.Default.prototype._getIconUrl;
@@ -25,8 +29,6 @@ export default function AdminLeafletMap({ lat, lng, onMarkerClick }: Props) {
         iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
-
-      if (!mapRef.current) return;
 
       const map = L.map(mapRef.current, {
         center: [lat || 0, lng || 0],
@@ -75,6 +77,7 @@ export default function AdminLeafletMap({ lat, lng, onMarkerClick }: Props) {
     });
 
     return () => {
+      isCancelled = true;
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
