@@ -48,7 +48,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
   open,
   setOpen,
 }) => {
-  const [createSchedule, { isLoading: isCreating }] = useCreateScheduleMutation();
+  const [createSchedule, { isLoading: isCreating }] =
+    useCreateScheduleMutation();
   const [currentStep, setCurrentStep] = useState(1);
   const [showLowerThird, setShowLowerThird] = useState(false);
 
@@ -196,7 +197,10 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
     const startD = step4Data.startDate || dayjs().format("YYYY-MM-DD");
     const cleanStartDate = startD.includes("T") ? startD.split("T")[0] : startD;
 
-    const endD = step4Data.repeat === "run-once" ? cleanStartDate : (step4Data.endDate || cleanStartDate);
+    const endD =
+      step4Data.repeat === "run-once"
+        ? cleanStartDate
+        : step4Data.endDate || cleanStartDate;
     const cleanEndDate = endD.includes("T") ? endD.split("T")[0] : endD;
 
     const startTime = `${cleanStartDate}T${step4Data.playTime}:00Z`;
@@ -207,9 +211,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
 
     const startDate = `${cleanStartDate}T00:00:00Z`;
     const endDate =
-      step4Data.repeat === "run-once"
-        ? undefined
-        : `${cleanEndDate}T23:59:00Z`;
+      step4Data.repeat === "run-once" ? undefined : `${cleanEndDate}T23:59:00Z`;
 
     // Segregate programs and files while validating UUIDs
     const selectedPrograms = activeContent
@@ -248,7 +250,7 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
     };
 
     console.log("=== SUBMITTING SCHEDULE PAYLOAD ===");
-    console.log("this is create schedule data",payload);
+    console.log("this is create schedule data", payload);
 
     try {
       const res = await createSchedule(payload).unwrap();

@@ -10,5 +10,5 @@ export default function ClientToaster() {
     }, []);
 
     if (!mounted) return null;
-    return <Toaster position="top-right" richColors />;
+    return <Toaster position="bottom-right" richColors />;
 }
