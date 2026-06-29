@@ -35,7 +35,7 @@ export default function TicketsMobileView({
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 break-all">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {ticket.ticketId}
                 </span>
                 <div className="flex-shrink-0">
