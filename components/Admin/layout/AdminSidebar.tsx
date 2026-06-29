@@ -81,7 +81,7 @@ export default function AdminSidebar({ isCollapsed }: { isCollapsed: boolean }) 
     { icon: CreditCard, href: '/admin/subscription', label: 'Subscription & Billing' },
     { icon: MonitorSmartphone, href: '/admin/devices', label: 'Devices (Global)' },
     { icon: Ticket, href: '/admin/support/support-tickets', label: 'Support Tickets' },
-    { icon: Briefcase, href: '/admin/support/enterprise-requests', label: 'Enterprise Requests' },
+    // { icon: Briefcase, href: '/admin/support/enterprise-requests', label: 'Enterprise Requests' },
     { icon: BookOpen, href: '/admin/support/knowledge-base', label: 'Knowledge Base' },
     { icon: ImageIcon, href: '/admin/support/banner', label: 'Banner' },
     { icon: UserCheck, href: '/admin/support/supporter-employees', label: 'Supporter Employees' },

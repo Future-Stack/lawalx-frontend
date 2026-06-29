@@ -34,7 +34,7 @@ export default function TicketsDesktopView({
       <Table wrapperClassName="overflow-visible">
         <TableHeader>
           <TableRow className="bg-navbarBg hover:bg-navbarBg">
-            <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap">
               Ticket ID
             </TableHead>
             <TableHead className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -92,9 +92,8 @@ export default function TicketsDesktopView({
                 )}
               >
 
-                {/* Ticket ID */}
                 <TableCell className="px-4 py-3">
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
                     {ticket.ticketId}
                   </span>
                 </TableCell>
