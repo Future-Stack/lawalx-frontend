@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import DeviceStatusBadge from "../../common/DeviceStatusBadge";
+import { useState } from "react";
+import AddDeviceModal from "@/components/dashboard/AddDeviceModal";
 
 interface Step3DeviceSelectionProps {
   isDevicesLoading: boolean;
@@ -19,12 +21,22 @@ export default function Step3DeviceSelection({
   programData,
   toggleDeviceSelection,
 }: Step3DeviceSelectionProps) {
+  const [isAddDeviceOpen, setIsAddDeviceOpen] = useState(false);
   return (
     <div className="space-y-5">
       <div>
-        <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-3">
-          Select Devices <span className="text-gray-400 font-normal">(optional)</span>
-        </label>
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <label className="block text-sm font-semibold text-gray-900 dark:text-white">
+            Select Devices <span className="text-gray-400 font-normal">(optional)</span>
+          </label>
+          <button
+            type="button"
+            onClick={() => setIsAddDeviceOpen(true)}
+            className="px-6 py-2 cursor-pointer bg-bgBlue text-white rounded-lg flex items-center justify-center gap-2 shadow-customShadow hover:bg-blue-600 transition-colors w-full sm:w-auto"
+          >
+            <span className="text-lg"><Plus /></span> Add Device
+          </button>
+        </div>
         <div className="border border-borderGray dark:border-gray-600 rounded-lg divide-y dark:divide-gray-700 max-h-64 overflow-y-auto scrollbar-hide">
           {isDevicesLoading ? (
             <div className="flex flex-col items-center justify-center p-8 text-gray-400">
@@ -69,6 +81,11 @@ export default function Step3DeviceSelection({
           )}
         </div>
       </div>
+
+      <AddDeviceModal
+        isOpen={isAddDeviceOpen}
+        onClose={() => setIsAddDeviceOpen(false)}
+      />
     </div>
   );
 }

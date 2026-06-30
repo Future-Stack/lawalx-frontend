@@ -88,9 +88,12 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
       if (timeStr.includes("AM") || timeStr.includes("PM")) return timeStr;
       if (timeStr.includes(":") && !timeStr.includes("T")) {
         const todayStr = dayjs().format("YYYY-MM-DD");
-        return dayjs(`${todayStr}T${timeStr}`).format("hh:mm A");
+        const partsCount = timeStr.split(":").length;
+        const formatPattern = partsCount >= 3 ? "hh:mm:ss A" : "hh:mm A";
+        return dayjs(`${todayStr}T${timeStr}`).format(formatPattern);
       }
-      return dayjs(timeStr).format("hh:mm A");
+      const hasSeconds = timeStr.includes("Z") || (timeStr.split(":").length >= 3);
+      return dayjs(timeStr).format(hasSeconds ? "hh:mm:ss A" : "hh:mm A");
     } catch {
       return timeStr;
     }
@@ -569,10 +572,7 @@ const ContentPreview: React.FC<ContentPreviewProps> = ({
             <Clock className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
             <span>
               {getRecurrenceLabel()} • {formatTimeStr(startTime)}
-              {repeat !== "once" &&
-                repeat !== "run-once" &&
-                endTime &&
-                ` – ${formatTimeStr(endTime)}`}
+              {endTime && ` – ${formatTimeStr(endTime)}`}
             </span>
           </span>
 
