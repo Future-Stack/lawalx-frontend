@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../../baseApi";
+import { SuccessResponse } from "../content/content.type";
 import { NotificationPreferencesResponse, NotificationUpdateType, PasswordUpdate, Preferences, ProfileResponse, SessionsResponse } from "./settings.type";
 
 export const settingsApi = baseApi.injectEndpoints({
@@ -55,8 +56,32 @@ export const settingsApi = baseApi.injectEndpoints({
         method: "PATCH",
         body,
       }),
+      invalidatesTags: ["User"],
+    }),
+
+    // sessions api 
+     deleteAllSession: builder.mutation<SuccessResponse, void>({
+      query: () => ({
+        url: "/settings/sessions/all",
+        method: "DELETE",
+      }),
+      invalidatesTags: ["User"],
+    }),
+    deleteOtherSession: builder.mutation<SuccessResponse, void>({
+      query: () => ({
+        url: "/settings/sessions/others",
+        method: "DELETE",
+      }),
+      invalidatesTags: ["User"],
+    }),
+    deleteSingleSession: builder.mutation<SuccessResponse, { sessionId: string }>({
+      query: ({ sessionId }) => ({
+        url: `/settings/sessions/${sessionId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["User"],
     }),
   }),
 });
 
-export const { useGetSettingsUserProfileQuery, useGetSettingsSessionsQuery, useGetSettingsNotificationQuery, useUpdateSettingsProfilePreferencesMutation,useUpdateSettingsNotificationMutation, useUpdateSittingsProfileMutation, useChangePasswordMutation } = settingsApi;
+export const { useGetSettingsUserProfileQuery, useGetSettingsSessionsQuery, useGetSettingsNotificationQuery, useUpdateSettingsProfilePreferencesMutation,useUpdateSettingsNotificationMutation, useUpdateSittingsProfileMutation, useChangePasswordMutation, useDeleteAllSessionMutation, useDeleteSingleSessionMutation, useDeleteOtherSessionMutation } = settingsApi;
