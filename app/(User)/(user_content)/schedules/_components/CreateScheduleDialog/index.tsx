@@ -76,6 +76,15 @@ const calculateTotalDuration = (contentList: ContentItem[]): number => {
   return total;
 };
 
+const formatPayloadTimeStr = (timeStr: string | null | undefined): string => {
+  if (!timeStr) return "00:00:00";
+  const parts = timeStr.split(":");
+  const hh = parts[0]?.padStart(2, "0") || "00";
+  const mm = parts[1]?.padStart(2, "0") || "00";
+  const ss = parts[2]?.padStart(2, "0") || "00";
+  return `${hh}:${mm}:${ss}`;
+};
+
 const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
   open,
   setOpen,
@@ -232,7 +241,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
     // Calculate duration for run-once
     const isOnce = step4Data.repeat === "run-once";
     const totalDurationSeconds = calculateTotalDuration(activeContent);
-    const startDateTime = dayjs(`${cleanStartDate}T${step4Data.playTime}:00`);
+    const cleanPlayTime = formatPayloadTimeStr(step4Data.playTime);
+    const startDateTime = dayjs(`${cleanStartDate}T${cleanPlayTime}`);
     const endDateTime = startDateTime.add(totalDurationSeconds, "second");
 
     const computedEndDateStr = endDateTime.format("YYYY-MM-DD");
@@ -243,10 +253,10 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
       : step4Data.endDate || cleanStartDate;
     const cleanEndDate = endD.includes("T") ? endD.split("T")[0] : endD;
 
-    const startTime = `${cleanStartDate}T${step4Data.playTime}:00Z`;
+    const startTime = `${cleanStartDate}T${cleanPlayTime}Z`;
     const endTime = isOnce
       ? `${computedEndDateStr}T${computedEndTimeStr}Z`
-      : `${cleanEndDate}T${step4Data.endTime || step4Data.playTime}:00Z`;
+      : `${cleanEndDate}T${formatPayloadTimeStr(step4Data.endTime || step4Data.playTime)}Z`;
 
     const startDate = `${cleanStartDate}T00:00:00Z`;
     const endDate = isOnce
@@ -347,7 +357,8 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
       const cleanStartDate = step4Data.startDate.includes("T")
         ? step4Data.startDate.split("T")[0]
         : step4Data.startDate;
-      const startDateTime = dayjs(`${cleanStartDate}T${step4Data.playTime}:00`);
+      const cleanPlayTime = formatPayloadTimeStr(step4Data.playTime);
+      const startDateTime = dayjs(`${cleanStartDate}T${cleanPlayTime}`);
       const endDateTime = startDateTime.add(totalDurationSeconds, "second");
       return {
         endTime: endDateTime.format("HH:mm:ss"),
