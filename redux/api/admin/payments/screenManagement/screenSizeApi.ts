@@ -58,14 +58,14 @@ export const screenSizeApi = baseApi.injectEndpoints({
         method: "GET",
         params: params || {},
       }),
-      providesTags: ["Subscription"],
+      providesTags: ["Subscription", "FinancialData"],
     }),
     getScreenSizeById: builder.query<ApiResponse<ScreenSize>, string>({
       query: (id) => ({
         url: `/subscription-management/screen-size/${id}`,
         method: "GET",
       }),
-      providesTags: ["Subscription"],
+      providesTags: ["Subscription", "FinancialData"],
     }),
     createScreenSize: builder.mutation<ApiResponse<ScreenSize>, CreateScreenSizePayload>({
       query: (data) => ({

@@ -9,11 +9,12 @@ import {
 } from "@/components/ui/table";
 import { Circle, Ban, PencilLine, Trash2, Loader2 } from "lucide-react";
 import { ScreenSize } from "@/redux/api/admin/payments/screenManagement/screenSizeApi";
+import { formatAmount } from "@/lib/currencyUtils";
 
 interface ScreenSizeTableProps {
   screenSizes: ScreenSize[];
   isUpdatingStatus: boolean;
-  currencySymbol: string;
+  currency: string;
   toggleStatus: (id: string, currentStatus: boolean) => void;
   handleEdit: (item: ScreenSize) => void;
   handleDeleteClick: (item: ScreenSize) => void;
@@ -22,7 +23,7 @@ interface ScreenSizeTableProps {
 const ScreenSizeTable = ({
   screenSizes,
   isUpdatingStatus,
-  currencySymbol,
+  currency,
   toggleStatus,
   handleEdit,
   handleDeleteClick,
@@ -58,8 +59,7 @@ const ScreenSizeTable = ({
                     {item.size}
                   </TableCell>
                   <TableCell className="py-5 text-[14px] font-bold text-headings">
-                    {currencySymbol}
-                    {item.price}
+                    {formatAmount(item.price, currency)}
                   </TableCell>
                   <TableCell className="py-5">
                     <span
@@ -172,8 +172,7 @@ const ScreenSizeTable = ({
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted">Price:</span>
                 <span className="font-semibold text-headings">
-                  {currencySymbol}
-                  {item.price}
+                  {formatAmount(item.price, currency)}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">
