@@ -373,7 +373,7 @@ const DeviceReportDashboard = () => {
         {/* Regional Device Statistics */}
         <div className="bg-navbarBg rounded-lg p-6 border border-border">
           <h2 className="text-lg font-semibold mb-6">Regional Device Statistics</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
             {data.regions.map((region: any) => (
               <div key={region.name} className="p-4 rounded-lg border border-border">
                 <h3 className="font-semibold mb-3">{region.name}</h3>

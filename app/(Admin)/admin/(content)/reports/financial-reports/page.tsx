@@ -513,7 +513,7 @@ const FinancialReport = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
           <div className="bg-navbarBg border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-6">
               <span className='border border-border rounded-full p-2'><DollarSign className="w-4 h-4 text-red-500" /></span>

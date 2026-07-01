@@ -40,15 +40,19 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
               return (
                 <tr
                   key={device.id}
-                  onClick={() => router.push(`/admin/devices/${device.id}`)}
+                  onClick={() => {
+                    const selection = window.getSelection();
+                    if (selection && selection.toString()) return;
+                    router.push(`/admin/devices/${device.id}`);
+                  }}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
                 >
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-nowrap">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">{device.device}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">{device.model}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.customer}</td>
-                  <td className="px-6 py-4 text-sm">
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-nowrap">{device.customer}</td>
+                  <td className="px-6 py-4 text-sm text-nowrap">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -59,13 +63,13 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
                       <DeviceLocation lat={device.lat} lng={device.lng} />
                     </button>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.type}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-nowrap">{device.type}</td>
+                  <td className="px-6 py-4 text-nowrap">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(device.status)}`}>
                       {device.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm">
+                  <td className="px-6 py-4 text-sm text-nowrap">
                     <div className="flex flex-col space-y-1">
                       <span className="text-gray-900 dark:text-white">{device.storage}</span>
                       <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -73,8 +77,8 @@ export const DeviceTable: React.FC<DeviceTableProps> = ({
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{device.lastSync}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 text-nowrap">{device.lastSync}</td>
+                  <td className="px-6 py-4 text-nowrap">
                     <ActionMenu device={device} onAction={handleAction} />
                   </td>
                 </tr>

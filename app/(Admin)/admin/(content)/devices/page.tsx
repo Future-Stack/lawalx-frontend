@@ -22,6 +22,7 @@ export default function GlobalDevices() {
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [typeFilter, setTypeFilter] = useState('All Types');
   const [searchQuery, setSearchQuery] = useState('');
+
   const [modalOpen, setModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -324,7 +325,7 @@ export default function GlobalDevices() {
             setStatusFilter={setStatusFilter}
           />
 
-          <div className="overflow-x-auto scrollbar-hide">
+          <div className="overflow-x-auto thin-gray-scrollbar">
             <DeviceTable
               paginatedDevices={paginatedDevices}
               onSelectLocation={handleSelectLocation}

@@ -41,7 +41,12 @@ export default function UserManagementPage() {
   const limit = 10;
 
   // API Queries
-  const planQuery = planFilter === "All Plans" ? undefined : planFilter.toUpperCase().replace(" ", "_");
+  const planQuery =
+    planFilter === "All Plans"
+      ? undefined
+      : planFilter === "Free" || planFilter === "Free Trial"
+      ? "FREE_TRIAL"
+      : planFilter.toUpperCase().replace(" ", "_");
 
   const { data: usersData, isLoading: isUsersLoading } = useGetUsersQuery({
     page,
