@@ -14,7 +14,6 @@ import {
 import { toast } from "sonner";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
-import { getCurrencySymbol } from "@/lib/currencyUtils";
 
 const ManageScreenSizeTab = () => {
   const [search, setSearch] = useState("");
@@ -30,7 +29,6 @@ const ManageScreenSizeTab = () => {
   const globalCurrency = useSelector(
     (state: RootState) => state.settings.currency,
   );
-  const currencySymbol = getCurrencySymbol(globalCurrency);
 
   // API Queries
   const { data: response, isLoading } = useGetAllScreenSizesQuery({
@@ -131,7 +129,7 @@ const ManageScreenSizeTab = () => {
             <ScreenSizeTable
               screenSizes={screenSizes}
               isUpdatingStatus={isUpdatingStatus}
-              currencySymbol={currencySymbol}
+              currency={globalCurrency}
               toggleStatus={toggleStatus}
               handleEdit={handleEdit}
               handleDeleteClick={handleDeleteClick}
