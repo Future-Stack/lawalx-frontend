@@ -14,7 +14,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit, Ban } from "lucide-react";
+import { MoreVertical, Edit, Ban, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { CouponItem } from "@/redux/api/admin/payments/coupons/couponsApi";
 
 interface CouponsTableProps {
@@ -67,18 +68,31 @@ const CouponsTable = ({
                 key={coupon.id}
                 className="hover:bg-bgGray dark:hover:bg-gray-800/50"
               >
-                <TableCell className="font-medium text-headings">
+                <TableCell className="font-medium text-headings whitespace-nowrap">
                   {coupon.name}
                 </TableCell>
-                <TableCell className="font-bold text-headings">
-                  {coupon.code}
+                <TableCell className="whitespace-nowrap">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-headings">{coupon.code}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(coupon.code);
+                        toast.success("Coupon code copied!");
+                      }}
+                      className="text-muted hover:text-bgBlue transition-colors cursor-pointer p-1 rounded-md hover:bg-bgGray dark:hover:bg-gray-800"
+                      title="Copy code"
+                      type="button"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </TableCell>
-                <TableCell className="font-semibold text-headings">
+                <TableCell className="font-semibold text-headings whitespace-nowrap">
                   {coupon.discountType === "PERCENTAGE"
                     ? `${coupon.discountValue}%`
                     : `$${coupon.discountValue}`}
                 </TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <div className="flex items-center gap-3 w-48">
                     <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-bgGray dark:bg-gray-800">
                       <div
@@ -97,7 +111,7 @@ const CouponsTable = ({
                     </span>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <Badge
                     variant="default"
                     className={`font-normal border ${getStatusColor(coupon.status)}`}
@@ -105,7 +119,7 @@ const CouponsTable = ({
                     {coupon.status}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-muted">
+                <TableCell className="text-muted whitespace-nowrap">
                   {formatDate(coupon.expiryDate)}
                 </TableCell>
                 <TableCell>
@@ -155,8 +169,21 @@ const CouponsTable = ({
                 <div className="font-medium text-headings text-lg">
                   {coupon.name}
                 </div>
-                <div className="font-bold text-headings text-sm">
-                  {coupon.code}
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="font-bold text-headings text-sm">
+                    {coupon.code}
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(coupon.code);
+                      toast.success("Coupon code copied!");
+                    }}
+                    className="text-muted hover:text-bgBlue transition-colors cursor-pointer p-1 rounded-md hover:bg-bgGray dark:hover:bg-gray-800"
+                    title="Copy code"
+                    type="button"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
               <DropdownMenu>

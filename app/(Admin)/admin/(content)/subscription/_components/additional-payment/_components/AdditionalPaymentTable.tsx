@@ -68,26 +68,26 @@ const AdditionalPaymentTable = ({
                 key={item.id}
                 className="border-b border-border last:border-0 transition-colors hover:bg-bgGray dark:hover:bg-gray-800/50"
               >
-                <TableCell className="py-5 text-[14px] font-bold text-headings">
+                <TableCell className="py-5 text-[14px] font-bold text-headings whitespace-nowrap">
                   {item.billTo}
                 </TableCell>
-                <TableCell className="py-5 text-[14px] text-headings">
+                <TableCell className="py-5 text-[14px] text-headings whitespace-nowrap">
                   {item.billFrom}
                 </TableCell>
-                <TableCell className="py-5 text-[14px] text-headings">
+                <TableCell className="py-5 text-[14px] text-headings whitespace-nowrap">
                   {item.invoiceNumber}
                 </TableCell>
-                <TableCell className="py-5 text-[14px] font-bold text-headings">
+                <TableCell className="py-5 text-[14px] font-bold text-headings whitespace-nowrap">
                   {formatAmount(item.totalPrice, item.currency)}
                 </TableCell>
-                <TableCell className="py-5">
+                <TableCell className="py-5 whitespace-nowrap">
                   <span
                     className={`px-3 py-1 rounded-full text-[12px] font-medium border ${statusClass(item.paymentStatus)}`}
                   >
                     {statusLabel(item.paymentStatus)}
                   </span>
                 </TableCell>
-                <TableCell className="py-5 text-right">
+                <TableCell className="py-5 text-right whitespace-nowrap">
                   <div className="flex items-center justify-end gap-3">
                     <button
                       type="button"
