@@ -1,64 +1,80 @@
-import { X, Edit2, Shield, User, Building2 } from "lucide-react";
+import { X, Edit2, User, Building2, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Dropdown from "@/components/shared/Dropdown";
 import { countries, getCountryByCode } from "@/constants/countries";
 
 interface UserData {
   id: string;
-  name: string;
-  email: string;
-  plan: string;
-  device: string;
-  storage: string;
-  status: string;
-  organization?: string;
-  designation?: string;
-  location?: string;
+  full_name?: string;
+  fullName?: string;
+  name?: string;
+  email?: string;
   phone?: string;
+  phoneNumber?: string;
+  phoneCountry?: string;
+  company_name?: string;
+  companyName?: string;
+  organization?: string;
+  industryType?: string;
+  website?: string;
+  location?: string;
+  cityCountry?: string;
+  designation?: string;
+  plan?: string;
+  status?: string;
 }
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: any) => void;
+  onSave: (data: any) => void | Promise<void>;
   userData: UserData | null;
 }
 
 export default function EditPersonalInfoModal({ isOpen, onClose, onSave, userData }: Props) {
   const [formData, setFormData] = useState({
     fullName: "",
-    email: "",
-    password: "",
-    // Personal Info
-    organization: "",
     designation: "",
     location: "",
+    cityCountry: "",
+    companyName: "",
+    industryType: "",
+    website: "",
     phoneNumber: "",
-    countryCode: "US",
+    phoneCountry: "US",
   });
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen && userData) {
       setFormData({
-        fullName: userData.name || "",
-        email: userData.email || "",
-        password: "",
-        organization: userData.organization || "TechCorp Inc.",
-        designation: userData.designation || "CEO",
-        location: userData.location || "USA",
-        phoneNumber: userData.phone || "+10101010101",
-        countryCode: "US", // Default or extract from phone if possible
+        fullName: userData.fullName || userData.full_name || userData.name || "",
+        designation: userData.designation || "",
+        location: userData.location || "",
+        cityCountry: userData.cityCountry || "",
+        companyName: userData.companyName || userData.company_name || userData.organization || "",
+        industryType: userData.industryType || "",
+        website: userData.website || "",
+        phoneNumber: userData.phoneNumber || userData.phone || "",
+        phoneCountry: userData.phoneCountry || "US",
       });
     }
   }, [isOpen, userData]);
 
-  const handleSave = () => {
-    onSave(formData);
-    onClose();
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await onSave(formData);
+      onClose();
+    } catch (error) {
+      // Rejections are handled by caller
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePhoneNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const country = getCountryByCode(formData.countryCode);
+    const country = getCountryByCode(formData.phoneCountry);
     if (!country) return;
 
     let val = e.target.value;
@@ -100,7 +116,8 @@ export default function EditPersonalInfoModal({ isOpen, onClose, onSave, userDat
           </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-400"
+            className="cursor-pointer p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors text-gray-400"
+            disabled={isSaving}
           >
             <X className="w-5 h-5" />
           </button>
@@ -108,13 +125,13 @@ export default function EditPersonalInfoModal({ isOpen, onClose, onSave, userDat
 
         {/* Body */}
         <div className="px-6 pb-6 space-y-6 overflow-y-auto scrollbar-hide flex-1">
-          {/* User Credentials - Green Theme */}
+          {/* User Details - Green Theme */}
           <div className="bg-green-50/50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/30 rounded-xl p-4">
             <h3 className="text-sm font-bold text-green-700 dark:text-green-400 mb-4 flex items-center gap-2">
-              <Shield className="w-4 h-4" />
-              User Credentials
+              <User className="w-4 h-4" />
+              User Details
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
                   Full Name *
@@ -124,50 +141,7 @@ export default function EditPersonalInfoModal({ isOpen, onClose, onSave, userDat
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-900 dark:text-white"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Password (Optional)
-                </label>
-                <input
-                  type="password"
-                  placeholder="Leave blank to keep current"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-900 dark:text-white"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Personal Info - Blue Theme */}
-          <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl p-4">
-            <h3 className="text-sm font-bold text-blue-700 dark:text-blue-400 mb-4 flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Personal Info
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                  Organization
-                </label>
-                <input
-                  type="text"
-                  value={formData.organization}
-                  onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                  disabled={isSaving}
                 />
               </div>
               <div>
@@ -178,22 +152,79 @@ export default function EditPersonalInfoModal({ isOpen, onClose, onSave, userDat
                   type="text"
                   value={formData.designation}
                   onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-900 dark:text-white"
+                  disabled={isSaving}
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
                   Location
                 </label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full pl-9 pr-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
-                  />
-                </div>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-900 dark:text-white"
+                  disabled={isSaving}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Company Location
+                </label>
+                <input
+                  type="text"
+                  value={formData.cityCountry}
+                  onChange={(e) => setFormData({ ...formData, cityCountry: e.target.value })}
+                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-green-500 text-gray-900 dark:text-white"
+                  disabled={isSaving}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Company & Contact Info - Blue Theme */}
+          <div className="bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 rounded-xl p-4">
+            <h3 className="text-sm font-bold text-blue-700 dark:text-blue-400 mb-4 flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Company & Contact Info
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Company Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.companyName}
+                  onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
+                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                  disabled={isSaving}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Industry Type
+                </label>
+                <input
+                  type="text"
+                  value={formData.industryType}
+                  onChange={(e) => setFormData({ ...formData, industryType: e.target.value })}
+                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                  disabled={isSaving}
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                  Website
+                </label>
+                <input
+                  type="text"
+                  value={formData.website}
+                  onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                  className="w-full px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                  disabled={isSaving}
+                />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1.5">
@@ -202,19 +233,20 @@ export default function EditPersonalInfoModal({ isOpen, onClose, onSave, userDat
                 <div className="flex gap-2">
                   <div className="w-24">
                     <Dropdown
-                      value={formData.countryCode}
+                      value={formData.phoneCountry}
                       options={countries.map(c => c.code)}
                       onChange={(val) => {
                         const country = getCountryByCode(val);
                         if (country) {
                           setFormData({ 
                             ...formData, 
-                            countryCode: val,
+                            phoneCountry: val,
                             phoneNumber: country.dialCode
                           });
                         }
                       }}
                       className="w-full h-[38px]"
+                      disabled={isSaving}
                     />
                   </div>
                   <input
@@ -224,6 +256,7 @@ export default function EditPersonalInfoModal({ isOpen, onClose, onSave, userDat
                     value={formData.phoneNumber}
                     onChange={handlePhoneNumberChange}
                     className="flex-1 px-3 py-2 bg-navbarBg border border-border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900 dark:text-white"
+                    disabled={isSaving}
                   />
                 </div>
               </div>
@@ -235,15 +268,24 @@ export default function EditPersonalInfoModal({ isOpen, onClose, onSave, userDat
         <div className="p-4 border-t border-border flex justify-end gap-3 shrink-0">
           <button
             onClick={onClose}
-            className="px-6 py-2 border border-border text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="cursor-pointer px-6 py-2 border border-border text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            disabled={isSaving}
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-customShadow"
+            disabled={isSaving}
+            className="cursor-pointer px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold flex items-center gap-2 transition-colors shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Save Changes
+            {isSaving ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
           </button>
         </div>
       </div>

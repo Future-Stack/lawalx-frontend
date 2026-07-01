@@ -159,7 +159,7 @@ export default function DetailsTab({ user, onEdit, onEditPersonalInfo }: Details
       <div className="bg-navbarBg rounded-xl border border-border shadow-sm">
         <div className="flex justify-between items-center mb-6 border-b border-border p-4">
           <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-            Plan Info
+            Company Info
           </h2>
           {/* <button
             onClick={onEdit}
@@ -216,7 +216,7 @@ export default function DetailsTab({ user, onEdit, onEditPersonalInfo }: Details
           </div>
 
           {/* Company Logo */}
-          <div className="space-y-1">
+          {/* <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
               <ImageIcon className="w-3.5 h-3.5" />
               <span>Company Logo</span>
@@ -224,7 +224,7 @@ export default function DetailsTab({ user, onEdit, onEditPersonalInfo }: Details
             <div className="text-sm font-medium text-gray-900 dark:text-white">
               {enterpriseInfo.companyLogo}
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
