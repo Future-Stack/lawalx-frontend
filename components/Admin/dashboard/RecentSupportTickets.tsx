@@ -23,7 +23,7 @@ export const RecentSupportTickets: React.FC<RecentSupportTicketsProps> = ({
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">Recent Support Tickets</h3>
           <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">User inquiries and reports</p>
         </div>
-        <Link href="/admin/support/support-tickets">
+        <Link href={`/admin/support/support-tickets?timeRange=${dateRange}`}>
           <button className="text-xs text-black dark:text-white hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer font-medium px-3 py-1.5 border border-border shadow-customShadow rounded-md">View All</button>
         </Link>
       </div>

@@ -176,6 +176,13 @@ const BillingDashboard = () => {
     if (tab) {
       setActiveTab(tab);
     }
+    const range = searchParams.get('timeRange');
+    if (range) {
+      if (range === '1d') setTimeRange('last 1 day');
+      else if (range === '7d') setTimeRange('last 7 days');
+      else if (range === '1m') setTimeRange('last 30 days');
+      else if (range === '1y') setTimeRange('last 1 year');
+    }
   }, [searchParams]);
 
   const handleTabChange = (tabId: string) => {
