@@ -88,14 +88,14 @@ export default function ActivityLogsTab({ activities }: { activities?: any[] }) 
       </div>
 
       <div className="bg-navbarBg border border-border rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto scrollbar-hide">
+        <div className="overflow-x-auto thin-gray-scrollbar">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-border">
-                <th className="px-6 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Activity</th>
-                <th className="px-6 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Location</th>
-                <th className="px-6 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Device & IP</th>
-                <th className="px-6 py-4 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Time & Date</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Activity</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Location</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Device & IP</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Time & Date</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -104,7 +104,7 @@ export default function ActivityLogsTab({ activities }: { activities?: any[] }) 
                   const [ipAddress, deviceName] = (log.deviceAndIp || "\n").split("\n");
                   return (
                     <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-5 text-nowrap">
                         <div className="flex items-center gap-4">
                           <div className="p-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
                             {log.activity === "UPLOAD" ? (
@@ -125,11 +125,11 @@ export default function ActivityLogsTab({ activities }: { activities?: any[] }) 
                           {log.location || "N/A"}
                         </div>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-5 text-nowrap">
                         <p className="text-sm font-bold text-gray-900 dark:text-white">{ipAddress?.trim() || "N/A"}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">{deviceName?.trim() || "N/A"}</p>
                       </td>
-                      <td className="px-6 py-5">
+                      <td className="px-6 py-5 text-nowrap">
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                           {log.timeAndDate ? new Date(log.timeAndDate).toLocaleString("en-US", { month: "long", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "N/A"}
                         </p>
