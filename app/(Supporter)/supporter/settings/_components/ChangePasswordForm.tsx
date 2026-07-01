@@ -56,13 +56,13 @@ export default function ChangePasswordForm() {
 
   return (
     <div className="animate-in fade-in duration-300">
-      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6">
+      <h3 className="text-lg sm:text-xl font-bold text-headings mb-6">
         Change Your Password
       </h3>
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Old Password */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+          <label className="text-sm font-medium text-headings">
             Old Password
           </label>
           <div className="relative">
@@ -72,12 +72,12 @@ export default function ChangePasswordForm() {
               required
               value={formData.oldPassword}
               onChange={(e) => setFormData({ ...formData, oldPassword: e.target.value })}
-              className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11 pr-10"
+              className="bg-navbarBg border-border text-headings placeholder:text-muted focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11 pr-10"
             />
             <button
               type="button"
               onClick={() => toggleVisibility('old')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-headings"
             >
               {showPasswords.old ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -86,7 +86,7 @@ export default function ChangePasswordForm() {
 
         {/* New Password */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+          <label className="text-sm font-medium text-headings">
             New Password
           </label>
           <div className="relative">
@@ -96,12 +96,12 @@ export default function ChangePasswordForm() {
               required
               value={formData.newPassword}
               onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
-              className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11 pr-10"
+              className="bg-navbarBg border-border text-headings placeholder:text-muted focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11 pr-10"
             />
             <button
               type="button"
               onClick={() => toggleVisibility('new')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-headings"
             >
               {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
@@ -110,7 +110,7 @@ export default function ChangePasswordForm() {
 
         {/* Confirm Password */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+          <label className="text-sm font-medium text-headings">
             Confirm Password
           </label>
           <div className="relative">
@@ -120,12 +120,12 @@ export default function ChangePasswordForm() {
               required
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11 pr-10"
+              className="bg-navbarBg border-border text-headings placeholder:text-muted focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11 pr-10"
             />
             <button
               type="button"
               onClick={() => toggleVisibility('confirm')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-headings"
             >
               {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
