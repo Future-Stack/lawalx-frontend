@@ -64,7 +64,7 @@ export default function SignatureSettings() {
 
   return (
     <div className="animate-in fade-in duration-300">
-      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6">
+      <h3 className="text-lg sm:text-xl font-bold text-headings mb-6">
         Signature Settings
       </h3>
 
@@ -74,10 +74,10 @@ export default function SignatureSettings() {
           Loading current signature...
         </div>
       ) : currentSigner ? (
-        <div className="mb-8 p-5 border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-900/30">
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-4">Current Signature</h4>
+        <div className="mb-8 p-5 border border-border rounded-xl bg-navbarBg">
+          <h4 className="text-sm font-semibold text-headings mb-4">Current Signature</h4>
           <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 w-full sm:w-[240px] h-[100px] flex items-center justify-center">
+            <div className="bg-bgGray border border-border rounded-lg p-3 w-full sm:w-[240px] h-[100px] flex items-center justify-center">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src={`${BASE_URL}/${currentSigner.imageUrl}`} 
@@ -85,10 +85,10 @@ export default function SignatureSettings() {
                 className="max-h-full max-w-full object-contain"
               />
             </div>
-            <div className="text-sm text-gray-600 dark:text-gray-300">
-              <p><span className="font-medium text-gray-900 dark:text-white">Signer Name:</span> {currentSigner.name}</p>
+            <div className="text-sm text-muted">
+              <p><span className="font-medium text-headings">Signer Name:</span> {currentSigner.name}</p>
               {currentSigner.createdAt && (
-                <p className="text-xs text-gray-500 mt-1">Uploaded on {new Date(currentSigner.createdAt).toLocaleDateString()}</p>
+                <p className="text-xs text-muted mt-1">Uploaded on {new Date(currentSigner.createdAt).toLocaleDateString()}</p>
               )}
             </div>
           </div>
@@ -96,9 +96,9 @@ export default function SignatureSettings() {
       ) : null}
 
       <div className="space-y-5">
-        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Upload New Signature</h4>
+        <h4 className="text-sm font-semibold text-headings">Upload New Signature</h4>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+          <label className="text-sm font-medium text-headings">
             Signer Name
           </label>
           <Input
@@ -106,12 +106,12 @@ export default function SignatureSettings() {
             placeholder="Name for the signature"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11"
+            className="bg-navbarBg border-border text-headings placeholder:text-muted focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+          <label className="text-sm font-medium text-headings">
             Signature Image
           </label>
 
@@ -119,8 +119,8 @@ export default function SignatureSettings() {
             className={`border-2 border-dashed rounded-xl p-6 transition-all flex flex-col items-center justify-center gap-3 relative
               ${
                 signaturePreview
-                  ? "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50"
-                  : "border-gray-300 dark:border-gray-700 hover:border-[#1EA1F2] dark:hover:border-[#1EA1F2] bg-white dark:bg-gray-950 cursor-pointer"
+                  ? "border-border bg-bgGray"
+                  : "border-border hover:border-[#1EA1F2] dark:hover:border-[#1EA1F2] bg-navbarBg cursor-pointer"
               }`}
             onClick={() => !signaturePreview && fileInputRef.current?.click()}
           >
@@ -134,7 +134,7 @@ export default function SignatureSettings() {
 
             {signaturePreview ? (
               <div className="w-full flex flex-col items-center">
-                <div className="relative w-full max-w-[240px] h-[100px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center overflow-hidden">
+                <div className="relative w-full max-w-[240px] h-[100px] bg-bgGray rounded-lg border border-border p-2 flex items-center justify-center overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={signaturePreview}
@@ -152,7 +152,7 @@ export default function SignatureSettings() {
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-3 font-medium">
+                <p className="text-xs text-muted mt-3 font-medium">
                   {signatureFile?.name}
                 </p>
               </div>
@@ -162,10 +162,10 @@ export default function SignatureSettings() {
                   <FileSignature className="w-6 h-6 text-[#1EA1F2]" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <p className="text-sm font-medium text-headings">
                     Click to upload your signature
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted mt-1">
                     SVG, PNG, JPG or GIF (max. 2MB)
                   </p>
                 </div>

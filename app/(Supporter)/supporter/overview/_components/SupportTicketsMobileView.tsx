@@ -19,21 +19,21 @@ export default function SupportTicketsMobileView({
   return (
     <div className="lg:hidden space-y-4 p-4">
       {isLoading ? (
-        <div className="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+        <div className="py-12 text-center text-sm text-muted">
           Loading tickets...
         </div>
       ) : paginatedTickets.length === 0 ? (
-        <div className="py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+        <div className="py-12 text-center text-sm text-muted">
           No tickets found.
         </div>
       ) : (
         paginatedTickets.map((ticket) => (
           <div
             key={ticket.id}
-            className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3 shadow-sm"
+            className="bg-navbarBg rounded-lg border border-border p-4 space-y-3 shadow-sm"
           >
             <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-              <span className="text-sm font-semibold text-gray-700 dark:text-gray-300 break-all">
+              <span className="text-sm font-semibold text-headings break-all">
                 {ticket.ticketId}
               </span>
               <span
@@ -47,7 +47,7 @@ export default function SupportTicketsMobileView({
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-              <div className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1 min-w-[120px]">
+              <div className="text-sm font-medium text-headings truncate flex-1 min-w-[120px]">
                 {ticket.clientName}
               </div>
               <span
@@ -60,17 +60,17 @@ export default function SupportTicketsMobileView({
               </span>
             </div>
 
-            <div className="text-sm text-gray-600 dark:text-gray-400 break-all">
-              <span className="font-medium mr-1 text-gray-800 dark:text-gray-200">Issue Type:</span>
+            <div className="text-sm text-muted break-all">
+              <span className="font-medium mr-1 text-headings">Issue Type:</span>
               {ticket.issueType}
             </div>
 
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              <span className="font-medium mr-1 text-gray-800 dark:text-gray-200">Desc:</span>
+            <div className="text-sm text-muted">
+              <span className="font-medium mr-1 text-headings">Desc:</span>
               <span className="line-clamp-2 inline break-all">{ticket.description}</span>
             </div>
 
-            <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-2 justify-end">
+            <div className="pt-3 border-t border-border flex items-center gap-2 justify-end">
               <button
                 onClick={() => openConversation(ticket)}
                 title="View Ticket"

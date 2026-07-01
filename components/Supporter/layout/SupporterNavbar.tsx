@@ -81,10 +81,10 @@ export default function SupporterNavbar({
               <span className="text-white text-sm font-bold leading-none">T</span>
             </div>
             <div className="hidden sm:flex flex-col ml-1">
-              <h1 className="text-base font-semibold text-gray-900 dark:text-white leading-none">
+              <h1 className="text-base font-semibold text-headings leading-none">
                 Tape Supporter
               </h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
+              <p className="text-xs text-muted">
                 Supporter Portal
               </p>
             </div>
@@ -92,7 +92,7 @@ export default function SupporterNavbar({
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0"
+            className="p-2 hover:bg-bgGray dark:hover:bg-gray-800/50 rounded-lg transition-colors flex-shrink-0"
             aria-label="Toggle sidebar"
           >
             <Image
@@ -113,10 +113,10 @@ export default function SupporterNavbar({
           <div className="relative">
             <button
               onClick={() => setNotifOpen(!notifOpen)}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg relative transition-colors cursor-pointer"
+              className="p-2 hover:bg-bgGray dark:hover:bg-gray-800/50 rounded-lg relative transition-colors cursor-pointer"
               aria-label="Notifications"
             >
-              <Bell className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+              <Bell className="w-5 h-5 text-headings" />
               {unreadCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full ring-2 ring-navbarBg" />
               )}
@@ -125,10 +125,10 @@ export default function SupporterNavbar({
             {notifOpen && (
               <>
                 <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg rounded-xl overflow-hidden z-40">
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-navbarBg border border-border shadow-lg rounded-xl overflow-hidden z-40">
                   {/* Header */}
-                  <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+                    <h3 className="text-base font-semibold text-headings">
                       Notifications
                     </h3>
                     {unreadCount > 0 && (
@@ -144,7 +144,7 @@ export default function SupporterNavbar({
                   {/* Notification List */}
                   <div className="overflow-y-auto max-h-96">
                     {sortedNotifications.length === 0 ? (
-                      <div className="px-5 py-10 text-center text-sm text-gray-500 dark:text-gray-400">
+                      <div className="px-5 py-10 text-center text-sm text-muted">
                         No notifications yet
                       </div>
                     ) : (
@@ -159,7 +159,7 @@ export default function SupporterNavbar({
                   </div>
 
                   {/* Footer */}
-                  <div className="px-5 py-3 text-center border-t border-gray-200 dark:border-gray-700">
+                  <div className="px-5 py-3 text-center border-t border-border">
                     <Link href="/supporter/notifications" onClick={() => setNotifOpen(false)}>
                       <button className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-500 font-medium cursor-pointer">
                         View All
@@ -187,7 +187,7 @@ export default function SupporterNavbar({
                 setIsDark(!isDark);
               });
             }}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-all duration-300 relative h-9 w-9 flex items-center justify-center overflow-hidden cursor-pointer"
+            className="p-2 hover:bg-bgGray dark:hover:bg-gray-800/50 rounded-lg transition-all duration-300 relative h-9 w-9 flex items-center justify-center overflow-hidden cursor-pointer"
             aria-label="Toggle dark mode"
           >
             <Sun
@@ -197,7 +197,7 @@ export default function SupporterNavbar({
                 }`}
             />
             <Moon
-              className={`w-5 h-5 text-gray-900 dark:text-gray-100 absolute transition-all duration-500 ease-in-out ${!isDark
+              className={`w-5 h-5 text-headings absolute transition-all duration-500 ease-in-out ${!isDark
                 ? 'translate-y-0 opacity-100 rotate-0'
                 : '-translate-y-10 opacity-0 rotate-90'
                 }`}
@@ -205,7 +205,7 @@ export default function SupporterNavbar({
           </button>
 
           {/* Avatar */}
-          <div className="flex items-center pl-2 sm:pl-3 border-l border-gray-200 dark:border-gray-700">
+          <div className="flex items-center pl-2 sm:pl-3 border-l border-border">
             <Link
               href="/supporter/settings"
               className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-semibold select-none flex-shrink-0 overflow-hidden relative border border-border"
