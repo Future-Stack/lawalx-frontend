@@ -189,7 +189,7 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
       { label: "Total Videos", value: statsProp.content?.totalVideos ?? 0, total: statsProp.content?.limits?.videoLimit ?? null },
       { label: "Total Images", value: statsProp.content?.totalImages ?? 0, total: statsProp.content?.limits?.imageLimit ?? null },
       { label: "Total Audios", value: statsProp.content?.totalAudios ?? 0, total: statsProp.content?.limits?.audioLimit ?? null },
-      { label: "Total Programs", value: statsProp.content?.totalPrograms ?? statsProp.content?.totalScreens ?? 0, total: null },
+      { label: "Total Programs", value: statsProp.content?.totalPrograms ?? statsProp.content?.totalProgram ?? 0, total: null },
       { label: "Total Schedules", value: statsProp.content?.totalSchedules ?? 0, total: null },
       { label: "Total Templates", value: statsProp.content?.totalTemplates ?? 0, total: statsProp.content?.limits?.templateLimit ?? null },
     ]

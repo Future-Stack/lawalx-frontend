@@ -16,7 +16,7 @@ export const PlatformActivityTrend: React.FC<PlatformActivityTrendProps> = ({ da
     return apiData.data.data.map((item: any) => ({
       label: item.label,
       dailyUsers: item.dailyUsers,
-      totalScreens: item.totalScreens,
+      totalProgram: item.totalProgram,
       totalDevices: item.totalDevices
     }));
   }, [apiData]);
@@ -98,7 +98,7 @@ export const PlatformActivityTrend: React.FC<PlatformActivityTrendProps> = ({ da
             />
             <Area
               type="monotone"
-              dataKey="totalScreens"
+              dataKey="totalProgram"
               stroke="#A78BFA"
               strokeWidth={2}
               fillOpacity={1}
