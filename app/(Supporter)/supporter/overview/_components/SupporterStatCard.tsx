@@ -19,7 +19,7 @@ export default function SupporterStatCard({
   return (
     <div
       className={cn(
-        'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm flex flex-col gap-3',
+        'bg-navbarBg border border-border rounded-xl p-5 shadow-sm flex flex-col gap-3',
         className
       )}
     >
@@ -33,13 +33,13 @@ export default function SupporterStatCard({
         >
           {icon}
         </div>
-        <p className="text-sm font-medium text-gray-600 dark:text-gray-400 leading-tight">
+        <p className="text-sm font-medium text-muted leading-tight">
           {title}
         </p>
       </div>
 
       {/* Value */}
-      <p className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight pl-0.5">
+      <p className="text-3xl font-bold text-headings tracking-tight pl-0.5">
         {value}
       </p>
     </div>
