@@ -86,7 +86,7 @@ export const ContentUsageBreakdown: React.FC<ContentUsageBreakdownProps> = ({
         </ResponsiveContainer>
       )}
 
-      <Link href={type === 'uploaded' ? "/admin/reports/content-and-programs" : "/admin/reports/subscription-&-billing-report?tab=failed-payment"} className="flex justify-end mt-4">
+      <Link href={type === 'uploaded' ? `/admin/reports/content-and-programs?timeRange=${dateRange}` : `/admin/reports/subscription-&-billing-report?tab=failed-payment&timeRange=${dateRange}`} className="flex justify-end mt-4">
         <button className="text-xs text-black dark:text-white hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer font-medium px-3 py-1.5 border border-border shadow-customShadow rounded-md">View Details</button>
       </Link>
     </div>

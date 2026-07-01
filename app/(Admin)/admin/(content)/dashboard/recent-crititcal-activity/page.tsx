@@ -1,16 +1,27 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useGetCriticalActivityQuery } from '@/redux/api/admin/dashbaordApi';
 import { HomeIcon, ChevronRight, Clock, Calendar, ChevronDown, Shield, User, Filter, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 
 type DateRange = '1d' | '7d' | '1m' | '1y';
 
 const RecentCriticalActivityPage = () => {
+  const searchParams = useSearchParams();
   const [dateRange, setDateRange] = useState<DateRange>('7d');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const { data: apiData, isLoading, refetch } = useGetCriticalActivityQuery(dateRange);
+
+  useEffect(() => {
+    const range = searchParams.get('timeRange');
+    if (range) {
+      if (range === '1d' || range === '7d' || range === '1m' || range === '1y') {
+        setDateRange(range as DateRange);
+      }
+    }
+  }, [searchParams]);
 
   const activities = useMemo(() => apiData?.data || [], [apiData]);
 
