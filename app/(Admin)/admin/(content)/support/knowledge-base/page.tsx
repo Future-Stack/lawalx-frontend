@@ -28,7 +28,7 @@ import KnowledgeBaseStats from '@/components/Admin/support/knowledge-base/Knowle
 import KnowledgeBaseTabs from '@/components/Admin/support/knowledge-base/KnowledgeBaseTabs';
 import KnowledgeBaseFilters from '@/components/Admin/support/knowledge-base/KnowledgeBaseFilters';
 import KnowledgeBaseTable from '@/components/Admin/support/knowledge-base/KnowledgeBaseTable';
-import KnowledgeBasePagination from '@/components/Admin/support/knowledge-base/KnowledgeBasePagination';
+
 
 export default function KnowledgeBase() {
     const [activeTab, setActiveTab] = useState<'FAQs' | 'Video Tutorial'>('FAQs');
@@ -229,14 +229,11 @@ export default function KnowledgeBase() {
                 onPlayVideoClick={(url) => setVideoToPlay({ isOpen: true, url })}
                 onEditClick={handleEdit}
                 onDeleteClick={(id) => handleDeleteClick(id, activeTab === 'FAQs' ? 'FAQ' : 'Video')}
-            />
-
-            <KnowledgeBasePagination
-                currentItemsLength={currentItems.length}
-                totalItems={totalItems}
-                currentPage={currentPage}
                 totalPages={totalPages}
+                currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
+                totalItems={totalItems}
+                limit={limit}
             />
 
             {/* Modals */}

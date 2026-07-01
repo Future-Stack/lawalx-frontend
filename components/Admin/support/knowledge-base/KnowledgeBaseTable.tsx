@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Eye, Edit, Trash2, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCategory, getVideoUrl } from './helpers';
+import KnowledgeBasePagination from './KnowledgeBasePagination';
 
 interface KnowledgeBaseTableProps {
     activeTab: 'FAQs' | 'Video Tutorial';
@@ -13,6 +14,11 @@ interface KnowledgeBaseTableProps {
     onPlayVideoClick: (url: string) => void;
     onEditClick: (item: any) => void;
     onDeleteClick: (id: string) => void;
+    totalPages: number;
+    currentPage: number;
+    setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+    totalItems: number;
+    limit: number;
 }
 
 export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
@@ -24,6 +30,11 @@ export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
     onPlayVideoClick,
     onEditClick,
     onDeleteClick,
+    totalPages,
+    currentPage,
+    setCurrentPage,
+    totalItems,
+    limit,
 }) => {
     const getStatusStyle = (status: string) => {
         if (status === 'PUBLISHED') return 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border-blue-100 dark:border-blue-800';
@@ -175,6 +186,14 @@ export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
                     </tbody>
                 </table>
             </div>
+            <KnowledgeBasePagination
+                currentItemsLength={currentItems.length}
+                totalItems={totalItems}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                setCurrentPage={setCurrentPage}
+                itemsPerPage={limit}
+            />
         </div>
     );
 };
