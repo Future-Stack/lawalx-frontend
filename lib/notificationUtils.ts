@@ -36,6 +36,8 @@ const STATUS_ICON_MAP: Record<string, LucideIcon> = {
   'ticket delay': Clock,
   'system error': AlertOctagon,
   'storage warning': Server,
+  'video upload': CheckCircle,
+  'schedule updated': Calendar,
 };
 
 const ACTOR_ICON_MAP: Record<string, LucideIcon> = {
@@ -204,6 +206,8 @@ export function getNotificationRoute(
       'payment successful': '/profile-settings/subscriptions',
       'payment warning': '/profile-settings/subscriptions',
       'ticket tagged': getUserSupportRoute(ticketId),
+      'video upload': resourceId ? `/content/${resourceId}` : '/content',
+      'schedule updated': resourceId ? `/schedules/${resourceId}` : '/schedules',
     };
     if (routes[status]) return routes[status];
   }
