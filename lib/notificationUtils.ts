@@ -38,6 +38,7 @@ const STATUS_ICON_MAP: Record<string, LucideIcon> = {
   'storage warning': Server,
   'video upload': CheckCircle,
   'schedule updated': Calendar,
+  'schedule created': Calendar,
 };
 
 const ACTOR_ICON_MAP: Record<string, LucideIcon> = {
@@ -208,6 +209,7 @@ export function getNotificationRoute(
       'ticket tagged': getUserSupportRoute(ticketId),
       'video upload': resourceId ? `/content/${resourceId}` : '/content',
       'schedule updated': resourceId ? `/schedules/${resourceId}` : '/schedules',
+      'schedule created': resourceId ? `/schedules/${resourceId}` : '/schedules',
     };
     if (routes[status]) return routes[status];
   }
