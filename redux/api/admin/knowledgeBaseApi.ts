@@ -1,6 +1,7 @@
 import { baseApi } from "../baseApi";
 
 export const knowledgeBaseApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // FAQ Endpoints
     getAllFaqsAdmin: builder.query({
