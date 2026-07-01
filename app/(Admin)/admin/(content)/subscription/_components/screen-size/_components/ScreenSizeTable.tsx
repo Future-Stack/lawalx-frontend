@@ -55,13 +55,13 @@ const ScreenSizeTable = ({
                   key={item.id}
                   className="border-b border-border last:border-0 transition-colors hover:bg-bgGray dark:hover:bg-gray-800/50"
                 >
-                  <TableCell className="py-5 text-[14px] font-medium text-headings">
+                  <TableCell className="py-5 text-[14px] font-medium text-headings whitespace-nowrap">
                     {item.size}
                   </TableCell>
-                  <TableCell className="py-5 text-[14px] font-bold text-headings">
+                  <TableCell className="py-5 text-[14px] font-bold text-headings whitespace-nowrap">
                     {formatAmount(item.price, currency)}
                   </TableCell>
-                  <TableCell className="py-5">
+                  <TableCell className="py-5 whitespace-nowrap">
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
                         item.isActive
@@ -72,7 +72,7 @@ const ScreenSizeTable = ({
                       {item.isActive ? "Enable" : "Disabled"}
                     </span>
                   </TableCell>
-                  <TableCell className="py-5 text-right">
+                  <TableCell className="py-5 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-2.5">
                       <button
                         onClick={() => toggleStatus(item.id, item.isActive)}
