@@ -75,7 +75,7 @@ const SubscribersTable = ({
                 key={sub.userId}
                 className="hover:bg-bgGray dark:hover:bg-gray-800/50"
               >
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <div>
                     <div className="font-medium text-headings">
                       {sub.userName}
@@ -83,7 +83,7 @@ const SubscribersTable = ({
                     <div className="text-sm text-muted">{sub.email}</div>
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <Badge
                     variant="default"
                     className="border-none bg-bgGray font-normal text-body hover:bg-bgGray dark:bg-gray-800"
@@ -91,16 +91,16 @@ const SubscribersTable = ({
                     {sub.plan}
                   </Badge>
                 </TableCell>
-                <TableCell className="font-semibold text-headings">
+                <TableCell className="font-semibold text-headings whitespace-nowrap">
                   {formatCurrency(sub.amount, currency)}
                 </TableCell>
-                <TableCell className="text-headings">
+                <TableCell className="text-headings whitespace-nowrap">
                   {sub.paymentCycle}
                 </TableCell>
-                <TableCell className="text-muted">
+                <TableCell className="text-muted whitespace-nowrap">
                   {formatDate(sub.nextBilling)}
                 </TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <Badge
                     variant="default"
                     className={`border-none font-normal ${

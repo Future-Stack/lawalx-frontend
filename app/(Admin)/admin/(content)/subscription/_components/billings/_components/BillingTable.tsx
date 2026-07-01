@@ -203,31 +203,31 @@ const BillingTable = ({
                 key={payment.paymentId}
                 className={`${isFetching ? "opacity-60 pointer-events-none" : ""} hover:bg-bgGray dark:hover:bg-gray-800/50`}
               >
-                <TableCell className="font-semibold text-headings">
+                <TableCell className="font-semibold text-headings whitespace-nowrap">
                   {payment.invoice}
                 </TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <div className="font-medium text-headings">
                     {payment.user.name}
                   </div>
                   <div className="text-sm text-muted">{payment.user.email}</div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <PaymentMethodBadge
                     method={payment.paymentMethod}
                     brand={payment.brand}
                     last4={payment.last4}
                   />
                 </TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <div className="font-semibold text-headings">
                     {formatCurrency(payment.amount, currency)}
                   </div>
                 </TableCell>
-                <TableCell>
+                <TableCell className="whitespace-nowrap">
                   <StatusBadge status={payment.status} />
                 </TableCell>
-                <TableCell className="text-muted">
+                <TableCell className="text-muted whitespace-nowrap">
                   {formatDate(payment.date)}
                 </TableCell>
                 <TableCell>

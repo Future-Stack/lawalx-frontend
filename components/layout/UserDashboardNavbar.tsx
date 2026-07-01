@@ -561,7 +561,7 @@ export default function UserDashboardNavbar() {
                     )}
 
                     <Link
-                      href="/choose-plan"
+                      href="/profile-settings/subscriptions"
                       className="mt-3 text-xs text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1"
                     >
                       Manage Plans
