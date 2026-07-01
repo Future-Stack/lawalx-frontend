@@ -48,6 +48,13 @@ const FinancialReport = () => {
     if (tab) {
       setActiveTab(tab);
     }
+    const range = searchParams.get('timeRange');
+    if (range) {
+      if (range === '1d') setTimeRange(1);
+      else if (range === '7d') setTimeRange(7);
+      else if (range === '1m') setTimeRange(30);
+      else if (range === '1y') setTimeRange(365);
+    }
   }, [searchParams]);
 
   const handleTabChange = (tabId: string) => {
