@@ -62,16 +62,19 @@ const SyncProgramDialog = ({ open, setOpen, programName, programId, devices }: S
     return filteredDevices.filter((device) => isDeviceOnline(device.status));
   }, [filteredDevices]);
 
+  /*
   const allFilteredSelected = useMemo(() => {
     if (filteredDevices.length === 0) return false;
     return filteredDevices.every((device) => selectedDeviceIds.includes(device.id));
   }, [filteredDevices, selectedDeviceIds]);
+  */
 
   const allFilteredOnlineSelected = useMemo(() => {
     if (filteredOnlineDevices.length === 0) return false;
     return filteredOnlineDevices.every((device) => selectedDeviceIds.includes(device.id));
   }, [filteredOnlineDevices, selectedDeviceIds]);
 
+  /*
   const handleSelectAll = () => {
     if (filteredDevices.length === 0) return;
 
@@ -92,9 +95,16 @@ const SyncProgramDialog = ({ open, setOpen, programName, programId, devices }: S
       });
     }
   };
+  */
 
   const handleSelectOnlineOnly = () => {
     const onlineIds = filteredOnlineDevices.map((d) => d.id);
+    
+    const hasOffline = filteredDevices.some((d) => !isDeviceOnline(d.status));
+    if (hasOffline) {
+      toast.error("Offline devices cannot be synced. Only online devices can be synced.");
+    }
+
     if (onlineIds.length === 0) return;
 
     if (allFilteredOnlineSelected) {
@@ -156,7 +166,7 @@ const SyncProgramDialog = ({ open, setOpen, programName, programId, devices }: S
             {filteredDevices.length > 0 && (
               <div className="flex items-center justify-between px-1 py-1">
                 <div className="flex flex-wrap items-center gap-4">
-                  <button
+                  {/* <button
                     type="button"
                     onClick={handleSelectAll}
                     className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-bgBlue dark:hover:text-bgBlue transition-colors cursor-pointer select-none"
@@ -171,7 +181,7 @@ const SyncProgramDialog = ({ open, setOpen, programName, programId, devices }: S
                       {allFilteredSelected && <CircleCheckBigIcon className="w-3.5 h-3.5" />}
                     </div>
                     <span>Select All ({filteredDevices.length})</span>
-                  </button>
+                  </button> */}
 
                   <button
                     type="button"

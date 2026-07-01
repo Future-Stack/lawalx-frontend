@@ -44,6 +44,47 @@ const isUUID = (id: any): id is string => {
   );
 };
 
+const parseDurationString = (durationStr?: string | number | null): number => {
+  if (!durationStr) return 7;
+  const str = String(durationStr).trim().toLowerCase();
+  if (str.endsWith('s')) {
+    const parsed = parseInt(str.slice(0, -1), 10);
+    return isNaN(parsed) ? 7 : parsed;
+  }
+  if (str.includes(":")) {
+    const parts = str.split(":");
+    if (parts.length === 2) {
+      const minutes = parseInt(parts[0], 10) || 0;
+      const seconds = parseInt(parts[1], 10) || 0;
+      return minutes * 60 + seconds;
+    } else if (parts.length === 3) {
+      const hours = parseInt(parts[0], 10) || 0;
+      const minutes = parseInt(parts[1], 10) || 0;
+      const seconds = parseInt(parts[2], 10) || 0;
+      return hours * 3600 + minutes * 60 + seconds;
+    }
+  }
+  const parsed = parseInt(str, 10);
+  return isNaN(parsed) ? 7 : parsed;
+};
+
+const calculateTotalDuration = (contentList: ContentItem[]): number => {
+  let total = 0;
+  contentList.forEach((item) => {
+    total += parseDurationString(item.duration);
+  });
+  return total;
+};
+
+const formatPayloadTimeStr = (timeStr: string | null | undefined): string => {
+  if (!timeStr) return "00:00:00";
+  const parts = timeStr.split(":");
+  const hh = parts[0]?.padStart(2, "0") || "00";
+  const mm = parts[1]?.padStart(2, "0") || "00";
+  const ss = parts[2]?.padStart(2, "0") || "00";
+  return `${hh}:${mm}:${ss}`;
+};
+
 const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
   open,
   setOpen,
@@ -197,21 +238,30 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
     const startD = step4Data.startDate || dayjs().format("YYYY-MM-DD");
     const cleanStartDate = startD.includes("T") ? startD.split("T")[0] : startD;
 
-    const endD =
-      step4Data.repeat === "run-once"
-        ? cleanStartDate
-        : step4Data.endDate || cleanStartDate;
+    // Calculate duration for run-once
+    const isOnce = step4Data.repeat === "run-once";
+    const totalDurationSeconds = calculateTotalDuration(activeContent);
+    const cleanPlayTime = formatPayloadTimeStr(step4Data.playTime);
+    const startDateTime = dayjs(`${cleanStartDate}T${cleanPlayTime}`);
+    const endDateTime = startDateTime.add(totalDurationSeconds, "second");
+
+    const computedEndDateStr = endDateTime.format("YYYY-MM-DD");
+    const computedEndTimeStr = endDateTime.format("HH:mm:ss");
+
+    const endD = isOnce
+      ? computedEndDateStr
+      : step4Data.endDate || cleanStartDate;
     const cleanEndDate = endD.includes("T") ? endD.split("T")[0] : endD;
 
-    const startTime = `${cleanStartDate}T${step4Data.playTime}:00Z`;
-    const endTime =
-      step4Data.repeat === "run-once"
-        ? undefined
-        : `${cleanEndDate}T${step4Data.endTime || step4Data.playTime}:00Z`;
+    const startTime = `${cleanStartDate}T${cleanPlayTime}Z`;
+    const endTime = isOnce
+      ? `${computedEndDateStr}T${computedEndTimeStr}Z`
+      : `${cleanEndDate}T${formatPayloadTimeStr(step4Data.endTime || step4Data.playTime)}Z`;
 
     const startDate = `${cleanStartDate}T00:00:00Z`;
-    const endDate =
-      step4Data.repeat === "run-once" ? undefined : `${cleanEndDate}T23:59:00Z`;
+    const endDate = isOnce
+      ? `${computedEndDateStr}T23:59:00Z`
+      : `${cleanEndDate}T23:59:00Z`;
 
     // Segregate programs and files while validating UUIDs
     const selectedPrograms = activeContent
@@ -298,6 +348,28 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
       document.documentElement.style.overflow = "unset";
     };
   }, [open]);
+
+  const isOnce = step4Data.repeat === "run-once";
+  const totalDurationSeconds = calculateTotalDuration(step2Data.selectedContent);
+
+  const computedTimes = (() => {
+    if (isOnce && step4Data.startDate && step4Data.playTime) {
+      const cleanStartDate = step4Data.startDate.includes("T")
+        ? step4Data.startDate.split("T")[0]
+        : step4Data.startDate;
+      const cleanPlayTime = formatPayloadTimeStr(step4Data.playTime);
+      const startDateTime = dayjs(`${cleanStartDate}T${cleanPlayTime}`);
+      const endDateTime = startDateTime.add(totalDurationSeconds, "second");
+      return {
+        endTime: endDateTime.format("HH:mm:ss"),
+        endDate: endDateTime.format("YYYY-MM-DD")
+      };
+    }
+    return null;
+  })();
+
+  const activeEndTime = computedTimes?.endTime ?? step4Data.endTime;
+  const activeEndDate = computedTimes?.endDate ?? step4Data.endDate;
 
   if (!open) return null;
 
@@ -389,7 +461,11 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
 
               {currentStep === 4 && (
                 <Step4ScheduleSettings
-                  data={step4Data}
+                  data={{
+                    ...step4Data,
+                    endTime: activeEndTime,
+                    endDate: activeEndDate
+                  }}
                   onChange={setStep4Data}
                 />
               )}
@@ -457,3 +533,468 @@ const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
 };
 
 export default CreateScheduleDialog;
+
+
+
+
+
+
+// /* eslint-disable @typescript-eslint/no-explicit-any */
+// "use client";
+
+// import React, { useState, useEffect } from "react";
+// import { toast } from "sonner";
+// import StepIndicator from "./StepIndicator";
+// import Step1NameDescription from "./Step1NameDescription";
+// import Step2ContentSelection from "./Step2ContentSelection";
+// import Step2LowerThird from "./Step2LowerThird";
+// import Step3ScreenSelection from "./Step3ScreenSelection";
+// import Step4ScheduleSettings from "./Step4ScheduleSettings";
+// import { ContentItem } from "@/types/content";
+// import { FileText, Loader2, Settings, TvMinimal, Video, X } from "lucide-react";
+// import { useCreateScheduleMutation } from "@/redux/api/users/schedules/schedules.api";
+// import {
+//   StoreMorningPromo,
+//   ContentType,
+//   DayOfWeek,
+// } from "@/redux/api/users/schedules/schedules.type";
+// import dayjs from "dayjs";
+
+// interface CreateScheduleDialogProps {
+//   open: boolean;
+//   setOpen: (open: boolean) => void;
+// }
+
+// const STEPS = [
+//   {
+//     number: 1,
+//     icon: <FileText />,
+//     label: "Name and Description",
+//     sublabel: "",
+//   },
+//   { number: 2, icon: <Video />, label: "Content Selection", sublabel: "" },
+//   { number: 3, icon: <TvMinimal />, label: "Device Selection", sublabel: "" },
+//   { number: 4, icon: <Settings />, label: "Schedule Settings", sublabel: "" },
+// ];
+
+// // Helper: Validate UUID format
+// const isUUID = (id: any): id is string => {
+//   if (typeof id !== "string") return false;
+//   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+//     id,
+//   );
+// };
+
+// const CreateScheduleDialog: React.FC<CreateScheduleDialogProps> = ({
+//   open,
+//   setOpen,
+// }) => {
+//   const [createSchedule, { isLoading: isCreating }] =
+//     useCreateScheduleMutation();
+//   const [currentStep, setCurrentStep] = useState(1);
+//   const [showLowerThird, setShowLowerThird] = useState(false);
+
+//   const [createdLowerThirdId, setCreatedLowerThirdId] = useState<string | null>(
+//     null,
+//   );
+
+//   // Form Data State
+//   const [step1Data, setStep1Data] = useState({ name: "", description: "" });
+//   const [step2Data, setStep2Data] = useState<{
+//     contentType: string;
+//     selectedContent: ContentItem[];
+//   }>({ contentType: "all", selectedContent: [] });
+
+//   const [lowerThirdData, setLowerThirdData] = useState({
+//     selectedContent: null as ContentItem | null,
+//     lowerThirdConfig: {
+//       backgroundColor: "#3D3D3D",
+//       backgroundOpacity: 80,
+//       enableAnimation: true,
+//       animationDirection: "left-to-right",
+//       speed: "medium",
+//       enableLogo: true,
+//       position: "bottom",
+//       textColor: "#FFFFFF",
+//       fontSize: "24",
+//       fontFamily: "Inter",
+//       loop: true,
+//       message: "This is a demo text",
+//       duration: "" as any,
+//     },
+//   });
+
+//   const [step3Data, setStep3Data] = useState({
+//     selectedScreens: [] as string[],
+//   });
+//   const [step4Data, setStep4Data] = useState({
+//     repeat: "run-once",
+//     selectedDays: [] as string[],
+//     selectedDates: [] as number[],
+//     playTime: "",
+//     endTime: "",
+//     startDate: "",
+//     endDate: "",
+//   });
+
+//   useEffect(() => {
+//     if (currentStep === 2 && step2Data.contentType === "lower-third") {
+//       setShowLowerThird(true);
+//     }
+//   }, [currentStep, step2Data.contentType]);
+
+//   // Set playTime, endTime, and startDate to present time/date when dialog opens
+//   useEffect(() => {
+//     if (open) {
+//       const presentTime = new Date().toTimeString().slice(0, 5);
+//       const todayDate = dayjs().format("YYYY-MM-DD");
+//       setStep4Data((prev) => ({
+//         ...prev,
+//         playTime: prev.playTime || presentTime,
+//         endTime: prev.endTime || presentTime,
+//         startDate: prev.startDate || todayDate,
+//       }));
+//     }
+//   }, [open]);
+
+//   const handleContentSelect = (content: ContentItem) => {
+//     const isSelected = step2Data.selectedContent.some(
+//       (c) => c.id === content.id,
+//     );
+//     const newSelection = isSelected
+//       ? step2Data.selectedContent.filter((c) => c.id !== content.id)
+//       : [...step2Data.selectedContent, content];
+
+//     setStep2Data({ ...step2Data, selectedContent: newSelection });
+
+//     // Lower third selection still works on single item for config
+//     setLowerThirdData({ ...lowerThirdData, selectedContent: content });
+
+//     if (step2Data.contentType === "lower-third") {
+//       setShowLowerThird(true);
+//     }
+//     // Note: We no longer auto-jump to step 3 to allow multiple selection
+//   };
+
+//   const handleNext = () => {
+//     if (showLowerThird) {
+//       // Move from Lower Third to Step 3
+//       setShowLowerThird(false);
+//       setCurrentStep(3);
+//     } else if (currentStep < 4) {
+//       setCurrentStep(currentStep + 1);
+//     } else {
+//       // Submit form
+//       handleSubmit();
+//     }
+//   };
+
+//   const handleBack = () => {
+//     if (isCreating) return;
+//     if (showLowerThird) {
+//       setShowLowerThird(false);
+//       setStep2Data((prev) => ({ ...prev, contentType: "all" }));
+//     } else if (currentStep > 1) {
+//       setCurrentStep(currentStep - 1);
+//     }
+//   };
+
+//   const handleCancel = () => {
+//     if (isCreating) return;
+//     // Reset all data
+//     setCurrentStep(1);
+//     setShowLowerThird(false);
+//     setStep1Data({ name: "", description: "" });
+//     setStep2Data({ contentType: "all", selectedContent: [] });
+//     setStep3Data({ selectedScreens: [] });
+//     setLowerThirdData({ ...lowerThirdData, selectedContent: null });
+//     setStep4Data({
+//       repeat: "run-once",
+//       selectedDays: [],
+//       selectedDates: [],
+//       playTime: "",
+//       endTime: "",
+//       startDate: "",
+//       endDate: "",
+//     });
+//     setCreatedLowerThirdId(null);
+//     setOpen(false);
+//   };
+
+//   const handleSubmit = async () => {
+//     // Determine active content (always use Step 2 selection)
+//     const activeContent = step2Data.selectedContent;
+
+//     // Map contentType to API enum
+//     let contentType: ContentType = "IMAGE_VIDEO";
+//     if (step2Data.contentType === "audio") {
+//       contentType = "AUDIO";
+//     } else if (step2Data.contentType === "lower-third") {
+//       contentType = "LOWERTHIRD";
+//     } else if (activeContent[0]?.type === "audio") {
+//       contentType = "AUDIO";
+//     }
+
+//     const startD = step4Data.startDate || dayjs().format("YYYY-MM-DD");
+//     const cleanStartDate = startD.includes("T") ? startD.split("T")[0] : startD;
+
+//     const endD =
+//       step4Data.repeat === "run-once"
+//         ? cleanStartDate
+//         : step4Data.endDate || cleanStartDate;
+//     const cleanEndDate = endD.includes("T") ? endD.split("T")[0] : endD;
+
+//     const startTime = `${cleanStartDate}T${step4Data.playTime}:00Z`;
+//     const endTime =
+//       step4Data.repeat === "run-once"
+//         ? undefined
+//         : `${cleanEndDate}T${step4Data.endTime || step4Data.playTime}:00Z`;
+
+//     const startDate = `${cleanStartDate}T00:00:00Z`;
+//     const endDate =
+//       step4Data.repeat === "run-once" ? undefined : `${cleanEndDate}T23:59:00Z`;
+
+//     // Segregate programs and files while validating UUIDs
+//     const selectedPrograms = activeContent
+//       .filter((c) => (c as any).isProgram)
+//       .map((c) => c.id)
+//       .filter(isUUID);
+//     const selectedFiles = activeContent
+//       .filter((c) => !(c as any).isProgram)
+//       .map((c) => c.id)
+//       .filter(isUUID);
+
+//     // Construct the API payload
+//     const payload: StoreMorningPromo = {
+//       name: step1Data.name,
+//       description: step1Data.description,
+//       contentType,
+//       recurrenceType: (step4Data.repeat === "run-once"
+//         ? "once"
+//         : step4Data.repeat) as "once" | "daily" | "weekly" | "monthly",
+//       startDate,
+//       endDate,
+//       startTime,
+//       endTime,
+//       daysOfWeek: step4Data.selectedDays as DayOfWeek[],
+//       dayOfMonth: step4Data.selectedDates,
+//       programIds: selectedPrograms.length > 0 ? selectedPrograms : undefined,
+//       deviceIds: step3Data.selectedScreens.filter(isUUID),
+//       fileIds: selectedFiles.length > 0 ? selectedFiles : undefined,
+//       status: "playing",
+//       lowerThirdIds:
+//         step2Data.contentType === "lower-third" &&
+//         createdLowerThirdId &&
+//         isUUID(createdLowerThirdId)
+//           ? [createdLowerThirdId]
+//           : undefined,
+//     };
+
+//     console.log("=== SUBMITTING SCHEDULE PAYLOAD ===");
+//     console.log("this is create schedule data", payload);
+
+//     try {
+//       const res = await createSchedule(payload).unwrap();
+//       console.log("Schedule created successfully:", res);
+//       toast.success(res?.message || "Schedule created successfully!");
+//       handleCancel();
+//     } catch (error: any) {
+//       console.error("Error creating schedule:", error);
+//       const errorMessage =
+//         error?.data?.message ||
+//         error?.message ||
+//         "Failed to create schedule. Please try again.";
+//       toast.error(errorMessage);
+//     }
+//   };
+
+//   const isNextDisabled = () => {
+//     if (isCreating) return true;
+//     if (currentStep === 1) return !step1Data.name;
+//     if (currentStep === 2) {
+//       if (showLowerThird) return !createdLowerThirdId;
+//       return step2Data.selectedContent.length === 0;
+//     }
+//     if (currentStep === 3) return step3Data.selectedScreens.length === 0;
+//     if (currentStep === 4) {
+//       const isRunOnce = step4Data.repeat === "run-once";
+//       const commonFields = !step4Data.playTime || !step4Data.startDate;
+//       if (isRunOnce) return commonFields;
+//       return commonFields || !step4Data.endDate || !step4Data.endTime;
+//     }
+//     return false;
+//   };
+
+//   // Prevent background scrolling when dialog is open
+//   useEffect(() => {
+//     if (open) {
+//       document.body.style.overflow = "hidden";
+//       document.documentElement.style.overflow = "hidden";
+//     } else {
+//       document.body.style.overflow = "unset";
+//       document.documentElement.style.overflow = "unset";
+//     }
+//     return () => {
+//       document.body.style.overflow = "unset";
+//       document.documentElement.style.overflow = "unset";
+//     };
+//   }, [open]);
+
+//   if (!open) return null;
+
+//   return (
+//     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+//       {/* Darker full-screen backdrop - Click to close */}
+//       <div
+//         className="absolute inset-0 bg-black/80 backdrop-blur-md cursor-pointer"
+//         onClick={() => !isCreating && handleCancel()}
+//       />
+
+//       {/* Modal Content container - Fully responsive scaling */}
+//       <div className="relative w-full md:max-w-4xl h-full md:h-auto md:max-h-[85vh] bg-navbarBg border-x md:border border-border rounded-none md:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+//         {/* Header */}
+//         <div className="p-4 md:p-6 border-b border-border flex items-center justify-between bg-navbarBg">
+//           <div>
+//             <h2 className="text-xl md:text-2xl font-bold text-headings">
+//               Create New Schedule
+//             </h2>
+//             <p className="text-xs md:text-sm text-muted mt-0.5 md:mt-1">
+//               Schedule when and where your content should play
+//             </p>
+//           </div>
+//           <button
+//             onClick={handleCancel}
+//             disabled={isCreating}
+//             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-all cursor-pointer text-muted hover:text-red-500 group disabled:opacity-50 disabled:cursor-not-allowed"
+//           >
+//             <X className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" />
+//           </button>
+//         </div>
+
+//         {/* Body - Scrollable */}
+//         <div className="flex-1 overflow-y-auto p-4 md:p-6">
+//           <div className="space-y-6">
+//             {/* Step Indicator */}
+//             <StepIndicator
+//               currentStep={showLowerThird ? 2 : currentStep}
+//               steps={STEPS}
+//             />
+
+//             {/* Step Content */}
+//             <div className="min-h-[400px]">
+//               {currentStep === 1 && (
+//                 <Step1NameDescription
+//                   data={step1Data}
+//                   onChange={setStep1Data}
+//                 />
+//               )}
+
+//               {currentStep === 2 && !showLowerThird && (
+//                 <Step2ContentSelection
+//                   data={step2Data}
+//                   onChange={(newData) => {
+//                     setStep2Data(newData);
+//                   }}
+//                   onContentSelect={handleContentSelect}
+//                   onTextSectionClick={() => {
+//                     setStep2Data((prev) => ({
+//                       ...prev,
+//                       contentType: "lower-third",
+//                     }));
+//                     setShowLowerThird(true);
+//                   }}
+//                 />
+//               )}
+
+//               {showLowerThird && (
+//                 <Step2LowerThird
+//                   data={lowerThirdData as any}
+//                   onChange={setLowerThirdData}
+//                   onLowerThirdCreated={setCreatedLowerThirdId}
+//                   onContentTypeChange={(type) => {
+//                     setStep2Data((prev) => ({ ...prev, contentType: type }));
+//                     if (type !== "lower-third") {
+//                       setShowLowerThird(false);
+//                     }
+//                   }}
+//                   isAlreadyCreated={!!createdLowerThirdId}
+//                 />
+//               )}
+
+//               {currentStep === 3 && !showLowerThird && (
+//                 <Step3ScreenSelection
+//                   data={step3Data}
+//                   onChange={setStep3Data}
+//                 />
+//               )}
+
+//               {currentStep === 4 && (
+//                 <Step4ScheduleSettings
+//                   data={step4Data}
+//                   onChange={setStep4Data}
+//                 />
+//               )}
+//             </div>
+//           </div>
+//         </div>
+//         {/* Footer - Sticky at bottom */}
+//         <div className="p-4 md:p-6 border-t border-border flex items-center justify-between bg-navbarBg/80 backdrop-blur-md">
+//           <button
+//             onClick={handleCancel}
+//             disabled={isCreating}
+//             className="px-4 md:px-6 py-2 md:py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+//           >
+//             Cancel
+//           </button>
+//           <div className="flex items-center gap-2 md:gap-3">
+//             {/* Always show Back button except on step 1 */}
+//             {(currentStep > 1 || showLowerThird) && (
+//               <button
+//                 onClick={handleBack}
+//                 disabled={
+//                   isCreating || (showLowerThird && !!createdLowerThirdId)
+//                 }
+//                 className="px-4 md:px-6 py-2 md:py-2.5 rounded-xl border border-border text-headings font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer shadow-customShadow text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+//               >
+//                 Back
+//               </button>
+//             )}
+
+//             {/* Always show Next/Create button */}
+//             <button
+//               onClick={handleNext}
+//               disabled={isNextDisabled()}
+//               className="px-6 md:px-8 py-2 md:py-2.5 rounded-xl bg-bgBlue text-white font-semibold hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-customShadow transition-all cursor-pointer text-sm md:text-base whitespace-nowrap flex items-center justify-center gap-2 min-w-[120px]"
+//             >
+//               {isCreating && currentStep === 4 ? (
+//                 <>
+//                   <Loader2 className="w-4 h-4 animate-spin text-white" />
+//                   Creating...
+//                 </>
+//               ) : currentStep === 4 ? (
+//                 "Create Schedule"
+//               ) : (
+//                 "Next"
+//               )}
+//             </button>
+//           </div>
+//         </div>
+
+//         <style
+//           dangerouslySetInnerHTML={{
+//             __html: `
+//                     /* Ensure Select and other portals appear on top */
+//                     [data-radix-portal],
+//                     [data-slot="select-content"],
+//                     [data-radix-popper-content-wrapper] {
+//                         z-index: 9999 !important;
+//                     }
+//                 `,
+//           }}
+//         />
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default CreateScheduleDialog;

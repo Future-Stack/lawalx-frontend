@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { MoreVertical, Loader2 } from "lucide-react";
+import { Loader2, Monitor, Clock, LogOut } from "lucide-react";
 import { useState } from "react";
-import { useChangePasswordMutation, useGetSettingsSessionsQuery } from "@/redux/api/users/settings/settingsApi";
+import { 
+    useChangePasswordMutation, 
+    useGetSettingsSessionsQuery,
+    useDeleteSingleSessionMutation,
+    useDeleteOtherSessionMutation
+} from "@/redux/api/users/settings/settingsApi";
 import { toast } from "sonner";
 import { useAppDispatch } from "@/redux/store/hook";
 import { logout } from "@/redux/features/auth/authSlice";
@@ -15,10 +20,19 @@ export default function Account() {
     const [oldPassword, setOldPassword] = useState("");
     const [newPassword, setNewPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
+    const [isEndingSession, setIsEndingSession] = useState<string | null>(null);
+    const [isEndingOthers, setIsEndingOthers] = useState(false);
 
     const [changePassword, { isLoading }] = useChangePasswordMutation();
     const { data: sessionData } = useGetSettingsSessionsQuery();
-    const sessions = sessionData?.data?.sessions || [];
+    const [deleteSingleSession] = useDeleteSingleSessionMutation();
+    const [deleteOtherSession] = useDeleteOtherSessionMutation();
+
+    const sessions = [...(sessionData?.data?.sessions || [])].sort((a, b) => {
+        if (a.isCurrent && !b.isCurrent) return -1;
+        if (!a.isCurrent && b.isCurrent) return 1;
+        return 0;
+    });
     const notificationEmail = sessionData?.data?.notificationEmail;
 
     const handlePasswordChange = async () => {
@@ -60,6 +74,40 @@ export default function Account() {
         setOldPassword("");
         setNewPassword("");
         setConfirmPassword("");
+    };
+
+    const handleEndSession = async (sessionId: string, isCurrent: boolean) => {
+        setIsEndingSession(sessionId);
+        try {
+            const res = await deleteSingleSession({ sessionId }).unwrap();
+            if (res.success) {
+                toast.success("Session ended successfully");
+                if (isCurrent) {
+                    setTimeout(() => {
+                        dispatch(logout());
+                        router.push("/signin");
+                    }, 1000);
+                }
+            }
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Failed to end session");
+        } finally {
+            setIsEndingSession(null);
+        }
+    };
+
+    const handleEndOtherSessions = async () => {
+        setIsEndingOthers(true);
+        try {
+            const res = await deleteOtherSession().unwrap();
+            if (res.success) {
+                toast.success("All other sessions ended successfully");
+            }
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Failed to end other sessions");
+        } finally {
+            setIsEndingOthers(false);
+        }
     };
 
     return (
@@ -120,11 +168,6 @@ export default function Account() {
                             Change Password
                         </button>
                     </div>
-
-                    {/* <div className="flex flex-col sm:flex-row sm:items-center gap-6 pt-6 border-t border-border">
-                        <label className="w-48 text-sm font-medium text-body">Email</label>
-                        <input type="email" value={user?.email || ""} disabled className="flex-1 px-4 py-2.5 bg-input border border-border rounded-lg text-sm text-gray-500" />
-                    </div> */}
                 </div>
             </section>
 
@@ -135,50 +178,73 @@ export default function Account() {
                     We will notify you via <span className="text-headings font-medium">{notificationEmail || "your email"}</span> if there is any unusual activity on your account
                 </p>
 
-                <div className="space-y-6">
-                    {sessions.map((session, index) => (
-                        <div 
-                            key={session.id} 
-                            className={`flex items-start justify-between ${index !== sessions.length - 1 ? "pb-6 border-b border-border" : "pb-2"}`}
-                        >
-                            <div>
-                                <div className="flex items-center gap-3 mb-1">
-                                    <span className="font-semibold text-headings">{session.deviceName}</span>
-                                    {session.isCurrent && (
-                                        <span className="px-2 py-0.5 bg-[#E6FFEF] text-[#008A2E] text-xs font-medium rounded-full flex items-center gap-1">
-                                            <span className="w-1.5 h-1.5 bg-[#008A2E] rounded-full"></span> Active Now
-                                        </span>
-                                    )}
+                <div className="space-y-3">
+                    {sessions.map((session) => {
+                        const isCurrent = session.isCurrent;
+                        const lastActive = session.lastActive;
+
+                        return (
+                            <div
+                                key={session.id}
+                                className="rounded-xl border border-border p-4 bg-navbarBg"
+                            >
+                                {/* Top row: device info + time/badge */}
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-start gap-3">
+                                        <Monitor className="w-5 h-5 text-gray-500 dark:text-gray-400 shrink-0 mt-0.5" />
+                                        <div>
+                                            <p className="text-sm font-bold text-headings">{session.deviceName || 'Browser'}</p>
+                                            <p className="text-xs text-muted mt-0.5">
+                                                {session.location || 'Unknown'}{session.ipAddress ? ` • ${session.ipAddress}` : ''}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Right side: always show last active time, plus Current badge if applicable */}
+                                    <div className="shrink-0 flex items-center gap-2">
+                                        {isCurrent && (
+                                            <span className="text-xs font-medium text-gray-500 border border-gray-300 dark:border-gray-600 rounded-full px-3 py-0.5">
+                                                Current
+                                            </span>
+                                        )}
+                                        <div className="flex items-center gap-1 text-xs text-muted">
+                                            <Clock className="w-3.5 h-3.5 shrink-0" />
+                                            <span>{lastActive}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <p className="text-xs text-muted">
-                                    {session.location} • {session.lastActive} • {session.ipAddress}
-                                </p>
+
+                                {/* Bottom row: End Session button */}
+                                <div className="mt-3 pl-8">
+                                    <button
+                                        disabled={isEndingSession === session.id}
+                                        onClick={() => handleEndSession(session.id, isCurrent)}
+                                        className="bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-xs font-semibold px-4 py-1.5 rounded-md shadow-customShadow transition-colors cursor-pointer flex items-center gap-1"
+                                    >
+                                        {isEndingSession === session.id && <Loader2 className="w-3 h-3 animate-spin" />}
+                                        End Session
+                                    </button>
+                                </div>
                             </div>
-                            <button className="text-muted hover:text-body cursor-pointer">
-                                <MoreVertical className="w-5 h-5" />
-                            </button>
-                        </div>
-                    ))}
+                        );
+                    })}
+
+                    {sessions.length > 1 && (
+                        <button
+                            disabled={isEndingOthers}
+                            onClick={handleEndOtherSessions}
+                            className="w-full mt-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            {isEndingOthers ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <LogOut className="w-4 h-4" />
+                            )}
+                            End All Other Sessions
+                        </button>
+                    )}
                 </div>
             </section>
-
-            {/* Account Deletion */}
-            {/* <section>
-                <h2 className="text-lg md:text-xl font-bold text-headings mb-6">Account Deletion</h2>
-
-                <div className="bg-[#FFF1F2] dark:bg-red-900/10 border border-[#FECDD3] dark:border-red-900/30 rounded-xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <p className="text-[#9F1239] dark:text-red-400 font-medium">
-                        These actions cannot be undone. Please proceed with caution.
-                    </p>
-                    <button className="px-6 py-2.5 bg-[#F43F5E] text-white font-medium rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2 shadow-customShadow cursor-pointer">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Delete Account
-                    </button>
-                </div>
-            </section> */}
-
         </div>
     );
 }
