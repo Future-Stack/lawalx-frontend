@@ -470,7 +470,7 @@ const ContentAndProgramsReport = () => {
       {/* <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-4 ml-1">
         Content Usage Trends
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
         {reportData.trends.map((item: any) => (
           <div key={item.id} className="bg-navbarBg p-5 rounded-xl border border-border shadow-sm">
             <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-4 whitespace-nowrap overflow-hidden text-ellipsis">

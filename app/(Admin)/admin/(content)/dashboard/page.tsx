@@ -33,7 +33,7 @@ const Dashboard: React.FC = () => {
   const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
-  
+
   const currency = useSelector((state: RootState) => state.settings.currency);
   const currencySymbol = getCurrencySymbol(currency);
 
@@ -167,7 +167,7 @@ const Dashboard: React.FC = () => {
         const trendRows = reportData.activityTrend.data.map((d: any) => [
           d.label,
           (d.dailyUsers || 0).toLocaleString(),
-          (d.totalScreens || 0).toLocaleString(),
+          (d.totalProgram || 0).toLocaleString(),
           (d.totalDevices || 0).toLocaleString()
         ]);
         autoTable(doc, {

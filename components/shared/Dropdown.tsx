@@ -11,6 +11,7 @@ type DropdownProps = {
   icon?: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label?: string;
   className?: string;
+  disabled?: boolean;
 };
 
 const Dropdown: React.FC<DropdownProps> = ({
@@ -19,7 +20,8 @@ const Dropdown: React.FC<DropdownProps> = ({
   onChange,
   icon: Icon,
   label,
-  className = ""
+  className = "",
+  disabled = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -128,7 +130,8 @@ const Dropdown: React.FC<DropdownProps> = ({
       <button
         ref={triggerRef}
         onClick={toggleDropdown}
-        className="cursor-pointer flex items-center gap-2 px-4 py-2 text-black dark:text-white bg-navbarBg border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm w-full h-full justify-between outline-none"
+        disabled={disabled}
+        className="cursor-pointer flex items-center gap-2 px-4 py-2 text-black dark:text-white bg-navbarBg border border-border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm w-full h-full justify-between outline-none disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div className="flex items-center gap-2">
           {Icon && <Icon className="w-4 h-4 text-gray-400" />}

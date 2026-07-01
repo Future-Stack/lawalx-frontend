@@ -189,7 +189,7 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
       { label: "Total Videos", value: statsProp.content?.totalVideos ?? 0, total: statsProp.content?.limits?.videoLimit ?? null },
       { label: "Total Images", value: statsProp.content?.totalImages ?? 0, total: statsProp.content?.limits?.imageLimit ?? null },
       { label: "Total Audios", value: statsProp.content?.totalAudios ?? 0, total: statsProp.content?.limits?.audioLimit ?? null },
-      { label: "Total Programs", value: statsProp.content?.totalPrograms ?? statsProp.content?.totalScreens ?? 0, total: null },
+      { label: "Total Programs", value: statsProp.content?.totalPrograms ?? statsProp.content?.totalProgram ?? 0, total: null },
       { label: "Total Schedules", value: statsProp.content?.totalSchedules ?? 0, total: null },
       { label: "Total Templates", value: statsProp.content?.totalTemplates ?? 0, total: statsProp.content?.limits?.templateLimit ?? null },
     ]
@@ -340,21 +340,21 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
 
         {/* Content View */}
         {viewMode === 'list' ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto thin-gray-scrollbar">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">File Type</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Uploaded Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Assigned To</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">File Type</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Uploaded Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Assigned To</th>
                   <th className="px-6 py-3 text-right"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {currentItems.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors group">
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-nowrap">
                       <div className="flex items-start gap-3">
                         <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {item.type === 'Image' && item.url ? (
@@ -387,13 +387,13 @@ export default function ContentTab({ files, stats: statsProp }: { files?: any[];
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-nowrap">
                       {getTypeBadge(item.type)}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 text-nowrap">
                       {item.uploadDate}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-nowrap">
                       <span className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 max-w-[200px]">
                         {item.assignedTo}
                       </span>

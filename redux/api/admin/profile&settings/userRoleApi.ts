@@ -1,6 +1,7 @@
 import { baseApi } from "../../baseApi";
 
 const userRoleApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getAllEmployees: builder.query({
       query: (filterFullWorkload) => ({

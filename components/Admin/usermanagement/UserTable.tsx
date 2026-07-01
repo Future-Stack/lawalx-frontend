@@ -34,6 +34,9 @@ export const UserTable: React.FC<UserTableProps> = ({
   const router = useRouter();
 
   const handleRowClick = (user: any) => {
+    const selection = window.getSelection();
+    if (selection && selection.toString()) return;
+
     const plan = user.plan || "No Plan";
     const deviceStr: string = user.device || "0/0";
     const storageStr: string = user.storage || "0GB/0GB";
@@ -61,7 +64,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto hidden lg:block">
+    <div className="overflow-x-auto thin-gray-scrollbar hidden lg:block">
       <table className="w-full">
         <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <tr>

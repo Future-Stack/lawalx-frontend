@@ -337,17 +337,17 @@ export default function DevicesTab({ devices: devicesProp }: { devices?: any[] }
       <div className="bg-navbarBg border border-border rounded-xl overflow-hidden">
 
         {/* Table */}
-        <div className="overflow-x-auto scrollbar-hide rounded-t-xl">
+        <div className="overflow-x-auto thin-gray-scrollbar rounded-t-xl">
           <table className="w-full">
             <thead className="bg-gray-50 dark:bg-gray-800/50 border-b border-border">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Device</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Program</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Location</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Resolution</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Storage</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Sync</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase text-nowrap">Device</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Program</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Location</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Resolution</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Status</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Storage</th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-nowrap">Last Sync</th>
                 {/* <th className="px-6 py-3"></th> */}
               </tr>
             </thead>
@@ -358,26 +358,26 @@ export default function DevicesTab({ devices: devicesProp }: { devices?: any[] }
                   const isFirstRows = index < 2;
                   return (
                     <tr key={device.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-nowrap">
                         <div className="text-sm font-medium text-gray-900 dark:text-white">{device.device}</div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">{device.model}</div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.customer}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-nowrap">{device.customer}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 text-nowrap">
                         {device.location && typeof device.location === 'object' ? (
                           <DeviceLocation lat={(device.location as any).lat} lng={(device.location as any).lng} />
                         ) : (
                           (!device.location || device.location === '0.00, 0.00' || device.location === '0, 0' || device.location === 'Unknown Location' || device.location === 'N/A') ? 'N/A' : device.location
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.type}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-nowrap">{device.type}</td>
+                      <td className="px-6 py-4 text-nowrap">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(device.status)}`}>
                           {device.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{device.storage}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">{device.lastSync}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white text-nowrap">{device.storage}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 text-nowrap">{device.lastSync}</td>
                       {/* <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <div className="w-2 h-2 rounded-full bg-green-500"></div>

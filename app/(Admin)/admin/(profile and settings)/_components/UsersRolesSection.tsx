@@ -338,69 +338,69 @@ export default function UsersRolesSection() {
                         Create Platform Employees
                     </button>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto thin-gray-scrollbar">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
                         <thead>
                             <tr className="border-b border-border">
-                                <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider">Employee Name</th>
-                                <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider">Role</th>
-                                <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider">Last Login</th>
-                                <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider text-right">Actions</th>
+                                <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider text-nowrap">Employee Name</th>
+                                <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider text-nowrap">Role</th>
+                                <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider text-nowrap">Last Login</th>
+                                <th className="py-4 px-4 text-xs font-semibold text-muted uppercase tracking-wider text-right text-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {isLoadingEmployees ? (
                                 <tr>
-                                    <td colSpan={4} className="py-10 text-center text-muted">Loading employees...</td>
+                                    <td colSpan={4} className="py-10 text-center text-muted text-nowrap">Loading employees...</td>
                                 </tr>
                             ) : (employeesData?.data || []).length === 0 ? (
                                 <tr>
-                                    <td colSpan={4} className="py-10 text-center text-muted">No employees found.</td>
+                                    <td colSpan={4} className="py-10 text-center text-muted text-nowrap">No employees found.</td>
                                 </tr>
                             ) : (employeesData?.data || []).map((emp: any, i: number) => (
                                 <tr key={emp.id} className="border-b border-border/50 hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                                    <td className="py-4 px-4">
-                                        <div className="flex items-center gap-3">
+                                    <td className="py-4 px-4 text-nowrap">
+                                        <div className="flex items-center gap-3 text-nowrap">
                                             <ProfileAvatar 
                                                 imageUrl={emp.user?.image_url || emp.user?.profileImage} 
                                                 name={emp.user?.username || emp.user?.full_name || ''} 
                                                 size="sm" 
                                             />
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <p className="text-sm font-bold text-headings">{emp.user?.username || emp.user?.full_name || 'N/A'}</p>
+                                            <div className="text-nowrap">
+                                                <div className="flex items-center gap-2 text-nowrap">
+                                                    <p className="text-sm font-bold text-headings text-nowrap">{emp.user?.username || emp.user?.full_name || 'N/A'}</p>
                                                     {emp.isDeleted && (
-                                                        <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-[10px] font-medium border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700">
+                                                        <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-[10px] font-medium border border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700 text-nowrap">
                                                             Deleted
                                                         </span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-muted">{emp.user?.account?.email || 'N/A'}</p>
+                                                <p className="text-xs text-muted text-nowrap">{emp.user?.account?.email || 'N/A'}</p>
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="py-4 px-4 text-sm">
-                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-semibold border ${getRoleBadgeStyle(emp.user?.role || 'N/A')}`}>
+                                    <td className="py-4 px-4 text-sm text-nowrap">
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-semibold border text-nowrap ${getRoleBadgeStyle(emp.user?.role || 'N/A')}`}>
                                             {emp.user?.role || 'N/A'}
                                         </span>
                                     </td>
-                                    <td className="py-4 px-4 text-sm text-body">
-                                        <div className="flex items-center gap-2 text-muted">
+                                    <td className="py-4 px-4 text-sm text-body text-nowrap">
+                                        <div className="flex items-center gap-2 text-muted text-nowrap">
                                             <Clock className="w-4 h-4" />
                                             {emp.createdAt ? new Date(emp.createdAt).toLocaleDateString() : 'N/A'}
                                         </div>
                                     </td>
-                                    <td className="py-4 px-4 text-right">
-                                        <div className="flex items-center justify-end gap-3">
+                                    <td className="py-4 px-4 text-right text-nowrap">
+                                        <div className="flex items-center justify-end gap-3 text-nowrap">
                                             <button
                                                 onClick={() => handleOpenViewModal(emp)}
-                                                className="text-muted hover:text-bgBlue transition-colors cursor-pointer"
+                                                className="text-blue-500 dark:text-blue-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors cursor-pointer"
                                             >
                                                 <Eye className="w-5 h-5" />
                                             </button>
                                             <button
                                                 onClick={() => handleOpenEditModal(emp)}
-                                                className="text-muted hover:text-bgBlue transition-colors cursor-pointer"
+                                                className="text-amber-500 dark:text-amber-400 hover:text-amber-600 dark:hover:text-amber-300 transition-colors cursor-pointer"
                                             >
                                                 <Edit className="w-5 h-5" />
                                             </button>
@@ -409,7 +409,7 @@ export default function UsersRolesSection() {
                                                     setEmployeeToDelete(emp);
                                                     setDeleteModalOpen(true);
                                                 }}
-                                                className="text-muted hover:text-red-500 transition-colors cursor-pointer"
+                                                className="text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors cursor-pointer"
                                             >
                                                 <Trash2 className="w-5 h-5" />
                                             </button>
