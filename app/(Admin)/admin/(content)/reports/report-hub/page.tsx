@@ -584,36 +584,36 @@ export default function ReportHub() {
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left">
+                <div className="overflow-x-auto thin-gray-scrollbar">
+                    <table className="w-full text-left min-w-[800px]">
                         <thead className="bg-[#F1FBFF] dark:bg-blue-900/20">
                             {activeTab === 'saved' ? (
                                 <tr>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 w-1/4">
-                                        Report Name <ChevronDown className="w-3 h-3 inline-block ml-1" />
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 w-1/4 text-nowrap">
+                                        Report Name
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">Data Source</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">Created By</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">Created Date</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">
-                                        Schedule <AlertCircle className="w-3 h-3 inline-block ml-1 opacity-50" />
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Data Source</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Created By</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Created Date</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">
+                                        Schedule
                                     </th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">Last Run</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-right">Actions</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Last Run</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-right text-nowrap">Actions</th>
                                 </tr>
                             ) : (
                                 <tr>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 w-1/4">
-                                        Report Name <ChevronDown className="w-3 h-3 inline-block ml-1" />
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 w-1/4 text-nowrap">
+                                        Report Name
                                     </th>
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Run Date</th>
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Triggered By</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400">
-                                        Status <AlertCircle className="w-3 h-3 inline-block ml-1 opacity-50" />
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">
+                                        Status
                                     </th>
                                     <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-nowrap">Recipients</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-right">Actions</th>
-                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-center w-10">Delete</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-right text-nowrap">Actions</th>
+                                    <th className="px-6 py-4 text-xs font-semibold text-gray-600 dark:text-gray-400 text-center w-10 text-nowrap">Delete</th>
                                 </tr>
                             )}
                         </thead>
@@ -621,32 +621,32 @@ export default function ReportHub() {
                             {activeTab === 'saved' ? (
                                 savedReports.map((report: any) => (
                                     <tr key={report.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                                        <td className="px-6 py-5">
-                                            <div className="text-sm font-bold text-gray-900 dark:text-white">{report.name}</div>
+                                        <td className="px-6 py-5 text-nowrap">
+                                            <div className="text-sm font-bold text-gray-900 dark:text-white text-nowrap">{report.name}</div>
                                         </td>
-                                        <td className="px-6 py-5">
+                                        <td className="px-6 py-5 text-nowrap">
                                             <span className="px-2 text-nowrap text-xs py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 font-medium rounded-full border border-gray-100 dark:border-gray-700">
                                                 {report.dataSource}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-5">
-                                            <div>
-                                                <div className="text-sm font-bold text-gray-900 dark:text-white">{report.user?.full_name}</div>
-                                                <div className="text-[10px] text-gray-400 dark:text-gray-500">{report.user?.account?.email}</div>
+                                        <td className="px-6 py-5 text-nowrap">
+                                            <div className="text-nowrap">
+                                                <div className="text-sm font-bold text-gray-900 dark:text-white text-nowrap">{report.user?.full_name}</div>
+                                                <div className="text-[10px] text-gray-400 dark:text-gray-500 text-nowrap">{report.user?.account?.email}</div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400">{new Date(report.createdAt).toLocaleDateString()}</td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
+                                        <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400 text-nowrap">{new Date(report.createdAt).toLocaleDateString()}</td>
+                                        <td className="px-6 py-5 text-nowrap">
+                                            <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white text-nowrap">
                                                 <Clock className="w-4 h-4 text-gray-400" />
                                                 {report.scheduleEnabled ? report.scheduleType : 'Not Scheduled'}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400">
+                                        <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400 text-nowrap">
                                             {report.updatedAt ? new Date(report.updatedAt).toLocaleDateString() : 'Never'}
                                         </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <div className="flex items-center justify-end gap-2">
+                                        <td className="px-6 py-5 text-right text-nowrap">
+                                            <div className="flex items-center justify-end gap-2 text-nowrap">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" size="icon-sm" className="text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-200">
@@ -707,18 +707,18 @@ export default function ReportHub() {
                             ) : (
                                 filteredRunHistory.map((run: any) => (
                                     <tr key={run.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                                        <td className="px-6 py-5">
-                                            <div className="text-sm font-bold text-gray-900 dark:text-white">{run.reportHub?.name}</div>
+                                        <td className="px-6 py-5 text-nowrap">
+                                            <div className="text-sm font-bold text-gray-900 dark:text-white text-nowrap">{run.reportHub?.name}</div>
                                         </td>
                                         <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400 text-nowrap">{new Date(run.runDate).toLocaleString()}</td>
-                                        <td className="px-6 py-5">
-                                            <span className="px-3 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-medium rounded-full border border-gray-100 dark:border-gray-700">
+                                        <td className="px-6 py-5 text-nowrap">
+                                            <span className="px-3 py-1 bg-gray-50 dark:bg-gray-800 text-gray-500 dark:text-gray-400 text-[10px] font-medium rounded-full border border-gray-100 dark:border-gray-700 text-nowrap">
                                                 {run.triggeredBy}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-5">
+                                        <td className="px-6 py-5 text-nowrap">
                                             <div className={cn(
-                                                "flex items-center gap-2 text-sm font-medium",
+                                                "flex items-center gap-2 text-sm font-medium text-nowrap",
                                                 run.status === 'PROCESSING' ? 'text-blue-500 animate-pulse' :
                                                     run.status === 'FAILED' ? 'text-red-500' :
                                                         'text-green-500'
@@ -729,14 +729,14 @@ export default function ReportHub() {
                                                 {run.status}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5">
-                                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                        <td className="px-6 py-5 text-nowrap">
+                                            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 text-nowrap">
                                                 <Mail className="w-4 h-4 opacity-50" />
                                                 {run.recipients?.join(', ') || 'N/A'}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5 text-right">
-                                            <div className="flex items-center justify-end gap-3">
+                                        <td className="px-6 py-5 text-right text-nowrap">
+                                            <div className="flex items-center justify-end gap-3 text-nowrap">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button 
@@ -773,11 +773,11 @@ export default function ReportHub() {
                                                 </Button>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-5 text-center">
+                                        <td className="px-6 py-5 text-center text-nowrap">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                                                className="text-red-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all text-nowrap"
                                                 onClick={() => {
                                                     setHistoryToDelete(run);
                                                     setIsHistoryDeleteOpen(true);

@@ -144,6 +144,8 @@ const UserActivityReports = () => {
   const [timeRange, setTimeRange] = useState(30);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
+
+
   useEffect(() => {
     const tab = searchParams.get('tab');
     if (tab) {
@@ -413,7 +415,7 @@ const UserActivityReports = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
           <div className="bg-navbarBg rounded-lg p-4 border border-border">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-gray-500 dark:text-gray-400">Total Users</span>
@@ -522,38 +524,38 @@ const UserActivityReports = () => {
                     Filter
                   </button> */}
                 </div>
-                <div className="overflow-x-auto scrollbar-hide">
-                  <table className="w-full">
+                <div className="overflow-x-auto thin-gray-scrollbar">
+                  <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">ID</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Timestamp</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">User</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Action</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Resource</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">IP Address</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">ID</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Timestamp</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">User</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Action</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Resource</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">IP Address</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Status</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.activityLog.recentActivity.map((activity: any, idx: number) => (
                         <tr key={idx} className="border-b border-border hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="py-3 px-4 text-sm">{activity.id}</td>
-                          <td className="py-3 px-4 text-sm">{activity.timestamp}</td>
-                          <td className="py-3 px-4 text-sm">{activity.user}</td>
-                          <td className="py-3 px-4 text-sm">
-                            <span className="inline-flex items-center gap-1.5">
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.id}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.timestamp}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.user}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">
+                            <span className="inline-flex items-center gap-1.5 text-nowrap">
                               <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
                               {activity.action}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm">{activity.resource}</td>
-                          <td className="py-3 px-4 text-sm">{activity.ip}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs ${activity.status === 'Success'
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.resource}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.ip}</td>
+                          <td className="py-3 px-4 text-nowrap">
+                            <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${activity.status === 'Success'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                               : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                              }`}>
+                            }`}>
                               {activity.status}
                             </span>
                           </td>
@@ -860,44 +862,54 @@ const UserActivityReports = () => {
                     Filter
                   </button> */}
                 </div>
-                <div className="overflow-x-auto scrollbar-hide">
-                  <table className="w-full">
+                <div className="overflow-x-auto thin-gray-scrollbar">
+                  <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">ID</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Name</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Email</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Role</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Organization</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Last Login</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">ID</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Name</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Email</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Role</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Organization</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Last Login</th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.userInventory.users.map((user: any, idx: number) => (
                         <tr key={idx} className="border-b border-border hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="py-3 px-4 text-sm">{user.id}</td>
-                          <td className="py-3 px-4 text-sm font-medium">{user.name}</td>
-                          <td className="py-3 px-4 text-sm">{user.email}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'Super Admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                          <td className="py-3 px-4 text-sm text-nowrap">{user.id}</td>
+                          <td className="py-3 px-4 text-sm font-medium text-nowrap">{user.name}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{user.email}</td>
+                          <td className="py-3 px-4 text-nowrap">
+                            <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${user.role === 'Super Admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
                               user.role === 'Admin' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
-                                user.role === 'Editor' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                                  'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'
-                              }`}>
+                              user.role === 'Editor' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                              'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'
+                            }`}>
                               {user.role}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm">{user.org}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs ${user.status === 'Active'
+                          <td className="py-3 px-4 text-sm text-nowrap">{user.org}</td>
+                          <td className="py-3 px-4 text-nowrap">
+                            <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${user.status === 'Active'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'
-                              }`}>
+                            }`}>
                               {user.status}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm">{user.lastLogin}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">
+                            {(() => {
+                              if (!user.lastLogin) return 'Never';
+                              const parsedDate = new Date(user.lastLogin);
+                              if (isNaN(parsedDate.getTime())) return user.lastLogin;
+                              return parsedDate.toLocaleString(undefined, {
+                                dateStyle: 'medium',
+                                timeStyle: 'short'
+                              });
+                            })()}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -1003,18 +1015,18 @@ const UserActivityReports = () => {
                     Filter
                   </button> */}
                 </div>
-                <div className="overflow-x-auto scrollbar-hide">
-                  <table className="w-full">
+                <div className="overflow-x-auto thin-gray-scrollbar">
+                  <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">ID</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Timestamp</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">User</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Action</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">IP Address</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Location</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Device</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">ID</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Timestamp</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">User</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Action</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">IP Address</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Location</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Device</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1029,7 +1041,7 @@ const UserActivityReports = () => {
                           </td>
                           <td className="py-3 px-4 text-sm text-nowrap">{event.user}</td>
                           <td className="py-3 px-4 text-sm text-nowrap">
-                            <span className="inline-flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1.5 text-nowrap">
                               {event.action === 'Login' ? <LogIn className="w-3.5 h-3.5 text-blue-500" /> :
                                 event.action === '2FA Verification' ? <Shield className="w-3.5 h-3.5 text-purple-500" /> :
                                   <AlertCircle className="w-3.5 h-3.5 text-red-500" />}
@@ -1037,10 +1049,10 @@ const UserActivityReports = () => {
                             </span>
                           </td>
                           <td className="py-3 px-4 text-nowrap">
-                            <span className={`px-2 py-1 rounded-full text-xs ${event.status === 'Success'
+                            <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${event.status === 'Success'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                               : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                              }`}>
+                            }`}>
                               {event.status}
                             </span>
                           </td>
@@ -1051,7 +1063,7 @@ const UserActivityReports = () => {
                               {event.location}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm">{event.device}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{event.device}</td>
                         </tr>
                       ))}
                     </tbody>

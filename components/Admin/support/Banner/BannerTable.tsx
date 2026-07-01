@@ -106,8 +106,12 @@ export default function BannerTable() {
     };
 
     const handleRowClick = (banner: any) => {
+        const selection = window.getSelection();
+        if (selection && selection.toString()) return;
         setSelectedBanner(banner);
     };
+
+
 
     // Convert table row data to BannerFormData for preview (Mock conversion)
     const getPreviewData = (banner: any): BannerFormData => {
@@ -181,16 +185,16 @@ export default function BannerTable() {
                 </div>
 
                 {/* Table */}
-                <div className="overflow-x-auto">
-                    <table className="w-full table-fixed min-w-[800px]">
+                <div className="overflow-x-auto thin-gray-scrollbar">
+                    <table className="w-full min-w-[800px]">
                         <thead className="bg-navbarBg border-b border-border">
                             <tr>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[25%]">Title & Description</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Type</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Targeted User</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Period</th>
-                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Status</th>
-                                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-[15%]">Actions</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[200px]">Title & Description</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[100px]">Type</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px] text-nowrap">Targeted User</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[150px]">Period</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[100px]">Status</th>
+                                <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider min-w-[120px]">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="bg-navbarBg divide-y divide-border">
@@ -207,21 +211,21 @@ export default function BannerTable() {
                                         className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
                                         onClick={() => handleRowClick(banner)}
                                     >
-                                        <td className="px-6 py-4">
+                                        <td className="px-6 py-4 text-nowrap">
                                             <div className="text-sm font-medium text-gray-900 dark:text-white">{banner.title || 'null'}</div>
                                             <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{banner.description || 'null'}</div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-6 py-4 text-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getTypeColor(banner.type)}`}>
                                                 {normalizeValue(banner.type)}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-6 py-4 text-nowrap">
                                             <span className="text-sm text-gray-900 dark:text-white font-medium">
                                                 {banner.targetUserType ? normalizeValue(banner.targetUserType) : '--'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-6 py-4 text-nowrap">
                                             <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                                                 <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                                                 <div>
@@ -243,27 +247,27 @@ export default function BannerTable() {
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        <td className="px-6 py-4 text-nowrap">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(banner.status)}`}>
                                                 {normalizeValue(banner.status)}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <td className="px-6 py-4 text-right text-sm font-medium text-nowrap">
                                             <div className="flex justify-end items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                                 <button
                                                     onClick={() => setSelectedBanner(banner)}
-                                                    className="cursor-pointer text-gray-400 dark:text-gray-500 hover:text-bgBlue dark:hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                                    className="cursor-pointer text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20"
                                                     title="View Preview"
                                                 >
                                                     <Eye className="w-4 h-4" />
                                                 </button>
                                                 <Link href={`/admin/support/banner/${banner.id}`}>
-                                                    <button className="cursor-pointer text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20" title="Edit">
+                                                    <button className="cursor-pointer text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors p-1.5 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20" title="Edit">
                                                         <Edit className="w-4 h-4" />
                                                     </button>
                                                 </Link>
                                                 <button
-                                                    className="cursor-pointer text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                    className="cursor-pointer text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
                                                     title="Delete"
                                                     onClick={(e) => handleDeleteClick(e, banner.id)}
                                                 >
