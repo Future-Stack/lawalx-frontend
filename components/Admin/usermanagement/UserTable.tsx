@@ -191,14 +191,14 @@ export const UserTable: React.FC<UserTableProps> = ({
                         : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
                       }`}
                   >
-                    <span
+                    {/* <span
                       className={`w-1.5 h-1.5 rounded-full ${user.status === "ACTIVE"
                         ? "bg-green-500"
                         : user.status === "SUSPENDED"
                           ? "bg-red-500"
                           : "bg-gray-500"
                         }`}
-                    />
+                    /> */}
                     {statusStr}
                   </span>
                 </td>
@@ -271,7 +271,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                             onUnsuspendUser(user.id);
                             setOpenActionMenu(null);
                           }}
-                          className="text-green-600 dark:text-green-400 focus:text-green-600 dark:focus:text-green-400"
+                          className="text-green-600 dark:text-green-400 focus:text-white dark:focus:text-white"
                         >
                           <UserCheck className="w-4 h-4" />
                           Unsuspend User
@@ -283,7 +283,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                             onSuspendUser(user);
                             setOpenActionMenu(null);
                           }}
-                          className="text-orange-600 dark:text-orange-400 focus:text-orange-600 dark:focus:text-orange-400"
+                          className="text-orange-600 dark:text-orange-400 focus:text-white dark:focus:text-white"
                         >
                           <UserX className="w-4 h-4" />
                           Suspend User
@@ -296,7 +296,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                           onDeleteUser(user);
                           setOpenActionMenu(null);
                         }}
-                        className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                        className="text-red-600 dark:text-red-400 focus:text-white dark:focus:text-white"
                       >
                         <Trash2 className="w-4 h-4" />
                         Delete User
