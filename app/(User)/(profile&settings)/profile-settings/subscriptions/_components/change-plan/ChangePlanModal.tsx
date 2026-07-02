@@ -42,6 +42,14 @@ export default function ChangePlanModal({
         toast.error(res.message || "Failed to calculate plan cost.");
         return;
       }
+      
+      // If there's no checkoutUrl, it means payment is not required and plan is already active
+      if (!res.data.checkoutUrl) {
+        toast.success(res.data.message || res.message || "Plan changed successfully!");
+        handleClose();
+        return;
+      }
+
       setChangePlanResult(res.data);
       setStep("confirm");
     } catch (err: unknown) {

@@ -7,7 +7,7 @@ interface ChangePlanBreakdownCardProps {
   result: ChangePlanResponseData;
 }
 
-function formatMoney(amount: number, currency: string): string {
+function formatMoney(amount: number = 0, currency: string = "USD"): string {
   const symbol = currency === "NGN" ? "₦" : "$";
   return `${symbol}${amount?.toLocaleString("en-US", {
     minimumFractionDigits: 2,
@@ -21,10 +21,13 @@ export default function ChangePlanBreakdownCard({
   const { breakdown, changeType, effectiveDate, targetPlan } = result;
   const isUpgrade = changeType === "UPGRADE";
 
-  const formattedEffectiveDate = new Date(effectiveDate).toLocaleDateString(
-    "en-US",
-    { year: "numeric", month: "long", day: "numeric" }
-  );
+  const formattedEffectiveDate = effectiveDate 
+    ? new Date(effectiveDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "your next billing cycle";
 
   return (
     <div className="space-y-4">
@@ -71,7 +74,7 @@ export default function ChangePlanBreakdownCard({
           </span>
         </div>
 
-        {breakdown?.remainingCredit > 0 && (
+        {(breakdown?.remainingCredit ?? 0) > 0 && (
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted">Remaining Credit (deducted)</span>
             <span className="font-medium text-green-600 dark:text-green-400">
@@ -80,7 +83,7 @@ export default function ChangePlanBreakdownCard({
           </div>
         )}
 
-        {breakdown?.couponDiscount > 0 && (
+        {(breakdown?.couponDiscount ?? 0) > 0 && (
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted">Coupon Discount</span>
             <span className="font-medium text-emerald-600 dark:text-emerald-400">
