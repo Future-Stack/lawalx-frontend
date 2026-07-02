@@ -8,13 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit, Ban, Copy } from "lucide-react";
+import { PencilLine, Ban, Circle, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { CouponItem } from "@/redux/api/admin/payments/coupons/couponsApi";
 
@@ -123,35 +117,32 @@ const CouponsTable = ({
                   {formatDate(coupon.expiryDate)}
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-bgGray dark:hover:bg-gray-800"
-                        disabled={isUpdatingStatus}
-                        aria-label="Coupon options"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-40">
-                      <DropdownMenuItem
-                        onClick={() => handleEditClick(coupon)}
-                        className="cursor-pointer"
-                      >
-                        <Edit className="mr-2 h-4 w-4" /> Edit coupon
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleStopCoupon(coupon)}
-                        className="cursor-pointer text-red-500 focus:text-red-500"
-                        disabled={isUpdatingStatus}
-                      >
-                        <Ban className="mr-2 h-4 w-4" />
-                        {coupon.status === "ACTIVE"
+                  <div className="flex items-center justify-end gap-2.5">
+                    <button
+                      onClick={() => handleStopCoupon(coupon)}
+                      className="cursor-pointer rounded-md bg-bgGray p-1.5 text-muted transition-all hover:bg-bgGray dark:bg-gray-800 disabled:opacity-50"
+                      disabled={isUpdatingStatus}
+                      title={
+                        coupon.status === "ACTIVE"
                           ? "Stop Coupon"
-                          : "Activate Coupon"}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                          : "Activate Coupon"
+                      }
+                    >
+                      {coupon.status === "ACTIVE" ? (
+                        <Circle className="w-5 h-5 text-muted" />
+                      ) : (
+                        <Ban className="w-5 h-5 text-muted" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleEditClick(coupon)}
+                      className="cursor-pointer rounded-md border border-cyan-200 bg-cyan-50 p-1.5 text-cyan-600 transition-all hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400"
+                      disabled={isUpdatingStatus}
+                      title="Edit coupon"
+                    >
+                      <PencilLine className="w-4 h-4" />
+                    </button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -186,35 +177,32 @@ const CouponsTable = ({
                   </button>
                 </div>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-bgGray dark:hover:bg-gray-800"
-                    disabled={isUpdatingStatus}
-                    aria-label="Coupon options"
-                  >
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem
-                    onClick={() => handleEditClick(coupon)}
-                    className="cursor-pointer"
-                  >
-                    <Edit className="mr-2 h-4 w-4" /> Edit coupon
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleStopCoupon(coupon)}
-                    className="cursor-pointer text-red-500 focus:text-red-500"
-                    disabled={isUpdatingStatus}
-                  >
-                    <Ban className="mr-2 h-4 w-4" />
-                    {coupon.status === "ACTIVE"
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  onClick={() => handleStopCoupon(coupon)}
+                  className="cursor-pointer rounded-md bg-bgGray p-1.5 text-muted transition-all hover:bg-bgGray dark:bg-gray-800 disabled:opacity-50"
+                  disabled={isUpdatingStatus}
+                  title={
+                    coupon.status === "ACTIVE"
                       ? "Stop Coupon"
-                      : "Activate Coupon"}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      : "Activate Coupon"
+                  }
+                >
+                  {coupon.status === "ACTIVE" ? (
+                    <Circle className="w-5 h-5 text-muted" />
+                  ) : (
+                    <Ban className="w-5 h-5 text-muted" />
+                  )}
+                </button>
+                <button
+                  onClick={() => handleEditClick(coupon)}
+                  className="cursor-pointer rounded-md border border-cyan-200 bg-cyan-50 p-1.5 text-cyan-600 transition-all hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400"
+                  disabled={isUpdatingStatus}
+                  title="Edit coupon"
+                >
+                  <PencilLine className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between text-sm">
