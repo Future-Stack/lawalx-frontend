@@ -560,20 +560,17 @@ const UserActivityReports = () => {
                   <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">ID</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Timestamp</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">User</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Action</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Resource</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">IP Address</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Timestamp</th>
                       </tr>
                     </thead>
                     <tbody>
                       {paginatedRecentActivity.map((activity: any, idx: number) => (
                         <tr key={idx} className="border-b border-border hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="py-3 px-4 text-sm text-nowrap">{activity.id}</td>
-                          <td className="py-3 px-4 text-sm text-nowrap">{activity.timestamp}</td>
                           <td className="py-3 px-4 text-sm text-nowrap">{activity.user}</td>
                           <td className="py-3 px-4 text-sm text-nowrap">
                             <span className="inline-flex items-center gap-1.5 text-nowrap">
@@ -591,6 +588,7 @@ const UserActivityReports = () => {
                               {activity.status}
                             </span>
                           </td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.timestamp}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -925,7 +923,6 @@ const UserActivityReports = () => {
                   <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">ID</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Name</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Email</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Role</th>
@@ -937,7 +934,6 @@ const UserActivityReports = () => {
                     <tbody>
                       {paginatedInventoryUsers.map((user: any, idx: number) => (
                         <tr key={idx} className="border-b border-border hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="py-3 px-4 text-sm text-nowrap">{user.id}</td>
                           <td className="py-3 px-4 text-sm font-medium text-nowrap">{user.name}</td>
                           <td className="py-3 px-4 text-sm text-nowrap">{user.email}</td>
                           <td className="py-3 px-4 text-nowrap">
@@ -951,12 +947,19 @@ const UserActivityReports = () => {
                           </td>
                           <td className="py-3 px-4 text-sm text-nowrap">{user.org}</td>
                           <td className="py-3 px-4 text-nowrap">
-                            <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${user.status === 'Active'
-                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'
-                            }`}>
-                              {user.status}
-                            </span>
+                            {(() => {
+                              const s = (user.status || '').toUpperCase();
+                              const cls = s === 'ACTIVE'
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                : s === 'SUSPENDED'
+                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400';
+                              return (
+                                <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${cls}`}>
+                                  {user.status}
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="py-3 px-4 text-sm text-nowrap">
                             {(() => {
@@ -1105,11 +1108,10 @@ const UserActivityReports = () => {
                   <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">ID</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Timestamp</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">User</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Action</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Timestamp</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">IP Address</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Location</th>
                         <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Device</th>
@@ -1118,13 +1120,6 @@ const UserActivityReports = () => {
                     <tbody>
                       {paginatedAuthEvents.map((event: any, idx: number) => (
                         <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="py-3 px-4 text-sm text-nowrap">{event.id}</td>
-                          <td className="py-3 px-4 text-sm text-nowrap">
-                            {new Date(event.timestamp).toLocaleString(undefined, {
-                              dateStyle: 'medium',
-                              timeStyle: 'short'
-                            })}
-                          </td>
                           <td className="py-3 px-4 text-sm text-nowrap">{event.user}</td>
                           <td className="py-3 px-4 text-sm text-nowrap">
                             <span className="inline-flex items-center gap-1.5 text-nowrap">
@@ -1141,6 +1136,12 @@ const UserActivityReports = () => {
                             }`}>
                               {event.status}
                             </span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-nowrap">
+                            {new Date(event.timestamp).toLocaleString(undefined, {
+                              dateStyle: 'medium',
+                              timeStyle: 'short'
+                            })}
                           </td>
                           <td className="py-3 px-4 text-sm text-nowrap">{event.ip}</td>
                           <td className="py-3 px-4 text-sm text-nowrap">

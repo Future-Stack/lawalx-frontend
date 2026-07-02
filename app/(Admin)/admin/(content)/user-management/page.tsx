@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import EditPersonalInfoModal from "@/components/Admin/modals/EditPersonalInfoModal";
@@ -40,6 +40,11 @@ export default function UserManagementPage() {
   const [storageFilter, setStorageFilter] = useState(0);
 
   const limit = 10;
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, planFilter, statusFilter, storageFilter]);
 
   // API Queries
   const planQuery =
@@ -301,6 +306,7 @@ export default function UserManagementPage() {
           page={page}
           totalPages={meta.totalPages || 1}
           setPage={setPage}
+          limit={limit}
         />
       </div>
 

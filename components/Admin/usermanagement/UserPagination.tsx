@@ -6,6 +6,7 @@ interface UserPaginationProps {
   page: number;
   totalPages: number;
   setPage: (p: number | ((prev: number) => number)) => void;
+  limit?: number;
 }
 
 export const UserPagination: React.FC<UserPaginationProps> = ({
@@ -14,11 +15,15 @@ export const UserPagination: React.FC<UserPaginationProps> = ({
   page,
   totalPages,
   setPage,
+  limit = 10,
 }) => {
+  const startIndex = totalCount === 0 ? 0 : (page - 1) * limit + 1;
+  const endIndex = totalCount === 0 ? 0 : (page - 1) * limit + usersLength;
+
   return (
     <div className="p-4 border-t border-border flex justify-between items-center bg-navbarBg rounded-b-lg">
       <div className="text-sm text-gray-500 dark:text-gray-400">
-        Showing {usersLength} of {totalCount} users
+        Showing {startIndex} to {endIndex} of {totalCount} users
       </div>
       <div className="flex gap-2">
         <button
