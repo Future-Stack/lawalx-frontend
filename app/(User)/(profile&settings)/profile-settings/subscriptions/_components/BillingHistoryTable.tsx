@@ -1,7 +1,7 @@
 "use client";
 
 import { Download } from "lucide-react";
-import type { SubscriptionPayment } from "@/redux/api/users/payment/payment.type";
+import type { UserBillingHistoryItem } from "@/redux/api/users/payment/payment.type";
 import { formatCurrency, formatDateTime } from "./format";
 import { downloadBillingInvoicePdf } from "@/app/(Admin)/admin/(content)/subscription/_components/billings/_utils/downloadBillingInvoicePdf";
 import { useGetSettingsUserProfileQuery } from "@/redux/api/users/settings/settingsApi";
@@ -11,7 +11,7 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 interface BillingHistoryTableProps {
-  payments: SubscriptionPayment[];
+  payments: UserBillingHistoryItem[];
   planName?: string;
 }
 
@@ -22,8 +22,8 @@ export default function BillingHistoryTable({
   const { data: profileRes } = useGetSettingsUserProfileQuery(undefined);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
-  const handleDownload = async (row: SubscriptionPayment) => {
-    setDownloadingId(row.id);
+  const handleDownload = async (row: UserBillingHistoryItem) => {
+    setDownloadingId(row.paymentId);
     try {
       // Normalize amount to prevent object conversion issues
       let rawAmount: unknown = row.amount;
@@ -39,12 +39,12 @@ export default function BillingHistoryTable({
           : parseFloat(String(rawAmount)) || 0;
 
       const invoiceData = {
-        paymentId: row.id,
-        invoice: row.transactionId,
-        date: row.createdAt,
+        paymentId: row.paymentId,
+        invoice: row.invoice || row.transactionId,
+        date: row.date,
         amount: finalAmount,
         status: row.status,
-        paymentMethod: row.gateway,
+        paymentMethod: row.gateway || row.paymentMethod,
         planName: planName.toUpperCase(),
         planDescription: `Subscription plan payment for ${planName}`,
         user: {
@@ -52,7 +52,7 @@ export default function BillingHistoryTable({
             profileRes?.data?.full_name ||
             profileRes?.data?.username ||
             "Tape User",
-          email: row.email || profileRes?.data?.email || "",
+          email: row.user?.email || profileRes?.data?.email || "",
         },
       };
 
@@ -94,7 +94,7 @@ export default function BillingHistoryTable({
               const status = row.status === "SUCCESS" ? "Paid" : row.status;
               return (
                 <tr
-                  key={row.id}
+                  key={row.paymentId}
                   className="hover:bg-gray-50 dark:hover:bg-gray-900"
                 >
                   <td className="px-6 py-4">
@@ -104,13 +104,13 @@ export default function BillingHistoryTable({
                     />
                   </td>
                   <td className="px-6 py-4 font-medium text-headings">
-                    {row.transactionId || row.id}
+                    {row.invoice || row.transactionId || row.paymentId}
                   </td>
                   <td className="px-6 py-4 text-muted">
                     {formatCurrency(row.amount, row.currency)}
                   </td>
                   <td className="px-6 py-4 text-muted">
-                    {formatDateTime(row.createdAt)}
+                    {formatDateTime(row.date)}
                   </td>
                   <td className="px-6 py-4">
                     <span
@@ -127,11 +127,11 @@ export default function BillingHistoryTable({
                     <button
                       type="button"
                       onClick={() => handleDownload(row)}
-                      disabled={downloadingId === row.id}
+                      disabled={downloadingId === row.paymentId}
                       className="cursor-pointer disabled:opacity-50"
                       title="Download Receipt"
                     >
-                      {downloadingId === row.id ? (
+                      {downloadingId === row.paymentId ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <Download className="w-4 h-4" />
