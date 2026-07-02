@@ -9,7 +9,7 @@ interface ChangePlanBreakdownCardProps {
 
 function formatMoney(amount: number, currency: string): string {
   const symbol = currency === "NGN" ? "₦" : "$";
-  return `${symbol}${amount.toLocaleString("en-US", {
+  return `${symbol}${amount?.toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -67,32 +67,32 @@ export default function ChangePlanBreakdownCard({
         <div className="flex justify-between text-xs sm:text-sm">
           <span className="text-muted">Subtotal</span>
           <span className="font-medium text-headings">
-            {formatMoney(breakdown?.subtotal, breakdown.currency)}
+            {formatMoney(breakdown?.subtotal, breakdown?.currency)}
           </span>
         </div>
 
-        {breakdown.remainingCredit > 0 && (
+        {breakdown?.remainingCredit > 0 && (
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted">Remaining Credit (deducted)</span>
             <span className="font-medium text-green-600 dark:text-green-400">
-              − {formatMoney(breakdown.remainingCredit, breakdown.currency)}
+              − {formatMoney(breakdown?.remainingCredit, breakdown?.currency)}
             </span>
           </div>
         )}
 
-        {breakdown.couponDiscount > 0 && (
+        {breakdown?.couponDiscount > 0 && (
           <div className="flex justify-between text-xs sm:text-sm">
             <span className="text-muted">Coupon Discount</span>
             <span className="font-medium text-emerald-600 dark:text-emerald-400">
-              − {formatMoney(breakdown.couponDiscount, breakdown.currency)}
+              − {formatMoney(breakdown?.couponDiscount, breakdown?.currency)}
             </span>
           </div>
         )}
 
         <div className="flex justify-between text-xs sm:text-sm">
-          <span className="text-muted">Tax ({breakdown.taxRate})</span>
+          <span className="text-muted">Tax ({breakdown?.taxRate})</span>
           <span className="font-medium text-headings">
-            {formatMoney(breakdown.tax, breakdown.currency)}
+            {formatMoney(breakdown?.tax, breakdown?.currency)}
           </span>
         </div>
 
@@ -101,7 +101,7 @@ export default function ChangePlanBreakdownCard({
             Total to Pay
           </span>
           <span className="text-sm sm:text-base font-extrabold text-bgBlue">
-            {formatMoney(breakdown.total, breakdown.currency)}
+            {formatMoney(breakdown?.total, breakdown?.currency)}
           </span>
         </div>
       </div>
