@@ -9,21 +9,10 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  MoreVertical,
-  Eye,
   ExternalLink,
   CloudDownload,
   Loader2,
   RotateCcw,
-  ArrowUpCircle,
-  Mail,
-  CreditCard,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount as formatCurrency } from "@/lib/currencyUtils";
@@ -247,55 +236,29 @@ const BillingTable = ({
                   </Button>
                 </TableCell>
                 <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        aria-label="Payment options"
-                        className="h-8 w-8 text-muted hover:bg-bgGray dark:hover:bg-gray-800"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      {/* <DropdownMenuItem
-                        onClick={() => handleViewDetails(payment.user.id)}
-                      >
-                        <Eye className="mr-2 h-4 w-4" />
-                        View Details
-                      </DropdownMenuItem> */}
-                      {/* <DropdownMenuItem>
-                        <ArrowUpCircle className="mr-2 h-4 w-4" />
-                        change plan
-                      </DropdownMenuItem> */}
-                      {/* <DropdownMenuItem>
-                        <Mail className="mr-2 h-4 w-4" />
-                        Resend Receipt
-                      </DropdownMenuItem> */}
-
-                      <DropdownMenuItem
-                        onClick={() => handleViewInGateway(payment.paymentId)}
-                        disabled={gatewayLoadingId === payment.paymentId}
-                      >
-                        {gatewayLoadingId === payment.paymentId ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <ExternalLink className="mr-2 h-4 w-4" />
-                        )}
-                        View in Gateway
-                      </DropdownMenuItem>
-                      {payment.status !== "REFUNDED" && (
-                        <DropdownMenuItem
-                          className="text-red-500 focus:text-red-500"
-                          onClick={() => handleRefund(payment)}
-                        >
-                          <RotateCcw className="mr-2 h-4 w-4" />
-                          Refund
-                        </DropdownMenuItem>
+                  <div className="flex items-center justify-end gap-2.5">
+                    <button
+                      onClick={() => handleViewInGateway(payment.paymentId)}
+                      disabled={gatewayLoadingId === payment.paymentId}
+                      className="cursor-pointer rounded-md border border-cyan-200 bg-cyan-50 p-1.5 text-cyan-600 transition-all hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400 disabled:opacity-50"
+                      title="View in Gateway"
+                    >
+                      {gatewayLoadingId === payment.paymentId ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <ExternalLink className="w-4 h-4" />
                       )}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                    </button>
+                    {payment.status !== "REFUNDED" && (
+                      <button
+                        onClick={() => handleRefund(payment)}
+                        className="cursor-pointer rounded-md border border-red-200 bg-red-50 p-1.5 text-red-500 transition-all hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                        title="Refund"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -353,54 +316,29 @@ const BillingTable = ({
                     <CloudDownload className="w-4 h-4" />
                   )}
                 </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label="Payment options"
-                      className="h-8 w-8 text-muted hover:bg-bgGray dark:hover:bg-gray-800"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44">
-                    {/* <DropdownMenuItem
-                      onClick={() => handleViewDetails(payment.user.id)}
-                    >
-                      <Eye className="mr-2 h-4 w-4" />
-                      View Details
-                    </DropdownMenuItem> */}
-                    <DropdownMenuItem>
-                      <ArrowUpCircle className="mr-2 h-4 w-4" />
-                      change plan
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <Mail className="mr-2 h-4 w-4" />
-                      Resend Receipt
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleViewInGateway(payment.paymentId)}
-                      disabled={gatewayLoadingId === payment.paymentId}
-                    >
-                      {gatewayLoadingId === payment.paymentId ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <ExternalLink className="mr-2 h-4 w-4" />
-                      )}
-                      View in Gateway
-                    </DropdownMenuItem>
-                    {payment.status !== "REFUNDED" && (
-                      <DropdownMenuItem
-                        className="text-red-500 focus:text-red-500"
-                        onClick={() => handleRefund(payment)}
-                      >
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        Refund
-                      </DropdownMenuItem>
+                <div className="flex items-center justify-end gap-2.5">
+                  <button
+                    onClick={() => handleViewInGateway(payment.paymentId)}
+                    disabled={gatewayLoadingId === payment.paymentId}
+                    className="cursor-pointer rounded-md border border-cyan-200 bg-cyan-50 p-1.5 text-cyan-600 transition-all hover:bg-cyan-100 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-400 disabled:opacity-50"
+                    title="View in Gateway"
+                  >
+                    {gatewayLoadingId === payment.paymentId ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ExternalLink className="w-4 h-4" />
                     )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                  </button>
+                  {payment.status !== "REFUNDED" && (
+                    <button
+                      onClick={() => handleRefund(payment)}
+                      className="cursor-pointer rounded-md border border-red-200 bg-red-50 p-1.5 text-red-500 transition-all hover:bg-red-100 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400"
+                      title="Refund"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-between text-sm gap-2">
