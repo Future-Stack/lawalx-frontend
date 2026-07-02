@@ -71,16 +71,18 @@ export interface ChangePlanBreakdown {
 }
 
 export interface ChangePlanResponseData {
-  paymentId: string;
-  checkoutUrl: string;
-  referenceId: string;
-  gateway: string;
-  changeType: "UPGRADE" | "DOWNGRADE";
-  currentPlan: string;
-  targetPlan: string;
-  effectiveDate: string;
-  breakdown: ChangePlanBreakdown;
-  message: string;
+  paymentId?: string;
+  checkoutUrl?: string;
+  referenceId?: string;
+  gateway?: string;
+  changeType?: "UPGRADE" | "DOWNGRADE";
+  currentPlan?: string;
+  targetPlan?: string;
+  effectiveDate?: string;
+  breakdown?: ChangePlanBreakdown;
+  message?: string;
+  success?: boolean;
+  subscription?: any;
 }
 
 export interface ChangePlanApiResponse {
