@@ -67,7 +67,7 @@ export default function ChangePlanBreakdownCard({
         <div className="flex justify-between text-xs sm:text-sm">
           <span className="text-muted">Subtotal</span>
           <span className="font-medium text-headings">
-            {formatMoney(breakdown.subtotal, breakdown.currency)}
+            {formatMoney(breakdown?.subtotal, breakdown.currency)}
           </span>
         </div>
 

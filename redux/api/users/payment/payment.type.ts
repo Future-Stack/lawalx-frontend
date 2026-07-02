@@ -162,3 +162,34 @@ export interface MySubscriptionApiResponse {
   message: string;
   data: UserSubscription | null;
 }
+
+export interface UserBillingHistoryItem {
+  paymentId: string;
+  invoice: string;
+  user: {
+    name: string;
+    email: string;
+  };
+  paymentMethod: string;
+  amount: number;
+  currency: string;
+  originalAmount: number;
+  originalCurrency: string;
+  status: string;
+  paymentType: string;
+  date: string;
+  transactionId: string;
+  gateway: string;
+  subscriptionId: string;
+  additionalPaymentId: string | null;
+  subscription?: any;
+}
+
+export interface UserBillingHistoryResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: {
+    data: UserBillingHistoryItem[];
+  };
+}

@@ -10,7 +10,7 @@ import {
   Loader2,
   Download,
 } from "lucide-react";
-import { useGetMySubscriptionQuery, useCancelSubscriptionMutation, useUpdateRecurringMutation } from "@/redux/api/users/payment/payment.api";
+import { useGetMySubscriptionQuery, useCancelSubscriptionMutation, useUpdateRecurringMutation, useGetMyBillingHistoryQuery } from "@/redux/api/users/payment/payment.api";
 import { useGetPlanByIdQuery } from "@/redux/api/users/plan/plan.api";
 import CancelSubscriptionModal from "@/components/common/CancelSubscriptionModal";
 import AutoRenewConfirmModal from "@/components/common/AutoRenewConfirmModal";
@@ -41,6 +41,7 @@ export default function Subscriptions() {
     "billing",
   );
   const { data: mySubscriptionRes, isLoading } = useGetMySubscriptionQuery();
+  const { data: billingHistoryRes, isLoading: isBillingLoading } = useGetMyBillingHistoryQuery(undefined, { skip: billingTab !== "billing" });
   const [cancelSubscription, { isLoading: isCanceling }] = useCancelSubscriptionMutation();
   const [updateRecurring, { isLoading: isUpdatingRecurring }] = useUpdateRecurringMutation();
   const [isCancelModalOpen, setIsCancelModalOpen] = React.useState(false);
@@ -84,8 +85,7 @@ export default function Subscriptions() {
       toast.error(err?.data?.message || "Failed to update auto-renew setting");
     }
   };
-  const payments = subscription?.payments ?? [];
-  const latestPayment = payments[0];
+  const payments = billingHistoryRes?.data?.data ?? [];
   const planName = subscription?.plan?.name
     ? `${subscription.plan.name.charAt(0)}${subscription.plan.name.slice(1).toLowerCase()} Plan`
     : "Premium Plan";
@@ -210,25 +210,27 @@ export default function Subscriptions() {
                      Next billing: {nextBilling}
                   </p>
                 </div>
-                <button
-                  className="flex items-center gap-2 rounded-lg border border-border bg-navbarBg px-4 py-2 text-sm font-medium text-headings shadow-customShadow transition-colors hover:bg-bgGray dark:hover:bg-gray-800 cursor-pointer"
-                  onClick={() => setIsChangePlanOpen(true)}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                {!subscription?.scheduledPlanChange && (
+                  <button
+                    className="flex items-center gap-2 rounded-lg border border-border bg-navbarBg px-4 py-2 text-sm font-medium text-headings shadow-customShadow transition-colors hover:bg-bgGray dark:hover:bg-gray-800 cursor-pointer"
+                    onClick={() => setIsChangePlanOpen(true)}
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                    />
-                  </svg>
-                  Change Plan
-                </button>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    Change Plan
+                  </button>
+                )}
               </div>
 
               {/* Usage Stats */}
@@ -466,7 +468,13 @@ export default function Subscriptions() {
         </div>
 
         {billingTab === "billing" ? (
-          <BillingHistoryTable payments={payments} planName={subscription?.plan?.name || "Premium"} />
+          isBillingLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-muted" />
+            </div>
+          ) : (
+            <BillingHistoryTable payments={payments} planName={subscription?.plan?.name || "Premium"} />
+          )
         ) : (
           <MyAdditionalPaymentTable />
         )}
