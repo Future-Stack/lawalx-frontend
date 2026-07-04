@@ -297,8 +297,11 @@ export default function FirstSignupCreateProgramModal({ isOpen, onClose, onSucce
           <h2 className="text-xl sm:text-3xl font-bold text-Headings dark:text-white text-nowrap">
             Create New Program
           </h2>
-          <button onClick={handleClose} className="text-gray-400 hover:text-red-500 hover:bg-gray-100 md:p-2 p-1 rounded-full dark:hover:text-gray-300 transition-all self-end sm:self-auto cursor-pointer group">
-            <X className="w-6 h-6 transition-transform duration-300 group-hover:rotate-90" />
+          <button
+            onClick={handleClose}
+            className="hover:bg-gray-100 dark:hover:bg-gray-800 p-1 md:p-2 rounded-full cursor-pointer hover:text-red-500 group duration-300 ease-in-out self-end sm:self-auto"
+          >
+            <X className="w-6 h-6 text-gray-400 dark:text-gray-300 cursor-pointer group-hover:text-red-500 transition-transform duration-300 group-hover:rotate-90" />
           </button>
         </div>
 
