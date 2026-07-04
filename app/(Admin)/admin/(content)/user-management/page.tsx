@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import EditUserModal from "@/components/Admin/modals/EditUserModal";
+import EditPersonalInfoModal from "@/components/Admin/modals/EditPersonalInfoModal";
 import ResetPasswordModal from "@/components/Admin/modals/ResetPasswordModal";
 import SuspendUserModal from "@/components/Admin/modals/SuspendUserModal";
 import DeleteUserModal from "@/components/Admin/modals/DeleteUserModal";
@@ -17,6 +17,7 @@ import {
   useSuspendUserMutation,
   useUnsuspendUserMutation,
   useLazyGetExportDataQuery,
+  useUpdateUserMutation,
 } from "@/redux/api/admin/usermanagementApi";
 // Import refactored subcomponents
 import UserManagementHeader from "@/components/Admin/usermanagement/UserManagementHeader";
@@ -40,8 +41,18 @@ export default function UserManagementPage() {
 
   const limit = 10;
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, planFilter, statusFilter, storageFilter]);
+
   // API Queries
-  const planQuery = planFilter === "All Plans" ? undefined : planFilter.toUpperCase().replace(" ", "_");
+  const planQuery =
+    planFilter === "All Plans"
+      ? undefined
+      : planFilter === "Free" || planFilter === "Free Trial"
+      ? "FREE_TRIAL"
+      : planFilter.toUpperCase().replace(" ", "_");
 
   const { data: usersData, isLoading: isUsersLoading } = useGetUsersQuery({
     page,
@@ -60,6 +71,31 @@ export default function UserManagementPage() {
   const [unsuspendUser] = useUnsuspendUserMutation();
   const [loginAsUser] = useLoginAsUserMutation();
   const [adminResetPassword] = useAdminResetPasswordMutation();
+  const [updateUser] = useUpdateUserMutation();
+
+  const handleSavePersonalInfo = async (data: any) => {
+    if (!selectedUser?.id) return;
+    try {
+      await updateUser({
+        userId: selectedUser.id,
+        data: {
+          fullName: data.fullName,
+          designation: data.designation,
+          location: data.location,
+          phoneNumber: data.phoneNumber,
+          phoneCountry: data.phoneCountry,
+          companyName: data.companyName,
+          industryType: data.industryType,
+          website: data.website,
+          cityCountry: data.cityCountry,
+        },
+      }).unwrap();
+      toast.success("User updated successfully");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update user information");
+      throw err;
+    }
+  };
 
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -270,6 +306,7 @@ export default function UserManagementPage() {
           page={page}
           totalPages={meta.totalPages || 1}
           setPage={setPage}
+          limit={limit}
         />
       </div>
 
@@ -280,15 +317,11 @@ export default function UserManagementPage() {
       />
 
       {/* Reusable Modals */}
-      <EditUserModal
+      <EditPersonalInfoModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         userData={selectedUser}
-        onSave={(updatedData) => {
-          console.log("User updated:", updatedData);
-          setIsEditModalOpen(false);
-          toast.info("Edit user functionality not yet connected to specialized backend endpoint.");
-        }}
+        onSave={handleSavePersonalInfo}
       />
 
       <ResetPasswordModal

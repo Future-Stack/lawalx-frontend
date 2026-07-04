@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { Eye, Edit, Trash2, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCategory, getVideoUrl } from './helpers';
+import KnowledgeBasePagination from './KnowledgeBasePagination';
 
 interface KnowledgeBaseTableProps {
     activeTab: 'FAQs' | 'Video Tutorial';
@@ -13,6 +14,11 @@ interface KnowledgeBaseTableProps {
     onPlayVideoClick: (url: string) => void;
     onEditClick: (item: any) => void;
     onDeleteClick: (id: string) => void;
+    totalPages: number;
+    currentPage: number;
+    setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+    totalItems: number;
+    limit: number;
 }
 
 export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
@@ -24,15 +30,22 @@ export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
     onPlayVideoClick,
     onEditClick,
     onDeleteClick,
+    totalPages,
+    currentPage,
+    setCurrentPage,
+    totalItems,
+    limit,
 }) => {
     const getStatusStyle = (status: string) => {
         if (status === 'PUBLISHED') return 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border-blue-100 dark:border-blue-800';
         return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border-gray-200 dark:border-gray-700'; // DRAFT
     };
 
+
+
     return (
         <div className="bg-navbarBg rounded-xl border border-border overflow-hidden shadow-sm">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto thin-gray-scrollbar">
                 <table className="w-full">
                     <thead className="bg-[#FFFFFF] dark:bg-gray-800/50 border-b border-border">
                         <tr>
@@ -49,10 +62,14 @@ export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
                         {currentItems.map((item: any) => (
                             <tr
                                 key={item.id}
-                                onClick={() => onRowClick(item)}
+                                onClick={() => {
+                                    const selection = window.getSelection();
+                                    if (selection && selection.toString()) return;
+                                    onRowClick(item);
+                                }}
                                 className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
                             >
-                                <td className="px-6 py-4">
+                                <td className="px-6 py-4 text-nowrap">
                                     <div className="flex items-start gap-3">
                                         {/* Thumbnail for video */}
                                         {activeTab === 'Video Tutorial' && (
@@ -107,33 +124,33 @@ export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
                                         </div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-6 py-4 text-nowrap">
                                     <span className="text-sm font-semibold text-gray-900 dark:text-white">
                                         {item.totalView || 0}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-6 py-4 text-nowrap">
                                     <span
                                         className={cn("rounded-full px-3 py-0.5 font-medium text-xs border uppercase", getStatusStyle(item.status))}
                                     >
                                         {item.status}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4">
+                                <td className="px-6 py-4 text-nowrap">
                                     <span className="text-xs font-medium text-gray-700 dark:text-gray-300 px-3 py-0.5">
                                         {Array.isArray(item.category)
                                             ? formatCategory(item.category[0])
                                             : formatCategory(item.category)}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-right">
+                                <td className="px-6 py-4 text-right text-nowrap">
                                     <div className="flex items-center justify-end gap-2">
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 onRowClick(item);
                                             }}
-                                            className="p-2 text-gray-400 hover:text-bgBlue dark:hover:text-blue-400 transition-colors cursor-pointer"
+                                            className="p-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors cursor-pointer"
                                         >
                                             <Eye className="w-4 h-4" />
                                         </button>
@@ -142,7 +159,7 @@ export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
                                                 e.stopPropagation();
                                                 onEditClick(item);
                                             }}
-                                            className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer"
+                                            className="p-2 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors cursor-pointer"
                                         >
                                             <Edit className="w-4 h-4" />
                                         </button>
@@ -151,7 +168,7 @@ export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
                                                 e.stopPropagation();
                                                 onDeleteClick(item.id);
                                             }}
-                                            className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors cursor-pointer"
+                                            className="p-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors cursor-pointer"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -169,6 +186,14 @@ export const KnowledgeBaseTable: React.FC<KnowledgeBaseTableProps> = ({
                     </tbody>
                 </table>
             </div>
+            <KnowledgeBasePagination
+                currentItemsLength={currentItems.length}
+                totalItems={totalItems}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                setCurrentPage={setCurrentPage}
+                itemsPerPage={limit}
+            />
         </div>
     );
 };

@@ -71,16 +71,18 @@ export interface ChangePlanBreakdown {
 }
 
 export interface ChangePlanResponseData {
-  paymentId: string;
-  checkoutUrl: string;
-  referenceId: string;
-  gateway: string;
-  changeType: "UPGRADE" | "DOWNGRADE";
-  currentPlan: string;
-  targetPlan: string;
-  effectiveDate: string;
-  breakdown: ChangePlanBreakdown;
-  message: string;
+  paymentId?: string;
+  checkoutUrl?: string;
+  referenceId?: string;
+  gateway?: string;
+  changeType?: "UPGRADE" | "DOWNGRADE";
+  currentPlan?: string;
+  targetPlan?: string;
+  effectiveDate?: string;
+  breakdown?: ChangePlanBreakdown;
+  message?: string;
+  success?: boolean;
+  subscription?: any;
 }
 
 export interface ChangePlanApiResponse {
@@ -161,4 +163,35 @@ export interface MySubscriptionApiResponse {
   success: boolean;
   message: string;
   data: UserSubscription | null;
+}
+
+export interface UserBillingHistoryItem {
+  paymentId: string;
+  invoice: string;
+  user: {
+    name: string;
+    email: string;
+  };
+  paymentMethod: string;
+  amount: number;
+  currency: string;
+  originalAmount: number;
+  originalCurrency: string;
+  status: string;
+  paymentType: string;
+  date: string;
+  transactionId: string;
+  gateway: string;
+  subscriptionId: string;
+  additionalPaymentId: string | null;
+  subscription?: any;
+}
+
+export interface UserBillingHistoryResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: {
+    data: UserBillingHistoryItem[];
+  };
 }

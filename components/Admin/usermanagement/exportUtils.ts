@@ -20,10 +20,17 @@ export const handleExportPDF = async ({
   storageFilter,
 }: ExportArgs) => {
   try {
+    const normalizedPlan =
+      planFilter === "All Plans"
+        ? undefined
+        : planFilter === "Free" || planFilter === "Free Trial"
+        ? "FREE_TRIAL"
+        : planFilter.toUpperCase().replace(" ", "_");
+
     const { data: exportData, isError } = await triggerExport({
       search: searchTerm,
       status: statusFilter,
-      plan: planFilter,
+      plan: normalizedPlan,
       storageUsage: storageFilter,
     });
 
@@ -81,10 +88,17 @@ export const handleExportExcel = async ({
   storageFilter,
 }: ExportArgs) => {
   try {
+    const normalizedPlan =
+      planFilter === "All Plans"
+        ? undefined
+        : planFilter === "Free" || planFilter === "Free Trial"
+        ? "FREE_TRIAL"
+        : planFilter.toUpperCase().replace(" ", "_");
+
     const { data: exportData, isError } = await triggerExport({
       search: searchTerm,
       status: statusFilter,
-      plan: planFilter,
+      plan: normalizedPlan,
       storageUsage: storageFilter,
     });
 

@@ -9,11 +9,12 @@ import {
 } from "@/components/ui/table";
 import { Circle, Ban, PencilLine, Trash2, Loader2 } from "lucide-react";
 import { ScreenSize } from "@/redux/api/admin/payments/screenManagement/screenSizeApi";
+import { formatAmount } from "@/lib/currencyUtils";
 
 interface ScreenSizeTableProps {
   screenSizes: ScreenSize[];
   isUpdatingStatus: boolean;
-  currencySymbol: string;
+  currency: string;
   toggleStatus: (id: string, currentStatus: boolean) => void;
   handleEdit: (item: ScreenSize) => void;
   handleDeleteClick: (item: ScreenSize) => void;
@@ -22,7 +23,7 @@ interface ScreenSizeTableProps {
 const ScreenSizeTable = ({
   screenSizes,
   isUpdatingStatus,
-  currencySymbol,
+  currency,
   toggleStatus,
   handleEdit,
   handleDeleteClick,
@@ -54,14 +55,13 @@ const ScreenSizeTable = ({
                   key={item.id}
                   className="border-b border-border last:border-0 transition-colors hover:bg-bgGray dark:hover:bg-gray-800/50"
                 >
-                  <TableCell className="py-5 text-[14px] font-medium text-headings">
+                  <TableCell className="py-5 text-[14px] font-medium text-headings whitespace-nowrap">
                     {item.size}
                   </TableCell>
-                  <TableCell className="py-5 text-[14px] font-bold text-headings">
-                    {currencySymbol}
-                    {item.price}
+                  <TableCell className="py-5 text-[14px] font-bold text-headings whitespace-nowrap">
+                    {formatAmount(item.price, currency)}
                   </TableCell>
-                  <TableCell className="py-5">
+                  <TableCell className="py-5 whitespace-nowrap">
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[12px] font-medium border ${
                         item.isActive
@@ -72,7 +72,7 @@ const ScreenSizeTable = ({
                       {item.isActive ? "Enable" : "Disabled"}
                     </span>
                   </TableCell>
-                  <TableCell className="py-5 text-right">
+                  <TableCell className="py-5 text-right whitespace-nowrap">
                     <div className="flex items-center justify-end gap-2.5">
                       <button
                         onClick={() => toggleStatus(item.id, item.isActive)}
@@ -172,8 +172,7 @@ const ScreenSizeTable = ({
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted">Price:</span>
                 <span className="font-semibold text-headings">
-                  {currencySymbol}
-                  {item.price}
+                  {formatAmount(item.price, currency)}
                 </span>
               </div>
               <div className="flex justify-between items-center text-sm">

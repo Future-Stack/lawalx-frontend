@@ -1,6 +1,7 @@
 import { baseApi } from "../../baseApi";
 
 export const adminSettingsApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     // Profile
     getAdminProfile: builder.query({
@@ -16,7 +17,7 @@ export const adminSettingsApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["AdminSettings"],
+      invalidatesTags: ["AdminSettings", "ReportHub"],
     }),
     uploadProfilePhoto: builder.mutation({
       query: (formData) => ({
@@ -24,7 +25,7 @@ export const adminSettingsApi = baseApi.injectEndpoints({
         method: "POST",
         body: formData,
       }),
-      invalidatesTags: ["AdminSettings"],
+      invalidatesTags: ["AdminSettings", "ReportHub"],
     }),
 
     // Preferences

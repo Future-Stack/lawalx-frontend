@@ -48,6 +48,13 @@ const FinancialReport = () => {
     if (tab) {
       setActiveTab(tab);
     }
+    const range = searchParams.get('timeRange');
+    if (range) {
+      if (range === '1d') setTimeRange(1);
+      else if (range === '7d') setTimeRange(7);
+      else if (range === '1m') setTimeRange(30);
+      else if (range === '1y') setTimeRange(365);
+    }
   }, [searchParams]);
 
   const handleTabChange = (tabId: string) => {
@@ -513,7 +520,7 @@ const FinancialReport = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
           <div className="bg-navbarBg border border-border rounded-lg p-4">
             <div className="flex items-center gap-2 mb-6">
               <span className='border border-border rounded-full p-2'><DollarSign className="w-4 h-4 text-red-500" /></span>

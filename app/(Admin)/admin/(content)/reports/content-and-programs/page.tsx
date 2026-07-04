@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Download,
   ChevronDown,
@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import {
   useGetContentDashboardQuery,
@@ -43,11 +44,34 @@ const TIME_RANGES = [
 
 const ContentAndProgramsReport = () => {
   const { theme } = useTheme();
+  const searchParams = useSearchParams();
   // State for time range filter
   const [selectedRange, setSelectedRange] = useState(TIME_RANGES[2]); // Default to 1 month
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [triggerExport] = useLazyGetContentExportQuery();
+
+  useEffect(() => {
+    const range = searchParams.get('timeRange');
+    if (range) {
+      const found = TIME_RANGES.find(t => t.value === range);
+      if (found) {
+        setSelectedRange(found);
+      }
+    }
+  }, [searchParams]);
+
+  const getSubtextColorClass = (subtext: string) => {
+    if (!subtext) return "text-gray-400 dark:text-gray-500";
+    const clean = subtext.toLowerCase();
+    if (clean.includes('+') || clean.includes('increase') || clean.includes('growth') || clean.includes('improvement')) {
+      return "text-green-500";
+    }
+    if (clean.includes('-') || clean.includes('decrease') || clean.includes('regression') || clean.includes('decline') || clean.includes('failed')) {
+      return "text-red-500";
+    }
+    return "text-gray-400 dark:text-gray-500";
+  };
 
   const handleExportPDF = async () => {
     try {
@@ -318,7 +342,7 @@ const ContentAndProgramsReport = () => {
             <span className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
               {reportData.kpi.totalDevice.toLocaleString()}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className={`text-xs ${getSubtextColorClass(reportData.kpi.totalDeviceSub)}`}>
               {reportData.kpi.totalDeviceSub}
             </span>
           </div>
@@ -334,7 +358,7 @@ const ContentAndProgramsReport = () => {
             <span className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
               {reportData.kpi.contentItems.toLocaleString()}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className={`text-xs ${getSubtextColorClass(reportData.kpi.contentItemsSub)}`}>
               {reportData.kpi.contentItemsSub}
             </span>
           </div>
@@ -350,7 +374,7 @@ const ContentAndProgramsReport = () => {
             <span className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
               {reportData.kpi.storageUsed}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className={`text-xs ${getSubtextColorClass(reportData.kpi.storageUsedSub)}`}>
               {reportData.kpi.storageUsedSub}
             </span>
           </div>
@@ -366,7 +390,7 @@ const ContentAndProgramsReport = () => {
             <span className="text-3xl font-bold text-red-500 mb-1">
               {reportData.kpi.unusedContent.toLocaleString()}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className={`text-xs ${getSubtextColorClass(reportData.kpi.unusedContentSub)}`}>
               {reportData.kpi.unusedContentSub}
             </span>
           </div>
@@ -470,7 +494,7 @@ const ContentAndProgramsReport = () => {
       {/* <h3 className="text-base font-semibold text-gray-800 dark:text-gray-200 mb-4 ml-1">
         Content Usage Trends
       </h3>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
         {reportData.trends.map((item: any) => (
           <div key={item.id} className="bg-navbarBg p-5 rounded-xl border border-border shadow-sm">
             <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-4 whitespace-nowrap overflow-hidden text-ellipsis">

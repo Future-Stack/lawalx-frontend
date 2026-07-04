@@ -168,11 +168,20 @@ const BillingDashboard = () => {
   const [mounted, setMounted] = useState(false);
   const [showExportMenu, setShowExportMenu] = useState(false);
 
+
+
   React.useEffect(() => {
     setMounted(true);
     const tab = searchParams.get('tab');
     if (tab) {
       setActiveTab(tab);
+    }
+    const range = searchParams.get('timeRange');
+    if (range) {
+      if (range === '1d') setTimeRange('last 1 day');
+      else if (range === '7d') setTimeRange('last 7 days');
+      else if (range === '1m') setTimeRange('last 30 days');
+      else if (range === '1y') setTimeRange('last 1 year');
     }
   }, [searchParams]);
 
@@ -781,7 +790,7 @@ const BillingDashboard = () => {
         <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Detailed Transaction Report</h3>
         <p className={`${theme.textSecondary} text-sm mb-6`}>Complete transaction history with status and payment methods</p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
           <div className="text-center p-4 bg-navbarBg rounded-xl border border-border">
             <div className="text-3xl font-bold text-purple-600">{transactionTotals?.total || 0}</div>
             <div className={`text-sm ${theme.textSecondary}`}>Total Transactions</div>
@@ -825,36 +834,36 @@ const BillingDashboard = () => {
           <h3 className={`text-lg font-semibold ${theme.text}`}>Recent Transactions</h3>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto thin-gray-scrollbar">
+          <table className="w-full min-w-[800px]">
             <thead>
               <tr className={`border-b ${theme.border}`}>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Transaction ID</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Date</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Customer</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Amount</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Status</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Payment Method</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Invoice</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Transaction ID</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Date</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Customer</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Amount</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Status</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Payment Method</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Invoice</th>
               </tr>
             </thead>
             <tbody>
               {recentTransactions.map((txn: any) => (
                 <tr key={txn.id} className={`border-b ${theme.border} ${theme.hover}`}>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{txn.id}</td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{txn.date}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{txn.customer}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{txn.amount}</td>
-                  <td className="py-3 px-4">
+                  <td className={`py-3 px-4 ${theme.text} text-sm text-nowrap`}>{txn.id}</td>
+                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm text-nowrap`}>{txn.date}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm text-nowrap`}>{txn.customer}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm text-nowrap`}>{currencySymbol}{txn.amount}</td>
+                  <td className="py-3 px-4 text-nowrap">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${txn.status === 'Successful' ? 'bg-green-100 text-green-800' :
                       txn.status === 'Failed' ? 'bg-red-100 text-red-800' :
-                        'bg-orange-100 text-orange-800'
-                      }`}>
+                      'bg-orange-100 text-orange-800'
+                    }`}>
                       {txn.status}
                     </span>
                   </td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{txn.method}</td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{txn.invoice}</td>
+                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm text-nowrap`}>{txn.method}</td>
+                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm text-nowrap`}>{txn.invoice}</td>
                 </tr>
               ))}
             </tbody>
@@ -1187,7 +1196,7 @@ const BillingDashboard = () => {
         <p className={`${theme.textSecondary} text-sm mt-1`}>Track refunds and customer-initiated disputes</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {/* Total Refunds */}
         <div className={`bg-navbarBg rounded-xl p-5 shadow-sm border border-border flex justify-between items-center transition-all duration-200`}>
           <div>
@@ -1228,28 +1237,28 @@ const BillingDashboard = () => {
       <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
         <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Refund & Chargeback Details</h3>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto thin-gray-scrollbar">
+          <table className="w-full min-w-[800px]">
             <thead>
               <tr className={`border-b ${theme.border}`}>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>ID</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Date</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Customer</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Amount</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Type</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Reason</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Fee</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Status</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>ID</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Date</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Customer</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Amount</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Type</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Reason</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Fee</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Status</th>
               </tr>
             </thead>
             <tbody>
               {refundData.map((item: any) => (
                 <tr key={item.id} className={`border-b ${theme.border} ${theme.hover}`}>
-                  <td className={`py-3 px-4 ${theme.text} text-sm font-medium`}>{item.id}</td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.date}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.customer}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm font-semibold`}>{currencySymbol}{item.amount}</td>
-                  <td className="py-3 px-4">
+                  <td className={`py-3 px-4 ${theme.text} text-sm font-medium text-nowrap`}>{item.id}</td>
+                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm text-nowrap`}>{item.date}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm text-nowrap`}>{item.customer}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm font-semibold text-nowrap`}>{currencySymbol}{item.amount}</td>
+                  <td className="py-3 px-4 text-nowrap">
                     <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${
                       (item.type || '').toLowerCase() === 'refund'
                         ? 'bg-amber-100/50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400'
@@ -1258,9 +1267,9 @@ const BillingDashboard = () => {
                       {item.type}
                     </span>
                   </td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.reason}</td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.fee}</td>
-                  <td className="py-3 px-4">
+                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm text-nowrap`}>{item.reason}</td>
+                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm text-nowrap`}>{item.fee}</td>
+                  <td className="py-3 px-4 text-nowrap">
                     <span className={`px-2.5 py-0.5 rounded-md text-xs font-semibold ${
                       (item.status || '').toLowerCase() === 'completed'
                         ? 'bg-green-100/50 text-green-600 dark:bg-green-950/40 dark:text-green-400'
@@ -1372,7 +1381,7 @@ const BillingDashboard = () => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4">
           {/* First card — purple highlighted */}
           <div className="p-5 rounded-xl bg-purple-50 border border-purple-200 dark:bg-purple-900/30 dark:border-purple-700/40 transition-colors duration-200">
             <div className="text-sm font-medium mb-2 text-purple-600 dark:text-purple-300 transition-colors duration-200">Total Tax Collected</div>
@@ -1403,40 +1412,40 @@ const BillingDashboard = () => {
       {/* Tax Breakdown Table */}
       <div className={`bg-navbarBg rounded-xl p-6 shadow-sm border border-border`}>
         <h3 className={`text-lg font-semibold mb-4 ${theme.text}`}>Tax Breakdown by Jurisdiction</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto thin-gray-scrollbar">
+          <table className="w-full min-w-[800px]">
             <thead>
               <tr className={`border-b ${theme.border}`}>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Jurisdiction</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Transactions</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Income</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Tax Rate</th>
-                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm`}>Tax Collected</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Jurisdiction</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Transactions</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Income</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Tax Rate</th>
+                <th className={`text-left py-3 px-4 ${theme.textSecondary} font-medium text-sm text-nowrap`}>Tax Collected</th>
               </tr>
             </thead>
             <tbody>
               {taxByJurisdiction.map((item: any, idx: number) => (
                 <tr key={idx} className={`border-b ${theme.border} ${theme.hover}`}>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>
+                  <td className={`py-3 px-4 ${theme.text} text-sm text-nowrap`}>
                     <div className="flex items-center gap-2">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={theme.textSecondary}><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
                       {item.jurisdiction}
                     </div>
                   </td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{item.transactions}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm`}>{currencySymbol}{(item.revenue || 0).toLocaleString()}</td>
-                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm`}>{item.rate}</td>
-                  <td className={`py-3 px-4 ${theme.text} text-sm font-semibold`}>{currencySymbol}{(item.collected || 0).toLocaleString()}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm text-nowrap`}>{item.transactions}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm text-nowrap`}>{currencySymbol}{(item.revenue || 0).toLocaleString()}</td>
+                  <td className={`py-3 px-4 ${theme.textSecondary} text-sm text-nowrap`}>{item.rate}</td>
+                  <td className={`py-3 px-4 ${theme.text} text-sm font-semibold text-nowrap`}>{currencySymbol}{(item.collected || 0).toLocaleString()}</td>
                 </tr>
               ))}
               {/* Total row */}
               {taxByJurisdiction.length > 0 && (
                 <tr className="transition-colors duration-200 bg-gray-50 dark:bg-gray-800/60">
-                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text}`}>Total</td>
-                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text}`}>{totalTransactions}</td>
-                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text}`}>{currencySymbol}{totalRevenue.toLocaleString()}</td>
-                  <td className={`py-3 px-4 text-sm ${theme.textSecondary}`}>-</td>
-                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text}`}>{currencySymbol}{totalCollected.toLocaleString()}</td>
+                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text} text-nowrap`}>Total</td>
+                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text} text-nowrap`}>{totalTransactions}</td>
+                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text} text-nowrap`}>{currencySymbol}{totalRevenue.toLocaleString()}</td>
+                  <td className={`py-3 px-4 text-sm ${theme.textSecondary} text-nowrap`}>-</td>
+                  <td className={`py-3 px-4 text-sm font-semibold ${theme.text} text-nowrap`}>{currencySymbol}{totalCollected.toLocaleString()}</td>
                 </tr>
               )}
             </tbody>

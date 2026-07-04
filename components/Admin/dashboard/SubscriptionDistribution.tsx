@@ -115,7 +115,7 @@ export const SubscriptionDistribution: React.FC<SubscriptionDistributionProps> =
         </>
       )}
 
-      <Link href="/admin/reports/financial-reports?tab=plans" className="flex justify-end mt-4">
+      <Link href={`/admin/reports/financial-reports?tab=plans&timeRange=${dateRange}`} className="flex justify-end mt-4">
         <button className="text-xs text-black dark:text-white hover:text-blue-400 dark:hover:text-blue-300 cursor-pointer font-medium px-3 py-1.5 border border-border shadow-customShadow rounded-md">View Details</button>
       </Link>
     </div>

@@ -143,6 +143,12 @@ const UserActivityReports = () => {
   const [activeTab, setActiveTab] = useState('activity');
   const [timeRange, setTimeRange] = useState(30);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [activityPage, setActivityPage] = useState(1);
+  const [inventoryPage, setInventoryPage] = useState(1);
+  const [authPage, setAuthPage] = useState(1);
+  const itemsPerPage = 5;
+
+
 
   useEffect(() => {
     const tab = searchParams.get('tab');
@@ -153,6 +159,9 @@ const UserActivityReports = () => {
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
+    setActivityPage(1);
+    setInventoryPage(1);
+    setAuthPage(1);
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', tabId);
     router.replace(`?${params.toString()}`, { scroll: false });
@@ -200,6 +209,22 @@ const UserActivityReports = () => {
     userInventory: { totalUsers: invOv?.data?.totalUsers?.value ?? 0, activeUsers: invOv?.data?.active?.value ?? 0, inactiveUsers: invOv?.data?.inactive?.value ?? 0, organizations: invOv?.data?.organizations?.value ?? 0, users: (userDir?.data ?? []).map((u: any) => ({ id: u.id, name: u.name, email: u.email, role: u.role, org: u.organization, status: u.status, lastLogin: u.lastLogin ?? 'N/A' })), roleDistribution: (byRole?.data ?? []).map((r: any, i: number) => ({ name: r.role, value: r.count, color: ['#f59e0b', '#8b5cf6', '#10b981', '#3b82f6'][i % 4] })), permissions: (permOv?.data ?? []).map((p: any) => ({ name: p.label, count: p.value, description: p.description })) },
     authentication: { successfulLogins: authOv?.data?.successLogins?.value ?? 0, failedAttempts: authOv?.data?.failedAttempts?.value ?? 0, twoFactorVerified: authOv?.data?.twoFactorVerified?.value ?? 0, successRate: authOv?.data?.successRate?.value ?? '0%', authEvents: (authEv?.data ?? []).map((e: any) => ({ id: e.id, timestamp: e.timestamp, user: e.user, action: e.action, status: e.status, ip: e.ipAddress, location: e.location ?? 'N/A', device: e.device ?? 'N/A' })), loginActivity: (loginTr?.data ?? []).map((l: any) => ({ time: l.label, successful: l.successfulLogins, failed: l.failedAttempts })), securityAlerts: (secAl?.data ?? []).map((a: any) => ({ type: a.type === 'SUCCESS' ? 'success' : a.type === 'WARNING' ? 'warning' : 'error', title: a.title, description: a.description, time: a.timestamp })) },
   };
+
+  // Pagination Calculations
+  const totalActivityItems = data.activityLog.recentActivity.length;
+  const activityTotalPages = Math.ceil(totalActivityItems / itemsPerPage);
+  const activityStartIndex = (activityPage - 1) * itemsPerPage;
+  const paginatedRecentActivity = data.activityLog.recentActivity.slice(activityStartIndex, activityStartIndex + itemsPerPage);
+
+  const totalInventoryItems = data.userInventory.users.length;
+  const inventoryTotalPages = Math.ceil(totalInventoryItems / itemsPerPage);
+  const inventoryStartIndex = (inventoryPage - 1) * itemsPerPage;
+  const paginatedInventoryUsers = data.userInventory.users.slice(inventoryStartIndex, inventoryStartIndex + itemsPerPage);
+
+  const totalAuthItems = data.authentication.authEvents.length;
+  const authTotalPages = Math.ceil(totalAuthItems / itemsPerPage);
+  const authStartIndex = (authPage - 1) * itemsPerPage;
+  const paginatedAuthEvents = data.authentication.authEvents.slice(authStartIndex, authStartIndex + itemsPerPage);
 
   const handleExportPDF = async () => {
     try {
@@ -376,7 +401,12 @@ const UserActivityReports = () => {
             <Dropdown
               value={timeRanges.find(t => t.value === timeRange)?.label || ''}
               options={timeRanges.map(t => t.label)}
-              onChange={(label) => setTimeRange(timeRanges.find(t => t.label === label)?.value || 30)}
+              onChange={(label) => {
+                setTimeRange(timeRanges.find(t => t.label === label)?.value || 30);
+                setActivityPage(1);
+                setInventoryPage(1);
+                setAuthPage(1);
+              }}
             />
 
             <div className="relative">
@@ -413,7 +443,7 @@ const UserActivityReports = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-6">
           <div className="bg-navbarBg rounded-lg p-4 border border-border">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-gray-500 dark:text-gray-400">Total Users</span>
@@ -479,7 +509,8 @@ const UserActivityReports = () => {
         {/* Activity Log Tab */}
         {activeTab === 'activity' && (
           <div className="space-y-6">
-            <div className="bg-navbarBg rounded-lg p-6 border border-border">
+            <div className="bg-navbarBg rounded-xl border border-border overflow-hidden">
+              <div className="p-6 pb-0">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <h2 className="text-lg font-semibold">User Activity Log / Audit Report</h2>
@@ -514,55 +545,79 @@ const UserActivityReports = () => {
                 </div>
               </div>
 
-              <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">Recent Activity</h3>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto thin-gray-scrollbar">
                   {/* <button className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center gap-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
                     <Filter className="w-4 h-4" />
                     Filter
                   </button> */}
                 </div>
-                <div className="overflow-x-auto scrollbar-hide">
-                  <table className="w-full">
+                <div className="overflow-x-auto thin-gray-scrollbar">
+                  <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">ID</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Timestamp</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">User</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Action</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Resource</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">IP Address</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">User</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Action</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Resource</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">IP Address</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Timestamp</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {data.activityLog.recentActivity.map((activity: any, idx: number) => (
+                      {paginatedRecentActivity.map((activity: any, idx: number) => (
                         <tr key={idx} className="border-b border-border hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="py-3 px-4 text-sm">{activity.id}</td>
-                          <td className="py-3 px-4 text-sm">{activity.timestamp}</td>
-                          <td className="py-3 px-4 text-sm">{activity.user}</td>
-                          <td className="py-3 px-4 text-sm">
-                            <span className="inline-flex items-center gap-1.5">
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.user}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">
+                            <span className="inline-flex items-center gap-1.5 text-nowrap">
                               <CheckCircle className="w-3.5 h-3.5 text-blue-500" />
                               {activity.action}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm">{activity.resource}</td>
-                          <td className="py-3 px-4 text-sm">{activity.ip}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs ${activity.status === 'Success'
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.resource}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.ip}</td>
+                          <td className="py-3 px-4 text-nowrap">
+                            <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${activity.status === 'Success'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                               : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                              }`}>
+                            }`}>
                               {activity.status}
                             </span>
                           </td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{activity.timestamp}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+
+                {/* Pagination */}
+                <div className="p-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 bg-navbarBg rounded-b-xl">
+                  <div className="text-xs sm:text-sm text-center sm:text-left text-gray-500 dark:text-gray-400">
+                    Showing {totalActivityItems === 0 ? 0 : (activityPage - 1) * itemsPerPage + 1}-
+                    {Math.min(activityPage * itemsPerPage, totalActivityItems)} of {totalActivityItems} activities
+                  </div>
+                  <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setActivityPage(prev => Math.max(prev - 1, 1))}
+                      disabled={activityPage === 1}
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setActivityPage(prev => Math.min(prev + 1, activityTotalPages))}
+                      disabled={activityPage >= activityTotalPages}
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -801,7 +856,8 @@ const UserActivityReports = () => {
         {/* User Inventory Tab */}
         {activeTab === 'inventory' && (
           <div className="space-y-6">
-            <div className="bg-navbarBg rounded-lg p-6 border border-border">
+            <div className="bg-navbarBg rounded-xl border border-border overflow-hidden">
+              <div className="p-6 pb-0">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-semibold">User Inventory & Permissions Report</h2>
@@ -852,58 +908,99 @@ const UserActivityReports = () => {
                 </div>
               </div>
 
-              <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">User Directory</h3>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto thin-gray-scrollbar">
                   {/* <button className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center gap-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
                     <Filter className="w-4 h-4" />
                     Filter
                   </button> */}
                 </div>
-                <div className="overflow-x-auto scrollbar-hide">
-                  <table className="w-full">
+                <div className="overflow-x-auto thin-gray-scrollbar">
+                  <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">ID</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Name</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Email</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Role</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Organization</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Last Login</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Name</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Email</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Role</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Organization</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Last Login</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {data.userInventory.users.map((user: any, idx: number) => (
+                      {paginatedInventoryUsers.map((user: any, idx: number) => (
                         <tr key={idx} className="border-b border-border hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="py-3 px-4 text-sm">{user.id}</td>
-                          <td className="py-3 px-4 text-sm font-medium">{user.name}</td>
-                          <td className="py-3 px-4 text-sm">{user.email}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs ${user.role === 'Super Admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
+                          <td className="py-3 px-4 text-sm font-medium text-nowrap">{user.name}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{user.email}</td>
+                          <td className="py-3 px-4 text-nowrap">
+                            <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${user.role === 'Super Admin' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' :
                               user.role === 'Admin' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
-                                user.role === 'Editor' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
-                                  'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'
-                              }`}>
+                              user.role === 'Editor' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                              'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'
+                            }`}>
                               {user.role}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm">{user.org}</td>
-                          <td className="py-3 px-4">
-                            <span className={`px-2 py-1 rounded-full text-xs ${user.status === 'Active'
-                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'
-                              }`}>
-                              {user.status}
-                            </span>
+                          <td className="py-3 px-4 text-sm text-nowrap">{user.org}</td>
+                          <td className="py-3 px-4 text-nowrap">
+                            {(() => {
+                              const s = (user.status || '').toUpperCase();
+                              const cls = s === 'ACTIVE'
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                : s === 'SUSPENDED'
+                                ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400';
+                              return (
+                                <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${cls}`}>
+                                  {user.status}
+                                </span>
+                              );
+                            })()}
                           </td>
-                          <td className="py-3 px-4 text-sm">{user.lastLogin}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">
+                            {(() => {
+                              if (!user.lastLogin) return 'Never';
+                              const parsedDate = new Date(user.lastLogin);
+                              if (isNaN(parsedDate.getTime())) return user.lastLogin;
+                              return parsedDate.toLocaleString(undefined, {
+                                dateStyle: 'medium',
+                                timeStyle: 'short'
+                              });
+                            })()}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+
+                {/* Pagination */}
+                <div className="p-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 bg-navbarBg rounded-b-xl">
+                  <div className="text-xs sm:text-sm text-center sm:text-left text-gray-500 dark:text-gray-400">
+                    Showing {totalInventoryItems === 0 ? 0 : (inventoryPage - 1) * itemsPerPage + 1}-
+                    {Math.min(inventoryPage * itemsPerPage, totalInventoryItems)} of {totalInventoryItems} users
+                  </div>
+                  <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setInventoryPage(prev => Math.max(prev - 1, 1))}
+                      disabled={inventoryPage === 1}
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setInventoryPage(prev => Math.min(prev + 1, inventoryTotalPages))}
+                      disabled={inventoryPage >= inventoryTotalPages}
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -962,7 +1059,8 @@ const UserActivityReports = () => {
         {/* Authentication Tab */}
         {activeTab === 'authentication' && (
           <div className="space-y-6">
-            <div className="bg-navbarBg rounded-lg p-6 border border-border">
+            <div className="bg-navbarBg rounded-xl border border-border overflow-hidden">
+              <div className="p-6 pb-0">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-semibold">Authentication & Access Log</h2>
@@ -995,41 +1093,36 @@ const UserActivityReports = () => {
                 </div>
               </div>
 
-              <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold">Authentication Events</h3>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto thin-gray-scrollbar">
                   {/* <button className="px-3 py-1.5 border border-gray-200 dark:border-gray-700 rounded-lg flex items-center gap-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
                     <Filter className="w-4 h-4" />
                     Filter
                   </button> */}
                 </div>
-                <div className="overflow-x-auto scrollbar-hide">
-                  <table className="w-full">
+                <div className="overflow-x-auto thin-gray-scrollbar">
+                  <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-border">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">ID</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Timestamp</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">User</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Action</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">IP Address</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Location</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400">Device</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">User</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Action</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Status</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Timestamp</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">IP Address</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Location</th>
+                        <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 dark:text-gray-400 text-nowrap">Device</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {data.authentication.authEvents.map((event: any, idx: number) => (
+                      {paginatedAuthEvents.map((event: any, idx: number) => (
                         <tr key={idx} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                          <td className="py-3 px-4 text-sm text-nowrap">{event.id}</td>
-                          <td className="py-3 px-4 text-sm text-nowrap">
-                            {new Date(event.timestamp).toLocaleString(undefined, {
-                              dateStyle: 'medium',
-                              timeStyle: 'short'
-                            })}
-                          </td>
                           <td className="py-3 px-4 text-sm text-nowrap">{event.user}</td>
                           <td className="py-3 px-4 text-sm text-nowrap">
-                            <span className="inline-flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1.5 text-nowrap">
                               {event.action === 'Login' ? <LogIn className="w-3.5 h-3.5 text-blue-500" /> :
                                 event.action === '2FA Verification' ? <Shield className="w-3.5 h-3.5 text-purple-500" /> :
                                   <AlertCircle className="w-3.5 h-3.5 text-red-500" />}
@@ -1037,12 +1130,18 @@ const UserActivityReports = () => {
                             </span>
                           </td>
                           <td className="py-3 px-4 text-nowrap">
-                            <span className={`px-2 py-1 rounded-full text-xs ${event.status === 'Success'
+                            <span className={`px-2 py-1 rounded-full text-xs text-nowrap ${event.status === 'Success'
                               ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                               : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
-                              }`}>
+                            }`}>
                               {event.status}
                             </span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-nowrap">
+                            {new Date(event.timestamp).toLocaleString(undefined, {
+                              dateStyle: 'medium',
+                              timeStyle: 'short'
+                            })}
                           </td>
                           <td className="py-3 px-4 text-sm text-nowrap">{event.ip}</td>
                           <td className="py-3 px-4 text-sm text-nowrap">
@@ -1051,13 +1150,36 @@ const UserActivityReports = () => {
                               {event.location}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-sm">{event.device}</td>
+                          <td className="py-3 px-4 text-sm text-nowrap">{event.device}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              </div>
+
+                {/* Pagination */}
+                <div className="p-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 bg-navbarBg rounded-b-xl">
+                  <div className="text-xs sm:text-sm text-center sm:text-left text-gray-500 dark:text-gray-400">
+                    Showing {totalAuthItems === 0 ? 0 : (authPage - 1) * itemsPerPage + 1}-
+                    {Math.min(authPage * itemsPerPage, totalAuthItems)} of {totalAuthItems} events
+                  </div>
+                  <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setAuthPage(prev => Math.max(prev - 1, 1))}
+                      disabled={authPage === 1}
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => setAuthPage(prev => Math.min(prev + 1, authTotalPages))}
+                      disabled={authPage >= authTotalPages}
+                      className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white dark:bg-gray-800 rounded-lg text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600 shadow-customShadow disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

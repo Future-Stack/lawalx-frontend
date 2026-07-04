@@ -233,23 +233,23 @@ export default function SubscriptionTab({
             Download All
           </button>
         </div>
-        <div className="overflow-x-auto px-4">
+        <div className="overflow-x-auto thin-gray-scrollbar px-4">
           <table className="w-full">
             <thead className="border-b border-border">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Invoice Number</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Amount</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Status</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400">Date</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 text-nowrap">Invoice Number</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 text-nowrap">Amount</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 text-nowrap">Status</th>
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 text-nowrap">Date</th>
                 <th className="px-6 py-4"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {currentHistory.length > 0 ? currentHistory.map((p, i) => (
                 <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{p.invoiceNumber || p.invoice}</td>
-                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">{formatAmount(p)}</td>
-                  <td className="px-6 py-4">
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white text-nowrap">{p.invoiceNumber || p.invoice}</td>
+                  <td className="px-6 py-4 text-sm font-bold text-gray-900 dark:text-white text-nowrap">{formatAmount(p)}</td>
+                  <td className="px-6 py-4 text-nowrap">
                     <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border inline-block ${p.status === "Paid" || p.status === "SUCCESS"
                       ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800"
                       : p.status === "PENDING"
@@ -261,7 +261,7 @@ export default function SubscriptionTab({
                       {p.status === "SUCCESS" ? "Paid" : p.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                  <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-400 text-nowrap">
                     {p.date ? new Date(p.date as string).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "N/A"}
                   </td>
                   <td className="px-6 py-4 text-right">

@@ -37,6 +37,7 @@ import {
   useUnsuspendUserMutation,
   useAdminResetPasswordMutation,
   useGetUserProfileQuery,
+  useUpdateUserMutation,
 } from "@/redux/api/admin/usermanagementApi";
 
 type TabType = "Details" | "Subscription & Billing" | "Content" | "Devices" | "Activity Logs";
@@ -85,6 +86,30 @@ export default function UserProfilePage() {
   const [suspendUser] = useSuspendUserMutation();
   const [unsuspendUser] = useUnsuspendUserMutation();
   const [adminResetPassword] = useAdminResetPasswordMutation();
+  const [updateUser] = useUpdateUserMutation();
+
+  const handleSavePersonalInfo = async (data: any) => {
+    try {
+      await updateUser({
+        userId,
+        data: {
+          fullName: data.fullName,
+          designation: data.designation,
+          location: data.location,
+          phoneNumber: data.phoneNumber,
+          phoneCountry: data.phoneCountry,
+          companyName: data.companyName,
+          industryType: data.industryType,
+          website: data.website,
+          cityCountry: data.cityCountry,
+        },
+      }).unwrap();
+      toast.success("User updated successfully");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update user information");
+      throw err;
+    }
+  };
 
   const handleLoginAsUser = async (id: string) => {
     try {
@@ -335,7 +360,7 @@ export default function UserProfilePage() {
       <EditPersonalInfoModal
         isOpen={isEditPersonalInfoOpen}
         onClose={() => setIsEditPersonalInfoOpen(false)}
-        onSave={() => toast.success("Personal information updated successfully")}
+        onSave={handleSavePersonalInfo}
         userData={profile}
       />
       <ChangePlanModal isOpen={isChangePlanOpen} onClose={() => setIsChangePlanOpen(false)} userData={profile} onConfirm={() => setIsChangePlanOpen(false)} />

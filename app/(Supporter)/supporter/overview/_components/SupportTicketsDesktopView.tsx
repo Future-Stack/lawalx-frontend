@@ -40,7 +40,7 @@ export default function SupportTicketsDesktopView({
             ].map((col) => (
               <TableHead
                 key={col}
-                className="px-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap border-b border-border"
+                className="px-4 text-xs font-semibold text-muted uppercase tracking-wide whitespace-nowrap border-b border-border"
               >
                 {col}
               </TableHead>
@@ -53,7 +53,7 @@ export default function SupportTicketsDesktopView({
             <TableRow className="border-0">
               <TableCell
                 colSpan={7}
-                className="text-center py-12 text-sm text-gray-500 dark:text-gray-400"
+                className="text-center py-12 text-sm text-muted"
               >
                 Loading tickets...
               </TableCell>
@@ -62,7 +62,7 @@ export default function SupportTicketsDesktopView({
             <TableRow className="border-0">
               <TableCell
                 colSpan={7}
-                className="text-center py-12 text-sm text-gray-500 dark:text-gray-400"
+                className="text-center py-12 text-sm text-muted"
               >
                 No tickets found.
               </TableCell>
@@ -71,20 +71,15 @@ export default function SupportTicketsDesktopView({
             paginatedTickets.map((ticket, idx) => (
               <TableRow
                 key={ticket.id}
-                className={cn(
-                  "border-0 transition-colors border-b border-border",
-                  idx % 2 === 1
-                    ? "bg-gray-50 dark:bg-gray-800/40 hover:bg-gray-100 dark:hover:bg-gray-800/60"
-                    : "bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/30",
-                )}
+                className="border-0 transition-colors border-b border-border hover:bg-bgGray dark:hover:bg-gray-800/50"
               >
                 {/* Ticket ID */}
-                <TableCell className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300 font-medium whitespace-nowrap">
+                <TableCell className="px-4 py-3 text-sm text-headings font-medium whitespace-nowrap">
                   {ticket.ticketId}
                 </TableCell>
 
                 {/* Client Name */}
-                <TableCell className="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium whitespace-nowrap">
+                <TableCell className="px-4 py-3 text-sm text-headings font-medium whitespace-nowrap">
                   {ticket.clientName}
                 </TableCell>
 
@@ -102,7 +97,7 @@ export default function SupportTicketsDesktopView({
                 </TableCell>
 
                 {/* Issue Type */}
-                <TableCell className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                <TableCell className="px-4 py-3 text-sm text-muted whitespace-nowrap">
                   {ticket.issueType}
                 </TableCell>
 
@@ -120,7 +115,7 @@ export default function SupportTicketsDesktopView({
                 </TableCell>
 
                 {/* Description */}
-                <TableCell className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 max-w-[200px]">
+                <TableCell className="px-4 py-3 text-sm text-muted max-w-[200px]">
                   <span className="truncate block">{ticket.description}</span>
                 </TableCell>
 

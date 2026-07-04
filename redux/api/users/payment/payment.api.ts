@@ -6,6 +6,7 @@ import type {
   MySubscriptionApiResponse,
   ChangePlanPayload,
   ChangePlanApiResponse,
+  UserBillingHistoryResponse,
 } from "./payment.type";
 
 export const userPaymentApi = baseApi.injectEndpoints({
@@ -55,6 +56,13 @@ export const userPaymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Subscription"],
     }),
+    getMyBillingHistory: builder.query<UserBillingHistoryResponse, void>({
+      query: () => ({
+        url: "/payment/my-billing-history",
+        method: "GET",
+      }),
+      providesTags: ["Subscription"],
+    }),
   }),
 });
 
@@ -65,5 +73,6 @@ export const {
   useCancelSubscriptionMutation,
   useUpdateRecurringMutation,
   useChangePlanMutation,
+  useGetMyBillingHistoryQuery,
 } = userPaymentApi;
 export const useCreatePaymentMutation = useCreateCheckoutMutation;

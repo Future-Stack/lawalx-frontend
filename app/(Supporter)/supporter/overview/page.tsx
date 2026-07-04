@@ -14,22 +14,22 @@ export default function SupporterOverviewPage() {
     <div className="min-h-screen space-y-6">
       {/* Welcome header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-headings flex items-center gap-2">
           {userName}{' '}
           <span role="img" aria-label="wave">
             👋
           </span>
         </h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        <p className="text-sm text-muted mt-1">
           This is your current progress overview
         </p>
       </div>
 
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+      <nav className="flex items-center gap-2 text-xs text-muted">
         <Link
           href="/supporter/overview"
-          className="text-[#0FA6FF] hover:text-[#0FA6FF] dark:hover:text-[#0FA6FF] transition-colors flex items-center gap-1"
+          className="text-[#0FA6FF] hover:text-[#0FA6FF] transition-colors flex items-center gap-1"
         >
           <HomeIcon className="w-4 h-4" /> Home
         </Link>

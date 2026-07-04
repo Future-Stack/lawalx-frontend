@@ -1,6 +1,12 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { MoreVertical, Eye, Edit, LogIn, UserCheck, UserX, Trash2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface UserTableProps {
   users: any[];
@@ -34,6 +40,9 @@ export const UserTable: React.FC<UserTableProps> = ({
   const router = useRouter();
 
   const handleRowClick = (user: any) => {
+    const selection = window.getSelection();
+    if (selection && selection.toString()) return;
+
     const plan = user.plan || "No Plan";
     const deviceStr: string = user.device || "0/0";
     const storageStr: string = user.storage || "0GB/0GB";
@@ -61,7 +70,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   };
 
   return (
-    <div className="overflow-x-auto hidden lg:block">
+    <div className="overflow-x-auto thin-gray-scrollbar hidden lg:block">
       <table className="w-full">
         <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
           <tr>
@@ -182,14 +191,14 @@ export const UserTable: React.FC<UserTableProps> = ({
                         : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600"
                       }`}
                   >
-                    <span
+                    {/* <span
                       className={`w-1.5 h-1.5 rounded-full ${user.status === "ACTIVE"
                         ? "bg-green-500"
                         : user.status === "SUSPENDED"
                           ? "bg-red-500"
                           : "bg-gray-500"
                         }`}
-                    />
+                    /> */}
                     {statusStr}
                   </span>
                 </td>
@@ -212,109 +221,88 @@ export const UserTable: React.FC<UserTableProps> = ({
                   )}
                 </td>
                 <td className="px-4 py-3 text-nowrap">
-                  <div className="relative">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenActionMenu(
-                          openActionMenu === user.id ? null : user.id
-                        );
-                      }}
-                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer"
-                    >
-                      <MoreVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-                    </button>
-                    {openActionMenu === user.id && (
-                      <>
-                        <div
-                          className="fixed inset-0 z-10"
+                  <DropdownMenu
+                    open={openActionMenu === user.id}
+                    onOpenChange={(open) => setOpenActionMenu(open ? user.id : null)}
+                  >
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors cursor-pointer"
+                      >
+                        <MoreVertical className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRowClick(user);
+                        }}
+                      >
+                        <Eye className="w-4 h-4" />
+                        View Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditUser(user);
+                          setOpenActionMenu(null);
+                        }}
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit User
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onImpersonateUser(user.id);
+                          setOpenActionMenu(null);
+                        }}
+                      >
+                        <LogIn className="w-4 h-4" />
+                        Impersonate User
+                      </DropdownMenuItem>
+
+                      {user.status === "SUSPENDED" ? (
+                        <DropdownMenuItem
                           onClick={(e) => {
                             e.stopPropagation();
+                            onUnsuspendUser(user.id);
                             setOpenActionMenu(null);
                           }}
-                        />
-                        <div
-                          className={`absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 ${isFirstRows
-                            ? "mt-2"
-                            : isLastRows
-                              ? "bottom-full mb-2"
-                              : "mt-2"
-                            }`}
+                          className="text-green-600 dark:text-green-400 focus:text-white dark:focus:text-white"
                         >
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRowClick(user);
-                            }}
-                            className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                          >
-                            <Eye className="w-4 h-4" />
-                            View Profile
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEditUser(user);
-                              setOpenActionMenu(null);
-                            }}
-                            className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                          >
-                            <Edit className="w-4 h-4" />
-                            Edit User
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onImpersonateUser(user.id);
-                              setOpenActionMenu(null);
-                            }}
-                            className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                          >
-                            <LogIn className="w-4 h-4" />
-                            Impersonate User
-                          </button>
+                          <UserCheck className="w-4 h-4" />
+                          Unsuspend User
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSuspendUser(user);
+                            setOpenActionMenu(null);
+                          }}
+                          className="text-orange-600 dark:text-orange-400 focus:text-white dark:focus:text-white"
+                        >
+                          <UserX className="w-4 h-4" />
+                          Suspend User
+                        </DropdownMenuItem>
+                      )}
 
-                          {user.status === "SUSPENDED" ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onUnsuspendUser(user.id);
-                                setOpenActionMenu(null);
-                              }}
-                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-green-600 dark:text-green-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                            >
-                              <UserCheck className="w-4 h-4" />
-                              Unsuspend User
-                            </button>
-                          ) : (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSuspendUser(user);
-                                setOpenActionMenu(null);
-                              }}
-                              className="w-full cursor-pointer px-4 py-2 text-left text-sm text-orange-600 dark:text-orange-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                            >
-                              <UserX className="w-4 h-4" />
-                              Suspend User
-                            </button>
-                          )}
-
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteUser(user);
-                              setOpenActionMenu(null);
-                            }}
-                            className="w-full cursor-pointer px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete User
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteUser(user);
+                          setOpenActionMenu(null);
+                        }}
+                        className="text-red-600 dark:text-red-400 focus:text-white dark:focus:text-white"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Delete User
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </td>
               </tr>
             );

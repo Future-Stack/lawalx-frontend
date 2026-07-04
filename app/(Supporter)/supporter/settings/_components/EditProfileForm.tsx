@@ -51,13 +51,13 @@ export default function EditProfileForm() {
 
   return (
     <div className="animate-in fade-in duration-300">
-      <h3 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-6">
+      <h3 className="text-lg sm:text-xl font-bold text-headings mb-6">
         Edit Your Profile
       </h3>
 
       <div className="space-y-5">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+          <label className="text-sm font-medium text-headings">
             Full Name
           </label>
           <Input
@@ -65,19 +65,19 @@ export default function EditProfileForm() {
             placeholder="Your Name"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="bg-white dark:bg-gray-950 border-gray-200 dark:border-gray-800 focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11"
+            className="bg-navbarBg border-border text-headings placeholder:text-muted focus-visible:ring-1 focus-visible:ring-[#1EA1F2] h-11"
           />
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-800 dark:text-gray-200">
+          <label className="text-sm font-medium text-headings">
             Username
           </label>
           <Input
             type="text"
             value={profile?.username || ""}
             readOnly
-            className="bg-[#F4F7F9] dark:bg-gray-800/80 border-gray-200 dark:border-gray-700 text-gray-500 cursor-not-allowed focus-visible:ring-0 h-11"
+            className="bg-bgGray border-border text-muted cursor-not-allowed focus-visible:ring-0 h-11"
           />
         </div>
 

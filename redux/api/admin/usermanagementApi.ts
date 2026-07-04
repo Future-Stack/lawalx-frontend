@@ -102,6 +102,15 @@ export const usermanagementApi = baseApi.injectEndpoints({
       providesTags: ["User"],
     }),
 
+    updateUser: builder.mutation({
+      query: ({ userId, data }: { userId: string; data: any }) => ({
+        url: `/usermanagement/${userId}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["User"],
+    }),
+
     getUserInvoices: builder.query({
       query: ({ userId, page, limit }: { userId: string; page?: number; limit?: number }) => {
         const params = new URLSearchParams();
@@ -132,6 +141,7 @@ export const {
   useSuspendUserMutation,
   useUnsuspendUserMutation,
   useGetUserProfileQuery,
+  useUpdateUserMutation,
   useLazyGetUserInvoicesQuery,
   useLazyGetSingleInvoiceQuery,
 } = usermanagementApi;

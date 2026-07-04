@@ -163,7 +163,7 @@ export default function Dashboard() {
               </span>
               <span className="text-sm font-semibold text-gray-900 mb-1" style={{ fontFamily: "Inter, sans-serif" }}>GB</span>
             </div>
-            <Link href="/choose-plan" className="text-[14px] font-medium text-[#0FA6FF] hover:text-[#0d8ad4] flex items-center gap-1 mb-2 transition-colors" style={{ fontFamily: "Inter, sans-serif" }}>
+            <Link href="/profile-settings/subscriptions" className="text-[14px] font-medium text-[#0FA6FF] hover:text-[#0d8ad4] flex items-center gap-1 mb-2 transition-colors" style={{ fontFamily: "Inter, sans-serif" }}>
               Upgrade <ArrowUpRight className="w-4 h-4" />
             </Link>
           </div>
