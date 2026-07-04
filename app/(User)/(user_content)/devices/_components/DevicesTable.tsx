@@ -161,6 +161,10 @@ export default function DevicesTable({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (device.status?.toUpperCase() === "OFFLINE") {
+                            toast.error("Device is offline. Cannot sync.");
+                            return;
+                          }
                           handleSync(device.id);
                         }}
                         disabled={syncingId !== null}
