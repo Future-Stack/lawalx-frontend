@@ -227,12 +227,13 @@ const UserActivityReports = () => {
   const paginatedAuthEvents = data.authentication.authEvents.slice(authStartIndex, authStartIndex + itemsPerPage);
 
   const handleExportPDF = async () => {
+    let toastId: string | number | undefined;
     try {
-      toast.loading("Preparing PDF report...");
+      toastId = toast.loading("Preparing PDF report...");
       const res = await triggerExport({ timeRange: apiTimeRange }).unwrap();
-      toast.dismiss();
       const exp = res?.data;
       if (!exp) {
+        if (toastId) toast.dismiss(toastId);
         toast.error("Failed to fetch export data");
         return;
       }
@@ -354,9 +355,11 @@ const UserActivityReports = () => {
       });
 
       doc.save(`User_Activity_Report_${apiTimeRange}.pdf`);
+      if (toastId) toast.dismiss(toastId);
       toast.success("PDF report exported successfully");
     } catch (e) {
       console.error('PDF export failed', e);
+      if (toastId) toast.dismiss(toastId);
       toast.error("An error occurred during PDF export");
     }
     setShowExportMenu(false);

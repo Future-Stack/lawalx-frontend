@@ -74,12 +74,13 @@ const ContentAndProgramsReport = () => {
   };
 
   const handleExportPDF = async () => {
+    let toastId: string | number | undefined;
     try {
-      toast.loading("Preparing PDF report...");
+      toastId = toast.loading("Preparing PDF report...");
       const { data: exportData, isError } = await triggerExport({});
-      toast.dismiss();
 
       if (isError || !exportData?.success) {
+        if (toastId) toast.dismiss(toastId);
         toast.error("Failed to fetch export data");
         return;
       }
@@ -146,9 +147,11 @@ const ContentAndProgramsReport = () => {
       });
 
       doc.save(`Content_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+      if (toastId) toast.dismiss(toastId);
       toast.success("Content report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
+      if (toastId) toast.dismiss(toastId);
       toast.error("An error occurred while exporting the report");
     }
   };

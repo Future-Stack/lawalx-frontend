@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -163,6 +163,14 @@ export default function ReportHubFormModal({
             .map(id => availableColumns.find(col => col.id === id))
             .filter(Boolean) as ReportColumn[];
     }, [formData.selectedColumnIds, availableColumns]);
+
+    const timeRef = useRef<HTMLInputElement>(null);
+
+    const handleIconClick = (ref: React.RefObject<HTMLInputElement | null>) => {
+        if (ref.current && 'showPicker' in ref.current) {
+            (ref.current as any).showPicker();
+        }
+    };
 
     const handleDragEnd = (event: any) => {
         const { active, over } = event;
@@ -532,14 +540,15 @@ export default function ReportHubFormModal({
                                             )}
                                             <div className="space-y-2">
                                                 <Label className="text-xs font-bold text-gray-900 dark:text-gray-300">Time</Label>
-                                                <div className="relative">
+                                                <div className="relative cursor-pointer" onClick={() => handleIconClick(timeRef)}>
                                                     <Input
+                                                        ref={timeRef}
                                                         type="time"
                                                         value={formData.time}
                                                         onChange={e => setFormData({ ...formData, time: e.target.value })}
-                                                        className="h-11 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl pr-10 text-gray-900 dark:text-white"
+                                                        className="h-11 bg-gray-50 dark:bg-gray-800/50 border-gray-100 dark:border-gray-800 rounded-xl pr-10 text-gray-900 dark:text-white cursor-pointer dark:[color-scheme:dark]"
                                                     />
-                                                    <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                                    <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                                                 </div>
                                             </div>
                                         </div>
