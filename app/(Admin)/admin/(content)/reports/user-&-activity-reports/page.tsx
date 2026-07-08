@@ -204,7 +204,20 @@ const UserActivityReports = () => {
 
   const data = {
     summary: { totalUsers: overview?.data?.totalUsers?.value ?? 0, activeUsers: overview?.data?.activeUsers?.value ?? 0, loginsToday: overview?.data?.loginsToday?.value ?? 0, avgSession: `${overview?.data?.avgSession?.value ?? 0} min`, failedLogins: overview?.data?.failedLogins?.value ?? 0 },
-    activityLog: { totalActions: auditOv?.data?.totalActions?.value ?? 0, successRate: auditOv?.data?.successful?.value ?? 0, failedActions: auditOv?.data?.failed?.value ?? 0, uniqueUsers: auditOv?.data?.uniqueUsers?.value ?? 0, recentActivity: (recentAct?.data ?? []).map((a: any) => ({ id: a.id, timestamp: new Date(a.timestamp).toLocaleString(), user: a.user, action: a.action, resource: a.resource, ip: a.ipAddress, status: a.status })), actionDistribution: (actDist?.data ?? []).map((a: any) => ({ name: a.label, value: a.value })) },
+    activityLog: { 
+      totalActions: auditOv?.data?.totalActions?.value ?? 0, 
+      totalActionsLabel: auditOv?.data?.totalActions?.label ?? 'this month',
+      successRate: auditOv?.data?.successful?.value ?? 0, 
+      successRatePercentage: auditOv?.data?.successful?.percentage ?? 0,
+      successRateLabel: auditOv?.data?.successful?.label ?? 'success rate',
+      failedActions: auditOv?.data?.failed?.value ?? 0, 
+      failedPercentage: auditOv?.data?.failed?.percentage ?? 0,
+      failedLabel: auditOv?.data?.failed?.label ?? 'of activity',
+      uniqueUsers: auditOv?.data?.uniqueUsers?.value ?? 0, 
+      uniqueUsersLabel: auditOv?.data?.uniqueUsers?.label ?? 'active this month',
+      recentActivity: (recentAct?.data ?? []).map((a: any) => ({ id: a.id, timestamp: new Date(a.timestamp).toLocaleString(), user: a.user, action: a.action, resource: a.resource, ip: a.ipAddress, status: a.status })), 
+      actionDistribution: (actDist?.data ?? []).map((a: any) => ({ name: a.label, value: a.value })) 
+    },
     userAdoption: { monthlyActiveUsers: adoptOv?.data?.activeUsers?.value ?? 0, newUsers: adoptOv?.data?.newUsers?.value ?? 0, avgSessionDuration: `${adoptOv?.data?.avgSessionDuration?.value ?? 0} min`, growthRate: adoptOv?.data?.growthRate?.value ?? '0%', adoptionTrend: (adoptTr?.data ?? []).map((a: any) => ({ month: a.label, activeUsers: a.activeUsers, newUsers: a.newUsers })), featureUsage: (featUse?.data ?? []).map((f: any) => ({ feature: f.name, rate: parseInt(String(f.percentage ?? '0')), users: f.users, trend: f.growth })), engagementLevels: engLvl?.data ? [{ level: 'Highly Engaged', users: engLvl.data.highlyEngaged?.users ?? 0, description: engLvl.data.highlyEngaged?.label ?? '' }, { level: 'Moderately Engaged', users: engLvl.data.moderatelyEngaged?.users ?? 0, description: engLvl.data.moderatelyEngaged?.label ?? '' }, { level: 'Low Engagement', users: engLvl.data.lowEngagement?.users ?? 0, description: engLvl.data.lowEngagement?.label ?? '' }] : [], sessionDuration: (sessTr?.data ?? []).map((s: any) => ({ month: s.label, duration: s.duration })) },
     userInventory: { totalUsers: invOv?.data?.totalUsers?.value ?? 0, activeUsers: invOv?.data?.active?.value ?? 0, inactiveUsers: invOv?.data?.inactive?.value ?? 0, organizations: invOv?.data?.organizations?.value ?? 0, users: (userDir?.data ?? []).map((u: any) => ({ id: u.id, name: u.name, email: u.email, role: u.role, org: u.organization, status: u.status, lastLogin: u.lastLogin ?? 'N/A' })), roleDistribution: (byRole?.data ?? []).map((r: any, i: number) => ({ name: r.role, value: r.count, color: ['#f59e0b', '#8b5cf6', '#10b981', '#3b82f6'][i % 4] })), permissions: (permOv?.data ?? []).map((p: any) => ({ name: p.label, count: p.value, description: p.description })) },
     authentication: { successfulLogins: authOv?.data?.successLogins?.value ?? 0, failedAttempts: authOv?.data?.failedAttempts?.value ?? 0, twoFactorVerified: authOv?.data?.twoFactorVerified?.value ?? 0, successRate: authOv?.data?.successRate?.value ?? '0%', authEvents: (authEv?.data ?? []).map((e: any) => ({ id: e.id, timestamp: e.timestamp, user: e.user, action: e.action, status: e.status, ip: e.ipAddress, location: e.location ?? 'N/A', device: e.device ?? 'N/A' })), loginActivity: (loginTr?.data ?? []).map((l: any) => ({ time: l.label, successful: l.successfulLogins, failed: l.failedAttempts })), securityAlerts: (secAl?.data ?? []).map((a: any) => ({ type: a.type === 'SUCCESS' ? 'success' : a.type === 'WARNING' ? 'warning' : 'error', title: a.title, description: a.description, time: a.timestamp })) },
@@ -529,22 +542,22 @@ const UserActivityReports = () => {
                 <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4">
                   <div className="text-sm text-purple-600 dark:text-purple-400 mb-1">Total Actions</div>
                   <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">{data.activityLog.totalActions.toLocaleString()}</div>
-                  <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">This month</div>
+                  <div className="text-xs text-purple-600 dark:text-purple-400 mt-1">{data.activityLog.totalActionsLabel}</div>
                 </div>
                 <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-4">
                   <div className="text-sm text-green-600 dark:text-green-400 mb-1">Successful</div>
                   <div className="text-2xl font-bold text-green-700 dark:text-green-300">{data.activityLog.successRate.toLocaleString()}</div>
-                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">98.9% success rate</div>
+                  <div className="text-xs text-green-600 dark:text-green-400 mt-1">{data.activityLog.successRatePercentage}% {data.activityLog.successRateLabel}</div>
                 </div>
                 <div className="bg-red-50 dark:bg-red-900/20 rounded-lg p-4">
-                  <div className="text-sm text-red-600 dark:text-red-400 mb-1">Failed/Failed</div>
+                  <div className="text-sm text-red-600 dark:text-red-400 mb-1">Failed</div>
                   <div className="text-2xl font-bold text-red-700 dark:text-red-300">{data.activityLog.failedActions}</div>
-                  <div className="text-xs text-red-600 dark:text-red-400 mt-1">1.1% of activity</div>
+                  <div className="text-xs text-red-600 dark:text-red-400 mt-1">{data.activityLog.failedPercentage}% {data.activityLog.failedLabel}</div>
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
                   <div className="text-sm text-blue-600 dark:text-blue-400 mb-1">Unique Users</div>
                   <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{data.activityLog.uniqueUsers}</div>
-                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">Active this month</div>
+                  <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">{data.activityLog.uniqueUsersLabel}</div>
                 </div>
               </div>
 
