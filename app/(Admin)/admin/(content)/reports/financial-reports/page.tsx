@@ -33,7 +33,7 @@ import * as XLSX from 'xlsx';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store/store';
-import { getCurrencySymbol } from '@/lib/currencyUtils';
+import { getCurrencySymbol, formatAmount as formatCurrency } from '@/lib/currencyUtils';
 
 const FinancialReport = () => {
   const { theme, resolvedTheme } = useTheme();
@@ -1003,17 +1003,23 @@ const FinancialReport = () => {
                 </button> */}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-6 gap-6 mb-10">
-                <div className="rounded-2xl p-6 border border-purple-100 dark:border-purple-800/30 bg-[#f5f3ff] dark:bg-purple-900/10">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6 gap-4 sm:gap-6 mb-10">
+                <div className="rounded-2xl p-4 sm:p-5 border border-purple-100 dark:border-purple-800/30 bg-[#f5f3ff] dark:bg-purple-900/10 min-w-0">
                   <div className="text-xs text-purple-600 dark:text-purple-400 mb-2 font-medium">Overall ARPU</div>
-                  <div className="text-4xl font-bold text-purple-700 dark:text-purple-300 mb-1">{currencySymbol}{data.arpu.overall}</div>
+                  <div className="text-lg xl:text-xl 2xl:text-2xl font-bold text-purple-700 dark:text-purple-300 mb-1 whitespace-nowrap tracking-tight" title={formatCurrency(Number(data.arpu.overall || 0), currency)}>
+                    {formatCurrency(Number(data.arpu.overall || 0), currency)}
+                  </div>
                   <div className="text-xs text-purple-500 dark:text-purple-400">Per month</div>
                 </div>
 
                 {data.arpu.byPlan.map((plan: any, idx: number) => (
-                  <div key={idx} className="rounded-2xl p-6 border border-border">
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium">{plan.name} ARPU</div>
-                    <div className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">{currencySymbol}{plan.arpu}</div>
+                  <div key={idx} className="rounded-2xl p-4 sm:p-5 border border-border min-w-0">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2 font-medium truncate" title={`${plan.name ? plan.name.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase()) : ''} ARPU`}>
+                      {plan.name ? plan.name.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase()) : ''} ARPU
+                    </div>
+                    <div className="text-base xl:text-lg 2xl:text-xl font-bold text-gray-900 dark:text-gray-100 mb-1 whitespace-nowrap tracking-tight" title={formatCurrency(Number(plan.arpu || 0), currency)}>
+                      {formatCurrency(Number(plan.arpu || 0), currency)}
+                    </div>
                     <div className={`text-xs flex items-center gap-1 ${plan.growth >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                       {plan.growth >= 0 ? `+${plan.growth}% growth` : `${plan.growth}% growth`}
                     </div>
