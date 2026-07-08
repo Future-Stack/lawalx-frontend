@@ -96,12 +96,13 @@ const FinancialReport = () => {
   const [triggerExport] = useLazyGetExportFinancialReportQuery();
 
   const handleExport = async (format: 'pdf' | 'excel') => {
+    let toastId: string | number | undefined;
     try {
-      toast.loading(`Preparing ${format.toUpperCase()} report...`);
+      toastId = toast.loading(`Preparing ${format.toUpperCase()} report...`);
       const { data: exportData } = await triggerExport({ timeRange: timeRangeString });
-      toast.dismiss();
 
       if (!exportData || !exportData.success) {
+        if (toastId) toast.dismiss(toastId);
         toast.error('Failed to fetch export data');
         return;
       }
@@ -279,9 +280,11 @@ const FinancialReport = () => {
 
         XLSX.writeFile(wb, `Financial_Report_${timeRangeString.replace(/\s+/g, '_')}.xlsx`);
       }
+      if (toastId) toast.dismiss(toastId);
       toast.success(`Report exported successfully as ${format.toUpperCase()}`);
     } catch (error) {
       console.error('Export error:', error);
+      if (toastId) toast.dismiss(toastId);
       toast.error('An error occurred during export');
     }
   };
