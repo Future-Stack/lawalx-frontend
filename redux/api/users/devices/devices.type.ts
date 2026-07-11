@@ -1,12 +1,13 @@
-// pair pin 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+// pair pin
 export interface AddDevicePin {
-    pin: string;
-    name?: string;
-    programId?: string;
-    location: {
+  pin: string;
+  name?: string;
+  programId?: string;
+  location: {
     lat: number;
-    lng: number
-  }
+    lng: number;
+  };
 }
 
 export type TimelineFile = {
@@ -52,7 +53,7 @@ export type Location = {
   lng: number;
 };
 
-// get my devices type 
+// get my devices type
 export type Device = {
   id: string;
   deviceSerial: string;
@@ -92,7 +93,7 @@ export type DeviceListResponse = {
   data: Device[];
 };
 
-// get device data api type 
+// get device data api type
 export type ApiResponse<T> = {
   statusCode: number;
   success: boolean;
@@ -109,3 +110,32 @@ export type DeviceData = {
 };
 
 export type DeviceResponse = ApiResponse<DeviceData>;
+
+
+// recent device api type 
+export interface RecentDevicesResponse {
+  statusCode: number;
+  success: boolean;
+  message: string;
+  data: RecentDevice[];
+}
+
+export interface RecentDevice {
+  id: string;
+  name: string;
+  status: "PAIRED" | "UNPAIRED" | "OFFLINE" | "ONLINE" | string;
+  location: RecentDeviceLocation;
+  metadata: RecentDeviceMetadata;
+  updatedAt: string;
+}
+
+export interface RecentDeviceLocation {
+  lat: number;
+  lng: number;
+}
+
+export interface RecentDeviceMetadata {
+  firmware: string;
+  osVersion: string;
+  screenSize: string;
+}
