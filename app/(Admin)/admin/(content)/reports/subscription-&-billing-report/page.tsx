@@ -220,8 +220,9 @@ const BillingDashboard = () => {
 
 
   const handleExport = async () => {
+    let toastId: string | number | undefined;
     try {
-      toast.loading("Preparing PDF report...");
+      toastId = toast.loading("Preparing PDF report...");
 
       const rawData = {
         overview: {
@@ -239,8 +240,6 @@ const BillingDashboard = () => {
         taxReport: { summary: taxSummary },
         dsoAnalysis: { metrics: dsoMetrics }
       };
-
-      toast.dismiss();
 
       const doc = new jsPDF({ orientation: "landscape" });
       const pdfCurrencySymbol = currencySymbol === '₦' ? 'NGN ' : currencySymbol;
@@ -382,9 +381,11 @@ const BillingDashboard = () => {
       });
 
       doc.save(`Subscription_Billing_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+      if (toastId) toast.dismiss(toastId);
       toast.success("Billing report exported successfully");
     } catch (error) {
       console.error("Export error:", error);
+      if (toastId) toast.dismiss(toastId);
       toast.error("Failed to export report");
     } finally {
       setShowExportMenu(false);

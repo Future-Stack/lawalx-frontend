@@ -65,6 +65,57 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { addPdfHeader } from '@/lib/pdfUtils';
 import { fetchAddressFromCoordinates, delay } from '@/lib/geocodeUtils';
+
+/**
+ * Converts local "HH:mm" time string to UTC "HH:mm" time string.
+ */
+function convertLocalTimeToUTC(localTime: string): string {
+    if (!localTime) return "";
+    const [hours, minutes] = localTime.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return localTime;
+    
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    
+    const utcHours = String(date.getUTCHours()).padStart(2, '0');
+    const utcMinutes = String(date.getUTCMinutes()).padStart(2, '0');
+    return `${utcHours}:${utcMinutes}`;
+}
+
+/**
+ * Converts UTC "HH:mm" time string to local "HH:mm" time string.
+ */
+function convertUTCToLocalTime(utcTime: string): string {
+    if (!utcTime) return "";
+    const [hours, minutes] = utcTime.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return utcTime;
+    
+    const date = new Date();
+    date.setUTCHours(hours);
+    date.setUTCMinutes(minutes);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    
+    const localHours = String(date.getHours()).padStart(2, '0');
+    const localMinutes = String(date.getMinutes()).padStart(2, '0');
+    return `${localHours}:${localMinutes}`;
+}
+
+/**
+ * Formats "HH:mm" time string to 12-hour AM/PM format.
+ */
+function formatTime12h(time24: string): string {
+    if (!time24) return "";
+    const [h, m] = time24.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return time24;
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const displayHour = h % 12 === 0 ? 12 : h % 12;
+    return `${String(displayHour).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+}
+
 export default function ReportHub() {
     const [activeTab, setActiveTab] = useState<'saved' | 'history'>('saved');
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
@@ -222,7 +273,7 @@ export default function ReportHub() {
         formData.append('emailRecipients', data.emailRecipients || "");
         formData.append('outputFormat', data.outputFormat?.toUpperCase() || "EXCEL");
         formData.append('emailSubject', data.emailSubject || `${data.name} Report`);
-        formData.append('scheduleTime', data.time || "");
+        formData.append('scheduleTime', convertLocalTimeToUTC(data.time || ""));
         formData.append('scheduleDayOfWeek', data.frequency === 'Weekly' ? (dayOfWeekMap[data.dayOfWeek] || "") : "");
         formData.append('scheduleDayOfMonth', data.frequency === 'Monthly' ? (data.dayOfMonth || "") : "");
 
@@ -638,8 +689,35 @@ export default function ReportHub() {
                                         <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400 text-nowrap">{new Date(report.createdAt).toLocaleDateString()}</td>
                                         <td className="px-6 py-5 text-nowrap">
                                             <div className="flex items-center gap-2 text-sm text-gray-900 dark:text-white text-nowrap">
-                                                <Clock className="w-4 h-4 text-gray-400" />
-                                                {report.scheduleEnabled ? report.scheduleType : 'Not Scheduled'}
+                                                <Clock className="w-4 h-4 text-gray-400 shrink-0" />
+                                                {report.scheduleEnabled ? (
+                                                    <div className="text-nowrap">
+                                                        <div className="text-sm font-bold text-gray-900 dark:text-white text-nowrap">
+                                                            {report.scheduleType ? (report.scheduleType.charAt(0).toUpperCase() + report.scheduleType.slice(1)) : 'Scheduled'}
+                                                        </div>
+                                                        {(() => {
+                                                            const localTime = report.scheduleTime ? formatTime12h(convertUTCToLocalTime(report.scheduleTime)) : '';
+                                                            
+                                                            let dayDetail = '';
+                                                            if (report.scheduleType === 'weekly' && report.scheduleDayOfWeek) {
+                                                                dayDetail = report.scheduleDayOfWeek;
+                                                            } else if (report.scheduleType === 'monthly' && report.scheduleDayOfMonth) {
+                                                                dayDetail = `Day ${report.scheduleDayOfMonth}`;
+                                                            }
+                                                            
+                                                            const combined = [localTime, dayDetail].filter(Boolean).join(' • ');
+                                                            
+                                                            if (!combined) return null;
+                                                            return (
+                                                                <div className="text-[10px] text-gray-400 dark:text-gray-500 font-semibold mt-0.5 text-nowrap">
+                                                                    {combined}
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-gray-500 dark:text-gray-400">Not Scheduled</span>
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-6 py-5 text-sm text-gray-500 dark:text-gray-400 text-nowrap">
@@ -680,7 +758,7 @@ export default function ReportHub() {
                                                                     frequency: report.scheduleType ? (report.scheduleType.charAt(0).toUpperCase() + report.scheduleType.slice(1)) : 'Weekly',
                                                                     dayOfWeek: report.scheduleDayOfWeek ? (shortToLongDayMap[report.scheduleDayOfWeek] || report.scheduleDayOfWeek) : 'Monday',
                                                                     dayOfMonth: report.scheduleDayOfMonth ? String(report.scheduleDayOfMonth) : '1',
-                                                                    time: report.scheduleTime || '09:00',
+                                                                    time: report.scheduleTime ? convertUTCToLocalTime(report.scheduleTime) : '09:00',
                                                                     emailRecipients: report.emailRecipients?.join(', ') || ''
                                                                 }); 
                                                                 setIsEditOpen(true); 
