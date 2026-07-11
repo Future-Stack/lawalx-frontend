@@ -17,9 +17,7 @@ import {
   CloudUpload,
   Activity,
   TvMinimal,
-  UserRoundCog,
-  PencilLine,
-  Trash2,
+  UserRoundCog
 } from "lucide-react";
 
 import ActionCardButton from "@/common/ActionCardButton";
@@ -29,7 +27,7 @@ import Link from "next/link";
 import DashboardBannerSystem from "@/components/dashboard/DashboardBannerSystem";
 import { formatDistanceToNow } from "date-fns";
 import { useGetAllActivitiesQuery, useGetAllStatsQuery } from "@/redux/api/users/dashboard/activityApi";
-import { useDeleteDeviceMutation, useGetMyAllDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
+import { useDeleteDeviceMutation, useGetRecentDevicesDataQuery } from "@/redux/api/users/devices/devices.api";
 import { RecentDeviceRenameModal, RecentDeviceRemoveModal } from "@/components/dashboard/RecentDeviceActionsModals";
 import { toast } from "sonner";
 import CommonLoader from "@/common/CommonLoader";
@@ -41,9 +39,9 @@ import DeviceStatusBadge from "@/components/common/DeviceStatusBadge";
 export default function Dashboard() {
   const { data: statsData } = useGetAllStatsQuery(undefined);
   const {
-    data: devicesData,
+    data: recentDevicesData,
     isError: isDevicesError,
-  } = useGetMyAllDevicesDataQuery();
+  } = useGetRecentDevicesDataQuery();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddDeviceModalOpen, setIsAddDeviceModalOpen] = useState(false);
@@ -68,11 +66,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleAction = (action: string, device: any) => {
-    if (action === 'Rename') setRenameDevice(device);
-    if (action === 'Remove Device') setRemoveDevice(device);
-  };
-
   const handleCloseAddDeviceModal = () => {
     setIsAddDeviceModalOpen(false);
   };
@@ -81,9 +74,13 @@ export default function Dashboard() {
     data: activityData,
     isError: isActivitiesError,
   } = useGetAllActivitiesQuery();
-  const activities = activityData?.data?.slice(0, 4) || [];
+  const activities = activityData?.data?.slice(0, 5) || [];
 
-  const devices = devicesData?.data || [];
+  const devices = (recentDevicesData?.data || []).filter(
+    (device) =>
+      device.status?.toUpperCase() === "ONLINE" ||
+      device.status?.toUpperCase() === "PAIRED"
+  );
 
   const totalDevices = statsData?.data?.totalDevices || 0;
   const onlineDevices = statsData?.data?.onlineDevices || 0;
@@ -235,59 +232,38 @@ export default function Dashboard() {
           </div>
 
           <div className="p-6 space-y-4">
-            {!devicesData && !isDevicesError ? (
+            {!recentDevicesData && !isDevicesError ? (
               <div className="flex justify-center items-center py-8">
                 <CommonLoader size={32} text="Loading devices..." />
               </div>
             ) : devices.length === 0 ? (
               <div className="text-center text-gray-500 py-4">No recent devices</div>
             ) : (
-              devices.slice(0, 3).map((device, index) => (
+              devices.slice(0, 5).map((device, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-4 p-5 border border-border rounded-[20px] bg-navbarBg justify-between"
+                  className="flex items-center gap-4 p-5 border border-border rounded-[20px] bg-navbarBg"
                 >
+                  <div className="w-10 h-10 rounded-full bg-[rgba(21,93,252,0.08)] p-2.5 flex items-center justify-center shrink-0">
+                    <TvMinimal className="w-5 h-5 text-[#3BA5FF]" />
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <span className="text-[16px] font-semibold text-headings truncate" style={{ fontFamily: "Inter, sans-serif" }}>
+                    <div className="flex items-center gap-3">
+                      <span className="text-[15px] font-semibold text-headings truncate" style={{ fontFamily: "Inter, sans-serif" }}>
                         {typeof device.name === 'object' ? 'Device' : (device.name || "Unknown Device")}
                       </span>
                       <DeviceStatusBadge status={device.status} />
                     </div>
-                    <div className="text-[14px] text-muted mb-1" style={{ fontFamily: "Inter, sans-serif" }}>
-                      3840 × 2160
-                    </div>
-                    <div className="text-[14px] text-body font-medium uppercase truncate" style={{ fontFamily: "Inter, sans-serif" }}>
+                    {/* <div className="text-[14px] text-muted mb-1" style={{ fontFamily: "Inter, sans-serif" }}>
+                      {device.metadata?.screenSize || "3840 × 2160"}
+                    </div> */}
+                    <p className="text-[14px] text-body mt-0.5 truncate" style={{ fontFamily: "Inter, sans-serif" }}>
                       {device.location && typeof device.location === 'object' && (device.location as any).lat !== undefined ? (
                         <DeviceLocation lat={(device.location as any).lat} lng={(device.location as any).lng} />
                       ) : (
                         (device.location as any) || "N/A"
                       )}
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAction('Rename', device);
-                      }}
-                      className="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-500 hover:text-bgBlue rounded-md transition-all cursor-pointer"
-                      title="Rename"
-                    >
-                      <PencilLine className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAction('Remove Device', device);
-                      }}
-                      className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 rounded-md transition-all cursor-pointer"
-                      title="Remove Device"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
+                    </p>
                   </div>
                 </div>
               ))
@@ -321,7 +297,7 @@ export default function Dashboard() {
               activities.map((activity: any, index: number) => (
                 <div
                   key={`${activity.id}-${index}`}
-                  className="flex items-start gap-4 p-5 border border-border rounded-[20px] bg-navbarBg"
+                  className="flex items-center gap-4 p-5 border border-border rounded-[20px] bg-navbarBg"
                 >
                   <div className="w-10 h-10 rounded-full bg-[rgba(21,93,252,0.08)] p-2.5 flex items-center justify-center shrink-0">
                     {activity.actionType.toLowerCase().includes("device") ? (

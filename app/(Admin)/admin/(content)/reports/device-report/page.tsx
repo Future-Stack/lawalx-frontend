@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import { useState, useMemo } from 'react';
-import { BarChart, Bar, Legend, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Monitor, Wifi, WifiOff, TrendingUp, ChevronDown, Download, FileSpreadsheet, Home, ChevronRight, Shield } from 'lucide-react';
+import { BarChart, Bar, Legend, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Monitor, Wifi, WifiOff, Download, Home, ChevronRight, Shield } from 'lucide-react';
 import Dropdown from '@/components/shared/Dropdown';
 import Link from 'next/link';
 

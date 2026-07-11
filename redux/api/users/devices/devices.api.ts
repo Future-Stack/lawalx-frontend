@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { baseApi } from "../../baseApi";
 import { SuccessResponse } from "../content/content.type";
-import { AddDevicePin, DeviceListResponse, DeviceResponse } from "./devices.type";
+import { AddDevicePin, DeviceListResponse, DeviceResponse, RecentDevicesResponse } from "./devices.type";
 
 const devicesAPI = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -25,6 +25,17 @@ const devicesAPI = baseApi.injectEndpoints({
       query: () => ({
         url: "/device/my-devices",
         method: "GET",
+      }),
+      providesTags: ["Devices", "Activity"],
+    }),
+    // get recent devices 
+    getRecentDevicesData: build.query<RecentDevicesResponse, void>({
+      query: () => ({
+        url: "/userdashboard/recent-devices",
+        method: "GET",
+        params: {
+          limit: 10
+        }
       }),
       providesTags: ["Devices", "Activity"],
     }),
@@ -78,4 +89,4 @@ const devicesAPI = baseApi.injectEndpoints({
   overrideExisting: true,
 });
 
-export const { useAddDeviceMutation, useGetMyAllDevicesDataQuery, useGetSingleDeviceDataQuery, useDeleteDeviceMutation, useAssignDeviceToProgramMutation, useRenameDeviceMutation, useGetDevicePinWiseDataQuery, useDeviceSyncMutation } = devicesAPI;
+export const { useAddDeviceMutation, useGetMyAllDevicesDataQuery, useGetRecentDevicesDataQuery, useGetSingleDeviceDataQuery, useDeleteDeviceMutation, useAssignDeviceToProgramMutation, useRenameDeviceMutation, useGetDevicePinWiseDataQuery, useDeviceSyncMutation } = devicesAPI;

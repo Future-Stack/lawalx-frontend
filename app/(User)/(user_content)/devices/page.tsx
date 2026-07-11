@@ -88,7 +88,7 @@ export default function DevicesPage() {
   const [statusFilter, setStatusFilter] = useState('All Status');
   const [typeFilter, setTypeFilter] = useState('All Types');
 
-  const statusOptions = ['All Status', 'ONLINE', 'OFFLINE', 'WAITING', 'PAIRED'];
+  const statusOptions = ['All Status', 'ONLINE', 'OFFLINE'];
   const typeOptions = useMemo(() => {
     const types = Array.from(new Set(allDevices.map(d => d.type).filter(Boolean)));
     return ['All Types', ...types];
