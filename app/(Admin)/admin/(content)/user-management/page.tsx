@@ -7,6 +7,7 @@ import EditPersonalInfoModal from "@/components/Admin/modals/EditPersonalInfoMod
 import ResetPasswordModal from "@/components/Admin/modals/ResetPasswordModal";
 import SuspendUserModal from "@/components/Admin/modals/SuspendUserModal";
 import DeleteUserModal from "@/components/Admin/modals/DeleteUserModal";
+import RequestImpersonationModal from "@/components/Admin/modals/RequestImpersonationModal";
 import AddUserModal from "@/components/Admin/usermanagement/AddUserModal";
 import {
   useGetUsersQuery,
@@ -106,6 +107,7 @@ export default function UserManagementPage() {
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any | null>(null);
 
   const users = usersData?.data || [];
@@ -251,6 +253,10 @@ export default function UserManagementPage() {
             setSelectedUser(user);
             setIsEditModalOpen(true);
           }}
+          onRequestAccess={(user) => {
+            setSelectedUser(user);
+            setIsRequestModalOpen(true);
+          }}
           onImpersonateUser={handleLoginAsUser}
           onUnsuspendUser={async (userId) => {
             try {
@@ -280,6 +286,10 @@ export default function UserManagementPage() {
           onEditUser={(user) => {
             setSelectedUser(user);
             setIsEditModalOpen(true);
+          }}
+          onRequestAccess={(user) => {
+            setSelectedUser(user);
+            setIsRequestModalOpen(true);
           }}
           onImpersonateUser={handleLoginAsUser}
           onUnsuspendUser={async (userId) => {
@@ -369,6 +379,13 @@ export default function UserManagementPage() {
             toast.error(err?.data?.message || "Failed to delete user");
           }
         }}
+      />
+
+      <RequestImpersonationModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        userId={selectedUser?.id || ''}
+        userName={selectedUser?.full_name || selectedUser?.username || ''}
       />
     </div>
   );

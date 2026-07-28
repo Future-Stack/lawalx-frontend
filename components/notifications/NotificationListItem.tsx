@@ -12,6 +12,7 @@ interface NotificationListItemProps {
   onClick: (item: NotificationHistoryItem) => void;
   /** 'sm' for navbar dropdown, 'md' for default */
   size?: "sm" | "md";
+  renderAction?: (item: NotificationHistoryItem) => React.ReactNode;
 }
 
 /**
@@ -21,6 +22,7 @@ export default function NotificationListItem({
   item,
   onClick,
   size = "sm",
+  renderAction,
 }: NotificationListItemProps) {
   const Icon = getNotificationIcon(item);
   const style = getNotificationStyleClasses(item.notification?.type);
@@ -59,6 +61,11 @@ export default function NotificationListItem({
               addSuffix: true,
             })}
           </p>
+          {renderAction && (
+            <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+              {renderAction(item)}
+            </div>
+          )}
         </div>
         {!item.isRead && (
           <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />

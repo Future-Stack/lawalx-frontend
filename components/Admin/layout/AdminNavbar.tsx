@@ -1,13 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { Moon, Bell, Sun, User } from 'lucide-react';
+import { Moon, Bell, Sun, User, LogIn } from 'lucide-react';
 import { useTheme } from './ThemeProvider';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useGetAdminProfileQuery } from '@/redux/api/admin/profile&settings/adminSettingsApi';
 import { useGetMyNotificationsQuery, useReadAllNotificationsMutation } from "@/redux/api/users/notificationApi";
+import { useLoginAsUserMutation } from '@/redux/api/admin/usermanagementApi';
+import { toast } from 'sonner';
 import NotificationListItem from "@/components/notifications/NotificationListItem";
 import { useNotificationClick } from "@/hooks/useNotificationClick";
 import type { NotificationHistoryItem } from "@/types/notification";
@@ -62,6 +64,7 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
 
   const { data: notificationData } = useGetMyNotificationsQuery();
   const [readAllNotifications] = useReadAllNotificationsMutation();
+  const [loginAsUser] = useLoginAsUserMutation();
   const { handleNotificationClick } = useNotificationClick({
     onAfterClick: () => setNotificationOpen(false),
   });
@@ -105,6 +108,68 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
     } catch (error) {
       console.error("Failed to mark all as read", error);
     }
+  };
+
+  const handleLoginAsUser = async (userId: string) => {
+    try {
+      const res = await loginAsUser(userId).unwrap();
+      if (res.success) {
+        const adminToken = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('token='))
+          ?.split('=')[1] || '';
+        const adminRefreshToken = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('refreshToken='))
+          ?.split('=')[1] || '';
+
+        sessionStorage.setItem('impersonation_original_token', adminToken);
+        sessionStorage.setItem('impersonation_original_refresh_token', adminRefreshToken);
+
+        const newToken = res.data.accessToken;
+        const newRefreshToken = res.data.refreshToken;
+
+        document.cookie = `token=${newToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure; samesite=strict`;
+        document.cookie = `refreshToken=${newRefreshToken}; path=/; max-age=${30 * 24 * 60 * 60}; secure; samesite=strict`;
+
+        toast.success(`Impersonating ${res.data.user?.email || 'user'}. Redirecting...`);
+
+        const role = res.data.user?.role?.toUpperCase() || 'USER';
+        const targetUrl = role === 'SUPPORTER' ? '/supporter/overview' : '/dashboard';
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 1000);
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to login as user");
+    }
+  };
+
+  const renderNotificationAction = (item: NotificationHistoryItem) => {
+    const isApprovedImpersonation =
+      item.notification?.notificationStatus === 'impersonate_approved' ||
+      (item.notification?.body?.toLowerCase().includes('approved') && item.notification?.body?.toLowerCase().includes('impersonat')) ||
+      (item.notification?.body?.toLowerCase().includes('access') && item.notification?.body?.toLowerCase().includes('approved'));
+
+    if (isApprovedImpersonation) {
+      const targetUserId = (item.notification.metadata as any)?.targetUserId || item.notification.resourceId;
+      if (targetUserId) {
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setNotificationOpen(false);
+              handleLoginAsUser(targetUserId);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50 rounded-lg text-xs font-medium transition-colors"
+          >
+            <LogIn className="w-3.5 h-3.5" />
+            Login as User
+          </button>
+        );
+      }
+    }
+    return null;
   };
 
   const profileImage = profileData?.data?.profileImage || profileData?.data?.image_url;
@@ -215,6 +280,7 @@ export default function AdminNavbar({ isCollapsed, setIsCollapsed }: AdminNavbar
                           item={item}
                           onClick={handleNotificationClick}
                           size="md"
+                          renderAction={renderNotificationAction}
                         />
                       ))
                     )}

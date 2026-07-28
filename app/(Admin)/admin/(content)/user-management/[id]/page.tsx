@@ -16,6 +16,7 @@ import {
   Home,
   ChevronRight,
   Activity,
+  KeyRound,
 } from "lucide-react";
 import EditUserModal from "@/components/Admin/modals/EditUserModal";
 import EditPersonalInfoModal from "@/components/Admin/modals/EditPersonalInfoModal";
@@ -23,6 +24,7 @@ import ResetPasswordModal from "@/components/Admin/modals/ResetPasswordModal";
 import ChangePlanModal from "@/components/Admin/modals/ChangePlanModal";
 import DeleteUserModal from "@/components/Admin/modals/DeleteUserModal";
 import SuspendUserModal from "@/components/Admin/modals/SuspendUserModal";
+import RequestImpersonationModal from "@/components/Admin/modals/RequestImpersonationModal";
 import DetailsTab from "@/components/Admin/usermanagement/tabs/DetailsTab";
 import SubscriptionTab from "@/components/Admin/usermanagement/tabs/SubscriptionTab";
 import ContentTab from "@/components/Admin/usermanagement/tabs/ContentTab";
@@ -80,6 +82,7 @@ export default function UserProfilePage() {
   const [isSuspendOpen, setIsSuspendOpen] = useState(false);
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [isDeleteUserOpen, setIsDeleteUserOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   const [loginAsUser] = useLoginAsUserMutation();
   const [deleteUser] = useDeleteUserMutation();
@@ -265,6 +268,13 @@ export default function UserProfilePage() {
 
           <div className="flex gap-3">
             <button
+              onClick={() => setIsRequestModalOpen(true)}
+              className="cursor-pointer px-6 py-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-sm"
+            >
+              <KeyRound className="w-4 h-4" />
+              Request Access
+            </button>
+            <button
               onClick={() => handleLoginAsUser(user.id)}
               className="cursor-pointer px-6 py-2 bg-primary-action text-white rounded-lg text-sm font-medium flex items-center gap-2 transition-colors shadow-customShadow"
             >
@@ -362,6 +372,12 @@ export default function UserProfilePage() {
         onClose={() => setIsEditPersonalInfoOpen(false)}
         onSave={handleSavePersonalInfo}
         userData={profile}
+      />
+      <RequestImpersonationModal
+        isOpen={isRequestModalOpen}
+        onClose={() => setIsRequestModalOpen(false)}
+        userId={userId}
+        userName={user.name}
       />
       <ChangePlanModal isOpen={isChangePlanOpen} onClose={() => setIsChangePlanOpen(false)} userData={profile} onConfirm={() => setIsChangePlanOpen(false)} />
       <SuspendUserModal

@@ -1,6 +1,6 @@
 import React from "react";
 import { useRouter } from "next/navigation";
-import { MoreVertical, Eye, Edit, LogIn, UserCheck, UserX, Trash2 } from "lucide-react";
+import { MoreVertical, Eye, Edit, LogIn, UserCheck, UserX, Trash2, KeyRound } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ interface UserTableProps {
   openActionMenu: string | null;
   setOpenActionMenu: (id: string | null) => void;
   onEditUser: (user: any) => void;
+  onRequestAccess: (user: any) => void;
   onImpersonateUser: (userId: string) => void;
   onUnsuspendUser: (userId: string) => void;
   onSuspendUser: (user: any) => void;
@@ -32,6 +33,7 @@ export const UserTable: React.FC<UserTableProps> = ({
   openActionMenu,
   setOpenActionMenu,
   onEditUser,
+  onRequestAccess,
   onImpersonateUser,
   onUnsuspendUser,
   onSuspendUser,
@@ -256,12 +258,22 @@ export const UserTable: React.FC<UserTableProps> = ({
                       <DropdownMenuItem
                         onClick={(e) => {
                           e.stopPropagation();
+                          onRequestAccess(user);
+                          setOpenActionMenu(null);
+                        }}
+                      >
+                        <KeyRound className="w-4 h-4" />
+                        Request Access
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
                           onImpersonateUser(user.id);
                           setOpenActionMenu(null);
                         }}
                       >
                         <LogIn className="w-4 h-4" />
-                        Impersonate User
+                        Login as User
                       </DropdownMenuItem>
 
                       {user.status === "SUSPENDED" ? (

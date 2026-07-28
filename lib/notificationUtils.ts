@@ -214,7 +214,7 @@ export function getNotificationRoute(
     if (routes[status]) return routes[status];
   }
 
-  // USER ticket deep-link via resourceId — same pattern as admin ?openTicket=
+  // USER ticket deep-link via resourceId — same pattern as admin?openTicket=
   if (role === 'USER' && ticketId) {
     const type = (item.notification?.type ?? '').toUpperCase();
     const isTicketLink =
