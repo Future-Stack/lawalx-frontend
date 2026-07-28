@@ -1,6 +1,6 @@
 import React from "react";
 import { useRouter } from "next/navigation";
-import { MoreVertical, Eye, Edit, LogIn, UserCheck, UserX, Trash2 } from "lucide-react";
+import { MoreVertical, Eye, Edit, LogIn, UserCheck, UserX, Trash2, KeyRound } from "lucide-react";
 
 interface UserMobileListProps {
   users: any[];
@@ -10,6 +10,7 @@ interface UserMobileListProps {
   openActionMenu: string | null;
   setOpenActionMenu: (id: string | null) => void;
   onEditUser: (user: any) => void;
+  onRequestAccess: (user: any) => void;
   onImpersonateUser: (userId: string) => void;
   onUnsuspendUser: (userId: string) => void;
   onSuspendUser: (user: any) => void;
@@ -24,6 +25,7 @@ export const UserMobileList: React.FC<UserMobileListProps> = ({
   openActionMenu,
   setOpenActionMenu,
   onEditUser,
+  onRequestAccess,
   onImpersonateUser,
   onUnsuspendUser,
   onSuspendUser,
@@ -166,13 +168,24 @@ export const UserMobileList: React.FC<UserMobileListProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            onRequestAccess(user);
+                            setOpenActionMenu(null);
+                          }}
+                          className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
+                        >
+                          <KeyRound className="w-4 h-4" />
+                          Request Access
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
                             onImpersonateUser(user.id);
                             setOpenActionMenu(null);
                           }}
                           className="w-full cursor-pointer px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 transition-colors border-b border-border/50"
                         >
                           <LogIn className="w-4 h-4" />
-                          Impersonate User
+                          Login as User
                         </button>
                         {user.status === "SUSPENDED" ? (
                           <button

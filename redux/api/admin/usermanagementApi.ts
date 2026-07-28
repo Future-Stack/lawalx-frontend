@@ -63,6 +63,14 @@ export const usermanagementApi = baseApi.injectEndpoints({
       invalidatesTags: ["User"],
     }),
 
+    requestImpersonate: builder.mutation({
+      query: ({ userId, data }) => ({
+        url: `/usermanagement/${userId}/request-impersonate`,
+        method: "POST",
+        body: data,
+      }),
+    }),
+
     loginAsUser: builder.mutation({
       query: (userId) => ({
         url: `/usermanagement/${userId}/login-as-user`,
@@ -136,6 +144,7 @@ export const {
   useLazyGetExportDataQuery,
   useAddUserMutation,
   useDeleteUserMutation,
+  useRequestImpersonateMutation,
   useLoginAsUserMutation,
   useAdminResetPasswordMutation,
   useSuspendUserMutation,
