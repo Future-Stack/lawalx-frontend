@@ -113,7 +113,7 @@ export const baseApi = createApi({
   reducerPath: "baseApi",
   baseQuery: baseQueryWithReauth,
   endpoints: () => ({}),
-  tagTypes: ["User", "NotificationPermission", "Notification", "Activity", "Content", "Devices", "Programs", "Schedules", "Device", "AdminSettings", "Subscription", "UserPlans", "ReportHub", "ReportHistory", "ReportPreview", "Banner", "Billing", "SupportTicket", "AdminSupportTicket", "AdminEmployee", "AdminSupporter", "SupporterTicket", "SupporterTicketStats", "FAQ", "VideoFAQ", "Preferences", "FinancialData", "Tax", "SupporterTag", "TicketTag", "AdditionalPayment", "AdditionalPaymentSigner", "AuthImage"],
+  tagTypes: ["User", "NotificationPermission", "Notification", "Activity", "Content", "Devices", "Programs", "Schedules", "Device", "AdminSettings", "Subscription", "UserPlans", "ReportHub", "ReportHistory", "ReportPreview", "Banner", "Billing", "SupportTicket", "AdminSupportTicket", "AdminEmployee", "AdminSupporter", "SupporterTicket", "SupporterTicketStats", "FAQ", "VideoFAQ", "Preferences", "FinancialData", "Tax", "SupporterTag", "TicketTag", "AdditionalPayment", "AdditionalPaymentSigner", "AuthImage", "ImpersonationRequest"],
 });
 
 
