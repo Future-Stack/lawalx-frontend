@@ -2,6 +2,7 @@ import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   turbopack: {
     root: path.resolve(process.cwd()),
   },
@@ -13,16 +14,26 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
+        hostname: "api.tapedigitaldisplay.com",
+      },
+      {
+        protocol: "https",
         hostname: "lawaltwo.sakibalhasa.xyz",
       },
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
-      }
+      },
     ],
   },
   async rewrites() {
-    const backendUrl = process.env.BACKEND_URL;
+    const rawBackendUrl =
+      process.env.BACKEND_URL ||
+      process.env.NEXT_PUBLIC_SOCKET_URL ||
+      "https://api.tapedigitaldisplay.com";
+
+    const backendUrl = rawBackendUrl.replace(/\/api\/v1\/?$/, "");
+
     return [
       {
         source: "/api/:path*",

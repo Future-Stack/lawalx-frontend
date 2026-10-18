@@ -43,14 +43,11 @@
 
 // app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import ReduxProvider from "@/redux/store/ReduxProvider";
 import ClientToaster from "@/components/common/ClientToaster";
 import NotificationSocketProvider from "@/components/common/NotificationSocketProvider";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   title: "Frontline",
@@ -64,7 +61,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} antialiased project-font`} suppressHydrationWarning>
+      <body className="antialiased project-font" suppressHydrationWarning>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
